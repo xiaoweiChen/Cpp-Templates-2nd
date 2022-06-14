@@ -1,0 +1,1425 @@
+
+\documentclass[11pt,a4paper,UTF8]{book}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{authblk}
+
+\usepackage{ctex} %导入中文包
+%\usepackage{ulem}
+\usepackage{tocvsec2}
+\usepackage{verbatim}
+
+\usepackage{tabularx}
+\usepackage{booktabs} 
+\usepackage{multirow}
+\usepackage{bbding}
+\usepackage{float}
+\usepackage{xspace}
+\usepackage[none]{hyphenat}
+
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{pifont}
+
+\usepackage{hyperref}  %制作pdf的目录
+\usepackage{subfiles} %使用多文件方式进行
+
+\usepackage{geometry} %设置页边距的包
+\geometry{left=2.5cm,right=2cm,top=2.54cm,bottom=2.54cm} %设置书籍的页边距
+
+\usepackage{url}
+\hypersetup{hidelinks, %去红框
+	colorlinks=true,
+	allcolors=black,
+	pdfstartview=Fit,
+	breaklinks=true
+}
+
+% 调整itemlist中的行间距
+\usepackage{enumitem}
+\setenumerate[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setitemize[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setdescription{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+
+% 超链接样式设置
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=blue,
+	urlcolor=blue,
+	citecolor=cyan,
+}
+
+\usepackage{indentfirst}
+
+\usepackage{listings}
+\usepackage[usenames,dvipsnames,svgnames, x11names]{xcolor}
+
+\usepackage[most]{tcolorbox}
+
+%展示代码
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{keywordcolor}{rgb}{0.8,0.1,0.5}
+\definecolor{webgreen}{rgb}{0,.5,0}
+\definecolor{bgcolor}{rgb}{0.92,0.92,0.92}
+
+%定义CMake
+\lstdefinelanguage{CMake}
+{morekeywords={
+		cmake\_minimum\_required,
+		project,
+		add\_executable,
+		add\_library,
+		target\_link\_libraries,
+		cmake\_parse\_arguments,
+		cmake\_language,
+		set, unset,
+		option,
+		string,
+		list,
+		math,
+		message,
+		if, elseif, else, endif,
+		mark\_as\_advanced,
+		foreach, endforeach,
+		while, endwhile,
+		add\_subdirectory, include, return, include\_gurad,
+		function, endfunction,
+		macro, endmacro,
+		find\_package,
+		cmake\_push\_check\_state,
+		cmake\_pop\_check\_state,
+		cmake\_reset\_check\_state,
+		add\_test,
+		set\_tests\_properties, 
+		check\_c\_source\_runs,
+		check\_cxx\_source\_runs,
+		check\_fortran\_source\_runs,
+		check\_source\_runs,
+		check\_compiler\_flag,
+		check\_c\_compiler\_flag,
+		check\_cxx\_compiler\_flag,
+		check\_fortran\_compiler\_flag,
+		check\_symbol\_exists,
+		check\_cxx\_symbol\_exists,
+		check\_linker\_flag,
+		cmake\_policy,
+		set\_property,
+		get\_property,
+		define\_property,
+		get\_cmake\_property,
+		set\_cmake\_property,
+		set\_target\_properties,
+		get\_target\_property,
+		set\_directory\_properties,
+		get\_directory\_property,
+		set\_source\_files\_properties,
+		get\_source\_file\_property,
+		set\_tests\_properties,
+		get\_tests\_property,
+		get\_test\_property,
+		cmake\_print\_properties,
+		cmake\_print\_variables,
+		variable\_watch,
+		include\_guard,
+		target\_link\_options,
+		target\_compile\_definitions,
+		target\_compile\_options,
+		include\_directories,
+		add\_definitions,
+		remove\_definitions,
+		add\_compile\_definitions,
+		add\_compile\_options,
+		link\_libraries,
+		link\_directories,
+		add\_link\_options,
+		target\_include\_directories,
+		target\_compile\_features,
+		add\_custom\_command,
+		add\_custom\_target,
+		execute\_process,
+		cmake\_path,
+		get\_filename\_component,
+		file,
+		configure\_file,
+		generate\_export\_header,
+		export,
+		find\_file,
+		find\_library,
+		find\_package,
+		find\_program,
+		pkg\_check\_modules,
+		pkg\_search\_module,
+		pkg\_get\_variable,
+		add\_test,
+		enable\_testing,
+		set\_tests\_properties,
+		site\_name,
+		ctest\_empty\_binary\_directory,
+		ctest\_start,
+		ctest\_configure,
+		ctest\_submit,
+		ctest\_build,
+		ctest\_memcheck,
+		ctest\_upload,
+		ctest\_test,
+		gtest\_add\_tests,
+		gtest\_discover\_tests,
+		install,
+		write\_basic\_package\_version\_file,
+		configure\_package\_config\_file,
+		cpack\_add\_component,
+		cpack\_add\_install\_type,
+		cpack\_add\_component\_group,
+		ExternalProject\_Add,
+		ExternalProject\_Add\_StepDependencies,
+		ExternalProject\_Get\_Property,
+		ExternalProject\_Add\_Step,
+		FetchContent\_Declare,
+		FetchContent\_GetProperties,
+		FetchContent\_Populate,
+		source\_group,
+		target\_precompile\_headers,
+		qt5\_wrap\_cpp,
+		qt5\_wrap\_ui,
+		qt5\_add\_resources,
+		qt5\_add\_big\_resources,
+		qt5\_add\_binary\_resources,
+		qt5\_add\_translation,
+		qt5\_create\_translation,
+		compile\_definitions,
+		add\_llvm\_component\_library,
+		add\_llvm\_tool,
+		llvm\_multisource,
+		llvm\_test\_data,
+		doxygen\_add\_docs,
+	}, %定义关键字
+	sensitive=false, %是否大小写敏感
+	morecomment=[l]{\#},
+	morestring=[b]",
+	morestring=[d]',
+}
+
+\lstdefinestyle{styleCXX}{
+	language = C++,  
+	backgroundcolor=\color{blue!3!white}, 
+	%basicstyle = \footnotesize,  
+	basicstyle      =   \zihao{-5}\ttfamily,
+	numberstyle     =   \zihao{-5}\ttfamily,   
+	%breakatwhitespace = false,    
+	basewidth       =   0.5em,    
+	breaklines = true,                 
+	captionpos = b,                    
+	commentstyle = \color{mygreen}\bfseries,
+	%extendedchars = false,             
+	frame =shadowbox, 
+	framerule=0.5pt,
+	%frameround = fttt,
+	keepspaces=true,
+	keywordstyle=\color{blue}\bfseries, % keyword style
+	otherkeywords={string}, 
+	numbers=left, 
+	numbersep=5pt,
+	numberstyle=\tiny\color{mygray},
+	rulecolor=\color{black},         
+	%showspaces=false,  
+	%showstringspaces=false, 
+	%showtabs=false,    
+	%stepnumber=1,         
+	stringstyle=\color{mymauve},        % string literal style
+	tabsize=2,          
+	columns         =   fixed,
+	flexiblecolumns,                   
+}
+
+
+\lstdefinestyle{styleCMake}{
+	language=CMake,
+	backgroundcolor=\color{blue!3!white}, 
+	basicstyle=\tt, 
+	breakatwhitespace = false,
+	breaklines = true,
+	captionpos = b,
+	commentstyle = \color{mygray}\bfseries, 
+	extendedchars =false,             
+	frame=shadowbox, 
+	tabsize=2,
+	framerule=0.5pt,
+	keepspaces=true,
+	keywordstyle=\color{blue}\bfseries, % keyword style
+	otherkeywords={string}, 
+	rulecolor=\color{black},
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	stepnumber=1,
+	stringstyle=\color{purple},        % string literal style
+}
+
+\lstdefinestyle{stylePython}{
+	language        =   Python, % 语言选Python
+	backgroundcolor=\color{blue!3!white}, 
+	basicstyle      =   \zihao{-5}\ttfamily,
+	numberstyle     =   \zihao{-5}\ttfamily,
+	keywordstyle    =   \color{blue},
+	keywordstyle    =   [2] \color{teal},
+	stringstyle     =   \color{magenta},
+	commentstyle    =   \color{red}\ttfamily,
+	frame = shadowbox, 
+	breaklines      =   true,   % 自动换行，建议不要写太长的行
+	columns         =   fixed,  % 如果不加这一句，字间距就不固定，很丑，必须加
+	basewidth       =   0.5em,
+	%basicstyle          =   \sffamily,          % 基本代码风格
+	%keywordstyle        =   \bfseries,          % 关键字风格
+	%commentstyle        =   \rmfamily\itshape,  % 注释的风格，斜体
+	%stringstyle         =   \ttfamily,  % 字符串风格
+	flexiblecolumns,                % 别问为什么，加上这个
+	%numbers             =   left,   % 行号的位置在左边
+	showspaces          =   false,  % 是否显示空格，显示了有点乱，所以不现实了
+	numberstyle         =   \zihao{-5}\ttfamily,    % 行号的样式，小五号，tt等宽字体
+	showstringspaces    =   false,
+	captionpos          =   t,      % 这段代码的名字所呈现的位置，t指的是top上面
+	frame               =   lrtb,   % 显示边框
+	tabsize=2,  
+}
+
+\tcbset{
+	commandshell/.style={
+		listing only,
+		colback=black!75!white,
+		colupper=white,
+		lowerbox=ignored,
+		listing options={
+			language={bash},
+			basicstyle=\ttfamily,
+			columns = fixed,
+			flexiblecolumns
+		}
+}}
+
+\usepackage{tikz}
+
+% URL 正确换行
+% https://liam.page/2017/05/17/help-the-url-command-from-hyperref-to-break-at-line-wrapping-point/
+\makeatletter
+\def\UrlAlphabet{%
+	\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j%
+	\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t%
+	\do\u\do\v\do\w\do\x\do\y\do\z\do\A\do\B\do\C\do\D%
+	\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M\do\N%
+	\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X%
+	\do\Y\do\Z}
+\def\UrlDigits{\do\1\do\2\do\3\do\4\do\5\do\6\do\7\do\8\do\9\do\0}
+\g@addto@macro{\UrlBreaks}{\UrlOrds}
+\g@addto@macro{\UrlBreaks}{\UrlAlphabet}
+\g@addto@macro{\UrlBreaks}{\UrlDigits}
+\makeatother
+
+% enable subsubsubsection
+% from https://tex.stackexchange.com/questions/274212/correct-hierarchy-levels-of-pdf-bookmarks-for-custom-section-subsubsubsection
+\usepackage[depth=3]{bookmark}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{4}
+\hypersetup{bookmarksdepth=4}
+
+\makeatletter
+
+\newcommand{\toclevel@subsubsubsection}{4}
+\newcounter{subsubsubsection}[subsubsection]
+
+\renewcommand{\thesubsubsubsection}{\thesubsubsection.\arabic{subsubsubsection}}
+
+\newcommand{\subsubsubsection}{\@startsection{subsubsubsection}{4}{\z@}%
+	{-3.25ex\@plus -1ex \@minus -.2ex}%
+	{1.5ex \@plus .2ex}%
+	{\normalfont\normalsize\bf\bfseries}}
+
+\newcommand*{\l@subsubsubsection}{\@dottedtocline{4}{11em}{5em}}  
+
+\newcommand{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\begin{document}
+\begin{sloppypar} %latex中一行文字出现溢出问题的解决方法
+	%\maketitle
+	
+	\begin{center}
+		\thispagestyle{empty}
+		%\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{cover.jpg}
+		\begin{tikzpicture}[remember picture, overlay, inner sep=0pt]
+			\node at (current page.center) 
+			{\includegraphics[width=\paperwidth, keepaspectratio=false]{cover.jpg}};
+		\end{tikzpicture}
+		\newpage
+		\thispagestyle{empty}
+		\huge
+		\textbf{C++ Templates} 
+		\\[9pt]
+		\normalsize
+		Second Edition
+		\\[10pt]
+		\normalsize 
+		作者: David Vandevoorde，Nicolai M. Josuttis，Douglas Gregor
+		\\[8pt]
+		\normalsize
+		译者：\href{https://github.com/Walton1128}{Walton1128}，\href{https://github.com/r00tk1ts}{r00tk1ts}，陈晓伟
+		\\[8pt]
+		\normalsize
+		校对/整理；陈晓伟
+	\end{center}
+	
+	\hspace*{\fill} \\ %插入空行
+	\noindent\textbf{本书概述}
+	
+	模板是C++中最强大的特性之一，但即使随着C++语言和开发社区的发展，对模板的理解仍有误解，从而无法使模板得到充分利用。在本书中，三位C++专家展示了如何使用现代模板来构建更干净、更快、更高效、更容易维护的软件。
+	
+	现在，这个新版本对C++11、C++14和C++17标准进行了更新，作者对所有改进模板或与模板交互的新语言特性提供了权威的解释，包括可变参数模板、泛型Lambda、类模板参数演绎、编译时if、转发引用和用户定义文字。他们还深入研究了基本的语言概念(比如值类别)，并完全涵盖了所有标准类型特征。
+	
+	本书从一个关于基本概念和相关语言特征的教程开始，其余部分作为一个全面的参考。首先关注语言细节，然后是编码技术、高级应用程序和复杂的习惯用法。在整个过程中，示例清楚地说明了抽象概念，并演示了使用C++模板所能做的最佳实践。
+	
+	\hspace*{\fill} \\ %插入空行
+	\noindent\textbf{关键特性}
+	\begin{itemize}
+		\item 准确理解模板的行为方式，避免陷阱
+		\item 使用模板来编写更有效、更灵活、可维护的软件
+		\item 掌握目前最有效的习语和技巧
+		\item 不影响性能或安全的情况下重用源码
+		\item 使用C++标准库中的泛型编程
+		\item 预览即将发布的概念特性
+	\end{itemize}
+	
+	\hspace*{\fill} \\ %插入空行
+	\noindent\textbf{作者简介}
+	
+	\textbf{David Vandevoorde}在20世纪80年代后期开始用C++编程。从伦斯勒理工学院获得博士学位后，成为惠普C++编译器团队的技术负责人。1999年，加入了爱迪生设计集团(EDG)，该集团的C++编译器技术是业界领先的。他是C++标准委员会的活跃成员，也是comp.lang.c++新闻组的主持人(他参与创办的)。也是《C++ Solutions》的作者，该书是《C++ Programming Language, 3rd Edition》配套书籍。
+	
+	\textbf{Nicolai M. Josuttis}因其畅销的事实上的标准书籍《The C++ Standard Library - A Tutorial and Reference》而闻名。他是一名独立技术顾问，为电信、交通、金融和制造业设计面向对象的软件。他是C++标准委员会的活跃成员，也是System Bauhaus的合伙人，System Bauhaus是一个由杰出的面向对象系统开发专家组成的德国团体。Josuttis还写过其他几本关于面向对象编程和C++的书。
+	
+	\textbf{Douglas Gregor}是苹果公司的高级Swift/ c++ /Objective-C编译工程师，拥有伦斯勒理工学院的计算机科学博士学位，并在印第安纳大学从事博士后工作。
+	
+	\hspace*{\fill} \\ %插入空行
+	\noindent\textbf{开源翻译}
+	
+	非常感谢两位的翻译，这里也只是站在二位的肩膀上
+	
+	\url{https://github.com/Walton1128/CPP-Templates-2nd--}
+	
+	\url{ttps://github.com/r00tk1ts/cpp-templates-2nd}
+	
+	
+	\hspace*{\fill} \\ %插入空行
+	\noindent\textbf{本书相关}
+	\begin{itemize}
+		\item Github地址：\\\url{https://github.com/xiaoweiChen/Cpp-Templates-2nd}
+	\end{itemize}
+	\newpage
+	
+	%前言
+	\pagestyle{empty}
+	\subfile{content/preface.tex}
+	
+	\pagestyle{empty}
+	\subfile{content/Acknowledgments-for-the-Second.tex}
+	
+	\pagestyle{empty}
+	\subfile{content/Acknowledgments-for-the-First.tex}
+	
+	\pagestyle{empty}
+	\subfile{content/About-This-Book.tex}
+	
+	\tableofcontents
+	\newpage
+
+	\setsecnumdepth{section}
+	
+	\color{white}
+	\section*{\zihao{1}第一部分：基础知识}
+	\pagecolor{mygray}
+	\addcontentsline{toc}{section}{第一部分：基础知识}
+	\textbf{\subfile{content/1/Section.tex}}
+	\newpage
+	\color{black}
+	\pagecolor{white}
+
+	\subsection*{\zihao{2} 第1章\hspace{0.5cm}Function Templates}
+	\addcontentsline{toc}{subsection}{第1章\hspace{0.5cm}Function Templates}
+	\subfile{content/1/chapter1/0.tex}
+	
+	\subsubsection*{\zihao{3} 1.1.\hspace{0.2cm}A First Look at Function Templates}
+	\addcontentsline{toc}{subsubsection}{1.1.\hspace{0.2cm}A First Look at Function Templates}
+	\subfile{content/1/chapter1/1.tex}
+	
+	\subsubsection*{\zihao{3} 1.2.\hspace{0.2cm}Template Argument Deduction}
+	\addcontentsline{toc}{subsubsection}{1.2.\hspace{0.2cm}Template Argument Deduction}
+	\subfile{content/1/chapter1/2.tex}
+	
+	\subsubsection*{\zihao{3} 1.3.\hspace{0.2cm}Multiple Template Parameters}
+	\addcontentsline{toc}{subsubsection}{1.3.\hspace{0.2cm}Multiple Template Parameters}
+	\subfile{content/1/chapter1/3.tex}
+	
+	\subsubsection*{\zihao{3} 1.4.\hspace{0.2cm}Default Template Arguments}
+	\addcontentsline{toc}{subsubsection}{1.4.\hspace{0.2cm}Default Template Arguments}
+	\subfile{content/1/chapter1/4.tex}
+	
+	\subsubsection*{\zihao{3} 1.5.\hspace{0.2cm}Overloading Function Templates}
+	\addcontentsline{toc}{subsubsection}{1.5.\hspace{0.2cm}Overloading Function Templates}
+	\subfile{content/1/chapter1/5.tex}
+	
+	\subsubsection*{\zihao{3} 1.6.\hspace{0.2cm}But, Shouldn’t We ...?}
+	\addcontentsline{toc}{subsubsection}{1.6.\hspace{0.2cm}But, Shouldn’t We ...?}
+	\subfile{content/1/chapter1/6.tex}
+	
+	\subsubsection*{\zihao{3} 1.7.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{1.7.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter1/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第2章\hspace{0.5cm}Class Templates}
+	\addcontentsline{toc}{subsection}{第2章\hspace{0.5cm}Class Templates}
+	\subfile{content/1/chapter2/0.tex}
+	
+	\subsubsection*{\zihao{3} 2.1.\hspace{0.2cm}Implementation of Class Template Stack}
+	\addcontentsline{toc}{subsubsection}{2.1.\hspace{0.2cm}Implementation of Class Template Stack}
+	\subfile{content/1/chapter2/1.tex}
+	
+	\subsubsection*{\zihao{3} 2.2.\hspace{0.2cm}Use of Class Template Stack}
+	\addcontentsline{toc}{subsubsection}{2.2.\hspace{0.2cm}Use of Class Template Stack}
+	\subfile{content/1/chapter2/2.tex}
+	
+	\subsubsection*{\zihao{3} 2.3.\hspace{0.2cm}Partial Usage of Class Templates}
+	\addcontentsline{toc}{subsubsection}{2.3.\hspace{0.2cm}Partial Usage of Class Templates}
+	\subfile{content/1/chapter2/3.tex}
+	
+	\subsubsection*{\zihao{3} 2.4.\hspace{0.2cm}Friends}
+	\addcontentsline{toc}{subsubsection}{2.4.\hspace{0.2cm}Friends}
+	\subfile{content/1/chapter2/4.tex}
+	
+	\subsubsection*{\zihao{3} 2.5.\hspace{0.2cm}Specializations of Class Templates}
+	\addcontentsline{toc}{subsubsection}{2.5.\hspace{0.2cm}Specializations of Class Templates}
+	\subfile{content/1/chapter2/5.tex}
+	
+	\subsubsection*{\zihao{3} 2.6.\hspace{0.2cm}Partial Specialization}
+	\addcontentsline{toc}{subsubsection}{2.6.\hspace{0.2cm}Partial Specialization}
+	\subfile{content/1/chapter2/6.tex}
+	
+	\subsubsection*{\zihao{3} 2.7.\hspace{0.2cm}Default Class Template Arguments}
+	\addcontentsline{toc}{subsubsection}{2.7.\hspace{0.2cm}Default Class Template Arguments}
+	\subfile{content/1/chapter2/7.tex}
+	
+	\subsubsection*{\zihao{3} 2.8.\hspace{0.2cm}Type Aliases}
+	\addcontentsline{toc}{subsubsection}{2.8.\hspace{0.2cm}Type Aliases}
+	\subfile{content/1/chapter2/8.tex}
+	
+	\subsubsection*{\zihao{3} 2.9.\hspace{0.2cm}Class Template Argument Deduction}
+	\addcontentsline{toc}{subsubsection}{2.9.\hspace{0.2cm}Class Template Argument Deduction}
+	\subfile{content/1/chapter2/9.tex}
+	
+	\subsubsection*{\zihao{3} 2.10.\hspace{0.2cm}Templatized Aggregates}
+	\addcontentsline{toc}{subsubsection}{2.10.\hspace{0.2cm}Templatized Aggregates}
+	\subfile{content/1/chapter2/10.tex}
+	
+	\subsubsection*{\zihao{3} 2.11.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{2.11.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter2/11.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第3章\hspace{0.5cm}Nontype Template Parameters}
+	\addcontentsline{toc}{subsection}{第3章\hspace{0.5cm}Nontype Template Parameters}
+	\subfile{content/1/chapter3/0.tex}
+	
+	\subsubsection*{\zihao{3} 3.1.\hspace{0.2cm}Nontype Class Template Parameters}
+	\addcontentsline{toc}{subsubsection}{3.1.\hspace{0.2cm}Nontype Class Template Parameters}
+	\subfile{content/1/chapter3/1.tex}
+	
+	\subsubsection*{\zihao{3} 3.2.\hspace{0.2cm}Nontype Function Template Parameters}
+	\addcontentsline{toc}{subsubsection}{3.2.\hspace{0.2cm}Nontype Function Template Parameters}
+	\subfile{content/1/chapter3/2.tex}
+	
+	\subsubsection*{\zihao{3} 3.3.\hspace{0.2cm}Restrictions for Nontype Template Parameters}
+	\addcontentsline{toc}{subsubsection}{3.3.\hspace{0.2cm}Restrictions for Nontype Template Parameters}
+	\subfile{content/1/chapter3/3.tex}
+	
+	\subsubsection*{\zihao{3} 3.4.\hspace{0.2cm}Template Parameter Type auto}
+	\addcontentsline{toc}{subsubsection}{3.4.\hspace{0.2cm}Template Parameter Type auto}
+	\subfile{content/1/chapter3/4.tex}
+	
+	\subsubsection*{\zihao{3} 3.5.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{3.5.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter3/5.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第4章\hspace{0.5cm}Variadic Templates}
+	\addcontentsline{toc}{subsection}{第4章\hspace{0.5cm}Variadic Templates}
+	\subfile{content/1/chapter4/0.tex}
+	
+	\subsubsection*{\zihao{3} 4.1.\hspace{0.2cm}Variadic Templates}
+	\addcontentsline{toc}{subsubsection}{4.1.\hspace{0.2cm}Variadic Templates}
+	\subfile{content/1/chapter4/1.tex}
+	
+	\subsubsection*{\zihao{3} 4.2.\hspace{0.2cm}Fold Expressions}
+	\addcontentsline{toc}{subsubsection}{4.2.\hspace{0.2cm}Fold Expressions}
+	\subfile{content/1/chapter4/2.tex}
+	
+	\subsubsection*{\zihao{3} 4.3.\hspace{0.2cm}Application of Variadic Templates}
+	\addcontentsline{toc}{subsubsection}{4.3.\hspace{0.2cm}Application of Variadic Templates}
+	\subfile{content/1/chapter4/3.tex}
+	
+	\subsubsection*{\zihao{3} 4.4.\hspace{0.2cm}Variadic Class Templates and Variadic Expressions}
+	\addcontentsline{toc}{subsubsection}{4.4.\hspace{0.2cm}Variadic Class Templates and Variadic Expressions}
+	\subfile{content/1/chapter4/4.tex}
+	
+	\subsubsection*{\zihao{3} 4.5.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{4.5.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter4/5.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第5章\hspace{0.5cm}Tricky Basics}
+	\addcontentsline{toc}{subsection}{第5章\hspace{0.5cm}Tricky Basics}
+	\subfile{content/1/chapter5/0.tex}
+	
+	\subsubsection*{\zihao{3} 5.1.\hspace{0.2cm}Keyword typename}
+	\addcontentsline{toc}{subsubsection}{5.1.\hspace{0.2cm}Keyword typename}
+	\subfile{content/1/chapter5/1.tex}
+	
+	\subsubsection*{\zihao{3} 5.2.\hspace{0.2cm}Zero Initialization}
+	\addcontentsline{toc}{subsubsection}{5.2.\hspace{0.2cm}Zero Initialization}
+	\subfile{content/1/chapter5/2.tex}
+	
+	\subsubsection*{\zihao{3} 5.3.\hspace{0.2cm}Using this->}
+	\addcontentsline{toc}{subsubsection}{5.3.\hspace{0.2cm}Using this->}
+	\subfile{content/1/chapter5/3.tex}
+	
+	\subsubsection*{\zihao{3} 5.4.\hspace{0.2cm}Templates for Raw Arrays and String Literals}
+	\addcontentsline{toc}{subsubsection}{5.4.\hspace{0.2cm}Templates for Raw Arrays and String Literals}
+	\subfile{content/1/chapter5/4.tex}
+	
+	\subsubsection*{\zihao{3} 5.5.\hspace{0.2cm}Member Templates}
+	\addcontentsline{toc}{subsubsection}{5.5.\hspace{0.2cm}Member Templates}
+	\subfile{content/1/chapter5/5.tex}
+	
+	\subsubsection*{\zihao{3} 5.6.\hspace{0.2cm}Variable Templates}
+	\addcontentsline{toc}{subsubsection}{5.6.\hspace{0.2cm}Variable Templates}
+	\subfile{content/1/chapter5/6.tex}
+	
+	\subsubsection*{\zihao{3} 5.7.\hspace{0.2cm}Template Template Parameters}
+	\addcontentsline{toc}{subsubsection}{5.7.\hspace{0.2cm}Template Template Parameters}
+	\subfile{content/1/chapter5/7.tex}
+	
+	\subsubsection*{\zihao{3} 5.8.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{5.8.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter5/8.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第6章\hspace{0.5cm}Move Semantics and enable\_if<>}
+	\addcontentsline{toc}{subsection}{第6章\hspace{0.5cm}Move Semantics and enable\_if<>}
+	\subfile{content/1/chapter6/0.tex}
+	
+	\subsubsection*{\zihao{3} 6.1.\hspace{0.2cm}Perfect Forwarding}
+	\addcontentsline{toc}{subsubsection}{6.1.\hspace{0.2cm}Perfect Forwarding}
+	\subfile{content/1/chapter6/1.tex}
+	
+	\subsubsection*{\zihao{3} 6.2.\hspace{0.2cm}Special Member Function Templates}
+	\addcontentsline{toc}{subsubsection}{6.2.\hspace{0.2cm}Special Member Function Templates}
+	\subfile{content/1/chapter6/2.tex}
+	
+	\subsubsection*{\zihao{3} 6.3.\hspace{0.2cm}Disable Templates with enable\_if<>}
+	\addcontentsline{toc}{subsubsection}{6.3.\hspace{0.2cm}Disable Templates with enable\_if<>}
+	\subfile{content/1/chapter6/3.tex}
+	
+	\subsubsection*{\zihao{3} 6.4.\hspace{0.2cm}Using enable\_if<>}
+	\addcontentsline{toc}{subsubsection}{6.4.\hspace{0.2cm}Using enable\_if<>}
+	\subfile{content/1/chapter6/4.tex}
+	
+	\subsubsection*{\zihao{3} 6.5.\hspace{0.2cm}Using Concepts to Simplify enable\_if<> Expressions}
+	\addcontentsline{toc}{subsubsection}{6.5.\hspace{0.2cm}Using Concepts to Simplify enable\_if<> Expressions}
+	\subfile{content/1/chapter6/5.tex}
+	
+	\subsubsection*{\zihao{3} 6.6.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{6.6.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter6/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第7章\hspace{0.5cm}By Value or by Reference?}
+	\addcontentsline{toc}{subsection}{第7章\hspace{0.5cm}By Value or by Reference?}
+	\subfile{content/1/chapter7/0.tex}
+	
+	\subsubsection*{\zihao{3} 7.1.\hspace{0.2cm}Passing by Value}
+	\addcontentsline{toc}{subsubsection}{7.1.\hspace{0.2cm}Passing by Value}
+	\subfile{content/1/chapter7/1.tex}
+	
+	\subsubsection*{\zihao{3} 7.2.\hspace{0.2cm}Passing by Reference}
+	\addcontentsline{toc}{subsubsection}{7.2.\hspace{0.2cm}Passing by Reference}
+	\subfile{content/1/chapter7/2.tex}
+	
+	\subsubsection*{\zihao{3} 7.3.\hspace{0.2cm}Using std::ref() and std::cref()}
+	\addcontentsline{toc}{subsubsection}{7.3.\hspace{0.2cm}Using std::ref() and std::cref()}
+	\subfile{content/1/chapter7/3.tex}
+	
+	\subsubsection*{\zihao{3} 7.4.\hspace{0.2cm}Dealing with String Literals and Raw Arrays}
+	\addcontentsline{toc}{subsubsection}{7.4.\hspace{0.2cm}Dealing with String Literals and Raw Arrays}
+	\subfile{content/1/chapter7/4.tex}
+	
+	\subsubsection*{\zihao{3} 7.5.\hspace{0.2cm}Dealing with Return Values}
+	\addcontentsline{toc}{subsubsection}{7.5.\hspace{0.2cm}Dealing with Return Values}
+	\subfile{content/1/chapter7/5.tex}
+	
+	\subsubsection*{\zihao{3} 7.6.\hspace{0.2cm}Recommended Template Parameter Declarations}
+	\addcontentsline{toc}{subsubsection}{7.6.\hspace{0.2cm}Recommended Template Parameter Declarations}
+	\subfile{content/1/chapter7/6.tex}
+	
+	\subsubsection*{\zihao{3} 7.7.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{7.7.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter7/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第8章\hspace{0.5cm}Compile-Time Programming}
+	\addcontentsline{toc}{subsection}{第8章\hspace{0.5cm}Compile-Time Programming}
+	\subfile{content/1/chapter8/0.tex}
+	
+	\subsubsection*{\zihao{3} 8.1.\hspace{0.2cm}Template Metaprogramming}
+	\addcontentsline{toc}{subsubsection}{8.1.\hspace{0.2cm}Template Metaprogramming}
+	\subfile{content/1/chapter8/1.tex}
+	
+	\subsubsection*{\zihao{3} 8.2.\hspace{0.2cm}Computing with constexpr}
+	\addcontentsline{toc}{subsubsection}{8.2.\hspace{0.2cm}Computing with constexpr}
+	\subfile{content/1/chapter8/2.tex}
+	
+	\subsubsection*{\zihao{3} 8.3.\hspace{0.2cm}Execution Path Selection with Partial Specialization}
+	\addcontentsline{toc}{subsubsection}{8.3.\hspace{0.2cm}Execution Path Selection with Partial Specialization}
+	\subfile{content/1/chapter8/3.tex}
+	
+	\subsubsection*{\zihao{3} 8.4.\hspace{0.2cm}SFINAE (Substitution Failure Is Not An Error)}
+	\addcontentsline{toc}{subsubsection}{8.4.\hspace{0.2cm}SFINAE (Substitution Failure Is Not An Error)}
+	\subfile{content/1/chapter8/4.tex}
+	
+	\subsubsection*{\zihao{3} 8.5.\hspace{0.2cm}Compile-Time if}
+	\addcontentsline{toc}{subsubsection}{8.5.\hspace{0.2cm}Compile-Time if}
+	\subfile{content/1/chapter8/5.tex}
+	
+	\subsubsection*{\zihao{3} 8.6.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{8.6.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter8/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第9章\hspace{0.5cm}Using Templates in Practice}
+	\addcontentsline{toc}{subsection}{第9章\hspace{0.5cm}Using Templates in Practice}
+	\subfile{content/1/chapter9/0.tex}
+	
+	\subsubsection*{\zihao{3} 9.1.\hspace{0.2cm}The Inclusion Model}
+	\addcontentsline{toc}{subsubsection}{9.1.\hspace{0.2cm}The Inclusion Model}
+	\subfile{content/1/chapter9/1.tex}
+	
+	\subsubsection*{\zihao{3} 9.2.\hspace{0.2cm}Templates and inline}
+	\addcontentsline{toc}{subsubsection}{9.2.\hspace{0.2cm}Templates and inline}
+	\subfile{content/1/chapter9/2.tex}
+	
+	\subsubsection*{\zihao{3} 9.3.\hspace{0.2cm}Precompiled Headers}
+	\addcontentsline{toc}{subsubsection}{9.3.\hspace{0.2cm}Precompiled Headers}	
+	\subfile{content/1/chapter9/3.tex}
+	
+	\subsubsection*{\zihao{3} 9.4.\hspace{0.2cm}Decoding the Error Novel}
+	\addcontentsline{toc}{subsubsection}{9.4.\hspace{0.2cm}Decoding the Error Novel}
+	\subfile{content/1/chapter9/4.tex}
+	
+	\subsubsection*{\zihao{3} 9.5.\hspace{0.2cm}Afternotes}
+	\addcontentsline{toc}{subsubsection}{9.5.\hspace{0.2cm}Afternotes}
+	\subfile{content/1/chapter9/5.tex}
+	
+	\subsubsection*{\zihao{3} 9.6.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{9.6.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter9/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第10章\hspace{0.5cm}Basic Template Terminology}
+	\addcontentsline{toc}{subsection}{第10章\hspace{0.5cm}Basic Template Terminology}
+	\subfile{content/1/chapter10/0.tex}
+	
+	\subsubsection*{\zihao{3} 10.1.\hspace{0.2cm}“Class Template” or “Template Class”?}
+	\addcontentsline{toc}{subsubsection}{10.1.\hspace{0.2cm}“Class Template” or “Template Class”?}
+	\subfile{content/1/chapter10/1.tex}
+	
+	\subsubsection*{\zihao{3} 10.2.\hspace{0.2cm}Substitution, Instantiation, and Specialization}
+	\addcontentsline{toc}{subsubsection}{10.2.\hspace{0.2cm}Substitution, Instantiation, and Specialization}
+	\subfile{content/1/chapter10/2.tex}
+	
+	\subsubsection*{\zihao{3} 10.3.\hspace{0.2cm}Declarations versus Definitions}
+	\addcontentsline{toc}{subsubsection}{10.3.\hspace{0.2cm}Declarations versus Definitions}
+	\subfile{content/1/chapter10/3.tex}
+	
+	\subsubsection*{\zihao{3} 10.4.\hspace{0.2cm}The One-Definition Rule}
+	\addcontentsline{toc}{subsubsection}{10.4.\hspace{0.2cm}The One-Definition Rule}
+	\subfile{content/1/chapter10/4.tex}
+	
+	\subsubsection*{\zihao{3} 10.5.\hspace{0.2cm}Template Arguments versus Template Parameters}
+	\addcontentsline{toc}{subsubsection}{10.5.\hspace{0.2cm}Template Arguments versus Template Parameters}
+	\subfile{content/1/chapter10/5.tex}
+	
+	\subsubsection*{\zihao{3} 10.6.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{10.6.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter10/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第11章\hspace{0.5cm}Generic Libraries}
+	\addcontentsline{toc}{subsection}{第11章\hspace{0.5cm}Generic Libraries}
+	\subfile{content/1/chapter11/0.tex}
+	
+	\subsubsection*{\zihao{3} 11.1.\hspace{0.2cm}Callables}
+	\addcontentsline{toc}{subsubsection}{11.1.\hspace{0.2cm}Callables}
+	\subfile{content/1/chapter11/1.tex}
+	
+	\subsubsection*{\zihao{3} 11.2.\hspace{0.2cm}Other Utilities to Implement Generic Libraries}
+	\addcontentsline{toc}{subsubsection}{11.2.\hspace{0.2cm}Other Utilities to Implement Generic Libraries}
+	\subfile{content/1/chapter11/2.tex}
+	
+	\subsubsection*{\zihao{3} 11.3.\hspace{0.2cm}Perfect Forwarding Temporaries}
+	\addcontentsline{toc}{subsubsection}{11.3.\hspace{0.2cm}Perfect Forwarding Temporaries}
+	\subfile{content/1/chapter11/3.tex}
+	
+	\subsubsection*{\zihao{3} 11.4.\hspace{0.2cm}References as Template Parameters}
+	\addcontentsline{toc}{subsubsection}{11.4.\hspace{0.2cm}References as Template Parameters}
+	\subfile{content/1/chapter11/4.tex}
+	
+	\subsubsection*{\zihao{3} 11.5.\hspace{0.2cm}Defer Evaluations}
+	\addcontentsline{toc}{subsubsection}{11.5.\hspace{0.2cm}Defer Evaluations}
+	\subfile{content/1/chapter11/5.tex}
+	
+	\subsubsection*{\zihao{3} 11.6.\hspace{0.2cm}Things to Consider When Writing Generic Libraries}
+	\addcontentsline{toc}{subsubsection}{11.6.\hspace{0.2cm}Things to Consider When Writing Generic Libraries}
+	\subfile{content/1/chapter11/6.tex}
+	
+	\subsubsection*{\zihao{3} 11.7.\hspace{0.2cm}总结}
+	\addcontentsline{toc}{subsubsection}{11.7.\hspace{0.2cm}总结}
+	\subfile{content/1/chapter11/7.tex}
+	\newpage
+	
+	\color{white}
+	\section*{\zihao{1}第二部分：Templates in Depth}
+	\pagecolor{mygray}
+	\addcontentsline{toc}{section}{第二部分：Templates in Depth}
+	\textbf{\subfile{content/2/Section.tex}}
+	\newpage
+	\color{black}
+	\pagecolor{white}
+	
+	\subsection*{\zihao{2} 第12章\hspace{0.5cm}Fundamentals in Depth}
+	\addcontentsline{toc}{subsection}{第12章\hspace{0.5cm}Fundamentals in Depth}
+	\subfile{content/2/chapter12/0.tex}
+	
+	\subsubsection*{\zihao{3} 12.1.\hspace{0.2cm}Parameterized Declarations}
+	\addcontentsline{toc}{subsubsection}{12.1.\hspace{0.2cm}Parameterized Declarations}
+	\subfile{content/2/chapter12/1.tex}
+	
+	\subsubsection*{\zihao{3} 12.2.\hspace{0.2cm}Template Parameters}
+	\addcontentsline{toc}{subsubsection}{12.2.\hspace{0.2cm}Template Parameters}
+	\subfile{content/2/chapter12/2.tex}
+	
+	\subsubsection*{\zihao{3} 12.3.\hspace{0.2cm}Template Arguments}
+	\addcontentsline{toc}{subsubsection}{12.3.\hspace{0.2cm}Template Arguments}
+	\subfile{content/2/chapter12/3.tex}
+	
+	\subsubsection*{\zihao{3} 12.4.\hspace{0.2cm}Variadic Templates}
+	\addcontentsline{toc}{subsubsection}{12.4.\hspace{0.2cm}Variadic Templates}
+	\subfile{content/2/chapter12/4.tex}
+	
+	\subsubsection*{\zihao{3} 12.5.\hspace{0.2cm}Friends}
+	\addcontentsline{toc}{subsubsection}{12.5.\hspace{0.2cm}Friends}
+	\subfile{content/2/chapter12/5.tex}
+	
+	\subsubsection*{\zihao{3} 12.6.\hspace{0.2cm}Afternotes}
+	\addcontentsline{toc}{subsubsection}{12.6.\hspace{0.2cm}Afternotes}
+	\subfile{content/2/chapter12/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第13章\hspace{0.5cm}Names in Templates}
+	\addcontentsline{toc}{subsection}{第13章\hspace{0.5cm}Names in Templates}
+	\subfile{content/2/chapter13/0.tex}
+	
+	\subsubsection*{\zihao{3} 13.1.\hspace{0.2cm}Name Taxonomy}
+	\addcontentsline{toc}{subsubsection}{13.1.\hspace{0.2cm}Name Taxonomy}
+	\subfile{content/2/chapter13/1.tex}
+	
+	\subsubsection*{\zihao{3} 13.2.\hspace{0.2cm}Looking Up Names}
+	\addcontentsline{toc}{subsubsection}{13.2.\hspace{0.2cm}Looking Up Names}
+	\subfile{content/2/chapter13/2.tex}
+	
+	\subsubsection*{\zihao{3} 13.3.\hspace{0.2cm}Parsing Templates}
+	\addcontentsline{toc}{subsubsection}{13.3.\hspace{0.2cm}Parsing Templates}
+	\subfile{content/2/chapter13/3.tex}
+	
+	\subsubsection*{\zihao{3} 13.4.\hspace{0.2cm}Inheritance and Class Templates}
+	\addcontentsline{toc}{subsubsection}{13.4.\hspace{0.2cm}Inheritance and Class Templates}
+	\subfile{content/2/chapter13/4.tex}
+	
+	\subsubsection*{\zihao{3} 13.5.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{13.5.\hspace{0.2cm}后记}
+	\subfile{content/2/chapter13/5.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第14章\hspace{0.5cm}Instantiation}
+	\addcontentsline{toc}{subsection}{第14章\hspace{0.5cm}Instantiation}
+	\subfile{content/2/chapter14/0.tex}
+	
+	\subsubsection*{\zihao{3} 14.1.\hspace{0.2cm}On-Demand Instantiation}
+	\addcontentsline{toc}{subsubsection}{14.1.\hspace{0.2cm}On-Demand Instantiation}
+	\subfile{content/2/chapter14/1.tex}
+	
+	\subsubsection*{\zihao{3} 14.2.\hspace{0.2cm}Lazy Instantiation}
+	\addcontentsline{toc}{subsubsection}{14.2.\hspace{0.2cm}Lazy Instantiation}
+	\subfile{content/2/chapter14/2.tex}
+	
+	\subsubsection*{\zihao{3} 14.3.\hspace{0.2cm}The C++ Instantiation Model}
+	\addcontentsline{toc}{subsubsection}{14.3.\hspace{0.2cm}The C++ Instantiation Model}
+	\subfile{content/2/chapter14/3.tex}
+	
+	\subsubsection*{\zihao{3} 14.4.\hspace{0.2cm}Implementation Schemes}
+	\addcontentsline{toc}{subsubsection}{14.4.\hspace{0.2cm}Implementation Schemes}
+	\subfile{content/2/chapter14/4.tex}
+	
+	\subsubsection*{\zihao{3} 14.5.\hspace{0.2cm}Explicit Instantiation}
+	\addcontentsline{toc}{subsubsection}{14.5.\hspace{0.2cm}Explicit Instantiation}
+	\subfile{content/2/chapter14/5.tex}
+	
+	\subsubsection*{\zihao{3} 14.6.\hspace{0.2cm}Compile-Time ifStatements}
+	\addcontentsline{toc}{subsubsection}{14.6.\hspace{0.2cm}Compile-Time ifStatements}
+	\subfile{content/2/chapter14/6.tex}
+	
+	\subsubsection*{\zihao{3} 14.7.\hspace{0.2cm}In the Standard Library}
+	\addcontentsline{toc}{subsubsection}{14.7.\hspace{0.2cm}In the Standard Library}
+	\subfile{content/2/chapter14/7.tex}
+	
+	\subsubsection*{\zihao{3} 14.8.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{14.8.\hspace{0.2cm}后记}
+	\subfile{content/2/chapter14/8.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第15章\hspace{0.5cm}Template Argument Deduction}
+	\addcontentsline{toc}{subsection}{第15章\hspace{0.5cm}Template Argument Deduction}
+	\subfile{content/2/chapter15/0.tex}
+	
+	\subsubsection*{\zihao{3} 15.1.\hspace{0.2cm}The Deduction Process}
+	\addcontentsline{toc}{subsubsection}{15.1.\hspace{0.2cm}The Deduction Process}
+	\subfile{content/2/chapter15/1.tex}
+	
+	\subsubsection*{\zihao{3} 15.2.\hspace{0.2cm}Deduced Contexts}
+	\addcontentsline{toc}{subsubsection}{15.2.\hspace{0.2cm}Deduced Contexts}
+	\subfile{content/2/chapter15/2.tex}
+	
+	\subsubsection*{\zihao{3} 15.3.\hspace{0.2cm}Special Deduction Situations}
+	\addcontentsline{toc}{subsubsection}{15.3.\hspace{0.2cm}Special Deduction Situations}
+	\subfile{content/2/chapter15/3.tex}
+	
+	\subsubsection*{\zihao{3} 15.4.\hspace{0.2cm}Initializer Lists}
+	\addcontentsline{toc}{subsubsection}{15.4.\hspace{0.2cm}Initializer Lists}
+	\subfile{content/2/chapter15/4.tex}
+	
+	\subsubsection*{\zihao{3} 15.5.\hspace{0.2cm}Parameter Packs}
+	\addcontentsline{toc}{subsubsection}{15.5.\hspace{0.2cm}Parameter Packs}
+	\subfile{content/2/chapter15/5.tex}
+	
+	\subsubsection*{\zihao{3} 15.6.\hspace{0.2cm}Rvalue References}
+	\addcontentsline{toc}{subsubsection}{15.6.\hspace{0.2cm}Rvalue References}
+	\subfile{content/2/chapter15/6.tex}
+	
+	\subsubsection*{\zihao{3} 15.7.\hspace{0.2cm}SFINAE (Substitution Failure Is Not An Error)}
+	\addcontentsline{toc}{subsubsection}{15.7.\hspace{0.2cm}SFINAE (Substitution Failure Is Not An Error)}
+	\subfile{content/2/chapter15/7.tex}
+	
+	\subsubsection*{\zihao{3} 15.8.\hspace{0.2cm}Limitations of Deduction}
+	\addcontentsline{toc}{subsubsection}{15.8.\hspace{0.2cm}Limitations of Deduction}
+	\subfile{content/2/chapter15/8.tex}
+	
+	\subsubsection*{\zihao{3} 15.9.\hspace{0.2cm}Explicit Function Template Arguments}
+	\addcontentsline{toc}{subsubsection}{15.9.\hspace{0.2cm}Explicit Function Template Arguments}
+	\subfile{content/2/chapter15/9.tex}
+	
+	\subsubsection*{\zihao{3} 15.10.\hspace{0.2cm}Deduction from Initializers and Expressions}
+	\addcontentsline{toc}{subsubsection}{15.10.\hspace{0.2cm}Deduction from Initializers and Expressions}
+	\subfile{content/2/chapter15/10.tex}
+
+	\subsubsection*{\zihao{3} 15.11.\hspace{0.2cm}Alias Templates}
+	\addcontentsline{toc}{subsubsection}{15.11.\hspace{0.2cm}Alias Templates}
+	\subfile{content/2/chapter15/11.tex}
+	
+	\subsubsection*{\zihao{3} 15.12.\hspace{0.2cm}Class Template Argument Deduction}
+	\addcontentsline{toc}{subsubsection}{15.12.\hspace{0.2cm}Class Template Argument Deduction}
+	\subfile{content/2/chapter15/12.tex}
+	
+	\subsubsection*{\zihao{3} 15.13.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{15.13.\hspace{0.2cm}后记}
+	\subfile{content/2/chapter15/13.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第16章\hspace{0.5cm}Specialization and Overloading}
+	\addcontentsline{toc}{subsection}{第16章\hspace{0.5cm}Specialization and Overloading}
+	\subfile{content/2/chapter16/0.tex}
+	
+	\subsubsection*{\zihao{3} 16.1.\hspace{0.2cm}When “Generic Code” Doesn’t Quite Cut It}
+	\addcontentsline{toc}{subsubsection}{16.1.\hspace{0.2cm}When “Generic Code” Doesn’t Quite Cut It}
+	\subfile{content/2/chapter16/1.tex}
+	
+	\subsubsection*{\zihao{3} 16.2.\hspace{0.2cm}Overloading Function Templates}
+	\addcontentsline{toc}{subsubsection}{16.2.\hspace{0.2cm}Overloading Function Templates}
+	\subfile{content/2/chapter16/2.tex}
+	
+	\subsubsection*{\zihao{3} 16.3.\hspace{0.2cm}Explicit Specialization}
+	\addcontentsline{toc}{subsubsection}{16.3.\hspace{0.2cm}Explicit Specialization}
+	\subfile{content/2/chapter16/3.tex}
+	
+	\subsubsection*{\zihao{3} 16.4.\hspace{0.2cm}Partial Class Template Specialization}
+	\addcontentsline{toc}{subsubsection}{16.4.\hspace{0.2cm}Partial Class Template Specialization}
+	\subfile{content/2/chapter16/4.tex}
+	
+	\subsubsection*{\zihao{3} 16.5.\hspace{0.2cm}Partial Variable Template Specialization}
+	\addcontentsline{toc}{subsubsection}{16.5.\hspace{0.2cm}Partial Variable Template Specialization}
+	\subfile{content/2/chapter16/5.tex}
+	
+	\subsubsection*{\zihao{3} 16.6.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{16.6.\hspace{0.2cm}后记}
+	\subfile{content/2/chapter16/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第17章\hspace{0.5cm}Future Directions}
+	\addcontentsline{toc}{subsection}{第17章\hspace{0.5cm}Future Directions}
+	\subfile{content/2/chapter17/0.tex}
+	
+	\subsubsection*{\zihao{3} 17.1.\hspace{0.2cm}Relaxed typenameRules}
+	\addcontentsline{toc}{subsubsection}{17.1.\hspace{0.2cm}Relaxed typenameRules}
+	\subfile{content/2/chapter17/1.tex}
+	
+	\subsubsection*{\zihao{3} 17.2.\hspace{0.2cm}Generalized Nontype Template Parameters}
+	\addcontentsline{toc}{subsubsection}{17.2.\hspace{0.2cm}Generalized Nontype Template Parameters}
+	\subfile{content/2/chapter17/2.tex}
+	
+	\subsubsection*{\zihao{3} 17.3.\hspace{0.2cm}Partial Specialization of Function Templates}
+	\addcontentsline{toc}{subsubsection}{17.3.\hspace{0.2cm}Partial Specialization of Function Templates}
+	\subfile{content/2/chapter17/3.tex}
+	
+	\subsubsection*{\zihao{3} 17.4.\hspace{0.2cm}Named Template Arguments}
+	\addcontentsline{toc}{subsubsection}{17.4.\hspace{0.2cm}Named Template Arguments}
+	\subfile{content/2/chapter17/4.tex}
+	
+	\subsubsection*{\zihao{3} 17.5.\hspace{0.2cm}Overloaded Class Templates}
+	\addcontentsline{toc}{subsubsection}{17.5.\hspace{0.2cm}Overloaded Class Templates}
+	\subfile{content/2/chapter17/5.tex}
+	
+	\subsubsection*{\zihao{3} 17.6.\hspace{0.2cm}Deduction for Nonfinal Pack Expansions}
+	\addcontentsline{toc}{subsubsection}{17.6.\hspace{0.2cm}Deduction for Nonfinal Pack Expansions}
+	\subfile{content/2/chapter17/6.tex}
+	
+	\subsubsection*{\zihao{3} 17.7.\hspace{0.2cm}Regularization of void}
+	\addcontentsline{toc}{subsubsection}{17.7.\hspace{0.2cm}Regularization of void}
+	\subfile{content/2/chapter17/7.tex}
+	
+	\subsubsection*{\zihao{3} 17.8.\hspace{0.2cm}Type Checking for Templates}
+	\addcontentsline{toc}{subsubsection}{17.8.\hspace{0.2cm}Type Checking for Templates}
+	\subfile{content/2/chapter17/8.tex}
+	
+	\subsubsection*{\zihao{3} 17.9.\hspace{0.2cm}Reflective Metaprogramming}
+	\addcontentsline{toc}{subsubsection}{17.9.\hspace{0.2cm}Reflective Metaprogramming}
+	\subfile{content/2/chapter17/9.tex}
+	
+	\subsubsection*{\zihao{3} 17.10.\hspace{0.2cm}Pack Facilities}
+	\addcontentsline{toc}{subsubsection}{17.10.\hspace{0.2cm}Pack Facilities}
+	\subfile{content/2/chapter17/10.tex}
+	
+	\subsubsection*{\zihao{3} 17.11.\hspace{0.2cm}Modules}
+	\addcontentsline{toc}{subsubsection}{17.11.\hspace{0.2cm}Modules}
+	\subfile{content/2/chapter17/11.tex}
+	\newpage
+	
+	\color{white}
+	\section*{\zihao{1}第三部分：Templates and Design}
+	\pagecolor{mygray}
+	\addcontentsline{toc}{section}{第三部分：Templates and Design}
+	\textbf{\subfile{content/3/Section.tex}}
+	\newpage
+	\color{black}
+	\pagecolor{white}
+	\newpage
+	
+	\subsection*{\zihao{2} 第18章\hspace{0.5cm}The Polymorphic Power of Templates}
+	\addcontentsline{toc}{subsection}{第18章\hspace{0.5cm}The Polymorphic Power of Templates}
+	\subfile{content/3/chapter18/0.tex}
+	
+	\subsubsection*{\zihao{3} 18.1.\hspace{0.2cm}Dynamic Polymorphism}
+	\addcontentsline{toc}{subsubsection}{18.1.\hspace{0.2cm}Dynamic Polymorphism}
+	\subfile{content/3/chapter18/1.tex}
+	
+	\subsubsection*{\zihao{3} 18.2.\hspace{0.2cm}Static Polymorphism}
+	\addcontentsline{toc}{subsubsection}{18.2.\hspace{0.2cm}Static Polymorphism}
+	\subfile{content/3/chapter18/2.tex}
+	
+	\subsubsection*{\zihao{3} 18.3.\hspace{0.2cm}Dynamic versus Static Polymorphism}
+	\addcontentsline{toc}{subsubsection}{18.3.\hspace{0.2cm}Dynamic versus Static Polymorphism}
+	\subfile{content/3/chapter18/3.tex}
+	
+	\subsubsection*{\zihao{3} 18.4.\hspace{0.2cm}Using Concepts}
+	\addcontentsline{toc}{subsubsection}{18.4.\hspace{0.2cm}Using Concepts}
+	\subfile{content/3/chapter18/4.tex}
+	
+	\subsubsection*{\zihao{3} 18.5.\hspace{0.2cm}New Forms of Design Patterns}
+	\addcontentsline{toc}{subsubsection}{18.5.\hspace{0.2cm}New Forms of Design Patterns}
+	\subfile{content/3/chapter18/5.tex}
+	
+	\subsubsection*{\zihao{3} 18.6.\hspace{0.2cm}Generic Programming}
+	\addcontentsline{toc}{subsubsection}{18.6.\hspace{0.2cm}Generic Programming}
+	\subfile{content/3/chapter18/6.tex}
+	
+	\subsubsection*{\zihao{3} 18.7.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{18.7.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter18/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第19章\hspace{0.5cm}Implementing Traits}
+	\addcontentsline{toc}{subsection}{第19章\hspace{0.5cm}Implementing Traits}
+	\subfile{content/3/chapter19/0.tex}
+	
+	\subsubsection*{\zihao{3} 19.1.\hspace{0.2cm}An Example: Accumulating a Sequence}
+	\addcontentsline{toc}{subsubsection}{19.1.\hspace{0.2cm}An Example: Accumulating a Sequence}
+	\subfile{content/3/chapter19/1.tex}
+	
+	\subsubsection*{\zihao{3} 19.2.\hspace{0.2cm}Traits versus Policies and Policy Classes}
+	\addcontentsline{toc}{subsubsection}{19.2.\hspace{0.2cm}Traits versus Policies and Policy Classes}
+	\subfile{content/3/chapter19/2.tex}
+	
+	\subsubsection*{\zihao{3} 19.3.\hspace{0.2cm}Type Functions}
+	\addcontentsline{toc}{subsubsection}{19.3.\hspace{0.2cm}Type Functions}
+	\subfile{content/3/chapter19/3.tex}
+	
+	\subsubsection*{\zihao{3} 19.4.\hspace{0.2cm}SFINAE-Based Traits}
+	\addcontentsline{toc}{subsubsection}{19.4.\hspace{0.2cm}SFINAE-Based Traits}
+	\subfile{content/3/chapter19/4.tex}
+	
+	\subsubsection*{\zihao{3} 19.5.\hspace{0.2cm}IsConvertibleT}
+	\addcontentsline{toc}{subsubsection}{19.5.\hspace{0.2cm}IsConvertibleT}
+	\subfile{content/3/chapter19/5.tex}
+	
+	\subsubsection*{\zihao{3} 19.6.\hspace{0.2cm}Detecting Members}
+	\addcontentsline{toc}{subsubsection}{19.6.\hspace{0.2cm}Detecting Members}
+	\subfile{content/3/chapter19/6.tex}
+	
+	\subsubsection*{\zihao{3} 19.7.\hspace{0.2cm}Other Traits Techniques}
+	\addcontentsline{toc}{subsubsection}{19.7.\hspace{0.2cm}Other Traits Techniques}
+	\subfile{content/3/chapter19/7.tex}
+	
+	\subsubsection*{\zihao{3} 19.8.\hspace{0.2cm}Type Classification}
+	\addcontentsline{toc}{subsubsection}{19.8.\hspace{0.2cm}Type Classification}
+	\subfile{content/3/chapter19/8.tex}
+	
+	\subsubsection*{\zihao{3} 19.9.\hspace{0.2cm}Policy Traits}
+	\addcontentsline{toc}{subsubsection}{19.9.\hspace{0.2cm}Policy Traits}
+	\subfile{content/3/chapter19/9.tex}
+	
+	\subsubsection*{\zihao{3} 19.10.\hspace{0.2cm}In the Standard Library}
+	\addcontentsline{toc}{subsubsection}{19.10.\hspace{0.2cm}In the Standard Library}
+	\subfile{content/3/chapter19/10.tex}
+	
+	\subsubsection*{\zihao{3} 19.11.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{19.11.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter19/11.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第20章\hspace{0.5cm}Implementing Traits}
+	\addcontentsline{toc}{subsection}{第20章\hspace{0.5cm}Implementing Traits}
+	\subfile{content/3/chapter20/0.tex}
+	
+	\subsubsection*{\zihao{3} 20.1.\hspace{0.2cm}An Example: Accumulating a Sequence}
+	\addcontentsline{toc}{subsubsection}{20.1.\hspace{0.2cm}An Example: Accumulating a Sequence}
+	\subfile{content/3/chapter20/1.tex}
+	
+	\subsubsection*{\zihao{3} 20.2.\hspace{0.2cm}Traits versus Policies and Policy Classes}
+	\addcontentsline{toc}{subsubsection}{20.2.\hspace{0.2cm}Traits versus Policies and Policy Classes}
+	\subfile{content/3/chapter20/2.tex}
+	
+	\subsubsection*{\zihao{3} 20.3.\hspace{0.2cm}Type Functions}
+	\addcontentsline{toc}{subsubsection}{20.3.\hspace{0.2cm}Type Functions}
+	\subfile{content/3/chapter20/3.tex}
+	
+	\subsubsection*{\zihao{3} 20.4.\hspace{0.2cm}SFINAE-Based Traits}
+	\addcontentsline{toc}{subsubsection}{20.4.\hspace{0.2cm}SFINAE-Based Traits}
+	\subfile{content/3/chapter20/4.tex}
+	
+	\subsubsection*{\zihao{3} 20.5.\hspace{0.2cm}IsConvertibleT}
+	\addcontentsline{toc}{subsubsection}{20.5.\hspace{0.2cm}IsConvertibleT}
+	\subfile{content/3/chapter20/5.tex}
+	
+	\subsubsection*{\zihao{3} 20.6.\hspace{0.2cm}Detecting Members}
+	\addcontentsline{toc}{subsubsection}{20.6.\hspace{0.2cm}Detecting Members}
+	\subfile{content/3/chapter20/6.tex}
+	
+	\subsubsection*{\zihao{3} 20.7.\hspace{0.2cm}Other Traits Techniques}
+	\addcontentsline{toc}{subsubsection}{20.7.\hspace{0.2cm}Other Traits Techniques}
+	\subfile{content/3/chapter20/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第21章\hspace{0.5cm}Templates and Inheritance}
+	\addcontentsline{toc}{subsection}{第21章\hspace{0.5cm}Templates and Inheritance}
+	\subfile{content/3/chapter20/0.tex}
+	
+	\subsubsection*{\zihao{3} 21.1.\hspace{0.2cm}The Empty Base Class Optimization (EBCO)}
+	\addcontentsline{toc}{subsubsection}{21.1.\hspace{0.2cm}The Empty Base Class Optimization (EBCO)}
+	\subfile{content/3/chapter21/1.tex}
+	
+	\subsubsection*{\zihao{3} 21.2.\hspace{0.2cm}The Curiously Recurring Template Pattern (CRTP)}
+	\addcontentsline{toc}{subsubsection}{21.2.\hspace{0.2cm}The Curiously Recurring Template Pattern (CRTP)}
+	\subfile{content/3/chapter21/2.tex}
+	
+	\subsubsection*{\zihao{3} 21.3.\hspace{0.2cm}Mixins}
+	\addcontentsline{toc}{subsubsection}{21.3.\hspace{0.2cm}Mixins}
+	\subfile{content/3/chapter21/3.tex}
+	
+	\subsubsection*{\zihao{3} 21.4.\hspace{0.2cm}Named Template Arguments}
+	\addcontentsline{toc}{subsubsection}{21.4.\hspace{0.2cm}Named Template Arguments}
+	\subfile{content/3/chapter21/4.tex}
+	
+	\subsubsection*{\zihao{3} 21.5.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{21.5.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter21/5.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第22章\hspace{0.5cm}Bridging Static and Dynamic Polymorphism}
+	\addcontentsline{toc}{subsection}{第22章\hspace{0.5cm}Bridging Static and Dynamic Polymorphism}
+	\subfile{content/3/chapter22/0.tex}
+	
+	\subsubsection*{\zihao{3} 22.1.\hspace{0.2cm}Function Objects, Pointers, and std::function<>}
+	\addcontentsline{toc}{subsubsection}{22.1.\hspace{0.2cm}Function Objects, Pointers, and std::function<>}
+	\subfile{content/3/chapter22/1.tex}
+	
+	\subsubsection*{\zihao{3} 22.2.\hspace{0.2cm}Generalized Function Pointers}
+	\addcontentsline{toc}{subsubsection}{22.2.\hspace{0.2cm}Generalized Function Pointers}
+	\subfile{content/3/chapter22/2.tex}
+	
+	\subsubsection*{\zihao{3} 22.3.\hspace{0.2cm}Bridge Interface}
+	\addcontentsline{toc}{subsubsection}{22.3.\hspace{0.2cm}Bridge Interface}
+	\subfile{content/3/chapter22/3.tex}
+	
+	\subsubsection*{\zihao{3} 22.4.\hspace{0.2cm}Type Erasure}
+	\addcontentsline{toc}{subsubsection}{22.4.\hspace{0.2cm}Type Erasure}
+	\subfile{content/3/chapter22/4.tex}
+	
+	\subsubsection*{\zihao{3} 22.5.\hspace{0.2cm}Optional Bridging}
+	\addcontentsline{toc}{subsubsection}{22.5.\hspace{0.2cm}Optional Bridging}
+	\subfile{content/3/chapter22/5.tex}
+	
+	\subsubsection*{\zihao{3} 22.6.\hspace{0.2cm}Performance Considerations}
+	\addcontentsline{toc}{subsubsection}{22.6.\hspace{0.2cm}Performance Considerations}
+	\subfile{content/3/chapter22/6.tex}
+	
+	\subsubsection*{\zihao{3} 22.7.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{22.7.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter22/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第23章\hspace{0.5cm}Metaprogramming}
+	\addcontentsline{toc}{subsection}{第23章\hspace{0.5cm}Metaprogramming}
+	\subfile{content/3/chapter23/0.tex}
+	
+	\subsubsection*{\zihao{3} 23.1.\hspace{0.2cm}The State of Modern C++ Metaprogramming}
+	\addcontentsline{toc}{subsubsection}{23.1.\hspace{0.2cm}The State of Modern C++ Metaprogramming}
+	\subfile{content/3/chapter23/1.tex}
+	
+	\subsubsection*{\zihao{3} 23.2.\hspace{0.2cm}The Dimensions of Reflective Metaprogramming}
+	\addcontentsline{toc}{subsubsection}{23.2.\hspace{0.2cm}The Dimensions of Reflective Metaprogramming}
+	\subfile{content/3/chapter23/2.tex}
+	
+	\subsubsection*{\zihao{3} 23.3.\hspace{0.2cm}The Cost of Recursive Instantiation}
+	\addcontentsline{toc}{subsubsection}{23.3.\hspace{0.2cm}The Cost of Recursive Instantiation}
+	\subfile{content/3/chapter23/3.tex}
+	
+	\subsubsection*{\zihao{3} 23.4.\hspace{0.2cm}Computational Completeness}
+	\addcontentsline{toc}{subsubsection}{23.4.\hspace{0.2cm}Computational Completeness}
+	\subfile{content/3/chapter23/4.tex}
+	
+	\subsubsection*{\zihao{3} 23.5.\hspace{0.2cm}Recursive Instantiation versus Recursive Template Arguments}
+	\addcontentsline{toc}{subsubsection}{23.5.\hspace{0.2cm}Recursive Instantiation versus Recursive Template Arguments}
+	\subfile{content/3/chapter23/5.tex}
+	
+	\subsubsection*{\zihao{3} 23.6.\hspace{0.2cm}Enumeration Values versus Static Constants}
+	\addcontentsline{toc}{subsubsection}{23.6.\hspace{0.2cm}Enumeration Values versus Static Constants}
+	\subfile{content/3/chapter23/6.tex}
+	
+	\subsubsection*{\zihao{3} 23.7.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{23.7.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter23/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第24章\hspace{0.5cm}Typelists}
+	\addcontentsline{toc}{subsection}{第24章\hspace{0.5cm}Typelists}
+	\subfile{content/3/chapter24/0.tex}
+	
+	\subsubsection*{\zihao{3} 24.1.\hspace{0.2cm}Anatomy of a Typelist}
+	\addcontentsline{toc}{subsubsection}{24.1.\hspace{0.2cm}Anatomy of a Typelist}
+	\subfile{content/3/chapter24/1.tex}
+	
+	\subsubsection*{\zihao{3} 24.2.\hspace{0.2cm}Typelist Algorithms}
+	\addcontentsline{toc}{subsubsection}{24.2.\hspace{0.2cm}Typelist Algorithms}
+	\subfile{content/3/chapter24/2.tex}
+	
+	\subsubsection*{\zihao{3} 24.3.\hspace{0.2cm}Nontype Typelists}
+	\addcontentsline{toc}{subsubsection}{24.3.\hspace{0.2cm}Nontype Typelists}
+	\subfile{content/3/chapter24/3.tex}
+	
+	\subsubsection*{\zihao{3} 24.4.\hspace{0.2cm}Optimizing Algorithms with Pack Expansions}
+	\addcontentsline{toc}{subsubsection}{24.4.\hspace{0.2cm}Optimizing Algorithms with Pack Expansions}
+	\subfile{content/3/chapter24/4.tex}
+	
+	\subsubsection*{\zihao{3} 24.5.\hspace{0.2cm}Cons-style Typelists}
+	\addcontentsline{toc}{subsubsection}{24.5.\hspace{0.2cm}Cons-style Typelists}
+	\subfile{content/3/chapter24/5.tex}
+	
+	\subsubsection*{\zihao{3} 24.6.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{24.6.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter24/6.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第25章\hspace{0.5cm}Tuples}
+	\addcontentsline{toc}{subsection}{第25章\hspace{0.5cm}Tuples}
+	\subfile{content/3/chapter25/0.tex}
+	
+	\subsubsection*{\zihao{3} 25.1.\hspace{0.2cm}Basic Tuple Design}
+	\addcontentsline{toc}{subsubsection}{25.1.\hspace{0.2cm}Basic Tuple Design}
+	\subfile{content/3/chapter25/1.tex}
+	
+	\subsubsection*{\zihao{3} 25.2.\hspace{0.2cm}Basic Tuple Operations}
+	\addcontentsline{toc}{subsubsection}{25.2.\hspace{0.2cm}Basic Tuple Operations}
+	\subfile{content/3/chapter25/2.tex}
+	
+	\subsubsection*{\zihao{3} 25.3.\hspace{0.2cm}Tuple Algorithms}
+	\addcontentsline{toc}{subsubsection}{25.3.\hspace{0.2cm}Tuple Algorithms}
+	\subfile{content/3/chapter25/3.tex}
+	
+	\subsubsection*{\zihao{3} 25.4.\hspace{0.2cm}Expanding Tuples}
+	\addcontentsline{toc}{subsubsection}{25.4.\hspace{0.2cm}Expanding Tuples}
+	\subfile{content/3/chapter25/4.tex}
+	
+	\subsubsection*{\zihao{3} 25.5.\hspace{0.2cm}Optimizing Tuple}
+	\addcontentsline{toc}{subsubsection}{25.5.\hspace{0.2cm}Optimizing Tuple}
+	\subfile{content/3/chapter25/5.tex}
+	
+	\subsubsection*{\zihao{3} 25.6.\hspace{0.2cm}Tuple Subscript}
+	\addcontentsline{toc}{subsubsection}{25.6.\hspace{0.2cm}Tuple Subscript}
+	\subfile{content/3/chapter25/6.tex}
+	
+	\subsubsection*{\zihao{3} 25.7.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{25.7.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter25/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第26章\hspace{0.5cm}Discriminated Unions}
+	\addcontentsline{toc}{subsection}{第26章\hspace{0.5cm}Discriminated Unions}
+	\subfile{content/3/chapter26/0.tex}
+	
+	\subsubsection*{\zihao{3} 26.1.\hspace{0.2cm}Storage}
+	\addcontentsline{toc}{subsubsection}{26.1.\hspace{0.2cm}Storage}
+	\subfile{content/3/chapter26/1.tex}
+	
+	\subsubsection*{\zihao{3} 26.2.\hspace{0.2cm}Design}
+	\addcontentsline{toc}{subsubsection}{26.2.\hspace{0.2cm}Design}
+	\subfile{content/3/chapter26/2.tex}
+	
+	\subsubsection*{\zihao{3} 26.3.\hspace{0.2cm}Value Query and Extraction}
+	\addcontentsline{toc}{subsubsection}{26.3.\hspace{0.2cm}Value Query and Extraction}
+	\subfile{content/3/chapter26/3.tex}
+	
+	\subsubsection*{\zihao{3} 26.4.\hspace{0.2cm}Element Initialization, Assignment and Destruction}
+	\addcontentsline{toc}{subsubsection}{26.4.\hspace{0.2cm}Element Initialization, Assignment and Destruction}
+	\subfile{content/3/chapter26/4.tex}
+	
+	\subsubsection*{\zihao{3} 26.5.\hspace{0.2cm}Visitors}
+	\addcontentsline{toc}{subsubsection}{26.5.\hspace{0.2cm}Visitors}
+	\subfile{content/3/chapter26/5.tex}
+	
+	\subsubsection*{\zihao{3} 26.6.\hspace{0.2cm}Variant Initialization and Assignment}
+	\addcontentsline{toc}{subsubsection}{26.6.\hspace{0.2cm}Variant Initialization and Assignment}
+	\subfile{content/3/chapter26/6.tex}
+	
+	\subsubsection*{\zihao{3} 26.7.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{26.7.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter26/7.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第27章\hspace{0.5cm}Expression Templates}
+	\addcontentsline{toc}{subsection}{第27章\hspace{0.5cm}Expression Templates}
+	\subfile{content/3/chapter27/0.tex}
+	
+	\subsubsection*{\zihao{3} 27.1.\hspace{0.2cm}Temporaries and Split Loops}
+	\addcontentsline{toc}{subsubsection}{27.1.\hspace{0.2cm}Temporaries and Split Loops}
+	\subfile{content/3/chapter27/1.tex}
+	
+	\subsubsection*{\zihao{3} 27.2.\hspace{0.2cm}Encoding Expressions in Template Arguments}
+	\addcontentsline{toc}{subsubsection}{27.2.\hspace{0.2cm}Encoding Expressions in Template Arguments}
+	\subfile{content/3/chapter27/2.tex}
+	
+	\subsubsection*{\zihao{3} 27.3.\hspace{0.2cm}Performance and Limitations of Expression Templates}
+	\addcontentsline{toc}{subsubsection}{27.3.\hspace{0.2cm}Performance and Limitations of Expression Templates}
+	\subfile{content/3/chapter27/3.tex}
+	
+	\subsubsection*{\zihao{3} 27.4.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{27.4.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter27/4.tex}
+	\newpage
+	
+	\subsection*{\zihao{2} 第28章\hspace{0.5cm}Discriminated Unions}
+	\addcontentsline{toc}{subsection}{第28章\hspace{0.5cm}Discriminated Unions}
+	\subfile{content/3/chapter28/0.tex}
+	
+	\subsubsection*{\zihao{3} 28.1.\hspace{0.2cm}Storage}
+	\addcontentsline{toc}{subsubsection}{28.1.\hspace{0.2cm}Storage}
+	\subfile{content/3/chapter28/1.tex}
+	
+	\subsubsection*{\zihao{3} 28.2.\hspace{0.2cm}Design}
+	\addcontentsline{toc}{subsubsection}{28.2.\hspace{0.2cm}Design}
+	\subfile{content/3/chapter28/2.tex}
+	
+	\subsubsection*{\zihao{3} 28.3.\hspace{0.2cm}Value Query and Extraction}
+	\addcontentsline{toc}{subsubsection}{28.3.\hspace{0.2cm}Value Query and Extraction}
+	\subfile{content/3/chapter28/3.tex}
+	
+	\subsubsection*{\zihao{3} 28.4.\hspace{0.2cm}Element Initialization, Assignment and Destruction}
+	\addcontentsline{toc}{subsubsection}{28.4.\hspace{0.2cm}Element Initialization, Assignment and Destruction}
+	\subfile{content/3/chapter28/4.tex}
+	
+	\subsubsection*{\zihao{3} 28.5.\hspace{0.2cm}Visitors}
+	\addcontentsline{toc}{subsubsection}{28.5.\hspace{0.2cm}Visitors}
+	\subfile{content/3/chapter28/5.tex}
+	
+	\subsubsection*{\zihao{3} 28.6.\hspace{0.2cm}后记}
+	\addcontentsline{toc}{subsubsection}{28.6.\hspace{0.2cm}后记}
+	\subfile{content/3/chapter28/6.tex}
+	\newpage
+	
+	\section*{\zihao{2} 附录A：The One-Definition Rule}
+	\addcontentsline{toc}{section}{附录A：The One-Definition Rule}
+	\subfile{content/Appendix/A.tex}
+	
+	\section*{\zihao{2} 附录B：Value Categories}
+	\addcontentsline{toc}{section}{附录B：Value Categories}
+	\subfile{content/Appendix/B.tex}
+	
+	\section*{\zihao{2} 附录C：Overload Resolution}
+	\addcontentsline{toc}{section}{附录C：Overload Resolution}
+	\subfile{content/Appendix/C.tex}
+	
+	\section*{\zihao{2} 附录D：Standard Type Utilities}
+	\addcontentsline{toc}{section}{附录D：Standard Type Utilities}
+	\subfile{content/Appendix/D.tex}
+	
+	\section*{\zihao{2} 附录E：Concepts}
+	\addcontentsline{toc}{section}{附录E：Concepts}
+	\subfile{content/Appendix/E.tex}
+
+	\section*{\zihao{2} Bibliography}
+	\addcontentsline{toc}{section}{Bibliography}
+	\subfile{content/Bibliography.tex}
+	
+	\section*{\zihao{2} Glossary}
+	\addcontentsline{toc}{section}{Glossary}
+	\subfile{content/Glossary.tex}
+
+\end{sloppypar}
+\end{document}
+

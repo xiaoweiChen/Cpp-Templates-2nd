@@ -1,0 +1,11 @@
+*.pdf
+*.aux
+*.log
+*.out
+*.gz
+*toc
+*.listing
+*.synctex(busy)
+/CPP-Templates-2nd---master/
+/cpp-templates-2nd-master/
+*.zip

@@ -1,6 +1,41 @@
 
 
+函数模板提供了适用于不同数据类型的函数行为，函数模板代表的是一组函数。除了某些信息未被明确指定之外，看起来很像普通函数。这些未指定的信息就是参数化的信息。
+
 \subsubsubsection{1.1.1\hspace{0.2cm}Defining the Template}
+
+以下就是一个函数模板，它返回两个数之中的最大值：
+
+\noindent
+\textit{asics/max1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T a, T b)
+{
+	// if b < a then yield a else yield b
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+This template definition specifies a family of functions that return the maximum of two values, which are passed as function parameters a and b.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note that the max() template according to [StepanovNotes] intentionally returns “b < a ? a : b” instead of “a < b ? b : a” to ensure that the function behaves correctly even if the two values are equivalent but not equal.
+\end{tcolorbox}
+
+The type of these parameters is left open as template parameter T. As seen in this example, template parameters must be announced with syntax of the following form:
+
+\begin{lstlisting}[style=styleCXX]
+template<逗号分割的模板参数>
+\end{lstlisting}
+
+\begin{lstlisting}[style=styleCXX]
+template<class T>
+T max (T a, T b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
 
 \subsubsubsection{1.1.2\hspace{0.2cm}Using the Template}
 

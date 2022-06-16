@@ -50,11 +50,11 @@
 
 ## 作者简介
 
-**David Vandevoorde**在20世纪80年代后期开始用C++编程。从伦斯勒理工学院获得博士学位后，成为惠普C++编译器团队的技术负责人。1999年，加入了爱迪生设计集团(EDG)，该集团的C++编译器技术是业界领先的。他是C++标准委员会的活跃成员，也是comp.lang.c++新闻组的主持人(他参与创办的)。也是《C++ Solutions》的作者，该书是《C++ Programming Language, 3rd Edition》配套书籍。
+**David Vandevoorde**在20世纪80年代后期开始用C++编程。从伦斯勒理工学院获得博士学位后，成为惠普C++编译器团队的技术负责人。1999年，加入了爱迪生设计集团(EDG)，该集团的C++编译器技术是业界领先的。他是C++标准委员会的活跃成员，也是comp.lang.c++新闻组的主持人(他参与创办的)。也是《C++ Solutions》的作者，该书是《C++ Programming Language, 3rd Edition》的配套书籍。
 
-**Nicolai M. Josuttis**因其畅销的事实上的标准书籍《The C++ Standard Library - A Tutorial and Reference》而闻名。他是一名独立技术顾问，为电信、交通、金融和制造业设计面向对象的软件。他是C++标准委员会的活跃成员，也是System Bauhaus的合伙人，System Bauhaus是一个由杰出的面向对象系统开发专家组成的德国团体。Josuttis还写过其他几本关于面向对象编程和C++的书。
+**Nicolai M. Josuttis**因其畅销的标准书籍《The C++ Standard Library - A Tutorial and Reference》而闻名于世。他是一名独立技术顾问，为电信、交通、金融和制造业设计面向对象的软件。他是C++标准委员会的活跃成员，也是System Bauhaus的合伙人，System Bauhaus是一个由杰出的面向对象系统开发专家组成的德国团体。Josuttis还写过其他几本关于面向对象编程和C++的书。
 
-**Douglas Gregor**是苹果公司的高级Swift/ c++ /Objective-C编译工程师，拥有伦斯勒理工学院的计算机科学博士学位，并在印第安纳大学从事博士后工作。
+**Douglas Gregor**是苹果公司的高级Swift/C++/Objective-C编译工程师，拥有伦斯勒理工学院的计算机科学博士学位，并在印第安纳大学从事博士后工作。
 
 
 

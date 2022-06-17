@@ -3,11 +3,7 @@
 *Second Edition*
 
 * 作者：David Vandevoorde，Nicolai M. Josuttis，Douglas Gregor
-
-* 译者：[Walton1128](https://github.com/Walton1128)，[r00tk1ts](https://github.com/r00tk1ts)，陈晓伟
-
-* 校对/整理：陈晓伟
-
+* 译者：陈晓伟
 * 首次发布时间：2017年9月8日([来源](https://www.amazon.com/C-Templates-Complete-Guide-2nd/dp/0321714121))
 
 > 翻译是译者用自己的思想，换一种语言，对原作者想法的重新阐释。鉴于我的学识所限，误解和错译在所难免。如果你能买到本书的原版，且有能力阅读英文，请直接去读原文。因为与之相较，我的译文可能根本不值得一读。

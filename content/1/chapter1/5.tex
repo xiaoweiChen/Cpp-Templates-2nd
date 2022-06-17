@@ -1,0 +1,228 @@
+Like ordinary functions, function templates can be overloaded. That is, you can have different function definitions with the same function name so that when that name is used in a function call, a C++ compiler must decide which one of the various candidates to call. The rules for this decision may become rather complicated, even without templates. In this section we discuss overloading when templates are involved. If you are not familiar with the basic rules of overloading without templates, please look at Appendix C, where we provide a reasonably detailed survey of the overload resolution rules.
+
+The following short program illustrates overloading a function template:
+
+\noindent
+\textit{basics/max2.cpp}
+\begin{lstlisting}[style=styleCXX]
+// maximum of two int values:
+int max (int a, int b)
+{
+	return b < a ? a : b;
+}
+
+// maximum of two values of any type:
+template<typename T>
+T max (T a, T b)
+{
+	return b < a ? a : b;
+}
+
+int main()
+{
+	::max(7, 42); // calls the nontemplate for two ints
+	::max(7.0, 42.0); // calls max<double> (by argument deduction)
+	::max('a', 'b'); // calls max<char> (by argument deduction)
+	::max<>(7, 42); // calls max<int> (by argument deduction)
+	::max<double>(7, 42); // calls max<double> (no argument deduction)
+	::max('a', 42.7); // calls the nontemplate for two ints
+}
+\end{lstlisting}
+
+As this example shows, a nontemplate function can coexist with a function template that has the same name and can be instantiated with the same type. All other factors being equal, the overload resolution process prefers the nontemplate over one generated from the template. The first call falls under this rule:
+
+\begin{lstlisting}[style=styleCXX]
+::max(7, 42); // both int values match the nontemplate function perfectly
+\end{lstlisting}
+
+If the template can generate a function with a better match, however, then the template is selected. This is demonstrated by the second and third calls of max():
+
+\begin{lstlisting}[style=styleCXX]
+::max(7.0, 42.0); // calls the max<double> (by argument deduction)
+::max('a', 'b'); // calls the max<char> (by argument deduction)
+\end{lstlisting}
+
+Here, the template is a better match because no conversion from double or char to int is required (see Section C.2 on page 682 for the rules of overload resolution).
+
+It is also possible to specify explicitly an empty template argument list. This syntax indicates that only templates may resolve a call, but all the template parameters should be deduced from the call arguments:
+
+\begin{lstlisting}[style=styleCXX]
+::max<>(7, 42); // calls max<int> (by argument deduction)
+\end{lstlisting}
+
+Because automatic type conversion is not considered for deduced template parameters but is considered for ordinary function parameters, the last call uses the nontemplate function (while 'a' and 42.7 both are converted to int):
+
+\begin{lstlisting}[style=styleCXX]
+::max('a', 42.7); // only the nontemplate function allows nontrivial conversions
+\end{lstlisting}
+
+An interesting example would be to overload the maximum template to be able to explicitly specify the return type only:
+
+\noindent
+\textit{asics/maxdefault4.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+template<typename RT, typename T1, typename T2>
+RT max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+Now, we can call max(), for example, as follows:
+
+\begin{lstlisting}[style=styleCXX]
+auto a = ::max(4, 7.2); // uses first template
+auto b = ::max<long double>(7.2, 4); // uses second template
+\end{lstlisting}
+
+However, when calling:
+
+\begin{lstlisting}[style=styleCXX]
+auto c = ::max<int>(4, 7.2); // ERROR: both function templates match
+\end{lstlisting}
+
+both templates match, which causes the overload resolution process normally to prefer none and result in an ambiguity error. Thus, when overloading function templates, you should ensure that only one of them matches for any call.
+
+A useful example would be to overload the maximum template for pointers and ordinary C-strings:
+
+\noindent
+\textit{asics/max3val.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstring>
+#include <string>
+
+// maximum of two values of any type:
+template<typename T>
+T max (T a, T b)
+{
+	return b < a ? a : b;
+}
+
+// maximum of two pointers:
+template<typename T>
+T* max (T* a, T* b)
+{
+	return *b < *a ? a : b;
+}
+
+// maximum of two C-strings:
+char const* max (char const* a, char const* b)
+{
+	return std::strcmp(b,a) < 0 ? a : b;
+}
+
+int main ()
+{
+	int a = 7;
+	int b = 42;
+	auto m1 = ::max(a,b); // max() for two values of type int
+	
+	std::string s1 = "hey";
+	std::string s2 = "you";
+	auto m2 = ::max(s1,s2); // max() for two values of type std::string
+	
+	int* p1 = &b;
+	int* p2 = &a;
+	auto m3 = ::max(p1,p2); // max() for two pointers
+	
+	char const* x = "hello";
+	char const* y = "world";
+	auto m4 = ::max(x,y); // max() for two C-strings
+}
+\end{lstlisting}
+
+Note that in all overloads of max() we pass the arguments by value. In general, it is a good idea not to change more than necessary when overloading function templates. You should limit your changes to the number of parameters or to specifying template parameters explicitly. Otherwise, unexpected effects may happen. For example, if you implement your max() template to pass the arguments by reference and overload it for two C-strings passed by value, you can’t use the three-argument version to compute the maximum of three C-strings:
+
+\noindent
+\textit{basics/max3ref.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstring>
+
+// maximum of two values of any type (call-by-reference)
+template<typename T>
+T const& max (T const& a, T const& b)
+{
+	return b < a ? a : b;
+}
+
+// maximum of two C-strings (call-by-value)
+char const* max (char const* a, char const* b)
+{
+	return std::strcmp(b,a) < 0 ? a : b;
+}
+
+// maximum of three values of any type (call-by-reference)
+template<typename T>
+T const& max (T const& a, T const& b, T const& c)
+{
+	return max (max(a,b), c); // error if max(a,b) uses call-by-value
+}
+
+int main ()
+{
+	auto m1 = ::max(7, 42, 68); // OK
+	
+	char const* s1 = "frederic";
+	char const* s2 = "anica";
+	char const* s3 = "lucas";
+	auto m2 = ::max(s1, s2, s3); // run-time ERROR
+}
+\end{lstlisting}
+
+The problem is that if you call max() for three C-strings, the statement
+
+\begin{lstlisting}[style=styleCXX]
+return max (max(a,b), c);
+\end{lstlisting}
+
+becomes a run-time error because for C-strings, max(a,b) creates a new, temporary local value that is returned by reference, but that temporary value expires as soon as the return statement is complete, leaving main() with a dangling reference. Unfortunately, the error is quite subtle and may not manifest itself in all cases.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In general, a conforming compiler isn’t even permitted to reject this code.
+\end{tcolorbox}
+
+Note, in contrast, that the first call to max() in main() doesn’t suffer from the same issue. There temporaries are created for the arguments (7, 42, and 68), but those temporaries are created in main() where they persist until the statement is done.
+
+This is only one example of code that might behave differently than expected as a result of detailed overload resolution rules. In addition, ensure that all overloaded versions of a function are declared before the function is called. This is because the fact that not all overloaded functions are visible when a corresponding function call is made may matter. For example, defining a three-argument version of max() without having seen the declaration of a special two-argument version of max() for ints causes the two-argument template to be used by the three-argument version:
+
+\noindent
+\textit{asics/max4.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+// maximum of two values of any type:
+template<typename T>
+T max (T a, T b)
+{
+	std::cout << "max<T>() \n";
+	return b < a ? a : b;
+}
+
+// maximum of three values of any type:
+template<typename T>
+T max (T a, T b, T c)
+{
+	return max (max(a,b), c); // uses the template version even for ints
+}                             // because the following declaration comes
+                              // too late:
+// maximum of two int values:
+int max (int a, int b)
+{
+	std::cout << "max(int,int) \n";
+	return b < a ? a : b;
+}
+
+int main()
+{
+	::max(47,11,33); // OOPS: uses max<T>() instead of max(int,int)
+}
+\end{lstlisting}
+
+We discuss details in Section 13.2.
+
+

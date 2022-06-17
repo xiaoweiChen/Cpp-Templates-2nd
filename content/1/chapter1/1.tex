@@ -2,7 +2,7 @@
 
 函数模板提供了适用于不同数据类型的函数行为，函数模板代表的是一组函数。除了某些信息未被明确指定之外，看起来很像普通函数。这些未指定的信息就是参数化的信息。
 
-\subsubsubsection{1.1.1\hspace{0.2cm}Defining the Template}
+\subsubsubsection{1.1.1\hspace{0.2cm}定义模板}
 
 以下就是一个函数模板，它返回两个数之中的最大值：
 
@@ -17,17 +17,27 @@ T max (T a, T b)
 }
 \end{lstlisting}
 
-This template definition specifies a family of functions that return the maximum of two values, which are passed as function parameters a and b.
+这个模板定义指定了一个函数组，它返回两个值的最大值，a和b作为函数的参数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that the max() template according to [StepanovNotes] intentionally returns “b < a ? a : b” instead of “a < b ? b : a” to ensure that the function behaves correctly even if the two values are equivalent but not equal.
+\hspace*{0.75cm}注意，根据[StepanovNotes]的\texttt{max()}模板有意地返回\texttt{b < a ? a: b}，而不是\texttt{a < b ? b: a}，是为了确保函数行为正确。
 \end{tcolorbox}
 
-The type of these parameters is left open as template parameter T. As seen in this example, template parameters must be announced with syntax of the following form:
+形参的类型为模板形参T。本例中可以看到，模板形参必须使用以下形式的进行声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<逗号分割的模板参数>
 \end{lstlisting}
+
+我们的示例中，形参列表是\texttt{typename T}。注意\texttt{<}和\texttt{>}尖括号。关键字\texttt{typename}引入了一个类型参数。这是C++程序中最常见的模板形参类型，也可以使用其他形参，会在后面进行讨论(参见第3章)。
+
+类型参数是\texttt{T}，也可以使用其他标识符作为参数名，不过使用T是惯例而已。类型参数表示在调用函数时才确定的类型，可以使用任何类型(基本类型、类等)，只要该类型提供模板使用的操作。这样，因为a和b使用这个操作符进行比较，所以类型\texttt{T}必须支持操作符\texttt{<}。\texttt{max()}的定义可能不太明显，类型T的值也必须是可复制的，以便返回。
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}在C++17之前，类型\texttt{T}也必须是可复制的才能传递参数。C++17以后，即使复制构造函数和移动构造函数都无效，也可以传递临时变量(右值，参见附录B)。
+\end{tcolorbox}
+
+由于历史原因，还可以使用关键字\texttt{class}来定义类型参数。关键字\texttt{typename}在C++98标准中出现得相对较晚。在此之前，关键字\texttt{class}是引入类型参数的唯一方法，现在这种方法仍然有效。因此，模板\texttt{max()}可以等价地定义为:
 
 \begin{lstlisting}[style=styleCXX]
 template<class T>
@@ -37,6 +47,162 @@ T max (T a, T b)
 }
 \end{lstlisting}
 
-\subsubsubsection{1.1.2\hspace{0.2cm}Using the Template}
+这里没有语义上的区别，即使在这里使用\texttt{class}，模板参数也可以使用任何类型。但因为这样使用\texttt{class}可能会引起误解(不仅是类可以替换为\texttt{T})，所以应该更倾向于中使用\texttt{typename}。但请注意，与类声明不同的是，在声明类型形参时，不能使用关键字\texttt{struct}来代替\texttt{typename}。
 
-\subsubsubsection{1.1.3\hspace{0.2cm}Two-Phase Translation}
+\subsubsubsection{1.1.2\hspace{0.2cm}使用模板}
+
+The following program shows how to use the max() function template:
+
+\noindent
+\textit{basics/max1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "max1.hpp"
+#include <iostream>
+#include <string>
+
+int main()
+{
+	int i = 42;
+	std::cout << "max(7,i): " << ::max(7,i) << '\n';
+	
+	double f1 = 3.4;
+	double f2 = -6.7;
+	std::cout << "max(f1,f2): " << ::max(f1,f2) << '\n';
+	
+	std::string s1 = "mathematics";
+	std::string s2 = "math";
+	std::cout << "max(s1,s2): " << ::max(s1,s2) << '\n';
+}
+\end{lstlisting}
+
+Inside the program, max() is called three times: once for two ints, once for two doubles, and once for two std::strings. Each time, the maximum is computed. As a result, the program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+max(7,i): 42
+max(f1,f2): 3.4
+max(s1,s2): mathematics
+\end{tcblisting}
+
+Note that each call of the max() template is qualified with ::. This is to ensure that our max() template is found in the global namespace. There is also a std::max() template in the standard library, which under some circumstances may be called or may lead to ambiguity.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}For example, if one argument type is defined in namespace std (such as std::string), according to the lookup rules of C++, both the global and the max() template in std are found (see Appendix C).
+\end{tcolorbox}
+
+Templates aren’t compiled into single entities that can handle any type. Instead, different entities are generated from the template for every type for which the template is used.4 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}A “one-entity-fits-all” alternative is conceivable but not used in practice (it would be less efficient at run time). All language rules are based on the principle that different entities are generated for different template arguments.
+\end{tcolorbox}
+
+Thus, max() is compiled for each of these three types. For example, the first call of max()
+
+\begin{lstlisting}[style=styleCXX]
+int i = 42;
+... max(7,i) ...
+\end{lstlisting}
+
+uses the function template with int as template parameter T. Thus, it has the semantics of calling the following code:
+
+\begin{lstlisting}[style=styleCXX]
+int max (int a, int b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+The process of replacing template parameters by concrete types is called instantiation. It results in an instance of a template.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The terms instance and instantiate are used in a different context in object-oriented programming—namely, for a concrete object of a class. However, because this book is about templates, we use this term for the “use” of templates unless otherwise specified.
+\end{tcolorbox}
+
+Note that the mere use of a function template can trigger such an instantiation process. There is no need for the programmer to request the instantiation separately.
+
+Similarly, the other calls of max() instantiate the max template for double and std::string as if they were declared and implemented individually:
+
+\begin{lstlisting}[style=styleCXX]
+double max (double, double);
+std::string max (std::string, std::string);
+\end{lstlisting}
+
+Note also that void is a valid template argument provided the resulting code is valid. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T foo(T*)
+{
+}
+
+void* vp = nullptr;
+foo(vp); // OK: deduces void foo(void*)
+\end{lstlisting}
+
+\subsubsubsection{1.1.3\hspace{0.2cm}两阶段翻译}
+
+An attempt to instantiate a template for a type that doesn’t support all the operations used within it will result in a compile-time error. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::complex<float> c1, c2; // doesn’t provide operator <
+...
+::max(c1,c2); // ERROR at compile time
+\end{lstlisting}
+
+Thus, templates are “compiled” in two phases:
+
+\begin{enumerate}
+\item 
+Without instantiation at definition time, the template code itself is checked for correctness ignoring the template parameters. This includes:
+\begin{itemize}
+\item[-] 
+Syntax errors are discovered, such as missing semicolons.
+
+\item[-]
+Using unknown names (type names, function names, ...) that don’t depend on template parameters are discovered.
+
+\item[-]
+Static assertions that don’t depend on template parameters are checked.
+\end{itemize}
+
+\item 
+At instantiation time, the template code is checked (again) to ensure that all code is valid. That is, now especially, all parts that depend on template parameters are double-checked.
+\end{enumerate}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T t)
+{
+	undeclared(); // first-phase compile-time error if undeclared() unknown
+	undeclared(t); // second-phase compile-time error if undeclared(T) unknown
+	static_assert(sizeof(int) > 10, // always fails if sizeof(int)<=10
+				  "int too small");
+	static_assert(sizeof(T) > 10, // fails if instantiated for T with size <=10
+	              "T too small");
+}
+\end{lstlisting}
+
+The fact that names are checked twice is called two-phase lookup and discussed in detail in Section 14.3.1。
+
+Note that some compilers don’t perform the full checks of the first phase.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}For example, The Visual C++ compiler in some versions (such as Visual Studio 20133 and 2015) allow undeclared names that don’t depend on template parameters and even some syntax flaws (such as a missing semicolon).
+\end{tcolorbox}
+
+So you might not see general problems until the template code is instantiated at least once.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Compiling and Linking}
+
+Two-phase translation leads to an important problem in the handling of templates in practice: When a function template is used in a way that triggers its instantiation, a compiler will (at some point) need to see that template’s definition. This breaks the usual compile and link distinction for ordinary functions, when the declaration of a function is sufficient to compile its use. Methods of handling this problem are discussed in Chapter 9. For the moment, let’s take the simplest approach: Implement each template inside a header file.
+
+
+
+
+
+
+
+

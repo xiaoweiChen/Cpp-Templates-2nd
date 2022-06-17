@@ -1,5 +1,203 @@
+
+As we have seen so far, function templates have two distinct sets of parameters:
+
+\begin{enumerate}
+\item 
+Template parameters, which are declared in angle brackets before the function template name:
+\begin{lstlisting}[style=styleCXX]
+template<typename T> // T is template parameter
+\end{lstlisting}
+
+\item 
+Call parameters, which are declared in parentheses after the function template name:
+\begin{lstlisting}[style=styleCXX]
+T max (T a, T b) // a and b are call parameters
+\end{lstlisting}
+\end{enumerate}
+
+You may have as many template parameters as you like. For example, you could define the max() template for call parameters of two potentially different types:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+T1 max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+...
+auto m = ::max(4, 7.2); // OK, but type of first argument defines return type
+\end{lstlisting}
+
+It may appear desirable to be able to pass parameters of different types to the max() template, but, as this example shows, it raises a problem. If you use one of the parameter types as return type, the argument for the other parameter might get converted to this type, regardless of the caller’s intention. Thus, the return type depends on the call argument order. The maximum of 66.66 and 42 will be the double 66.66, while the maximum of 42 and 66.66 will be the int 66.
+
+C++ provides different ways to deal with this problem:
+
+\begin{itemize}
+\item
+Introduce a third template parameter for the return type.
+
+\item
+Let the compiler find out the return type.
+
+\item
+Declare the return type to be the “common type” of the two parameter types.
+\end{itemize}
+
+All these options are discussed next.
+
 \subsubsubsection{1.3.1\hspace{0.2cm}Template Parameters for Return Types}
+
+Our earlier discussion showed that template argument deduction allows us to call function templates with syntax identical to that of calling an ordinary function: We do not have to explicitly specify the types corresponding to the template parameters.
+
+We also mentioned, however, that we can specify the types to use for the template parameters explicitly:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T a, T b);
+...
+::max<double>(4, 7.2); // instantiate T as double
+\end{lstlisting}
+
+In cases when there is no connection between template and call parameters and when template parameters cannot be determined, you must specify the template argument explicitly with the call. For example, you can introduce a third template argument type to define the return type of a function template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename RT>
+RT max (T1 a, T2 b);
+\end{lstlisting}
+
+However, template argument deduction does not take return types into account,7 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Deduction can be seen as part of overload resolution—a process that is not based on selection of return types either. The sole exception is the return type of conversion operator members.
+\end{tcolorbox}
+
+and RT does not appear in the types of the function call parameters. Therefore, RT cannot be deduced.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In C++, the return type also cannot be deduced from the context in which the caller uses the call.
+\end{tcolorbox}
+
+As a consequence, you have to specify the template argument list explicitly. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename RT>
+RT max (T1 a, T2 b);
+...
+::max<int,double,double>(4, 7.2); // OK, but tedious
+\end{lstlisting}
+
+So far, we have looked at cases in which either all or none of the function template arguments were mentioned explicitly. Another approach is to specify only the first arguments explicitly and to allow the deduction process to derive the rest. In general, you must specify all the argument types up to the last argument type that cannot be determined implicitly. Thus, if you change the order of the template parameters in our example, the caller needs to specify only the return type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename RT, typename T1, typename T2>
+RT max (T1 a, T2 b);
+...
+::max<double>(4, 7.2) // OK: return type is double, T1 and T2 are deduced
+\end{lstlisting}
+
+In this example, the call to max<double> explicitly sets RT to double, but the parameters T1 and T2 are deduced to be int and double from the arguments. 
+
+Note that these modified versions of max() don’t lead to significant advantages. For the oneparameter version you can already specify the parameter (and return) type if two arguments of a different type are passed. Thus, it’s a good idea to keep it simple and use the one-parameter version of max() (as we do in the following sections when discussing other template issues).
+
+See Chapter 15 for details of the deduction process.
 
 \subsubsubsection{1.3.2\hspace{0.2cm}Deducing the Return Type}
 
+If a return type depends on template parameters, the simplest and best approach to deduce the return type is to let the compiler find out. Since C++14, this is possible by simply not declaring any return type (you still have to declare the return type to be auto):
+
+\noindent
+\textit{basics/maxauto.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+In fact, the use of auto for the return type without a corresponding trailing return type (which would be introduced with a -> at the end) indicates that the actual return type must be deduced from the return statements in the function body. Of course, deducing the return type from the function body has to be possible. Therefore, the code must be available and multiple return statements have to match.
+
+Before C++14, it is only possible to let the compiler determine the return type by more or less making the implementation of the function part of its declaration. In C++11 we can benefit from the fact that the trailing return type syntax allows us to use the call parameters. That is, we can declare that the return type is derived from what operator?: yields:
+
+\noindent
+\textit{asics/maxdecltype.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto max (T1 a, T2 b) -> decltype(b<a?a:b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+Here, the resulting type is determined by the rules for operator ?:, which are fairly elaborate but generally produce an intuitively expected result (e.g., if a and b have different arithmetic types, a common arithmetic type is found for the result).
+
+Note that
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto max (T1 a, T2 b) -> decltype(b<a?a:b);
+\end{lstlisting}
+
+is a declaration, so that the compiler uses the rules of operator?: called for parameters a and b to find out the return type of max() at compile time. The implementation does not necessarily have to match. In fact, using true as the condition for operator?: in the declaration is enough:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto max (T1 a, T2 b) -> decltype(true?a:b);
+\end{lstlisting}
+
+However, in any case this definition has a significant drawback: It might happen that the return type is a reference type, because under some conditions T might be a reference. For this reason you should return the type decayed from T, which looks as follows:
+
+\noindent
+\textit{asics/maxdecltypedecay.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+template<typename T1, typename T2>
+auto max (T1 a, T2 b) -> typename std::decay<decltype(true?a:b)>::type
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+Here, the type trait std::decay<> is used, which returns the resulting type in a member type. It is defined by the standard library in <type\_trait> (see Section D.5 on page 732). Because the member type is a type, you have to qualify the expression with typename to access it (see Section 5.1).
+
+Note that an initialization of type auto always decays. This also applies to return values when the return type is just auto. auto as a return type behaves just as in the following code, where a is declared by the decayed type of i, int:
+
+\begin{lstlisting}[style=styleCXX]
+int i = 42;
+int const& ir = i; // ir refers to i
+auto a = ir; // a is declared as new object of type int
+\end{lstlisting}
+
 \subsubsubsection{1.3.3\hspace{0.2cm}Return Type as Common Type}
+
+Since C++11, the C++ standard library provides a means to specify choosing “the more general type.” std::common\_type<>::type yields the “common type” of two (or more) different types passed as template arguments. For example:
+
+\noindent
+\textit{asics/maxcommon.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+template<typename T1, typename T2>
+std::common_type_t<T1,T2> max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+Again, std::common\_type is a type trait, defined in <type\_traits>, which yields a structure having a type member for the resulting type. Thus, its core usage is as follows:
+
+\begin{lstlisting}[style=styleCXX]
+typename std::common_type<T1,T2>::type // since C++11
+\end{lstlisting}
+
+However, since C++14 you can simplify the usage of traits like this by appending \_t to the trait name and skipping typename and ::type (see Section 2.8 for details), so that the return type definition simply becomes:
+
+\begin{lstlisting}[style=styleCXX]
+std::common_type_t<T1,T2> // equivalent since C++14
+\end{lstlisting}
+
+The way std::common\_type<> is implemented uses some tricky template programming, which is discussed in Section 26.5.2. Internally, it chooses the resulting type according to the language rules of operator ?: or specializations for specific types. Thus, both ::max(4, 7.2) and ::max(7.2, 4) yield the same value 7.2 of type double. Note that std::common\_type<> also decays. See Section D.5 for details.
+
+
+
+

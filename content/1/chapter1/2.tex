@@ -1,0 +1,108 @@
+When we call a function template such as max() for some arguments, the template parameters are determined by the arguments we pass. If we pass two ints to the parameter types T, the C++ compiler has to conclude that T must be int.
+
+However, T might only be “part” of the type. For example, if we declare max() to use constant references:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T const& a, T const& b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+and pass int, again T is deduced as int, because the function parameters match for int const\&.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Type Conversions During Type Deduction}
+
+Note that automatic type conversions are limited during type deduction:
+
+\begin{itemize}
+\item
+When declaring call parameters by reference, even trivial conversions do not apply to type deduction. Two arguments declared with the same template parameter T must match exactly.
+
+\item
+When declaring call parameters by value, only trivial conversions that decay are supported: Qualifications with const or volatile are ignored, references convert to the referenced type, and raw arrays or functions convert to the corresponding pointer type. For two arguments declared with the same template parameter T the decayed types must match.
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T a, T b);
+...
+int const c = 42;
+max(i, c); // OK: T is deduced as int
+max(c, c); // OK: T is deduced as int
+int& ir = i;
+max(i, ir); // OK: T is deduced as int
+int arr[4];
+foo(&i, arr); // OK: T is deduced as int*
+\end{lstlisting}
+
+However, the following are errors:
+
+\begin{lstlisting}[style=styleCXX]
+max(4, 7.2); // ERROR: T can be deduced as int or double
+std::string s;
+foo("hello", s); // ERROR: T can be deduced as char const[6] or std::string
+\end{lstlisting}
+
+There are three ways to handle such errors:
+
+\begin{enumerate}
+\item
+Cast the arguments so that they both match:
+\begin{lstlisting}[style=styleCXX]
+max(static_cast<double>(4), 7.2); // OK
+\end{lstlisting}
+
+\item
+Specify (or qualify) explicitly the type of T to prevent the compiler from attempting type deduction:
+\begin{lstlisting}[style=styleCXX]
+max<double>(4, 7.2); // OK
+\end{lstlisting}
+
+\item
+Specify that the parameters may have different types.
+\end{enumerate}
+
+Section 1.3 will elaborate on these options. Section 7.2 and Chapter 15 will discuss the rules for type conversions during type deduction in detail.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Type Deduction for Default Arguments}
+
+Note also that type deduction does not work for default call arguments. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f(T = "");
+...
+f(1); // OK: deduced T to be int, so that it calls f<int>(1)
+f(); // ERROR: cannot deduce T
+\end{lstlisting}
+
+To support this case, you also have to declare a default argument for the template parameter, which will be discussed in Section 1.4:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T = std::string>
+void f(T = "");
+...
+f(); // OK
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

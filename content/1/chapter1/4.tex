@@ -14,7 +14,7 @@ For example, if you want to combine the approaches to define the return type wit
 We can use operator?: directly. However, because we have to apply operator?: before the call parameters a and b are declared, we can only use their types:
 
 \noindent
-\textit{asics/maxdefault1.hpp}
+\textit{basics/maxdefault1.hpp}
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
 
@@ -38,7 +38,7 @@ Note also that this implementation requires that we are able to call default con
 We can also use the std::common\_type<> type trait to specify the default value for the return type: 
 
 \noindent
-\textit{asics/maxdefault3.hpp}
+\textit{basics/maxdefault3.hpp}
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
 

@@ -1,7 +1,87 @@
-
+Probably, even these simple function template examples might raise further questions. Three questions are probably so common that we should discuss them here briefly.
 
 \subsubsubsection{1.6.1\hspace{0.2cm}Pass by Value or by Reference?}
 
+You might wonder, why we in general declare the functions to pass the arguments by value instead of using references. In general, passing by reference is recommended for types other than cheap simple types (such as fundamental types or std::string\_view), because no unnecessary copies are created.
+
+However, for a couple of reasons, passing by value in general is often better:
+
+\begin{itemize}
+\item
+The syntax is simple.
+
+\item 
+Compilers optimize better.
+
+\item
+Move semantics often makes copies cheap.
+
+\item 
+And sometimes there is no copy or move at all.
+\end{itemize}
+
+In addition, for templates, specific aspects come into play:
+
+\begin{itemize}
+\item
+A template might be used for both simple and complex types, so choosing the approach for complex types might be counter-productive for simple types.
+
+\item 
+As a caller you can often still decide to pass arguments by reference, using std::ref() and std::cref() (see Section 7.3).
+
+\item
+Although passing string literals or raw arrays always can become a problem, passing them by reference often is considered to become the bigger problem.
+\end{itemize}
+
+All this will be discussed in detail in Chapter 7. For the moment inside the book we will usually pass arguments by value unless some functionality is only possible when using references.
+
 \subsubsubsection{1.6.2\hspace{0.2cm}Why Not inline?}
+ 
+In general, function templates don’t have to be declared with inline. Unlike ordinary noninline functions, we can define noninline function templates in a header file and include this header file in multiple translation units.
+
+The only exception to this rule are full specializations of templates for specific types, so that the resulting code is no longer generic (all template parameters are defined). See Section 9.2 for more details.
+ 
+From a strict language definition perspective, inline only means that a definition of a function can appear multiple times in a program. However, it is also meant as a hint to the compiler that calls to that function should be “expanded inline”: Doing so can produce more efficient code for certain cases, but it can also make the code less efficient for many other cases. Nowadays, compilers usually are better at deciding this without the hint implied by the inline keyword. However, compilers still account for the presence of inline in that decision.
 
 \subsubsubsection{1.6.3\hspace{0.2cm}Why Not constexpr?}
+
+Since C++11, you can use constexpr to provide the ability to use code to compute some values at compile time. For a lot of templates this makes sense.
+
+For example, to be able to use the maximum function at compile time, you have to declare it as follows:
+
+\noindent
+\textit{basics/maxconstexpr.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+constexpr auto max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+With this, you can use the maximum function template in places with compile-time context, such as when declaring the size of a raw array:
+
+\begin{lstlisting}[style=styleCXX]
+int a[::max(sizeof(char),1000u)];
+\end{lstlisting}
+
+or the size of a std::array<>:
+
+\begin{lstlisting}[style=styleCXX]
+std::array<std::string, ::max(sizeof(char),1000u)> arr;
+\end{lstlisting}
+
+Note that we pass 1000 as unsigned int to avoid warnings about comparing a signed with an unsigned value inside the template.
+
+Section 8.2 will discuss other examples of using constexpr. However, to keep our focus on the fundamentals, we usually will skip constexpr when discussing other template features.
+
+
+
+
+
+
+
+
+
+
+

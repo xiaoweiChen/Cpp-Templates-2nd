@@ -1,7 +1,179 @@
 
+As we did with function templates, we declare and define class Stack<> in a header file as follows:
 
+\noindent
+\textit{basics/stack1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <cassert>
+
+template<typename T>
+class Stack {
+private:
+	std::vector<T> elems; // elements
+	
+public:
+	void push(T const& elem); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+};
+
+template<typename T>
+void Stack<T>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+
+template<typename T>
+void Stack<T>::pop ()
+{
+	assert(!elems.empty());
+	elems.pop_back(); // remove last element
+}
+
+template<typename T>
+T const& Stack<T>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+\end{lstlisting}
+
+As you can see, the class template is implemented by using a class template of the C++ standard library: vector<>. As a result, we don’t have to implement memory management, copy constructor, and assignment operator, so we can concentrate on the interface of this class template.
 
 \subsubsubsection{2.1.1\hspace{0.2cm}Declaration of Class Templates}
 
+Declaring class templates is similar to declaring function templates: Before the declaration, you have to declare one or multiple identifiers as a type parameter(s). Again, T is usually used as an identifier:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+};
+\end{lstlisting}
+
+Here again, the keyword class can be used instead of typename:
+
+\begin{lstlisting}[style=styleCXX]
+template<class T>
+class Stack {
+	...
+};
+\end{lstlisting}
+
+Inside the class template, T can be used just like any other type to declare members and member functions. In this example, T is used to declare the type of the elements as vector of Ts, to declare push() as a member function that uses a T as an argument, and to declare top() as a function that returns a T:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+private:
+	std::vector<T> elems; // elements
+	
+public:
+	void push(T const& elem); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+};
+\end{lstlisting}
+
+The type of this class is Stack<T>, with T being a template parameter. Thus, you have to use Stack<T> whenever you use the type of this class in a declaration except in cases where the template arguments can be deduced. However, inside a class template using the class name not followed by template arguments represents the class with its template parameters as its arguments (see Section 13.2.3 for details).
+
+If, for example, you have to declare your own copy constructor and assignment operator, it typically looks like this:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	Stack (Stack const&); // copy constructor
+	Stack& operator= (Stack const&); // assignment operator
+	...
+};
+\end{lstlisting}
+
+which is formally equivalent to:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	Stack (Stack<T> const&); // copy constructor
+	Stack<T>& operator= (Stack<T> const&); // assignment operator
+	...
+};
+\end{lstlisting}
+
+but usually the <T> signals special handling of special template parameters, so it’s usually better to use the first form.
+
+However, outside the class structure you’d need:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+bool operator== (Stack<T> const& lhs, Stack<T> const& rhs);
+\end{lstlisting}
+
+Note that in places where the name and not the type of the class is required, only Stack may be used. This is especially the case when you specify the name of constructors (not their arguments) and the destructor.
+
+Note also that, unlike nontemplate classes, you can’t declare or define class templates inside functions or block scope. In general, templates can only be defined in global/namespace scope or inside class declarations (see Section 12.1 for details).
+
 \subsubsubsection{2.1.2\hspace{0.2cm}Implementation of Member Functions}
+
+To define a member function of a class template, you have to specify that it is a template, and you have to use the full type qualification of the class template. Thus, the implementation of the member function push() for type Stack<T> looks like this:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void Stack<T>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+\end{lstlisting}
+
+In this case, push\_back() of the element vector is called, which appends the element at the end of the vector.
+
+Note that pop\_back() of a vector removes the last element but doesn’t return it. The reason for this behavior is exception safety. It is impossible to implement a completely exception-safe version of pop() that returns the removed element (this topic was first discussed by Tom Cargill in [CargillExceptionSafety] and is discussed as Item 10 in [SutterExceptional]). However, ignoring this danger, we could implement a pop() that returns the element just removed. To do this, we simply use T to declare a local variable of the element type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T Stack<T>::pop ()
+{
+	assert(!elems.empty());
+	T elem = elems.back(); // save copy of last element
+	elems.pop_back(); // remove last element
+	return elem; // return copy of saved element
+}
+\end{lstlisting}
+
+Because back() (which returns the last element) and pop\_back() (which removes the last element) have undefined behavior when there is no element in the vector, we decided to check whether the stack is empty. If it is empty, we assert, because it is a usage error to call pop() on an empty stack. This is also done in top(), which returns but does not remove the top element, on attempts to remove a nonexistent top element:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T const& Stack<T>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+\end{lstlisting}
+
+Of course, as for any member function, you can also implement member functions of class templates as an inline function inside the class declaration. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	void push (T const& elem) {
+		elems.push_back(elem); // append copy of passed elem
+	}
+	...
+};
+\end{lstlisting}
+
+
+
+
+
 

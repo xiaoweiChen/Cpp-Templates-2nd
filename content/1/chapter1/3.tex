@@ -119,7 +119,7 @@ In fact, the use of auto for the return type without a corresponding trailing re
 Before C++14, it is only possible to let the compiler determine the return type by more or less making the implementation of the function part of its declaration. In C++11 we can benefit from the fact that the trailing return type syntax allows us to use the call parameters. That is, we can declare that the return type is derived from what operator?: yields:
 
 \noindent
-\textit{asics/maxdecltype.hpp}
+\textit{basics/maxdecltype.hpp}
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
 auto max (T1 a, T2 b) -> decltype(b<a?a:b)
@@ -147,7 +147,7 @@ auto max (T1 a, T2 b) -> decltype(true?a:b);
 However, in any case this definition has a significant drawback: It might happen that the return type is a reference type, because under some conditions T might be a reference. For this reason you should return the type decayed from T, which looks as follows:
 
 \noindent
-\textit{asics/maxdecltypedecay.hpp}
+\textit{basics/maxdecltypedecay.hpp}
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
 
@@ -173,7 +173,7 @@ auto a = ir; // a is declared as new object of type int
 Since C++11, the C++ standard library provides a means to specify choosing “the more general type.” std::common\_type<>::type yields the “common type” of two (or more) different types passed as template arguments. For example:
 
 \noindent
-\textit{asics/maxcommon.hpp}
+\textit{basics/maxcommon.hpp}
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
 

@@ -1,0 +1,85 @@
+You can specialize a class template for certain template arguments. Similar to the overloading of function templates (see Section 1.5 on page 15), specializing class templates allows you to optimize implementations for certain types or to fix a misbehavior of certain types for an instantiation of the class template. However, if you specialize a class template, you must also specialize all member functions. Although it is possible to specialize a single member function of a class template, once you have done so, you can no longer specialize the whole class template instance that the specialized member belongs to.
+
+To specialize a class template, you have to declare the class with a leading template<> and a specification of the types for which the class template is specialized. The types are used as a template argument and must be specified directly following the name of the class:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+class Stack<std::string> {
+	...
+};
+\end{lstlisting}
+
+For these specializations, any definition of a member function must be defined as an “ordinary” member function, with each occurrence of T being replaced by the specialized type:
+
+\begin{lstlisting}[style=styleCXX]
+void Stack<std::string>::push (std::string const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+\end{lstlisting}
+
+Here is a complete example of a specialization of Stack<> for type std::string:
+
+\noindent
+\textit{basics/stack2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "stack1.hpp"
+#include <deque>
+#include <string>
+#include <cassert>
+
+template<>
+class Stack<std::string> {
+	private:
+	std::deque<std::string> elems; // elements
+	public:
+	void push(std::string const&); // push element
+	void pop(); // pop element
+	std::string const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+};
+
+void Stack<std::string>::push (std::string const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+
+void Stack<std::string>::pop ()
+{
+	assert(!elems.empty());
+	elems.pop_back(); // remove last element
+}
+
+std::string const& Stack<std::string>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+\end{lstlisting}
+
+In this example, the specialization uses reference semantics to pass the string argument to push(), which makes more sense for this specific type (we should even better pass a forwarding reference, though, which is discussed in Section 6.1).
+
+Another difference is to use a deque instead of a vector to manage the elements inside the stack. Although this has no particular benefit here, it does demonstrate that the implementation of a specialization might look very different from the implementation of the primary template.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,222 @@
+Since C++17, you can define a nontype template parameter to generically accept any type that is allowed for a nontype parameter. Using this feature, we can provide an even more generic stack class with fixed size:
+
+\noindent
+\textit{basics/stackauto.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <array>
+#include <cassert>
+template<typename T, auto Maxsize>
+class Stack {
+	public:
+	using size_type = decltype(Maxsize);
+private:
+	std::array<T,Maxsize> elems; // elements
+	size_type numElems; // current number of elements
+public:
+	Stack(); // constructor
+	void push(T const& elem); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return numElems == 0;
+	}
+	size_type size() const { // return current number of elements
+		return numElems;
+	}
+};
+
+// constructor
+template<typename T, auto Maxsize>
+Stack<T,Maxsize>::Stack ()
+: numElems(0) // start with no elements
+{
+	// nothing else to do
+}
+
+template<typename T, auto Maxsize>
+void Stack<T,Maxsize>::push (T const& elem)
+{
+	assert(numElems < Maxsize);
+	elems[numElems] = elem; // append element
+	++numElems; // increment number of elements
+}
+
+template<typename T, auto Maxsize>
+void Stack<T,Maxsize>::pop ()
+{
+	assert(!elems.empty());
+	--numElems; // decrement number of elements
+}
+
+template<typename T, auto Maxsize>
+T const& Stack<T,Maxsize>::top () const
+{
+	assert(!elems.empty());
+	return elems[numElems-1]; // return last element
+}
+\end{lstlisting}
+
+By defining
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, auto Maxsize>
+class Stack {
+	...
+};
+\end{lstlisting}
+
+by using the placeholder type auto, you define Maxsize to be a value of a type not specified yet. It might be any type that is allowed to be a nontype template parameter type.
+
+Internally you can use both the value:
+
+\begin{lstlisting}[style=styleCXX]
+std::array<T,Maxsize> elems; // elements
+\end{lstlisting}
+
+and its type:
+
+\begin{lstlisting}[style=styleCXX]
+using size_type = decltype(Maxsize);
+\end{lstlisting}
+
+which is then, for example, used as return type of the size() member function:
+
+\begin{lstlisting}[style=styleCXX]
+size_type size() const { // return current number of elements
+	return numElems;
+}
+\end{lstlisting}
+
+Since C++14, you could also just use auto here as return type to let the compiler find out the return type:
+
+\begin{lstlisting}[style=styleCXX]
+auto size() const { // return current number of elements
+	return numElems;
+}
+\end{lstlisting}
+
+With this class declaration the type of the number of elements is defined by the type used for the number of elements, when using a stack:
+
+\noindent
+\textit{basics/stackauto.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <string>
+#include "stackauto.hpp"
+
+int main()
+{
+	Stack<int,20u> int20Stack; // stack of up to 20 ints
+	Stack<std::string,40> stringStack; // stack of up to 40 strings
+	
+	// manipulate stack of up to 20 ints
+	int20Stack.push(7);
+	std::cout << int20Stack.top() << '\n';
+	auto size1 = int20Stack.size();
+	
+	// manipulate stack of up to 40 strings
+	stringStack.push("hello");
+	std::cout << stringStack.top() << '\n';
+	auto size2 = stringStack.size();
+	
+	if (!std::is_same_v<decltype(size1), decltype(size2)>) {
+		std::cout << "size types differ" << '\n';
+	}
+}
+\end{lstlisting}
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int,20u> int20Stack; // stack of up to 20 ints
+\end{lstlisting}
+
+the internal size type is unsigned int, because 20u is passed.
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+Stack<std::string,40> stringStack; // stack of up to 40 strings
+\end{lstlisting}
+
+the internal size type is int, because 40 is passed.
+
+size() for the two stacks will have different return types, so that after
+
+\begin{lstlisting}[style=styleCXX]
+auto size1 = int20Stack.size();
+...
+auto size2 = stringStack.size();
+\end{lstlisting}
+
+the types of size1 and size2 differ. By using the standard type trait std::is\_same (see Section D.3.3) and decltype, we can check that:
+
+\begin{lstlisting}[style=styleCXX]
+if (!std::is_same<decltype(size1), decltype(size2)>::value) {
+	std::cout << "size types differ" << '\n';
+}
+\end{lstlisting}
+
+Thus, the output will be:
+
+\begin{tcblisting}{commandshell={}}
+size types differ
+\end{tcblisting}
+
+Since C++17, for traits returning values, you can also use the suffix \_v and skip ::value (see Section 5.6 for details):
+
+\begin{lstlisting}[style=styleCXX]
+if (!std::is_same_v<decltype(size1), decltype(size2)>) {
+	std::cout << "size types differ" << '\n';
+}
+\end{lstlisting}
+
+Note that other constraints on the type of nontype template parameters remain in effect. Especially, the restrictions about possible types for nontype template arguments discussed in Section 3.3 still apply. For example:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int,3.14> sd; // ERROR: Floating-point nontype argument
+\end{lstlisting}
+
+And, because you can also pass strings as constant arrays (since C++17 even static locally declared; see Section 3.3), the following is possible:
+
+\noindent
+\textit{basics/message.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<auto T> // take value of any possible nontype parameter (since C++17)
+class Message {
+	public:
+	void print() {
+		std::cout << T << '\n';
+	}
+};
+
+int main()
+{
+	Message<42> msg1;
+	msg1.print(); // initialize with int 42 and print that value
+	
+	static char const s[] = "hello";
+	Message<s> msg2; // initialize with char const[6] "hello"
+	msg2.print(); // and print that value
+}
+\end{lstlisting}
+
+Note also that even template<decltype(auto) N> is possible, which allows instantiation of N as a reference:
+
+\begin{lstlisting}[style=styleCXX]
+template<decltype(auto) N>
+class C {
+	...
+};
+
+int i;
+C<(i)> x; // N is int&
+\end{lstlisting}
+
+See Section 15.10.1 for details.
+
+
+
+

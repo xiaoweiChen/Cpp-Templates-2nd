@@ -1,12 +1,302 @@
 
-
+Besides the examples above, parameter packs can appear in additional places, including, for example, expressions, class templates, using declarations, and even deduction guides. Section 12.4.2 has a complete list.
 
 \subsubsubsection{4.4.1\hspace{0.2cm}Variadic Expressions}
 
+You can do more than just forward all the parameters. You can compute with them, which means to compute with all the parameters in a parameter pack.
+
+For example, the following function doubles each parameter of the parameter pack args and passes each doubled argument to print():
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... T>
+void printDoubled (T const&... args)
+{
+	print (args + args...);
+}
+\end{lstlisting}
+
+If, for example, you call
+
+\begin{lstlisting}[style=styleCXX]
+printDoubled(7.5, std::string("hello"), std::complex<float>(4,2));
+\end{lstlisting}
+
+the function has the following effect (except for any constructor side effects):
+
+\begin{lstlisting}[style=styleCXX]
+print(7.5 + 7.5,
+	std::string("hello") + std::string("hello"),
+	std::complex<float>(4,2) + std::complex<float>(4,2);
+\end{lstlisting}
+
+If you just want to add 1 to each argument, note that the dots from the ellipsis may not directly follow a numeric literal:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... T>
+void addOne (T const&... args)
+{
+	print (args + 1...); // ERROR: 1... is a literal with too many decimal points
+	print (args + 1 ...); // OK
+	print ((args + 1)...); // OK
+}
+\end{lstlisting}
+
+Compile-time expressions can include template parameter packs in the same way. For example, the following function template returns whether the types of all the arguments are the same:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename... TN>
+constexpr bool isHomogeneous (T1, TN...)
+{
+	return (std::is_same<T1,TN>::value && ...); // since C++17
+}
+\end{lstlisting}
+
+This is an application of fold expressions (see Section 4.2): For
+
+\begin{lstlisting}[style=styleCXX]
+isHomogeneous(43, -1, "hello")
+\end{lstlisting}
+
+the expression for the return value expands to
+
+\begin{lstlisting}[style=styleCXX]
+std::is_same<int,int>::value && std::is_same<int,char const*>::value
+\end{lstlisting}
+
+and yields false, while
+
+\begin{lstlisting}[style=styleCXX]
+isHomogeneous("hello", " ", "world", "!")
+\end{lstlisting}
+
+yields true because all passed arguments are deduced to be char const* (note that the argument types decay because the call arguments are passed by value).
+
 \subsubsubsection{4.4.2\hspace{0.2cm}Variadic Indices}
+
+As another example, the following function uses a variadic list of indices to access the corresponding element of the passed first argument:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename C, typename... Idx>
+void printElems (C const& coll, Idx... idx)
+{
+	print (coll[idx]...);
+}
+\end{lstlisting}
+
+That is, when calling
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<std::string> coll = {"good", "times", "say", "bye"};
+printElems(coll,2,0,3);
+\end{lstlisting}
+
+the effect is to call
+
+\begin{tcblisting}{commandshell={}}
+print (coll[2], coll[0], coll[3]);
+\end{tcblisting}
+
+You can also declare nontype template parameters to be parameter packs. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<std::size_t... Idx, typename C>
+void printIdx (C const& coll)
+{
+	print(coll[Idx]...);
+}
+\end{lstlisting}
+
+allows you to call
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<std::string> coll = {"good", "times", "say", "bye"};
+printIdx<2,0,3>(coll);
+\end{lstlisting}
+
+which has the same effect as the previous example.
 
 \subsubsubsection{4.4.3\hspace{0.2cm}Variadic Class Templates}
 
+Variadic templates can also be class templates. An important example is a class where an arbitrary number of template parameters specify the types of corresponding members:
+
+\begin{lstlisting}[style=styleCXX]
+emplate<typename... Elements>
+class Tuple;
+
+Tuple<int, std::string, char> t; // t can hold integer, string, and character
+\end{lstlisting}
+
+This will be discussed in Chapter 25.
+
+Another example is to be able to specify the possible types objects can have:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Variant;
+
+Variant<int, std::string, char> v; // v can hold integer, string, or character
+\end{lstlisting}
+
+This will be discussed in Chapter 26.
+
+You can also define a class that as a type represents a list of indices:
+
+\begin{lstlisting}[style=styleCXX]
+// type for arbitrary number of indices:
+template<std::size_t...>
+struct Indices {
+};
+\end{lstlisting}
+
+This can be used to define a function that calls print() for the elements of a std::array or std::tuple using the compile-time access with get<>() for the given indices:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, std::size_t... Idx>
+void printByIdx(T t, Indices<Idx...>)
+{
+	print(std::get<Idx>(t)...);
+}
+\end{lstlisting}
+
+This template can be used as follows:
+
+\begin{lstlisting}[style=styleCXX]
+std::array<std::string, 5> arr = {"Hello", "my", "new", "!", "World"};
+printByIdx(arr, Indices<0, 4, 3>());
+\end{lstlisting}
+
+or as follows:
+
+\begin{lstlisting}[style=styleCXX]
+auto t = std::make_tuple(12, "monkeys", 2.0);
+printByIdx(t, Indices<0, 1, 2>());
+\end{lstlisting}
+
+This is a first step towards meta-programming, which will be discussed in Section 8.1 and Chapter 23.
+
 \subsubsubsection{4.4.4\hspace{0.2cm}Variadic Deduction Guides}
 
+Even deduction guides (see Section 2.9) can be variadic. For example, the C++ standard library defines the following deduction guide for std::arrays:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T, typename... U> array(T, U...)
+	-> array<enable_if_t<(is_same_v<T, U> && ...), T>,
+		(1 + sizeof...(U))>;
+}
+\end{lstlisting}
+
+An initialization such as
+
+\begin{lstlisting}[style=styleCXX]
+std::array a{42,45,77};
+\end{lstlisting}
+
+deduces T in the guide to the type of the element, and the various U... types to the types of the subsequent elements. The total number of elements is therefore 1 + sizeof...(U):
+
+\begin{lstlisting}[style=styleCXX]
+std::array<int, 3> a{42,45,77};
+\end{lstlisting}
+
+The std::enable\_if<> expression for the first array parameter is a fold expression that (as introduced as isHomogeneous() in Section 4.4.1) expands to:
+
+\begin{lstlisting}[style=styleCXX]
+is_same_v<T, U1> && is_same_v<T, U2> && is_same_v<T, U3> ...
+\end{lstlisting}
+
+If the result is not true (i.e., not all the element types are the same), the deduction guide is discarded and the overall deduction fails. This way, the standard library ensures that all elements must have the same type for the deduction guide to succeed.
+
 \subsubsubsection{4.4.5\hspace{0.2cm}Variadic Base Classes and using}
+
+Finally, consider the following example:
+
+\noindent
+\textit{basics/varusing.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <unordered_set>
+
+class Customer
+{
+	private:
+	std::string name;
+	public:
+	Customer(std::string const& n) : name(n) { }
+	std::string getName() const { return name; }
+};
+
+struct CustomerEq {
+	bool operator() (Customer const& c1, Customer const& c2) const {
+		return c1.getName() == c2.getName();
+	}
+};
+
+struct CustomerHash {
+	std::size_t operator() (Customer const& c) const {
+		return std::hash<std::string>()(c.getName());
+	}
+};
+
+// define class that combines operator() for variadic base classes:
+template<typename... Bases>
+struct Overloader : Bases...
+{
+	using Bases::operator()...; // OK since C++17
+};
+
+int main()
+{
+	// combine hasher and equality for customers in one type:
+	using CustomerOP = Overloader<CustomerHash,CustomerEq>;
+	
+	std::unordered_set<Customer,CustomerHash,CustomerEq> coll1;
+	std::unordered_set<Customer,CustomerOP,CustomerOP> coll2;
+	...
+}
+\end{lstlisting}
+
+Here, we first define a class Customer and independent function objects to hash and compare Customer objects. With
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Bases>
+struct Overloader : Bases...
+{
+	using Bases::operator()...; // OK since C++17
+};
+\end{lstlisting}
+
+we can define a class derived from a variadic number of base classes that brings in the operator() declarations from each of those base classes. With
+
+\begin{lstlisting}[style=styleCXX]
+using CustomerOP = Overloader<CustomerHash,CustomerEq>;
+\end{lstlisting}
+
+we use this feature to derive CustomerOP from CustomerHash and CustomerEq and enable both implementations of operator() in the derived class.
+
+See Section 26.4 for another application of this technique.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,3 +1,73 @@
 
+A class template usually applies multiple operations on the template arguments it is instantiated for (including construction and destruction). This might lead to the impression that these template arguments have to provide all operations necessary for all member functions of a class template. But this is not the case: Template arguments only have to provide all necessary operations that are needed (instead of that could be needed).
+
+If, for example, class Stack<> would provide a member function printOn() to print the whole stack content, which calls operator<< for each element:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	void printOn() (std::ostream& strm) const {
+		for (T const& elem : elems) {
+			strm << elem << ' '; // call << for each element
+		}
+	}
+};
+\end{lstlisting}
+
+You can still use this class for elements that don’t have operator<< defined:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<std::pair<int,int>> ps; // note: std::pair<> has no operator<< defined
+ps.push({4, 5}); // OK
+ps.push({6, 7}); // OK
+std::cout << ps.top().first << '\n'; // OK
+std::cout << ps.top().second << '\n'; // OK
+\end{lstlisting}
+
+Only if you call printOn() for such a stack, the code will produce an error, because it can’t instantiate the call of operator<< for this specific element type:
+
+\begin{lstlisting}[style=styleCXX]
+ps.printOn(std::cout); // ERROR: operator<< not supported for element type
+\end{lstlisting}
+
 \subsubsubsection{2.3.1\hspace{0.2cm}Concepts}
+
+This raises the question: How do we know which operations are required for a template to be able to get instantiated? The term concept is often used to denote a set of constraints that is repeatedly required in a template library. For example, the C++ standard library relies on such concepts as random access iterator and default constructible.
+
+Currently (i.e., as of C++17), concepts can more or less only be expressed in the documentation (e.g., code comments). This can become a significant problem because failures to follow constraints can lead to terrible error messages (see Section 9.4).
+
+For years, there have also been approaches and trials to support the definition and validation of concepts as a language feature. However, up to C++17 no such approach was standardized yet.
+
+Since C++11, you can at least check for some basic constraints by using the static\_assert keyword and some predefined type traits. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C
+{
+	static_assert(std::is_default_constructible<T>::value,
+	"Class C requires default-constructible elements");
+	...
+};
+\end{lstlisting}
+
+Without this assertion the compilation will still fail, if the default constructor is required. However, the error message then might contain the entire template instantiation history from the initial cause of the instantiation down to the actual template definition in which the error was detected (see Section 9.4).
+
+However, more complicated code is necessary to check, for example, objects of type T provide a specific member function or that they can be compared using operator <. See Section 19.6.3 for a detailed example of such code. 
+
+See Appendix E for a detailed discussion of concepts for C++.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

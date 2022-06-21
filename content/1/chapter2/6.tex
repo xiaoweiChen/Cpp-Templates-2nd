@@ -1,0 +1,134 @@
+Class templates can be partially specialized. You can provide special implementations for particular circumstances, but some template parameters must still be defined by the user. For example, we can define a special implementation of class Stack<> for pointers:
+
+\noindent
+\textit{basics/stackpartspec.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "stack1.hpp"
+
+// partial specialization of class Stack<> for pointers:
+template<typename T>
+class Stack<T*> {
+private:
+	std::vector<T*> elems; // elements
+	
+public:
+	void push(T*); // push element
+	T* pop(); // pop element
+	T* top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+};
+
+template<typename T>
+void Stack<T*>::push (T* elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+
+template<typename T>
+T* Stack<T*>::pop ()
+{
+	assert(!elems.empty());
+	T* p = elems.back();
+	elems.pop_back(); // remove last element
+	return p; // and return it (unlike in the general case)
+}
+
+template<typename T>
+T* Stack<T*>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+\end{lstlisting}
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack<T*> {
+};
+\end{lstlisting}
+
+we define a class template, still parameterized for T but specialized for a pointer (Stack<T*>).
+
+Note again that the specialization might provide a (slightly) different interface. Here, for example, pop() returns the stored pointer, so that a user of the class template can call delete for the removed value, when it was created with new
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int*> ptrStack; // stack of pointers (special implementation)
+
+ptrStack.push(new int{42});
+std::cout << *ptrStack.top() << '\n';
+delete ptrStack.pop();
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Partial Specialization with Multiple Parameters}
+
+Class templates might also specialize the relationship between multiple template parameters. For example, for the following class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+class MyClass {
+	...
+};
+\end{lstlisting}
+
+the following partial specializations are possible:
+
+\begin{lstlisting}[style=styleCXX]
+// partial specialization: both template parameters have same type
+template<typename T>
+class MyClass<T,T> {
+	...
+};
+
+// partial specialization: second type is int
+template<typename T>
+class MyClass<T,int> {
+	...
+};
+
+// partial specialization: both template parameters are pointer types
+template<typename T1, typename T2>
+class MyClass<T1*,T2*> {
+	...
+};
+\end{lstlisting}
+
+The following examples show which template is used by which declaration:
+
+\begin{lstlisting}[style=styleCXX]
+MyClass<int,float> mif; // uses MyClass<T1,T2>
+MyClass<float,float> mff; // uses MyClass<T,T>
+MyClass<float,int> mfi; // uses MyClass<T,int>
+MyClass<int*,float*> mp; // uses MyClass<T1*,T2*>
+\end{lstlisting}
+
+If more than one partial specialization matches equally well, the declaration is ambiguous:
+
+\begin{lstlisting}[style=styleCXX]
+MyClass<int,int> m; // ERROR: matches MyClass<T,T>
+					// and MyClass<T,int>
+MyClass<int*,int*> m; // ERROR: matches MyClass<T,T>
+					  // and MyClass<T1*,T2*>
+\end{lstlisting}
+
+To resolve the second ambiguity, you could provide an additional partial specialization for pointers of the same type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyClass<T*,T*> {
+	...
+};
+\end{lstlisting}
+
+For details of partial specialization, see Section 16.4 on page 347.
+
+
+
+
+
+

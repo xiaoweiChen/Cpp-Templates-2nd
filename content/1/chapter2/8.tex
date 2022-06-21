@@ -1,0 +1,149 @@
+
+You can make using a class template more convenient by defining a new name for the whole type.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Typedefs and Alias Declarations}
+
+To simply define a new name for a complete type, there are two ways to do it:
+
+\begin{enumerate}
+\item
+By using the keyword typedef:
+
+\begin{lstlisting}[style=styleCXX]
+typedef Stack<int> IntStack; // typedef
+void foo (IntStack const& s); // s is stack of ints
+IntStack istack[10]; // istack is array of 10 stacks of ints
+\end{lstlisting}
+
+We call this declaration a typedef and the resulting name is called a typedef-name.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Using the word typedef instead of “type definition” in intentional. The keyword typedef was originally meant to suggest “type definition.” However, in C++, “type definition” really means something else (e.g., the definition of a class or enumeration type). Instead, a typedef should just be thought of as an alternative name (an “alias”) for an existing type, which can be done by a typedef.
+\end{tcolorbox}
+
+\item
+By using the keyword using (since C++11):
+
+\begin{lstlisting}[style=styleCXX]
+using IntStack = Stack<int>; // alias declaration
+void foo (IntStack const& s); // s is stack of ints
+IntStack istack[10]; // istack is array of 10 stacks of ints
+\end{lstlisting}
+
+Introduced by [DosReisMarcusAliasTemplates], this is called an alias declaration. 
+
+\end{enumerate}
+
+Note that in both cases we define a new name for an existing type rather than a new type. Thus, after the typedef
+
+\begin{lstlisting}[style=styleCXX]
+typedef Stack<int> IntStack;
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=styleCXX]
+using IntStack = Stack<int>;
+\end{lstlisting}
+
+IntStack and Stack<int> are two interchangeable notations for the same type.
+
+As a common term for both alternatives to define a new name for an existing type, we use the term type alias declaration. The new name is a type alias then.
+
+Because it is more readable (always having the defined type name on the left side of the =, for the remainder of this book, we prefer the alias declaration syntax when declaring an type alias.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Alias Templates}
+
+Unlike a typedef, an alias declaration can be templated to provide a convenient name for a family of types. This is also available since C++11 and is called an alias template.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Alias templates are sometimes (incorrectly) referred to as typedef templates because they fulfill the same role that a typedef would if it could be made into a template.
+\end{tcolorbox}
+
+The following alias template DequeStack, parameterized over the element type T, expands to a Stack that stores its elements in a std::deque:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using DequeStack = Stack<T, std::deque<T>>;
+\end{lstlisting}
+
+Thus, both class templates and alias templates can be used as a parameterized type. But again, an alias template simply gives a new name to an existing type, which can still be used. Both DequeStack<int> and Stack<int, std::deque<int>> represent the same type.
+
+Note again that, in general, templates can only be declared and defined in global/namespace scope or inside class declarations.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Alias Templates for Member Types}
+
+Alias templates are especially helpful to define shortcuts for types that are members of class templates. After
+
+\begin{lstlisting}[style=styleCXX]
+struct C {
+	typedef ... iterator;
+	...
+};
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=styleCXX]
+struct MyType {
+	using iterator = ...;
+	...
+};
+\end{lstlisting}
+
+a definition such as
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using MyTypeIterator = typename MyType<T>::iterator;
+\end{lstlisting}
+
+allows the use of
+
+\begin{lstlisting}[style=styleCXX]
+MyTypeIterator<int> pos;
+\end{lstlisting}
+
+instead of the following:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The typename is necessary here because the member is a type. See Section 5.1 for details.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+typename MyType<T>::iterator pos;
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Type Traits Suffix \_t}
+
+Since C++14, the standard library uses this technique to define shortcuts for all type traits in the standard library that yield a type. For example, to be able to write
+
+\begin{lstlisting}[style=styleCXX]
+std::add_const_t<T> // since C++14
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+typename std::add_const<T>::type // since C++11
+\end{lstlisting}
+
+the standard library defines:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T> using add_const_t = typename add_const<T>::type;
+}
+\end{lstlisting}
+
+
+
+

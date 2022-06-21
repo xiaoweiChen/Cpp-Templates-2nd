@@ -1,0 +1,142 @@
+Since C++17, there is a feature to compute the result of using a binary operator over all the arguments of a parameter pack (with an optional initial value).
+
+For example, the following function returns the sum of all passed arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... T>
+auto foldSum (T... s) {
+	return (... + s); // ((s1 + s2) + s3) ...
+}
+\end{lstlisting}
+
+If the parameter pack is empty, the expression is usually ill-formed (with the exception that for operator \&\& the value is true, for operator || the value is false, and for the comma operator the value for an empty parameter pack is void()).
+
+Table 4.1 lists the possible fold expressions.
+
+\begin{center}
+	
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Fold Expression}                                                                                                      & \textbf{Evaluation}                                                                                                                                                                                                     \\ \hline
+		\begin{tabular}[c]{@{}l@{}}( ... op pack )\\ ( pack op ... )\\ ( init op ... op pack )\\ ( pack op ... op init )\end{tabular} & \begin{tabular}[c]{@{}l@{}}((( pack1 op pack2 ) op pack3 ) ... op packN )\\ ( pack1 op ( ... ( packN-1 op packN )))\\ ((( init op pack1 ) op pack2 ) ... op packN )\\ ( pack1 op ( ... ( packN op init )))\end{tabular} \\ \hline
+	\end{tabular}
+\end{table}
+
+Table 4.1. Fold Expressions (since C++17)
+\end{center}
+
+You can use almost all binary operators for fold expressions (see Section 12.4.6 for details). For example, you can use a fold expression to traverse a path in a binary tree using operator ->*:
+
+\noindent
+\textit{basics/foldtraverse.cpp}
+\begin{lstlisting}[style=styleCXX]
+// define binary tree structure and traverse helpers:
+struct Node {
+	int value;
+	Node* left;
+	Node* right;
+	Node(int i=0) : value(i), left(nullptr), right(nullptr) {
+	}
+	...
+};
+
+auto left = &Node::left;
+auto right = &Node::right;
+
+// traverse tree, using fold expression:
+template<typename T, typename... TP>
+Node* traverse (T np, TP... paths) {
+	return (np ->* ... ->* paths); // np ->* paths1 ->* paths2 ...
+}
+
+int main()
+{
+	// init binary tree structure:
+	Node* root = new Node{0};
+	root->left = new Node{1};
+	root->left->right = new Node{2};
+	...
+	// traverse binary tree:
+	Node* node = traverse(root, left, right);
+	...
+}
+\end{lstlisting}
+
+Here,
+
+\begin{lstlisting}[style=styleCXX]
+(np ->* ... ->* paths)
+\end{lstlisting}
+
+uses a fold expression to traverse the variadic elements of paths from np.
+
+With such a fold expression using an initializer, we might think about simplifying the variadic template to print all arguments, introduced above:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+void print (Types const&... args)
+{
+	(std::cout << ... << args) << '\n';
+}
+\end{lstlisting}
+
+However, note that in this case no whitespace separates all the elements from the parameter pack. To do that, you need an additional class template, which ensures that any output of any argument is extended by a space:
+
+\noindent
+\textit{basics/addspace.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class AddSpace
+{
+private:
+	T const& ref; // refer to argument passed in constructor
+public:
+	AddSpace(T const& r): ref(r) {
+	}
+	friend std::ostream& operator<< (std::ostream& os, AddSpace<T> s) {
+		return os << s.ref << ' '; // output passed argument and a space
+	}
+};
+
+template<typename... Args>
+void print (Args... args) {
+	( std::cout << ... << AddSpace(args) ) << '\n';
+}
+\end{lstlisting}
+
+Note that the expression AddSpace(args) uses class template argument deduction (see Section 2.9) to have the effect of AddSpace<Args>(args), which for each argument creates an AddSpace object that refers to the passed argument and adds a space when it is used in output expressions.
+
+See Section 12.4.6 for details about fold expressions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

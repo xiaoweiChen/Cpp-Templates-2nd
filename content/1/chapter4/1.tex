@@ -1,0 +1,191 @@
+
+
+Template parameters can be defined to accept an unbounded number of template arguments. Templates with this ability are called variadic templates.
+
+\subsubsubsection{4.1.1\hspace{0.2cm}Variadic Templates by Example}
+
+For example, you can use the following code to call print() for a variable number of arguments of different types:
+
+\noindent
+\textit{basics/varprint1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+void print ()
+{
+}
+
+template<typename T, typename... Types>
+void print (T firstArg, Types... args)
+{
+	std::cout << firstArg << '\n'; // print first argument
+	print(args...); // call print() for remaining arguments
+}
+\end{lstlisting}
+
+If one or more arguments are passed, the function template is used, which by specifying the first argument separately allows printing of the first argument before recursively calling print() for the remaining arguments. These remaining arguments named args are a function parameter pack:
+
+\begin{lstlisting}[style=styleCXX]
+void print (T firstArg, Types... args)
+\end{lstlisting}
+
+using different “Types” specified by a template parameter pack:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+\end{lstlisting}
+
+To end the recursion, the nontemplate overload of print() is provided, which is issued when the parameter pack is empty.
+
+For example, a call such as
+
+\begin{lstlisting}[style=styleCXX]
+std::string s("world");
+print (7.5, "hello", s);
+\end{lstlisting}
+
+would output the following:
+
+\begin{tcblisting}{commandshell={}}
+7.5
+hello
+world
+\end{tcblisting}
+
+The reason is that the call first expands to
+
+\begin{lstlisting}[style=styleCXX]
+print<double, char const*, std::string> (7.5, "hello", s);
+\end{lstlisting}
+
+with
+
+\begin{itemize}
+\item 
+firstArg having the value 7.5 so that type T is a double and
+
+\item 
+args being a variadic template argument having the values "hello" of type char const* and "world" of type std::string.
+\end{itemize}
+
+After printing 7.5 as firstArg, it calls print() again for the remaining arguments, which then expands to:
+
+\begin{lstlisting}[style=styleCXX]
+print<char const*, std::string> ("hello", s);
+\end{lstlisting}
+
+with
+
+\begin{itemize}
+\item 
+firstArg having the value "hello" so that type T is a char const* here and
+
+\item 
+args being a variadic template argument having the value of type std::string.
+\end{itemize}
+
+After printing "hello" as firstArg, it calls print() again for the remaining arguments, which then expands to:
+
+\begin{lstlisting}[style=styleCXX]
+print<std::string> (s);
+\end{lstlisting}
+
+with
+
+\begin{itemize}
+\item 
+firstArg having the value "world" so that type T is a std::string now and
+
+\item 
+args being an empty variadic template argument having no value.
+\end{itemize}
+
+Thus, after printing "world" as firstArg, we calls print() with no arguments, which results in calling the nontemplate overload of print() doing nothing.
+
+\subsubsubsection{4.1.2\hspace{0.2cm}Overloading Variadic and Nonvariadic Templates}
+
+Note that you can also implement the example above as follows:
+
+\noindent
+\textit{basics/varprint2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+void print (T arg)
+{
+	std::cout << arg << '\n'; // print passed argument
+}
+
+template<typename T, typename... Types>
+void print (T firstArg, Types... args)
+{
+	print(firstArg); // call print() for the first argument
+	print(args...); // call print() for remaining arguments
+}
+\end{lstlisting}
+
+That is, if two function templates only differ by a trailing parameter pack, the function template without the trailing parameter pack is preferred.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Initially, in C++11 and C++14 this was an ambiguity, which was fixed later (see [CoreIssue1395]), but all compilers handle it this way in all versions.
+\end{tcolorbox}
+
+Section C.3.1 on page 688 explains the more general overload resolution rule that applies here.
+
+\subsubsubsection{4.1.3\hspace{0.2cm}Operator sizeof...}
+
+C++11 also introduced a new form of the sizeof operator for variadic templates: sizeof.... It expands to the number of elements a parameter pack contains. Thus,
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+void print (T firstArg, Types... args)
+{
+	std::cout << sizeof...(Types) << '\n'; // print number of remaining types
+	std::cout << sizeof...(args) << '\n'; // print number of remaining args
+	...
+}
+\end{lstlisting}
+
+twice prints the number of remaining arguments after the first argument passed to print(). As you can see, you can call sizeof... for both template parameter packs and function parameter packs.
+
+This might lead us to think we can skip the function for the end of the recursion by not calling it in case there are no more arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+void print (T firstArg, Types... args)
+{
+	std::cout << firstArg << '\n';
+	if (sizeof...(args) > 0) { // error if sizeof...(args)==0
+		print(args...); // and no print() for no arguments declared
+	}
+}
+\end{lstlisting}
+
+However, this approach doesn’t work because in general both branches of all if statements in function templates are instantiated. Whether the instantiated code is useful is a run-time decision, while the instantiation of the call is a compile-time decision. For this reason, if you call the print() function template for one (last) argument, the statement with the call of print(args...) still is instantiated for no argument, and if there is no function print() for no arguments provided, this is an error.
+
+However, note that since C++17, a compile-time if is available, which achieves what was expected here with a slightly different syntax. This will be discussed in Section 8.5.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

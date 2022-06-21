@@ -1,0 +1,79 @@
+
+Instead of printing the stack contents with printOn() it is better to implement operator<< for the stack. However, as usual operator<< has to be implemented as nonmember function, which then could call printOn() inline:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	void printOn() (std::ostream& strm) const {
+		...
+	}
+	friend std::ostream& operator<< (std::ostream& strm,
+	Stack<T> const& s) {
+		s.printOn(strm);
+		return strm;
+	}
+};
+\end{lstlisting}
+
+Note that this means that operator<< for class Stack<> is not a function template, but an “ordinary” function instantiated with the class template if needed.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}It is a templated entity, see Section 12.1.
+\end{tcolorbox}
+
+However, when trying to declare the friend function and define it afterwards, things become more complicated. In fact, we have two options:
+
+\begin{enumerate}
+\item 
+We can implicitly declare a new function template, which must use a different template parameter, such as U:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	template<typename U>
+	friend std::ostream& operator<< (std::ostream&, Stack<U> const&);
+};
+\end{lstlisting}
+
+Neither using T again nor skipping the template parameter declaration would work (either the inner T hides the outer T or we declare a nontemplate function in namespace scope).
+
+\item 
+We can forward declare the output operator for a Stack<T> to be a template, which, however, means that we first have to forward declare Stack<T>:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack;
+template<typename T>
+std::ostream& operator<< (std::ostream&, Stack<T> const&);
+\end{lstlisting}
+
+Then, we can declare this function as friend:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	...
+	friend std::ostream& operator<< <T> (std::ostream&,
+	Stack<T> const&);
+};
+\end{lstlisting}
+
+Note the <T> behind the “function name” operator<<. Thus, we declare a specialization of the nonmember function template as friend. Without <T> we would declare a new nontemplate function. See Section 12.5.2 for details.
+\end{enumerate}
+
+In any case, you can still use this class for elements that don’t have operator<< defined. Only calling operator<< for this stack results in an error:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<std::pair<int,int>> ps; // std::pair<> has no operator<< defined
+ps.push({4, 5}); // OK
+ps.push({6, 7}); // OK
+std::cout << ps.top().first << '\n'; // OK
+std::cout << ps.top().second << '\n'; // OK
+std::cout << ps << '\n'; // ERROR: operator<< not supported
+\end{lstlisting}
+
+
+
+

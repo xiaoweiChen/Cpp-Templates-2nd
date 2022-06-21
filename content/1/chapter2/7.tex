@@ -1,0 +1,115 @@
+As for function templates, you can define default values for class template parameters. For example, in class Stack<> you can define the container that is used to manage the elements as a second template parameter, using std::vector<> as the default value:
+
+\noindent
+\textit{basics/stack3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <cassert>
+
+template<typename T, typename Cont = std::vector<T>>
+class Stack {
+private:
+	Cont elems; // elements
+	
+public:
+	void push(T const& elem); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+};
+
+template<typename T, typename Cont>
+void Stack<T,Cont>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+
+template<typename T, typename Cont>
+void Stack<T,Cont>::pop ()
+{
+	assert(!elems.empty());
+	elems.pop_back(); // remove last element
+}
+
+template<typename T, typename Cont>
+T const& Stack<T,Cont>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+\end{lstlisting}
+
+Note that we now have two template parameters, so each definition of a member function must be defined with these two parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Cont>
+void Stack<T,Cont>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+\end{lstlisting}
+
+You can use this stack the same way it was used before. Thus, if you pass a first and only argument as an element type, a vector is used to manage the elements of this type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Cont = std::vector<T>>
+class Stack {
+private:
+	Cont elems; // elements
+	...
+};
+\end{lstlisting}
+
+In addition, you could specify the container for the elements when you declare a Stack object in your program:
+
+\noindent
+\textit{basics/stack3test.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "stack3.hpp"
+#include <iostream>
+#include <deque>
+
+int main()
+{
+	// stack of ints:
+	Stack<int> intStack;
+
+	// stack of doubles using a std::deque<> to manage the elements
+	Stack<double,std::deque<double>> dblStack;
+
+	// manipulate int stack
+	intStack.push(7);
+	std::cout << intStack.top() << '\n';
+	intStack.pop();
+
+	// manipulate double stack
+	dblStack.push(42.42);
+	std::cout << dblStack.top() << '\n';
+	dblStack.pop();
+}
+\end{lstlisting}
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+Stack<double,std::deque<double>>
+\end{lstlisting}
+
+you declare a stack for doubles that uses a std::deque<> to manage the elements internally.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

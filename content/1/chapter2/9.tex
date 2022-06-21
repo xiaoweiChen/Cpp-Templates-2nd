@@ -1,0 +1,189 @@
+Until C++17, you always had to pass all template parameter types to class templates (unless they have default values). Since C++17, the constraint that you always have to specify the template arguments explicitly was relaxed. Instead, you can skip to define the templates arguments explicitly, if the constructor is able to deduce all template parameters (that don’t have a default value).
+
+For example, in all previous code examples, you can use a copy constructor without specifying the template arguments:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int> intStack1; // stack of strings
+Stack<int> intStack2 = intStack1; // OK in all versions
+Stack intStack3 = intStack1; // OK since C++17
+\end{lstlisting}
+
+By providing constructors that pass some initial arguments, you can support deduction of the element type of a stack. For example, we could provide a stack that can be initialized by a single element:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+private:
+	std::vector<T> elems; // elements
+public:
+	Stack () = default;
+	Stack (T const& elem) // initialize stack with one element
+	: elems({elem}) {
+	}
+	...
+};
+\end{lstlisting}
+
+This allows you to declare a stack as follows:
+
+\begin{lstlisting}[style=styleCXX]
+Stack intStack = 0; // Stack<int> deduced since C++17
+\end{lstlisting}
+
+By initializing the stack with the integer 0, the template parameter T is deduced to be int, so that a Stack<int> is instantiated.
+
+Note the following:
+
+\begin{itemize}
+\item 
+Due to the definition of the int constructor, you have to request the default constructors to be available with its default behavior, because the default constructor is available only if no other constructor is defined:
+\begin{lstlisting}[style=styleCXX]
+Stack() = default;
+\end{lstlisting}
+
+\item 
+The argument elem is passed to elems with braces around to initialize the vector elems with an initializer list with elem as the only argument:
+\begin{lstlisting}[style=styleCXX]
+: elems({elem})
+\end{lstlisting}
+There is no constructor for a vector that is able to take a single parameter as initial element directly.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Even worse, there is a vector constructor taking one integral argument as initial size, so that for a stack with the initial value 5, the vector would get an initial size of five elements when : elems(elem) is used.
+\end{tcolorbox}
+
+\end{itemize}
+
+Note that, unlike for function templates, class template arguments may not be deduced only partially (by explicitly specifying only some of the template arguments). See Section 15.12 for details.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Class Template Arguments Deduction with String Literals}
+
+In principle, you can even initialize the stack with a string literal:
+
+\begin{lstlisting}[style=styleCXX]
+Stack stringStack = "bottom"; // Stack<char const[7]> deduced since C++17
+\end{lstlisting}
+
+But this causes a lot of trouble: In general, when passing arguments of a template type T by reference, the parameter doesn’t decay, which is the term for the mechanism to convert a raw array type to the corresponding raw pointer type. This means that we really initialize a
+
+\begin{lstlisting}[style=styleCXX]
+Stack<char const[7]>
+\end{lstlisting}
+
+and use type char const[7] wherever T is used. For example, we may not push a string of different size, because it has a different type. For a detailed discussion see Section 7.4.
+
+However, when passing arguments of a template type T by value, the parameter decays, which is the term for the mechanism to convert a raw array type to the corresponding raw pointer type. That is, the call parameter T of the constructor is deduced to be char const* so that the whole class is deduced to be a Stack<char const*>.
+
+For this reason, it might be worthwhile to declare the constructor so that the argument is passed by value:
+
+\begin{lstlisting}[style=styleCXX]
+class Stack {
+private:
+	std::vector<T> elems; // elements
+public:
+	Stack (T elem) // initialize stack with one element by value
+	: elems({elem}) { // to decay on class tmpl arg deduction
+	}
+	...
+};
+\end{lstlisting}
+
+With this, the following initialization works fine:
+
+\begin{lstlisting}[style=styleCXX]
+Stack stringStack = "bottom"; // Stack<char const*> deduced since C++17
+\end{lstlisting}
+
+In this case, however, we should better move the temporary elem into the stack to avoid unnecessarily copying it:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+private:
+	std::vector<T> elems; // elements
+public:
+	Stack (T elem) // initialize stack with one element by value
+	: elems({std::move(elem)}) {
+	}
+	...
+};
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Deduction Guides}
+
+Instead of declaring the constructor to be called by value, there is a different solution: Because handling raw pointers in containers is a source of trouble, we should disable automatically deducing raw character pointers for container classes.
+
+You can define specific deduction guides to provide additional or fix existing class template argument deductions. For example, you can define that whenever a string literal or C string is passed, the stack is instantiated for std::string:
+
+\begin{lstlisting}[style=styleCXX]
+Stack(char const*) -> Stack<std::string>;
+\end{lstlisting}
+
+This guide has to appear in the same scope (namespace) as the class definition. Usually, it follows the class definition. We call the type following the -> the guided type of the deduction guide.
+
+Now, the declaration with
+
+\begin{lstlisting}[style=styleCXX]
+Stack stringStack{"bottom"}; // OK: Stack<std::string> deduced since C++17
+\end{lstlisting}
+
+deduces the stack to be a Stack<std::string>. However, the following still doesn’t work:
+
+\begin{lstlisting}[style=styleCXX]
+Stack stringStack = "bottom"; // Stack<std::string> deduced, but still not valid
+\end{lstlisting}
+
+We deduce std::string so that we instantiate a Stack<std::string>:
+
+\begin{lstlisting}[style=styleCXX]
+class Stack {
+private:
+	std::vector<std::string> elems; // elements
+public:
+	Stack (std::string const& elem) // initialize stack with one element
+	: elems({elem}) {
+	}
+	...
+};
+\end{lstlisting}
+
+However, by language rules, you can’t copy initialize (initialize using =) an object by passing a string literal to a constructor expecting a std::string. So you have to initialize the stack as follows:
+
+\begin{lstlisting}[style=styleCXX]
+Stack stringStack{"bottom"}; // Stack<std::string> deduced and valid
+\end{lstlisting}
+
+Note that, if in doubt, class template argument deduction copies. After declaring stringStack as Stack<std::string> the following initializations declare the same type (thus, calling the copy constructor) instead of initializing a stack by elements that are string stacks:
+
+\begin{lstlisting}[style=styleCXX]
+Stack stack2{stringStack}; // Stack<std::string> deduced
+Stack stack3(stringStack); // Stack<std::string> deduced
+Stack stack4 = {stringStack}; // Stack<std::string> deduced
+\end{lstlisting}
+
+See Section 15.12 for more details about class template argument deduction.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

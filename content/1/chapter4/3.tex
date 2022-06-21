@@ -1,0 +1,92 @@
+Variadic templates play an important role when implementing generic libraries, such as the C++ standard library.
+
+One typical application is the forwarding of a variadic number of arguments of arbitrary type. For example, we use this feature when:
+
+\begin{itemize}
+\item 
+Passing arguments to the constructor of a new heap object owned by a shared pointer:
+\begin{lstlisting}[style=styleCXX]
+// create shared pointer to complex<float> initialized by 4.2 and 7.7:
+auto sp = std::make_shared<std::complex<float>>(4.2, 7.7);
+\end{lstlisting}
+
+\item 
+Passing arguments to a thread, which is started by the library:
+\begin{lstlisting}[style=styleCXX]
+std::thread t (foo, 42, "hello"); // call foo(42,"hello") in a separate thread
+\end{lstlisting}
+
+\item 
+Passing arguments to the constructor of a new element pushed into a vector:
+\begin{lstlisting}[style=styleCXX]
+std::vector<Customer> v;
+...
+v.emplace("Tim", "Jovi", 1962); // insert a Customer initialized by three arguments
+\end{lstlisting}
+
+\end{itemize}
+
+Usually, the arguments are “perfectly forwarded” with move semantics (see Section 6.1), so that the corresponding declarations are, for example:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T, typename... Args> shared_ptr<T>
+	make_shared(Args&&... args);
+	class thread {
+		public:
+		template<typename F, typename... Args>
+		explicit thread(F&& f, Args&&... args);
+		...
+	};
+
+	template<typename T, typename Allocator = allocator<T>>
+	class vector {
+		public:
+		template<typename... Args> reference emplace_back(Args&&... args);
+		...
+	};
+}
+\end{lstlisting}
+
+Note also that the same rules apply to variadic function template parameters as for ordinary parameters. For example, if passed by value, arguments are copied and decay (e.g., arrays become pointers), while if passed by reference, parameters refer to the original parameter and don’t decay:
+
+\begin{lstlisting}[style=styleCXX]
+// args are copies with decayed types:
+template<typename... Args> void foo (Args... args);
+// args are nondecayed references to passed objects:
+template<typename... Args> void bar (Args const&... args);
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

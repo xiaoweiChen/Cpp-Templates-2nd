@@ -1,0 +1,86 @@
+Note that nontype template parameters carry some restrictions. In general, they can be only constant integral values (including enumerations), pointers to objects/functions/members, lvalue references to objects or functions, or std::nullptr\_t (the type of nullptr).
+
+Floating-point numbers and class-type objects are not allowed as nontype template parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<double VAT> // ERROR: floating-point values are not
+double process (double v) // allowed as template parameters
+{
+	return v * VAT;
+}
+
+template<std::string name> // ERROR: class-type objects are not
+class MyClass { // allowed as template parameters
+	...
+};
+\end{lstlisting}
+
+When passing template arguments to pointers or references, the objects must not be string literals, temporaries, or data members and other subobjects. Because these restrictions were relaxed with each and every C++ version before C++17, additional constraints apply:
+
+\begin{itemize}
+\item 
+In C++11, the objects also had to have external linkage.
+
+\item 
+In C++14, the objects also had to have external or internal linkage.
+\end{itemize}
+
+Thus, the following is not possible:
+
+\begin{lstlisting}[style=styleCXX]
+template<char const* name>
+class MyClass {
+	...
+};
+
+MyClass<"hello"> x; // ERROR: string literal "hello" not allowed
+\end{lstlisting}
+
+However there are workarounds (again depending on the C++ version):
+
+\begin{lstlisting}[style=styleCXX]
+extern char const s03[] = "hi"; // external linkage
+char const s11[] = "hi"; // internal linkage
+int main()
+{
+	Message<s03> m03; // OK (all versions)
+	Message<s11> m11; // OK since C++11
+	static char const s17[] = "hi"; // no linkage
+	Message<s17> m17; // OK since C++17
+}
+\end{lstlisting}
+
+In all three cases a constant character array is initialized by "hello" and this object is used as a template parameter declared with char const*. This is valid in all C++ versions if the object has external linkage (s03), in C++11 and C++14 also if it has internal linkage (s11), and since C++17 if it has no linkage at all.
+
+See Section 12.3.3 for a detailed discussion and Section 17.2 on page 354 for a discussion of possible future changes in this area.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Avoiding Invalid Expressions}
+
+Arguments for nontype template parameters might be any compile-time expressions. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<int I, bool B>
+class C;
+...
+C<sizeof(int) + 4, sizeof(int)==4> c;
+\end{lstlisting}
+
+However, note that if operator> is used in the expression, you have to put the whole expression into parentheses so that the nested > ends the argument list:
+
+\begin{lstlisting}[style=styleCXX]
+C<42, sizeof(int) > 4> c; // ERROR: first > ends the template argument list
+C<42, (sizeof(int) > 4)> c; // OK
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+

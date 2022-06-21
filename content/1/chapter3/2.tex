@@ -1,0 +1,68 @@
+You can also define nontype parameters for function templates. For example, the following function template defines a group of functions for which a certain value can be added:
+
+\noindent
+\textit{basics/addvalue.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<int Val, typename T>
+T addValue (T x)
+{
+	return x + Val;
+}
+\end{lstlisting}
+
+These kinds of functions can be useful if functions or operations are used as parameters. For example, if you use the C++ standard library you can pass an instantiation of this function template to add a value to each element of a collection:
+
+\begin{lstlisting}[style=styleCXX]
+std::transform (source.begin(), source.end(), // start and end of source
+dest.begin(), // start of destination
+addValue<5,int>); // operation
+\end{lstlisting}
+
+The last argument instantiates the function template addValue<>() to add 5 to a passed int value. The resulting function is called for each element in the source collection source, while it is translated into the destination collection dest.
+
+Note that you have to specify the argument int for the template parameter T of addValue<>(). Deduction only works for immediate calls and std::transform() need a complete type to deduce the type of its fourth parameter. There is no support to substitute/deduce only some template parameters and the see, what could fit, and deduce the remaining parameters.
+
+Again, you can also specify that a template parameter is deduced from the previous parameter. For example, to derive the return type from the passed nontype:
+
+\begin{lstlisting}[style=styleCXX]
+template<auto Val, typename T = decltype(Val)>
+T foo();
+\end{lstlisting}
+
+or to ensure that the passed value has the same type as the passed type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T Val = T{}>
+T bar();
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

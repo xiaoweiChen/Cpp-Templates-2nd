@@ -1,0 +1,116 @@
+For fundamental types such as int, double, or pointer types, there is no default constructor that initializes them with a useful default value. Instead, any noninitialized local variable has an undefined value:
+
+\begin{lstlisting}[style=styleCXX]
+void foo()
+{
+	int x; // x has undefined value
+	int* ptr; // ptr points to anywhere (instead of nowhere)
+}
+\end{lstlisting}
+
+Now if you write templates and want to have variables of a template type initialized by a default value, you have the problem that a simple definition doesn’t do this for built-in types:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo()
+{
+	T x; // x has undefined value if T is built-in type
+}
+\end{lstlisting}
+
+For this reason, it is possible to call explicitly a default constructor for built-in types that initializes them with zero (or false for bool or nullptr for pointers). As a consequence, you can ensure proper initialization even for built-in types by writing the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo()
+{
+	T x{}; // x is zero (or false) if T is a built-in type
+}
+\end{lstlisting}
+
+This way of initialization is called value initialization, which means to either call a provided constructor or zero initialize an object. This even works if the constructor is explicit.
+
+Before C++11, the syntax to ensure proper initialization was
+
+\begin{lstlisting}[style=styleCXX]
+T x = T(); // x is zero (or false) if T is a built-in type
+\end{lstlisting}
+
+Prior to C++17, this mechanism (which is still supported) only worked if the constructor selected for the copy-initialization is not explicit. In C++17, mandatory copy elision avoids that limitation and either syntax can work, but the braced initialized notation can use an initializer-list constructor if no default constructor is available.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}That is, a constructor with a parameter of type std::initializer\_list<X>, for some type X.
+\end{tcolorbox}
+
+To ensure that a member of a class template, for which the type is parameterized, gets initialized, you can define a default constructor that uses a braced initializer to initialize the member:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyClass {
+private:
+	T x;
+public:
+	MyClass() : x{} { // ensures that x is initialized even for built-in types
+	}
+	...
+};
+\end{lstlisting}
+
+The pre-C++11 syntax
+
+\begin{lstlisting}[style=styleCXX]
+MyClass() : x() { // ensures that x is initialized even for built-in types
+}
+\end{lstlisting}
+
+also still works.
+
+Since C++11, you can also provide a default initialization for a nonstatic member, so that the following is also possible:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyClass {
+private:
+	T x{}; // zero-initialize x unless otherwise specified
+	...
+};
+\end{lstlisting}
+
+However, note that default arguments cannot use that syntax. For example,
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T p{}) { // ERROR
+	...
+}
+\end{lstlisting}
+
+Instead, we have to write:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T p = T{}) { // OK (must use T() before C++11)
+	...
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

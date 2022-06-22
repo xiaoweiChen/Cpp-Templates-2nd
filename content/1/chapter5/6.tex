@@ -1,0 +1,200 @@
+Since C++14, variables also can be parameterized by a specific type. Such a thing is called a variable template.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Yes, we have very similar terms for very different things: A variable template is a variable that is a template (variable is a noun here). A variadic template is a template for a variadic number of template parameters (variadic is an adjective here).
+\end{tcolorbox}
+
+For example, you can use the following code to define the value of $\pi$ while still not defining the type of the valueW:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+constexpr T pi{3.1415926535897932385};
+\end{lstlisting}
+
+Note that, as for all templates, this declaration may not occur inside functions or block scope.
+
+To use a variable template, you have to specify its type. For example, the following code uses two different variables of the scope where pi<> is declared:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << pi<double> << '\n';
+std::cout << pi<float> << '\n';
+\end{lstlisting}
+
+You can also declare variable templates that are used in different translation units:
+
+\begin{lstlisting}[style=styleCXX]
+// header.hpp:
+template<typename T> T val{}; // zero initialized value
+
+// translation unit 1:
+#include "header.hpp"
+
+int main()
+{
+	val<long> = 42;
+	print();
+}
+
+// translation unit 2:
+#include "header.hpp"
+
+void print()
+{
+	std::cout << val<long> << '\n'; // OK: prints 42
+}
+\end{lstlisting}
+
+Variable templates can also have default template arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T = long double>
+constexpr T pi = T{3.1415926535897932385};
+\end{lstlisting}
+
+You can use the default or any other type:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << pi<> << '\n'; // outputs a long double
+std::cout << pi<float> << '\n'; // outputs a float
+\end{lstlisting}
+
+However, note that you always have to specify the angle brackets. Just using pi is an error:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << pi << '\n'; // ERROR
+\end{lstlisting}
+
+Variable templates can also be parameterized by nontype parameters, which also may be used to parameterize the initializer. For example:
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <array>
+
+template<int N>
+std::array<int,N> arr{}; // array with N elements, zero-initialized
+
+template<auto N>
+	constexpr decltype(N) dval = N; // type of dval depends on passed value
+
+int main()
+{
+	std::cout << dval<'c'> << '\n'; // N has value 'c' of type char
+	arr<10>[0] = 42; // sets first element of global arr
+	for (std::size_t i=0; i<arr<10>.size(); ++i) { // uses values set in arr
+		std::cout << arr<10>[i] << '\n';
+	}
+}
+\end{lstlisting}
+
+Again, note that even when the initialization of and iteration over arr happens in different translation units the same variable std::array<int,10> arr of global scope is still used.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Variable Templates for Data Members}
+
+A useful application of variable templates is to define variables that represent members of class templates. For example, if a class template is defined as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyClass {
+	public:
+	static constexpr int max = 1000;
+};
+\end{lstlisting}
+
+which allows you to define different values for different specializations of MyClass<>, then you can define
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+int myMax = MyClass<T>::max;
+\end{lstlisting}
+
+so that application programmers can just write
+
+\begin{lstlisting}[style=styleCXX]
+auto i = myMax<std::string>;
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+auto i = MyClass<std::string>::max;
+\end{lstlisting}
+
+This means, for a standard class such as
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T> class numeric_limits {
+		public:
+		...
+		static constexpr bool is_signed = false;
+		...
+	};
+}
+\end{lstlisting}
+
+you can define
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+constexpr bool isSigned = std::numeric_limits<T>::is_signed;
+\end{lstlisting}
+
+to be able to write
+
+\begin{lstlisting}[style=styleCXX]
+isSigned<char>
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+std::numeric_limits<char>::is_signed
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Type Traits Suffix \_v}
+
+Since C++17, the standard library uses the technique of variable templates to define shortcuts for all type traits in the standard library that yield a (Boolean) value. For example, to be able to write
+
+\begin{lstlisting}[style=styleCXX]
+std::is_const_v<T> // since C++17
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+std::is_const<T>::value // since C++11
+\end{lstlisting}
+
+the standard library defines
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T> constexpr bool is_const_v = is_const<T>::value;
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

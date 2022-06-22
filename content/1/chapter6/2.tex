@@ -1,0 +1,192 @@
+Member function templates can also be used as special member functions, including as a constructor, which, however, might lead to surprising behavior.
+
+Consider the following example:
+
+\noindent
+\textit{basics/specialmemtmpl1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <string>
+#include <iostream>
+
+class Person
+{
+private:
+	std::string name;
+public:
+	// constructor for passed initial name:
+	explicit Person(std::string const& n) : name(n) {
+		std::cout << "copying string-CONSTR for '" << name << "'\n";
+	}
+	explicit Person(std::string&& n) : name(std::move(n)) {
+		std::cout << "moving string-CONSTR for '" << name << "'\n";
+	}
+	// copy and move constructor:
+	Person (Person const& p) : name(p.name) {
+		std::cout << "COPY-CONSTR Person '" << name << "'\n";
+	}
+	Person (Person&& p) : name(std::move(p.name)) {
+		std::cout << "MOVE-CONSTR Person '" << name << "'\n";
+	}
+};
+
+int main()
+{
+	std::string s = "sname";
+	Person p1(s); // init with string object => calls copying string-CONSTR
+	Person p2("tmp"); // init with string literal => calls moving string-CONSTR
+	Person p3(p1); // copy Person => calls COPY-CONSTR
+	Person p4(std::move(p1)); // move Person => calls MOVE-CONST
+}
+\end{lstlisting}
+
+Here, we have a class Person with a string member name for which we provide initializing constructors. To support move semantics, we overload the constructor taking a std::string:
+
+\begin{itemize}
+\item 
+We provide a version for string object the caller still needs, for which name is initialized by a copy of the passed argument:
+
+\begin{lstlisting}[style=styleCXX]
+Person(std::string const& n) : name(n) {
+	std::cout << "copying string-CONSTR for '" << name << "'\n";
+}
+\end{lstlisting}
+
+\item 
+We provide a version for movable string object, for which we call std::move() to “steal” the value from:
+
+\begin{lstlisting}[style=styleCXX]
+Person(std::string&& n) : name(std::move(n)) {
+	std::cout << "moving string-CONSTR for '" << name << "'\n";
+}
+\end{lstlisting}
+\end{itemize}
+
+As expected, the first is called for passed string objects that are in use (lvalues), while the latter is called for movable objects (rvalues):
+
+\begin{lstlisting}[style=styleCXX]
+std::string s = "sname";
+Person p1(s); // init with string object => calls copying string-CONSTR
+Person p2("tmp"); // init with string literal => calls moving string-CONSTR
+\end{lstlisting}
+
+Besides these constructors, the example has specific implementations for the copy and move constructor to see when a Person as a whole is copied/moved:
+
+\begin{lstlisting}[style=styleCXX]
+Person p3(p1); // copy Person => calls COPY-CONSTR
+Person p4(std::move(p1)); // move Person => calls MOVE-CONSTR
+\end{lstlisting}
+
+Now let’s replace the two string constructors with one generic constructor perfect forwarding the passed argument to the member name:
+
+\noindent
+\textit{basics/specialmemtmpl2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <string>
+#include <iostream>
+
+class Person
+{
+private:
+	std::string name;
+public:
+	// generic constructor for passed initial name:
+	template<typename STR>
+	explicit Person(STR&& n) : name(std::forward<STR>(n)) {
+		std::cout << "TMPL-CONSTR for '" << name << "'\n";
+	}
+
+	// copy and move constructor:
+	Person (Person const& p) : name(p.name) {
+		std::cout << "COPY-CONSTR Person '" << name << "'\n";
+	}
+	Person (Person&& p) : name(std::move(p.name)) {
+		std::cout << "MOVE-CONSTR Person '" << name << "'\n";
+	}
+};
+\end{lstlisting}
+
+Construction with passed string works fine, as expected:
+
+\begin{lstlisting}[style=styleCXX]
+std::string s = "sname";
+Person p1(s); // init with string object => calls TMPL-CONSTR
+Person p2("tmp"); // init with string literal => calls TMPL-CONSTR
+\end{lstlisting}
+
+Note how the construction of p2 does not create a temporary string in this case: The parameter STR is deduced to be of type char const[4]. Applying std::forward<STR> to the pointer parameter of the constructor has not much of an effect, and the name member is thus constructed from a nullterminated string.
+
+But when we attempt to call the copy constructor, we get an error:
+
+\begin{lstlisting}[style=styleCXX]
+Person p3(p1); // ERROR
+\end{lstlisting}
+
+while initializing a new Person by a movable object still works fine:
+
+\begin{lstlisting}[style=styleCXX]
+Person p4(std::move(p1)); // OK: move Person => calls MOVE-CONST
+\end{lstlisting}
+
+Note that also copying a constant Person works fine:
+
+\begin{lstlisting}[style=styleCXX]
+Person const p2c("ctmp"); // init constant object with string literal
+Person p3c(p2c); // OK: copy constant Person => calls COPY-CONSTR
+\end{lstlisting}
+
+The problem is that, according to the overload resolution rules of C++ (see Section 16.2.4), for a nonconstant lvalue Person p the member template
+
+\begin{lstlisting}[style=styleCXX]
+template<typename STR>
+Person(STR&& n)
+\end{lstlisting}
+
+is a better match than the (usually predefined) copy constructor:
+
+\begin{lstlisting}[style=styleCXX]
+Person (Person const& p)
+\end{lstlisting}
+
+STR is just substituted with Person\&, while for the copy constructor a conversion to const is necessary.
+
+You might think about solving this by also providing a nonconstant copy constructor:
+
+\begin{lstlisting}[style=styleCXX]
+Person (Person& p)
+\end{lstlisting}
+
+However, that is only a partial solution because for objects of a derived class, the member template is still a better match. What you really want is to disable the member template for the case that the passed argument is a Person or an expression that can be converted to a Person. This can be done by using std::enable\_if<>, which is introduced in the next section.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

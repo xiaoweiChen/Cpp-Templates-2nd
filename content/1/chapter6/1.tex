@@ -1,0 +1,171 @@
+Suppose you want to write generic code that forwards the basic property of passed arguments:
+
+\begin{itemize}
+\item 
+Modifyable objects should be forwarded so that they still can be modified.
+
+\item 
+Constant objects should be forwarded as read-only objects.
+
+\item 
+Movable objects (objects we can “steal” from because they are about to expire) should be forwarded as movable objects.
+\end{itemize}
+
+To achieve this functionality without templates, we have to program all three cases. For example, to forward a call of f() to a corresponding function g():
+
+\noindent
+\textit{basics/move1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <iostream>
+
+class X {
+	...
+};
+
+void g (X&) {
+	std::cout << "g() for variable\n";
+}
+void g (X const&) {
+	std::cout << "g() for constant\n";
+}
+void g (X&&) {
+	std::cout << "g() for movable object\n";
+}
+// let f() forward argument val to g():
+void f (X& val) {
+	g(val); // val is non-const lvalue => calls g(X&)
+}
+void f (X const& val) {
+	g(val); // val is const lvalue => calls g(X const&)
+}
+
+void f (X&& val) {
+	g(std::move(val)); // val is non-const lvalue => needs std::move() to call g(X&&)
+}
+
+int main()
+{
+	X v; // create variable
+	X const c; // create constant
+	
+	f(v); // f() for nonconstant object calls f(X&) => calls g(X&)
+	f(c); // f() for constant object calls f(X const&) => calls g(X const&)
+	f(X()); // f() for temporary calls f(X&&) => calls g(X&&)
+	f(std::move(v)); // f() for movable variable calls f(X&&) => calls g(X&&)
+}
+\end{lstlisting}
+
+Here, we see three different implementations of f() forwarding its argument to g():
+
+\begin{lstlisting}[style=styleCXX]
+void f (X& val) {
+	g(val); // val is non-const lvalue => calls g(X&)
+}
+void f (X const& val) {
+	g(val); // val is const lvalue => calls g(X const&)
+}
+void f (X&& val) {
+	g(std::move(val)); // val is non-const lvalue => needs std::move() to call g(X&&)
+}
+\end{lstlisting}
+
+Note that the code for movable objects (via an rvalue reference) differs from the other code: It needs a std::move() because according to language rules, move semantics is not passed through.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The fact that move semantics is not automatically passed through is intentional and important. If it weren’t, we would lose the value of a movable object the first time we use it in a function.
+\end{tcolorbox}
+
+Although val in the third f() is declared as rvalue reference its value category when used as expression is a nonconstant lvalue (see Appendix B) and behaves as val in the first f(). Without the move(), g(X\&) for nonconstant lvalues instead of g(\&\&) would be called.
+
+If we want to combine all three cases in generic code, we have a problem:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f (T val) {
+	g(T);
+}
+\end{lstlisting}
+
+works for the first two cases, but not for the (third) case where movable objects are passed.
+
+C++11 for this reason introduces special rules for perfect forwarding parameters. The idiomatic code pattern to achieve this is as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f (T&& val) {
+	g(std::forward<T>(val)); // perfect forward val to g()
+}
+\end{lstlisting}
+
+Note that std::move() has no template parameter and “triggers” move semantics for the passed argument, while std::forward<>() “forwards” potential move semantic depending on a passed  template argument. 
+
+Don’t assume that T\&\& for a template parameter T behaves as X\&\& for a specific type X. Different rules apply! However, syntactically they look identical:
+
+\begin{itemize}
+\item 
+X\&\& for a specific type X declares a parameter to be an rvalue reference. It can only be bound to a movable object (a prvalue, such as a temporary object, and an xvalue, such as an object passed with std::move(); see Appendix B for details). It is always mutable and you can always “steal” its value.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}A type like X const\&\& is valid but provides no common semantics in practice because “stealing” the internal representation of a movable object requires modifying that object. It might be used, though, to force passing only temporaries or objects marked with std::move() without being able to modify them.
+\end{tcolorbox}
+
+\item 
+T\&\& for a template parameter T declares a forwarding reference (also called universal reference).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The term universal reference was coined by Scott Meyers as a common term that could result in either an “lvalue reference” or an “rvalue reference.” Because “universal” was, well, too universal, the C++17 standard introduced the term forwarding reference, because the major reason to use such a reference is to forward objects. However, note that it does not automatically forward. The term does not describe what it is but what it is typically used for.
+\end{tcolorbox}
+
+It can be bound to a mutable, immutable (i.e., const), or movable object. Inside the function definition, the parameter may be mutable, immutable, or refer to a value you can “steal” the internals from.
+\end{itemize}
+
+Note that T must really be the name of a template parameter. Depending on a template parameter is not sufficient. For a template parameter T, a declaration such as typename T::iterator\&\& is just an rvalue reference, not a forwarding reference.
+
+So, the whole program to perfect forward arguments will look as follows:
+
+\noindent
+\textit{basics/move2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <iostream>
+
+class X {
+	...
+};
+
+void g (X&) {
+	std::cout << "g() for variable\n";
+}
+void g (X const&) {
+	std::cout << "g() for constant\n";
+}
+void g (X&&) {
+	std::cout << "g() for movable object\n";
+}
+
+// let f() perfect forward argument val to g():
+template<typename T>
+void f (T&& val) {
+	g(std::forward<T>(val)); // call the right g() for any passed argument val
+}
+
+int main()
+{
+	X v; // create variable
+	X const c; // create constant
+	
+	f(v); // f() for variable calls f(X&) => calls g(X&)
+	f(c); // f() for constant calls f(X const&) => calls g(X const&)
+	f(X()); // f() for temporary calls f(X&&) => calls g(X&&)
+	f(std::move(v)); // f() for move-enabled variable calls f(X&&) => calls g(X&&)
+}
+\end{lstlisting}
+
+Of course, perfect forwarding can also be used with variadic templates (see Section 4.3 for some examples). See Section 15.6.3 for details of perfect forwarding.
+
+
+
+
+
+

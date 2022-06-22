@@ -1,5 +1,328 @@
 
+Class members can also be templates. This is possible for both nested classes and member functions. The application and advantage of this ability can again be demonstrated with the Stack<> class template. Normally you can assign stacks to each other only when they have the same type, which implies that the elements have the same type. However, you can’t assign a stack with elements of any other type, even if there is an implicit type conversion for the element types defined:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int> intStack1, intStack2; // stacks for ints
+Stack<float> floatStack; // stack for floats
+...
+intStack1 = intStack2; // OK: stacks have same type
+floatStack = intStack1; // ERROR: stacks have different types
+\end{lstlisting}
+
+The default assignment operator requires that both sides of the assignment operator have the same type, which is not the case if stacks have different element types.
+
+By defining an assignment operator as a template, however, you can enable the assignment of stacks with elements for which an appropriate type conversion is defined. To do this you have to declare Stack<> as follows:
+
+\noindent
+\textit{basics/stack5decl.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+private:
+	std::deque<T> elems; // elements
+	
+public:
+	void push(T const&); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+	
+	// assign stack of elements of type T2
+	template<typename T2>
+	Stack& operator= (Stack<T2> const&);
+};
+\end{lstlisting}
+
+The following two changes have been made:
+
+\begin{enumerate}
+\item 
+We added a declaration of an assignment operator for stacks of elements of another type T2.
+
+\item 
+The stack now uses a std::deque<> as an internal container for the elements. Again, this is a consequence of the implementation of the new assignment operator.
+\end{enumerate}
+
+The implementation of the new assignment operator looks like this:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This is a basic implementation to demonstrate the template features. Issues like proper exception handling are certainly missing.
+\end{tcolorbox}
+
+
+\noindent
+\textit{basics/stack5assign.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+template<typename T2>
+Stack<T>& Stack<T>::operator= (Stack<T2> const& op2)
+{
+	Stack<T2> tmp(op2); // create a copy of the assigned stack
+	
+	elems.clear(); // remove existing elements
+	while (!tmp.empty()) { // copy all elements
+		elems.push_front(tmp.top());
+		tmp.pop();
+	}
+	return *this;
+}
+\end{lstlisting}
+
+First let’s look at the syntax to define a member template. Inside the template with template parameter T, an inner template with template parameter T2 is defined:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+template<typename T2>
+...
+\end{lstlisting}
+
+Inside the member function, you may expect simply to access all necessary data for the assigned stack op2. However, this stack has a different type (if you instantiate a class template for two different argument types, you get two different class types), so you are restricted to using the public interface. It follows that the only way to access the elements is by calling top(). However, each element has to become a top element, then. Thus, a copy of op2 must first be made, so that the elements are taken from that copy by calling pop(). Because top() returns the last element pushed onto the stack, we might prefer to use a container that supports the insertion of elements at the other end of the collection. For this reason, we use a std::deque<>, which provides push\_front() to put an element on the other side of the collection.
+
+To get access to all the members of op2 you can declare that all other stack instances are friends:
+
+\noindent
+\textit{basics/stack6decl.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+private:
+	std::deque<T> elems; // elements
+	
+public:
+	void push(T const&); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+
+	// assign stack of elements of type T2
+	template<typename T2>
+	Stack& operator= (Stack<T2> const&);
+	// to get access to private members of Stack<T2> for any type T2:
+	template<typename> friend class Stack;
+};
+\end{lstlisting}
+
+As you can see, because the name of the template parameter is not used, you can omit it:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename> friend class Stack;
+\end{lstlisting}
+
+Now, the following implementation of the template assignment operator is possible:
+
+\noindent
+\textit{basics/stack6assign.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+template<typename T2>
+Stack<T>& Stack<T>::operator= (Stack<T2> const& op2)
+{
+	elems.clear(); // remove existing elements
+	elems.insert(elems.begin(), // insert at the beginning
+				op2.elems.begin(), // all elements from op2
+				op2.elems.end());
+	return *this;
+}
+\end{lstlisting}
+
+Whatever your implementation is, having this member template, you can now assign a stack of ints to a stack of floats:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int> intStack; // stack for ints
+Stack<float> floatStack; // stack for floats
+...
+floatStack = intStack; // OK: stacks have different types,
+						// but int converts to float
+\end{lstlisting}
+
+Of course, this assignment does not change the type of the stack and its elements. After the assignment, the elements of the floatStack are still floats and therefore top() still returns a float.
+
+It may appear that this function would disable type checking such that you could assign a stack with elements of any type, but this is not the case. The necessary type checking occurs when the element of the (copy of the) source stack is moved to the destination stack:
+
+\begin{lstlisting}[style=styleCXX]
+elems.push_front(tmp.top());
+\end{lstlisting}
+
+If, for example, a stack of strings gets assigned to a stack of floats, the compilation of this line results in an error message stating that the string returned by tmp.top() cannot be passed as an argument to elems.push\_front() (the message varies depending on the compiler, but this is the gist of what is meant):
+
+\begin{lstlisting}[style=styleCXX]
+Stack<std::string> stringStack; // stack of strings
+Stack<float> floatStack; // stack of floats
+...
+floatStack = stringStack; // ERROR: std::string doesn’t convert to float
+\end{lstlisting}
+
+Again, you could change the implementation to parameterize the internal container type:
+
+\noindent
+\textit{basics/stack7decl.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Cont = std::deque<T>>
+class Stack {
+private:
+	Cont elems; // elements
+	
+public:
+	void push(T const&); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+
+	// assign stack of elements of type T2
+	template<typename T2, typename Cont2>
+	Stack& operator= (Stack<T2,Cont2> const&);
+	// to get access to private members of Stack<T2> for any type T2:
+	template<typename, typename> friend class Stack;
+};
+\end{lstlisting}
+
+Then the template assignment operator is implemented like this:
+
+\noindent
+\textit{basics/stack7assign.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Cont>
+template<typename T2, typename Cont2>
+Stack<T,Cont>&
+Stack<T,Cont>::operator= (Stack<T2,Cont2> const& op2)
+{
+	elems.clear(); // remove existing elements
+	elems.insert(elems.begin(), // insert at the beginning
+				op2.elems.begin(), // all elements from op2
+				op2.elems.end());
+	return *this;
+}
+\end{lstlisting}
+
+Remember, for class templates, only those member functions that are called are instantiated. Thus, if you avoid assigning a stack with elements of a different type, you could even use a vector as an internal container:
+
+\begin{lstlisting}[style=styleCXX]
+// stack for ints using a vector as an internal container
+Stack<int,std::vector<int>> vStack;
+...
+vStack.push(42);
+vStack.push(7);
+std::cout << vStack.top() << '\n';
+\end{lstlisting}
+
+Because the assignment operator template isn’t necessary, no error message of a missing member function push\_front() occurs and the program is fine.
+
+For the complete implementation of the last example, see all the files with a name that starts with stack7 in the subdirectory basics.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Specialization of Member Function Templates}
+
+Member function templates can also be partially or fully specialized. For example, for the following class:
+
+\noindent
+\textit{basics/boolstring.hpp}
+\begin{lstlisting}[style=styleCXX]
+class BoolString {
+private:
+	std::string value;
+public:
+	BoolString (std::string const& s)
+	: value(s) {
+	}
+	template<typename T = std::string>
+	T get() const { // get value (converted to T)
+		return value;
+	}
+};
+\end{lstlisting}
+
+you can provide a full specialization for the member function template as follows:
+
+\noindent
+\textit{basics/boolstringgetbool.hpp}
+\begin{lstlisting}[style=styleCXX]
+// full specialization for BoolString::getValue<>() for bool
+template<>
+inline bool BoolString::get<bool>() const {
+	return value == "true" || value == "1" || value == "on";
+}
+\end{lstlisting}
+
+Note that you don’t need and also can’t declare the specializations; you only define them. Because it is a full specialization and it is in a header file you have to declare it with inline to avoid errors if the definition is included by different translation units.
+
+You can use class and the full specialization as follows:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << std::boolalpha;
+BoolString s1("hello");
+std::cout << s1.get() << '\n'; // prints hello
+std::cout << s1.get<bool>() << '\n'; // prints false
+BoolString s2("on");
+std::cout << s2.get<bool>() << '\n'; // prints true
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Special Member Function Templates}
+
+Template member functions can be used wherever special member functions allow copying or moving objects. Similar to assignment operators as defined above, they can also be constructors. However, note that template constructors or template assignment operators don’t replace predefined constructors or assignment operators. Member templates don’t count as the special member functions that copy or move objects. In this example, for assignments of stacks of the same type, the default assignment operator is still called.
+
+This effect can be good and bad:
+
+\begin{itemize}
+\item 
+It can happen that a template constructor or assignment operator is a better match than the predefined copy/move constructor or assignment operator, although a template version is provided for initialization of other types only. See Section 6.2 for details.
+
+\item 
+It is not easy to “templify” a copy/move constructor, for example, to be able to constrain its existence. See Section 6.4 for details.
+\end{itemize}
 
 \subsubsubsection{5.5.1\hspace{0.2cm}The .templateConstruct}
 
+Sometimes, it is necessary to explicitly qualify template arguments when calling a member template. In that case, you have to use the template keyword to ensure that a < is the beginning of the template argument list. Consider the following example using the standard bitset type:
+
+\begin{lstlisting}[style=styleCXX]
+template<unsigned long N>
+void printBitset (std::bitset<N> const& bs) {
+	std::cout << bs.template to_string<char, std::char_traits<char>,
+			std::allocator<char>>();
+}
+\end{lstlisting}
+
+For the bitset bs we call the member function template to\_string(), while explicitly specifying the string type details. Without that extra use of .template, the compiler does not know that the less-than token (<) that follows is not really less-than but the beginning of a template argument list. Note that this is a problem only if the construct before the period depends on a template parameter. In our example, the parameter bs depends on the template parameter N.
+
+The .template notation (and similar notations such as ->template and ::template) should be used only inside templates and only if they follow something that depends on a template parameter. See Section 13.3.3 for details.
+
 \subsubsubsection{5.5.2\hspace{0.2cm}Generic Lambdas and Member Templates}
+
+Note that generic lambdas, introduced with C++14, are shortcuts for member templates. A simple lambda computing the “sum” of two arguments of arbitrary types:
+
+\begin{lstlisting}[style=styleCXX]
+[] (auto x, auto y) {
+	return x + y;
+}
+\end{lstlisting}
+
+is a shortcut for a default-constructed object of the following class:
+
+\begin{lstlisting}[style=styleCXX]
+class SomeCompilerSpecificName {
+	public:
+	SomeCompilerSpecificName(); // constructor only callable by compiler
+	template<typename T1, typename T2>
+	auto operator() (T1 x, T2 y) const {
+		return x + y;
+	}
+};
+\end{lstlisting}
+
+See Section 15.10.6 for details.
+
+
+
+
+
+
+

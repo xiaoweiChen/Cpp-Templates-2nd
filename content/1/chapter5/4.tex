@@ -1,0 +1,160 @@
+When passing raw arrays or string literals to templates, some care has to be taken. First, if the template parameters are declared as references, the arguments don’t decay. That is, a passed argument of "hello" has type char const[6]. This can become a problem if raw arrays or string arguments of different length are passed because the types differ. Only when passing the argument by value, the types decay, so that string literals are converted to type char const*. This is discussed in detail in Chapter 7.
+
+Note that you can also provide templates that specifically deal with raw arrays or string literals. For example:
+
+\noindent
+\textit{basics/lessarray.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, int N, int M>
+bool less (T(&a)[N], T(&b)[M])
+{
+	for (int i = 0; i<N && i<M; ++i) {
+		if (a[i]<b[i]) return true;
+		if (b[i]<a[i]) return false;
+	}
+	return N < M;
+}
+\end{lstlisting}
+
+Here, when calling
+
+\begin{lstlisting}[style=styleCXX]
+int x[] = {1, 2, 3};
+int y[] = {1, 2, 3, 4, 5};
+std::cout << less(x,y) << '\n';
+\end{lstlisting}
+
+less<>() is instantiated with T being int, N being 3, and M being 5.
+
+You can also use this template for string literals:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << less("ab","abc") << '\n';
+\end{lstlisting}
+
+In this case, less<>() is instantiated with T being char const, N being 3 and M being 4.
+
+If you only want to provide a function template for string literals (and other char arrays), you can do this as follows:
+
+\noindent
+\textit{basics/lessstring.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<int N, int M>
+bool less (char const(&a)[N], char const(&b)[M])
+{
+	for (int i = 0; i<N && i<M; ++i) {
+		if (a[i]<b[i]) return true;
+		if (b[i]<a[i]) return false;
+	}
+	return N < M;
+}
+\end{lstlisting}
+
+Note that you can and sometimes have to overload or partially specialize for arrays of unknown bounds. The following program illustrates all possible overloads for arrays:
+
+\noindent
+\textit{basics/arrays.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+struct MyClass; // primary template
+
+template<typename T, std::size_t SZ>
+struct MyClass<T[SZ]> // partial specialization for arrays of known bounds
+{
+	static void print() { std::cout << "print() for T[" << SZ << "]\n"; }
+};
+
+template<typename T, std::size_t SZ>
+struct MyClass<T(&)[SZ]> // partial spec. for references to arrays of known bounds
+{
+	static void print() { std::cout << "print() for T(&)[" << SZ << "]\n"; }
+};
+
+template<typename T>
+struct MyClass<T[]> // partial specialization for arrays of unknown bounds
+{
+	static void print() { std::cout << "print() for T[]\n"; }
+};
+
+template<typename T>
+struct MyClass<T(&)[]> // partial spec. for references to arrays of unknown bounds
+{
+	static void print() { std::cout << "print() for T(&)[]\n"; }
+};
+
+template<typename T>
+struct MyClass<T*> // partial specialization for pointers
+{
+	static void print() { std::cout << "print() for T*\n"; }
+};
+\end{lstlisting}
+
+Here, the class template MyClass<> is specialized for various types: arrays of known and unknown bound, references to arrays of known and unknown bounds, and pointers. Each case is different and can occur when using arrays:
+
+\noindent
+\textit{basics/arrays.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "arrays.hpp"
+
+template<typename T1, typename T2, typename T3>
+void foo(int a1[7], int a2[], // pointers by language rules
+		int (&a3)[42], // reference to array of known bound
+		int (&x0)[], // reference to array of unknown bound
+		T1 x1, // passing by value decays
+		T2& x2, T3&& x3) // passing by reference
+{
+	MyClass<decltype(a1)>::print(); // uses MyClass<T*>
+	MyClass<decltype(a2)>::print(); // uses MyClass<T*>
+	MyClass<decltype(a3)>::print(); // uses MyClass<T(&)[SZ]>
+	MyClass<decltype(x0)>::print(); // uses MyClass<T(&)[]>
+	MyClass<decltype(x1)>::print(); // uses MyClass<T*>
+	MyClass<decltype(x2)>::print(); // uses MyClass<T(&)[]>
+	MyClass<decltype(x3)>::print(); // uses MyClass<T(&)[]>
+}
+
+int main()
+{
+	int a[42];
+	MyClass<decltype(a)>::print(); // uses MyClass<T[SZ]>
+	
+	extern int x[]; // forward declare array
+	MyClass<decltype(x)>::print(); // uses MyClass<T[]>
+	foo(a, a, a, x, x, x, x);
+	
+}
+
+int x[] = {0, 8, 15}; // define forward-declared array
+\end{lstlisting}
+
+Note that a call parameter declared as an array (with or without length) by language rules really has a pointer type. Note also that templates for arrays of unknown bounds can be used for an incomplete type such as
+
+\begin{lstlisting}[style=styleCXX]
+extern int i[];
+\end{lstlisting}
+
+And when this is passed by reference, it becomes a int(\&)[], which can also be used as a template parameter.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Parameters of type X (\&)[]——for some arbitrary type X——have become valid only in C++17, through the resolution of Core issue 393. However, many compilers accepted such parameters in earlier versions of the language.
+\end{tcolorbox}
+
+See Section 19.3.1 for another example using the different array types in generic code.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

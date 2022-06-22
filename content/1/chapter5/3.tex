@@ -1,0 +1,67 @@
+For class templates with base classes that depend on template parameters, using a name x by itself is not always equivalent to this->x, even though a member x is inherited. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Base {
+public:
+	void bar();
+};
+
+template<typename T>
+class Derived : Base<T> {
+public:
+	void foo() {
+		bar(); // calls external bar() or error
+	}
+};
+\end{lstlisting}
+
+In this example, for resolving the symbol bar inside foo(), bar() defined in Base is never considered. Therefore, either you have an error, or another bar() (such as a global bar()) is called.
+
+We discuss this issue in Section 13.4.2 in detail. For the moment, as a rule of thumb, we recommend that you always qualify any symbol that is declared in a base that is somehow dependent on a template parameter with this-> or Base<T>::.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

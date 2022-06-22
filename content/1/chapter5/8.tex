@@ -1,0 +1,32 @@
+
+\begin{itemize}
+\item 
+To access a type name that depends on a template parameter, you have to qualify the name with a leading typename.
+
+\item 
+To access members of bases classes that depend on template parameters, you have to qualify the access by this-> or their class name.
+
+\item 
+Nested classes and member functions can also be templates. One application is the ability to implement generic operations with internal type conversions.
+
+\item 
+Template versions of constructors or assignment operators don’t replace predefined constructors or assignment operators.
+
+\item 
+By using braced initialization or explicitly calling a default constructor, you can ensure that variables and members of templates are initialized with a default value even if they are instantiated with a built-in type.
+
+\item 
+You can provide specific templates for raw arrays, which can also be applicable to string literals.
+
+\item 
+When passing raw arrays or string literals, arguments decay (perform an array-to-pointer conversion) during argument deduction if and only if the parameter is not a reference.
+
+\item 
+You can define variable templates (since C++14).
+
+\item 
+You can also use class templates as template parameters, as template template parameters.
+
+\item 
+Template template arguments must usually match their parameters exactly.
+\end{itemize}

@@ -1,0 +1,74 @@
+The keyword typename was introduced during the standardization of C++ to clarify that an identifier inside a template is a type. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyClass {
+	public:
+	...
+	void foo() {
+		typename T::SubType* ptr;
+	}
+};
+\end{lstlisting}
+
+Here, the second typename is used to clarify that SubType is a type defined within class T. Thus, ptr is a pointer to the type T::SubType.
+
+Without typename, SubType would be assumed to be a nontype member (e.g., a static data member or an enumerator constant). As a result, the expression
+
+\begin{lstlisting}[style=styleCXX]
+T::SubType* ptr
+\end{lstlisting}
+
+would be a multiplication of the static SubType member of class T with ptr, which is not an error, because for some instantiations of MyClass<> this could be valid code.
+
+In general, typename has to be used whenever a name that depends on a template parameter is a type. This is discussed in detail in Section 13.3.2.
+
+One application of typename is the declaration to iterators of standard containers in generic code:
+
+\noindent
+\textit{basics/printcoll.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+// print elements of an STL container
+template<typename T>
+void printcoll (T const& coll)
+{
+	typename T::const_iterator pos; // iterator to iterate over coll
+	typename T::const_iterator end(coll.end()); // end position
+	for (pos=coll.begin(); pos!=end; ++pos) {
+		std::cout << *pos << ' ';
+	}
+	std::cout << '\n';
+}
+\end{lstlisting}
+
+In this function template, the call parameter is an standard container of type T. To iterate over all elements of the container, the iterator type of the container is used, which is declared as type const\_iterator inside each standard container class:
+
+\begin{lstlisting}[style=styleCXX]
+class stlcontainer {
+	public:
+	using iterator = ...; // iterator for read/write access
+	using const_iterator = ...; // iterator for read access
+	...
+};
+\end{lstlisting}
+
+Thus, to access type const\_iterator of template type T, you have to qualify it with a leading typename:
+
+\begin{lstlisting}[style=styleCXX]
+typename T::const_iterator pos;
+\end{lstlisting}
+
+See Section 13.3.2 for more details about the need for typename until C++17. Note that C++20 will probably remove the need for typename in many common cases (see Section 17.1 for details).
+
+
+
+
+
+
+
+
+
+
+

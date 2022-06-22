@@ -1,0 +1,276 @@
+It can be useful to allow a template parameter itself to be a class template. Again, our stack class template can be used as an example.
+
+To use a different internal container for stacks, the application programmer has to specify the element type twice. Thus, to specify the type of the internal container, you have to pass the type of the container and the type of its elements again:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int, std::vector<int>> vStack; // integer stack that uses a vector
+\end{lstlisting}
+
+Using template template parameters allows you to declare the Stack class template by specifying the type of the container without respecifying the type of its elements:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<int, std::vector> vStack; // integer stack that uses a vector
+\end{lstlisting}
+
+To do this, you must specify the second template parameter as a template template parameter. In principle, this looks as follows:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Before C++17, there is an issue with this version that we explain in a minute. However, this affects only the default value std::deque. Thus, we can illustrate the general features of template template parameters with this default value before we discuss how to deal with it before C++17.
+\end{tcolorbox}
+
+\noindent
+\textit{basics/stack8decl.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		template<typename Elem> class Cont = std::deque>
+class Stack {
+private:
+	Cont<T> elems; // elements
+	
+public:
+	void push(T const&); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+	...
+};
+\end{lstlisting}
+
+The difference is that the second template parameter is declared as being a class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Elem> class Cont
+\end{lstlisting}
+
+The default value has changed from std::deque<T> to std::deque. This parameter has to be a class template, which is instantiated for the type that is passed as the first template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+Cont<T> elems;
+\end{lstlisting}
+
+This use of the first template parameter for the instantiation of the second template parameter is particular to this example. In general, you can instantiate a template template parameter with any type inside a class template.
+
+As usual, instead of typename you could use the keyword class for template parameters. Before C++11, Cont could only be substituted by the name of a class template.
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		template<class Elem> class Cont = std::deque>
+class Stack { // OK
+	...
+};
+\end{lstlisting}
+
+Since C++11, we can also substitute Cont with the name of an alias template, but it wasn’t until C++17 that a corresponding change was made to permit the use of the keyword typename instead of class to declare a template template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		template<typename Elem> typename Cont = std::deque>
+class Stack { // ERROR before C++17
+	...
+};
+\end{lstlisting}
+
+Those two variants mean exactly the same thing: Using class instead of typename does not prevent us from specifying an alias template as the argument corresponding to the Cont parameter.
+
+Because the template parameter of the template template parameter is not used, it is customary to omit its name (unless it provides useful documentation):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		template<typename> class Cont = std::deque>
+class Stack {
+	...
+};
+\end{lstlisting}
+
+Member functions must be modified accordingly. Thus, you have to specify the second template parameter as the template template parameter. The same applies to the implementation of the member function. The push() member function, for example, is implemented as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, template<typename> class Cont>
+void Stack<T,Cont>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+\end{lstlisting}
+
+Note that while template template parameters are placeholders for class or alias templates, there is no corresponding placeholder for function or variable templates.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Template Template Argument Matching}
+
+If you try to use the new version of Stack, you may get an error message saying that the default value std::deque is not compatible with the template template parameter Cont. The problem is that prior to C++17 a template template argument had to be a template with parameters that exactly match the parameters of the template template parameter it substitutes, with some exceptions related to variadic template parameters (see Section 12.3.4 on page 197). Default template arguments of template template arguments were not considered, so that a match couldn’t be achieved by leaving out arguments that have default values (in C++17, default arguments are considered).
+
+The pre-C++17 problem in this example is that the std::deque template of the standard library has more than one parameter: The second parameter (which describes an allocator) has a default value, but prior to C++17 this was not considered when matching std::deque to the Cont parameter.
+
+There is a workaround, however. We can rewrite the class declaration so that the Cont parameter expects containers with two template parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+	template<typename Elem,
+		typename Alloc = std::allocator<Elem>>
+	class Cont = std::deque>
+class Stack {
+private:
+	Cont<T> elems; // elements
+	...
+};
+\end{lstlisting}
+
+Again, we could omit Alloc because it is not used.
+
+The final version of our Stack template (including member templates for assignments of stacks of different element types) now looks as follows:
+
+\noindent
+\textit{basics/stack9.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <deque>
+#include <cassert>
+#include <memory>
+
+template<typename T,
+	template<typename Elem,
+		typename = std::allocator<Elem>>
+	class Cont = std::deque>
+class Stack {
+private:
+	Cont<T> elems; // elements
+	
+public:
+	void push(T const&); // push element
+	void pop(); // pop element
+	T const& top() const; // return top element
+	bool empty() const { // return whether the stack is empty
+		return elems.empty();
+	}
+
+	// assign stack of elements of type T2
+	template<typename T2,
+		template<typename Elem2,
+			typename = std::allocator<Elem2>
+		>class Cont2>
+	Stack<T,Cont>& operator= (Stack<T2,Cont2> const&);
+	// to get access to private members of any Stack with elements of type T2:
+	template<typename, template<typename, typename>class>
+	friend class Stack;
+};
+
+template<typename T, template<typename,typename> class Cont>
+void Stack<T,Cont>::push (T const& elem)
+{
+	elems.push_back(elem); // append copy of passed elem
+}
+
+template<typename T, template<typename,typename> class Cont>
+void Stack<T,Cont>::pop ()
+{
+	assert(!elems.empty());
+	elems.pop_back(); // remove last element
+}
+
+template<typename T, template<typename,typename> class Cont>
+T const& Stack<T,Cont>::top () const
+{
+	assert(!elems.empty());
+	return elems.back(); // return copy of last element
+}
+
+template<typename T, template<typename,typename> class Cont>
+	template<typename T2, template<typename,typename> class Cont2>
+Stack<T,Cont>&
+Stack<T,Cont>::operator= (Stack<T2,Cont2> const& op2)
+{
+	elems.clear(); // remove existing elements
+	elems.insert(elems.begin(), // insert at the beginning
+				op2.elems.begin(), // all elements from op2
+				op2.elems.end());
+	return *this;
+}
+\end{lstlisting}
+
+Note again that to get access to all the members of op2 we declare that all other stack instances are friends (omitting the names of the template parameters):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename, template<typename, typename>class>
+friend class Stack;
+\end{lstlisting}
+
+Still, not all standard container templates can be used for Cont parameter. For example, std::array will not work because it includes a nontype template parameter for the array length that has no match in our template template parameter declaration.
+
+The following program uses all features of this final version:
+
+\noindent
+\textit{basics/stack9test.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "stack9.hpp"
+#include <iostream>
+#include <vector>
+
+int main()
+{
+	Stack<int> iStack; // stack of ints
+	Stack<float> fStack; // stack of floats
+	
+	// manipulate int stack
+	iStack.push(1);
+	iStack.push(2);
+	std::cout << "iStack.top(): " << iStack.top() << '\n';
+	
+	// manipulate float stack:
+	fStack.push(3.3);
+	std::cout << "fStack.top(): " << fStack.top() << '\n';
+	
+	// assign stack of different type and manipulate again
+	fStack = iStack;
+	fStack.push(4.4);
+	std::cout << "fStack.top(): " << fStack.top() << '\n';
+	
+	// stack for doubless using a vector as an internal container
+	Stack<double, std::vector> vStack;
+	vStack.push(5.5);
+	vStack.push(6.6);
+	std::cout << "vStack.top(): " << vStack.top() << '\n';
+	
+	vStack = fStack;
+	std::cout << "vStack: ";
+	while (! vStack.empty()) {
+		std::cout << vStack.top() << ' ';
+		vStack.pop();
+	}
+	std::cout << '\n';
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+iStack.top(): 2
+fStack.top(): 3.3
+fStack.top(): 4.4
+vStack.top(): 6.6
+vStack: 4.4 2 1
+\end{tcblisting}
+
+For further discussion and examples of template template parameters, see Section 12.2.3, Section 12.3.4 on page 197, and Section 19.2.2.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

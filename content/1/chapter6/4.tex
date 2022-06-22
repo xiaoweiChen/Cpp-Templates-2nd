@@ -1,0 +1,220 @@
+We can use enable\_if<> to solve our problem with the constructor template introduced in Section 6.2.
+
+The problem we have to solve is to disable the declaration of the template constructor
+
+\begin{lstlisting}[style=styleCXX]
+template<typename STR>
+Person(STR&& n);
+\end{lstlisting}
+
+if the passed argument STR has the right type (i.e., is a std::string or a type convertible to std::string).
+
+For this, we use another standard type trait, std::is\_convertible<FROM,TO>. With C++17, the corresponding declaration looks as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename STR,
+	typename = std::enable_if_t<
+		std::is_convertible_v<STR, std::string>>>
+Person(STR&& n);
+\end{lstlisting}
+
+If type STR is convertible to type std::string, the whole declaration expands to
+
+\begin{lstlisting}[style=styleCXX]
+template<typename STR,
+	typename = void>
+Person(STR&& n);
+\end{lstlisting}
+
+If type STR is not convertible to type std::string, the whole function template is ignored.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}If you wonder why we don’t instead check whether STR is “not convertible to Person,” beware: We are defining a function that might allow us to convert a string to a Person. So the constructor has to know whether it is enabled, which depends on whether it is convertible, which depends on whether it is enabled, and so on. Never use enable\_if in places that impact the condition used by enable\_if. This is a logical error that compilers do not necessarily detect.
+\end{tcolorbox}
+
+Again, we can define our own name for the constraint by using an alias template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using EnableIfString = std::enable_if_t<
+						std::is_convertible_v<T, std::string>>;
+...
+template<typename STR, typename = EnableIfString<STR>>
+Person(STR&& n);
+\end{lstlisting}
+
+Thus, the whole class Person should look as follows:
+
+\noindent
+\textit{basics/specialmemtmpl3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <string>
+#include <iostream>
+#include <type_traits>
+
+template<typename T>
+using EnableIfString = std::enable_if_t<
+						std::is_convertible_v<T,std::string>>;
+
+class Person
+{
+private:
+	std::string name;
+public:
+	// generic constructor for passed initial name:
+	template<typename STR, typename = EnableIfString<STR>>
+	explicit Person(STR&& n)
+	: name(std::forward<STR>(n)) {
+		std::cout << "TMPL-CONSTR for '" << name << "'\n";
+	}
+
+	// copy and move constructor:
+	Person (Person const& p) : name(p.name) {
+		std::cout << "COPY-CONSTR Person '" << name << "'\n";
+	}
+	Person (Person&& p) : name(std::move(p.name)) {
+		std::cout << "MOVE-CONSTR Person '" << name << "'\n";
+	}
+};
+\end{lstlisting}
+
+Now, all calls behave as expected:
+
+\noindent
+\textit{basics/specialmemtmpl3.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "specialmemtmpl3.hpp"
+
+int main()
+{
+	std::string s = "sname";
+	Person p1(s); // init with string object => calls TMPL-CONSTR
+	Person p2("tmp"); // init with string literal => calls TMPL-CONSTR
+	Person p3(p1); // OK => calls COPY-CONSTR
+	Person p4(std::move(p1)); // OK => calls MOVE-CONST
+}
+\end{lstlisting}
+
+Note again that in C++14, we have to declare the alias template as follows, because the \_v version is not defined for type traits that yield a value:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using EnableIfString = std::enable_if_t<
+						std::is_convertible<T, std::string>::value>;
+\end{lstlisting}
+
+And in C++11, we have to declare the special member template as follows, because as written the \_t version is not defined for type traits that yield a type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using EnableIfString
+= typename std::enable_if<std::is_convertible<T, std::string>::value
+						>::type;
+\end{lstlisting}
+
+But that’s all hidden now in the definition of EnableIfString<>.
+
+Note also that there is an alternative to using std::is\_convertible<> because it requires that the types are implicitly convertible. By using std::is\_constructible<>, we also allow explicit conversions to be used for the initialization. However, the order of the arguments is the opposite is this case:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using EnableIfString = std::enable_if_t<
+						std::is_constructible_v<std::string, T>>;
+\end{lstlisting}
+
+See Section D.3.2 for details about std::is\_constructible<> and Section D.3.3 for details about std::is\_convertible<>. See Section D.6 for details and examples to apply enable\_if<> on variadic templates.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Disabling Special Member Functions}
+
+Note that normally we can’t use enable\_if<> to disable the predefined copy/move constructors and/or assignment operators. The reason is that member function templates never count as special member functions and are ignored when, for example, a copy constructor is needed. Thus, with this declaration:
+
+\begin{lstlisting}[style=styleCXX]
+class C {
+public:
+	template<typename T>
+	C (T const&) {
+		std::cout << "tmpl copy constructor\n";
+	}
+	...
+};
+\end{lstlisting}
+
+the predefined copy constructor is still used, when a copy of a C is requested:
+
+\begin{lstlisting}[style=styleCXX]
+C x;
+C y{x}; // still uses the predefined copy constructor (not the member template)
+\end{lstlisting}
+
+(There is really no way to use the member template because there is no way to specify or deduce its template parameter T.)
+
+Deleting the predefined copy constructor is no solution, because then the trial to copy a C results in an error.
+
+There is a tricky solution, though:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Thanks to Peter Dimov for pointing out this technique
+\end{tcolorbox}
+
+We can declare a copy constructor for const volatile arguments and mark it “deleted” (i.e., define it with = delete). Doing so prevents another copy constructor from being implicitly declared. With that in place, we can define a constructor template that will be preferred over the (deleted) copy constructor for nonvolatile types:
+
+\begin{lstlisting}[style=styleCXX]
+class C
+{
+public:
+	...
+	// user-define the predefined copy constructor as deleted
+	// (with conversion to volatile to enable better matches)
+	C(C const volatile&) = delete;
+	
+	// implement copy constructor template with better match:
+	template<typename T>
+	C (T const&) {
+		std::cout << "tmpl copy constructor\n";
+	}
+...
+};
+\end{lstlisting}
+
+Now the template constructors are used even for “normal” copying:
+
+\begin{lstlisting}[style=styleCXX]
+C x;
+C y{x}; // uses the member template
+\end{lstlisting}
+
+In such a template constructor we can then apply additional constraints with enable\_if<>. For example, to prevent being able to copy objects of a class template C<> if the template parameter is an integral type, we can implement the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C
+{
+public:
+	...
+	// user-define the predefined copy constructor as deleted
+	// (with conversion to volatile to enable better matches)
+	C(C const volatile&) = delete;
+	// if T is no integral type, provide copy constructor template with better match:
+	template<typename U,
+	typename = std::enable_if_t<!std::is_integral<U>::value>>
+	C (C<U> const&) {
+		...
+	}
+	...
+};
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+

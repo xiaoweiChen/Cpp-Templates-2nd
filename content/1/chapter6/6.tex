@@ -1,0 +1,20 @@
+
+\begin{itemize}
+\item 
+In templates, you can “perfectly” forward parameters by declaring them as forwarding references (declared with a type formed with the name of a template parameter followed by \&\&) and using std::forward<>() in the forwarded call.
+
+\item 
+When using perfect forwarding member function templates, they might match better than the predefined special member function to copy or move objects.
+
+\item 
+With std::enable\_if<>, you can disable a function template when a compile-time condition is false (the template is then ignored once that condition has been determined).
+
+\item 
+By using std::enable\_if<> you can avoid problems when constructor templates or assignment operator templates that can be called for single arguments are a better match than implicitly generated special member functions.
+
+\item 
+You can templify (and apply enable\_if<>) to special member functions by deleting the predefined special member functions for const volatile.
+
+\item 
+Concepts will allow us to use a more intuitive syntax for requirements on function templates.
+\end{itemize}

@@ -1,5 +1,107 @@
 
+So far, the words declaration and definition have been used only a few times in this book. However, these words carry with them a rather precise meaning in standard C++, and that is the meaning that we use.
 
+A declaration is a C++ construct that introduces or reintroduces a name into a C++ scope. This introduction always includes a partial classification of that name, but the details are not required to make a valid declaration. For example:
 
+\begin{lstlisting}[style=styleCXX]
+class C; // a declaration of C as a class
+void f(int p); // a declaration of f() as a function and p as a named parameter
+extern int v; // a declaration of v as a variable
+\end{lstlisting}
+
+Note that even though they have a “name,” macro definitions and goto labels are not considered declarations in C++.
+
+Declarations become definitions when the details of their structure are made known or, in the case of variables, when storage space must be allocated. For class type definitions, this means a braceenclosed body must be provided. For function definitions, this means a brace-enclosed body must be provided (in the common case), or the function must be designated as = default2 or = delete. For a variable, initialization or the absence of an extern specifier causes a declaration to become a definition. Here are examples that complement the preceding nondefinition declarations:
+
+\begin{lstlisting}[style=styleCXX]
+class C {}; // definition (and declaration) of class C
+
+void f(int p) { // definition (and declaration) of function f()
+	std::cout << p << ’\n’;
+}
+
+extern int v = 1; // an initializer makes this a definition for v
+
+int w; // global variable declarations not preceded by
+// extern are also definitions
+\end{lstlisting}
+
+By extension, the declaration of a class template or function template is called a definition if it has a body. Hence,
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void func (T);
+\end{lstlisting}
+
+is a declaration that is not a definition, whereas
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class S {};
+\end{lstlisting}
+
+is in fact a definition.
 
 \subsubsubsection{10.3.1\hspace{0.2cm}Complete versus Incomplete Types}
+
+Types can be complete or incomplete, which is a notion closely related to the distinction between a declaration and a definition. Some language constructs require complete types, whereas others are valid with incomplete types too.
+
+Incomplete types are one of the following:
+
+\begin{itemize}
+\item 
+A class type that has been declared but not yet defined.
+
+\item 
+ An array type with an unspecified bound.
+
+\item 
+An array type with an incomplete element type.
+
+\item 
+void
+
+\item 
+An enumeration type as long as the underlying type or the enumeration values are not defined.
+
+\item 
+Any type above to which const and/or volatile are applied.
+\end{itemize}
+
+All other types are complete. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class C; // C is an incomplete type
+C const* cp; // cp is a pointer to an incomplete type
+extern C elems[10]; // elems has an incomplete type
+extern int arr[]; // arr has an incomplete type
+...
+class C { }; // C now is a complete type (and therefore cpand elems
+			 // no longer refer to an incomplete type)
+int arr[10]; // arr now has a complete type
+\end{lstlisting}
+
+See Section 11.5 on page 171 for hints about how to deal with incomplete types in templates.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

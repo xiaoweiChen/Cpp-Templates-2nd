@@ -1,0 +1,9 @@
+When processing source code that uses templates, a C++ compiler must at various times substitute concrete template arguments for the template parameters in the template. Sometimes, this substitution is just tentative: The compiler may need to check if the substitution could be valid (see Section 8.4 on page 129 and Section 15.7 on page 284).
+
+The process of actually creating a definition for a regular class, type alias, function, member function, or variable from a template by substituting concrete arguments for the template parameters is called template instantiation.
+
+Surprisingly, there is currently no standard or generally agreed upon term to denote the process of creating a declaration that is not a definition through template parameter substitution. We have seen the phrases partial instantiation or instantiation of a declaration used by some teams, but those are by no means universal. Perhaps a more intuitive term is incomplete instantiation (which, in the case of a class template, produces an incomplete class).
+
+The entity resulting from an instantiation or an incomplete instantiation (i.e., a class, function, member function, or variable) is generically called a specialization.
+
+However, in C++ the instantiation process is not the only way to produce a specialization. Alternative mechanisms allow the programmer to specify explicitly a declaration that is tied to a special substitution of template parameters. As we showed in Section 2.5 on page 31, such a specialization is introduced with the prefix template<>:

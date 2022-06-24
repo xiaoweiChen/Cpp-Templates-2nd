@@ -1,5 +1,256 @@
 
+In C++ it is pretty common to overload functions to account for various argument types. When a compiler sees a call to an overloaded function, it must therefore consider each candidate separately, evaluating the arguments of the call and picking the candidate that matches best (see also Appendix C for some details about this process).
 
+In cases where the set of candidates for a call includes function templates, the compiler first has to determine what template arguments should be used for that candidate, then substitute those arguments in the function parameter list and in its return type, and then evaluate how well it matches (just like an ordinary function). However, the substitution process could run into problems: It could produce constructs that make no sense. Rather than deciding that such meaningless substitutions lead to errors, the language rules instead say that candidates with such substitution problems are simply ignored. 
+
+We call this principle SFINAE (pronounced like sfee-nay), which stands for “substitution failure is not an error.”
+
+Note that the substitution process described here is distinct from the on-demand instantiation process (see Section 2.2 on page 27): The substitution may be done even for potential instantiations that are not needed (so the compiler can evaluate whether indeed they are unneeded). It is a substitution of the constructs appearing directly in the declaration of the function (but not its body). 
+
+Consider the following example:
+
+\noindent
+\textit{basics/len1.hpp}
+\begin{lstlisting}[style=styleCXX]
+// number of elements in a raw array:
+template<typename T, unsigned N>
+std::size_t len (T(&)[N])
+{
+	return N;
+}
+
+// number of elements for a type having size_type:
+template<typename T>
+typename T::size_type len (T const& t)
+{
+	return t.size();
+}
+\end{lstlisting}
+
+Here, we define two function templates len() taking one generic argument:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}We don’t name this function size() because we want to avoid a naming conflict with the C++ standard library, which defines a standard function template std::size() since C++17.
+\end{tcolorbox}
+
+\begin{enumerate}
+\item 
+The first function template declares the parameter as T(\&)[N], which means that the parameter has to be an array of N elements of type T.
+
+\item 
+The second function template declares the parameter simply as T, which places no constraints on the parameter but returns type T::size\_type, which requires that the passed argument type has a corresponding member size\_type.
+\end{enumerate}
+
+When passing a raw array or string literals, only the function template for raw arrays matches:
+
+\begin{lstlisting}[style=styleCXX]
+int a[10];
+std::cout << len(a); // OK: only len() for array matches
+std::cout << len("tmp"); // OK: only len() for array matches
+\end{lstlisting}
+
+According to its signature, the second function template also matches when substituting (respectively) int[10] and char const[4] for T, but those substitutions lead to potential errors in the return type T::size\_type. The second template is therefore ignored for these calls.
+
+When passing a std::vector<>, only the second function template matches:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> v;
+std::cout << len(v); // OK: only len() for a type with size_type matches
+\end{lstlisting}
+
+When passing a raw pointer, neither of the templates match (without a failure). As a result, the compiler will complain that no matching len() function is found:
+
+\begin{lstlisting}[style=styleCXX]
+int* p;
+std::cout << len(p); // ERROR: no matching len() function found
+\end{lstlisting}
+
+Note that this differs from passing an object of a type having a size\_type member, but no size() member function, as is, for example, the case for std::allocator<>:
+
+\begin{lstlisting}[style=styleCXX]
+std::allocator<int> x;
+std::cout << len(x); // ERROR: len() function found, but can’t size()
+\end{lstlisting}
+
+When passing an object of such a type, the compiler finds the second function template as matching function template. So instead of an error that no matching len() function is found, this will result in a compile-time error that calling size() for a std::allocator<int> is invalid. This time, the second function template is not ignored.
+
+Ignoring a candidate when substituting its return type is meaningless can cause the compiler to select another candidate whose parameters are a worse match. For example:
+
+\noindent
+\textit{basics/len2.hpp}
+\begin{lstlisting}[style=styleCXX]
+// number of elements in a raw array:
+template<typename T, unsigned N>
+std::size_t len (T(&)[N])
+{
+	return N;
+}
+
+// number of elements for a type having size_type:
+template<typename T>
+typename T::size_type len (T const& t)
+{
+	return t.size();
+}
+
+// fallback for all other types:
+std::size_t len (...)
+{
+	return 0;
+}
+\end{lstlisting}
+
+Here, we also provide a general len() function that always matches but has the worst match (match with ellipsis (...) in overload resolution (see Section C.2).
+
+So, for raw arrays and vectors, we have two matches where the specific match is the better match. For pointers, only the fallback matches so that the compiler no longer complains about a missing len() for this call.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In practice, such a fallback function would usually provide a more useful default, throw an exception, or contain a static assertion to result in a useful error message.
+\end{tcolorbox}
+
+But for the allocator, the second and third function templates match, with the second function template as the better match. So, still, this results in an error that no size() member function can be called:
+
+\begin{lstlisting}[style=styleCXX]
+int a[10];
+std::cout << len(a); // OK: len() for array is best match
+std::cout << len("tmp"); // OK: len() for array is best match
+
+std::vector<int> v;
+std::cout << len(v); // OK: len() for a type with size_type is best match
+
+int* p;
+std::cout << len(p); // OK: only fallback len() matches
+
+std::allocator<int> x;
+std::cout << len(x); // ERROR: 2nd len() function matches best,
+					 // but can’t call size() for x
+\end{lstlisting}
+
+See Section 15.7 on page 284 for more details about SFINAE and Section 19.4 about some applications of SFINAE.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{SFINAE and Overload Resolution}
+
+Over time, the SFINAE principle has become so important and so prevalent among template designers that the abbreviation has become a verb. We say “we SFINAE out a function” if we mean to apply the SFINAE mechanism to ensure that function templates are ignored for certain constraints by instrumenting the template code to result in invalid code for these constraints. And whenever you read in the C++ standard that a function template “shall not participate in overload resolution unless...” it means that SFINAE is used to “SFINAE out” that function template for certain cases.
+
+For example, class std::thread declares a constructor:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+class thread {
+public:
+	...
+	template<typename F, typename... Args>
+	explicit thread(F&& f, Args&&... args);
+	...
+};
+}
+\end{lstlisting}
+
+with the following remark:
+
+Remarks: This constructor shall not participate in overload resolution if decay\_t<F> is the same type as std::thread.
+
+This means that the template constructor is ignored if it is called with a std::thread as first and only argument. The reason is that otherwise a member template like this sometimes might better match than any predefined copy or move constructor (see Section 6.2 on page 95 and Section 16.2.4 on page 333 for details). By SFINAE’ing out the constructor template when called for a thread, we ensure that the predefined copy or move constructor is always used when a thread gets constructed from another thread.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Since the copy constructor for class thread is deleted, this also ensures that copying is forbidden.
+\end{tcolorbox}
+
+Applying this technique on a case-by-case basis can be unwieldy. Fortunately, the standard library provides tools to disable templates more easily. The best-known such feature is std::enable\_if<>, which was introduced in Section 6.3 on page 98. It allows us to disable a template just by replacing a type with a construct containing the condition to disable it.
+
+As a consequence, the real declaration of std::thread typically is as follows:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	class thread {
+		public:
+		...
+		template<typename F, typename... Args,
+		typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>,
+		thread>>>
+		explicit thread(F&& f, Args&&... args);
+		...
+	};
+}
+\end{lstlisting}
+
+See Section 20.3 for details about how std::enable\_if<> is implemented, using partial specialization and SFINAE.
 
 
 \subsubsubsection{8.4.1\hspace{0.2cm}Expression SFINAE with decltype}
+
+It’s not always easy to find out and formulate the right expression to SFINAE out function templates for certain conditions.
+
+Suppose, for example, that we want to ensure that the function template len() is ignored for arguments of a type that has a size\_type member but not a size() member function. Without any form of requirements for a size() member function in the function declaration, the function template is selected and its ultimate instantiation then results in an error:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+typename T::size_type len (T const& t)
+{
+	return t.size();
+}
+
+std::allocator<int> x;
+std::cout << len(x) << ’\n’; // ERROR: len() selected, but x has no size()
+\end{lstlisting}
+
+There is a common pattern or idiom to deal with such a situation:
+
+\begin{itemize}
+\item 
+Specify the return type with the trailing return type syntax (use auto at the front and -> before the return type at the end).
+
+\item 
+Define the return type using decltype and the comma operator.
+
+\item 
+Formulate all expressions that must be valid at the beginning of the comma operator (converted to void in case the comma operator is overloaded).
+
+\item 
+Define an object of the real return type at the end of the comma operator.
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+auto len (T const& t) -> decltype( (void)(t.size()), T::size_type() )
+{
+	return t.size();
+}
+\end{lstlisting}
+
+Here the return type is given by
+
+\begin{lstlisting}[style=styleCXX]
+decltype( (void)(t.size)(), T::size_type() )
+\end{lstlisting}
+
+The operand of the decltype construct is a comma-separated list of expressions, so that the last expression T::size\_type() yields a value of the desired return type (which decltype uses to convert into the return type). Before the (last) comma, we have the expressions that must be valid, which in this case is just t.size(). The cast of the expression to void is to avoid the possibility of a user-defined comma operator overloaded for the type of the expressions.
+
+Note that the argument of decltype is an unevaluated operand, which means that you, for example, can create “dummy objects” without calling constructors, which is discussed in Section 11.2.3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

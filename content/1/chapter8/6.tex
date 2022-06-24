@@ -1,0 +1,20 @@
+
+\begin{itemize}
+\item 
+Templates provide the ability to compute at compile time (using recursion to iterate and partial specialization or operator ?: for selections).
+
+\item 
+With constexpr functions, we can replace most compile-time computations with “ordinary functions” that are callable in compile-time contexts.
+
+\item 
+With partial specialization, we can choose between different implementations of class templates based on certain compile-time constraints.
+
+\item 
+Templates are used only if needed and substitutions in function template declarations do not result in invalid code. This principle is called SFINAE (substitution failure is not an error).
+
+\item 
+SFINAE can be used to provide function templates only for certain types and/or constraints.
+
+\item 
+Since C++17, a compile-time if allows us to enable or discard statements according to compiletime conditions (even outside templates).
+\end{itemize}

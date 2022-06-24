@@ -1,0 +1,53 @@
+The C++ language definition places some constraints on the redeclaration of various entities. The totality of these constraints is known as the one-definition rule or ODR. The details of this rule are a little complex and span a large variety of situations. Later chapters illustrate the various resulting facets in each applicable context, and you can find a complete description of the ODR in Appendix A. For now, it suffices to remember the following ODR basics:
+
+\begin{itemize}
+\item 
+Ordinary (i.e., not templates) noninline functions and member functions, as well as (noninline) global variables and static data members should be defined only once across the whole program.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Global and static variables and data members can be defined as inline since C++17. This removes the requirement that they be defined in exactly one translation unit.
+\end{tcolorbox}
+
+\item 
+Class types (including structs and unions), templates (including partial specializations but not full specializations), and inline functions and variables should be defined at most once per translation unit, and all these definitions should be identical.
+\end{itemize}
+
+A translation unit is what results from preprocessing a source file; that is, it includes the contents named by \#include directives and produced by macro expansions.
+
+In the remainder of this book, linkable entity refers to any of the following: a function or member function, a global variable or a static data member, including any such things generated from a template, as visible to the linker.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

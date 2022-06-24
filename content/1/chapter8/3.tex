@@ -1,0 +1,130 @@
+An interesting application of a compile-time test such as isPrime() is to use partial specialization to select at compile time between different implementations.
+
+For example, we can choose between different implementations depending on whether a template argument is a prime number:
+
+\begin{lstlisting}[style=styleCXX]
+// primary helper template:
+template<int SZ, bool = isPrime(SZ)>
+struct Helper;
+
+// implementation if SZ is not a prime number:
+template<int SZ>
+struct Helper<SZ, false>
+{
+	...
+};
+
+// implementation if SZ is a prime number:
+template<int SZ>
+struct Helper<SZ, true>
+{
+	...
+};
+
+template<typename T, std::size_t SZ>
+long foo (std::array<T,SZ> const& coll)
+{
+	Helper<SZ> h; // implementation depends on whether array has prime number as size
+	...
+}
+\end{lstlisting}
+
+Here, depending on whether the size of the std::array<> argument is a prime number, we use two different implementations of class Helper<>. This kind of application of partial specialization is broadly applicable to select among different implementations of a function template depending on properties of the arguments it’s being invoked for.
+
+Above, we used two partial specializations to implement the two possible alternatives. Instead, we can also use the primary template for one of the alternatives (the default) case and partial specializations for any other special case:
+
+\begin{lstlisting}[style=styleCXX]
+// primary helper template (used if no specialization fits):
+template<int SZ, bool = isPrime(SZ)>
+struct Helper
+{
+	...
+};
+
+// special implementation if SZ is a prime number:
+template<int SZ>
+struct Helper<SZ, true>
+{
+	...
+};
+\end{lstlisting}
+
+Because function templates do not support partial specialization, you have to use other mechanisms to change function implementation based on certain constraints. Our options include the following:
+
+\begin{itemize}
+\item 
+Use classes with static functions,
+
+\item 
+Use std::enable\_if, introduced in Section 6.3 .
+
+\item 
+Use the SFINAE feature, which is introduced next, or
+
+\item 
+Use the compile-time if feature, available since C++17, which is introduced below in Section 8.5.
+\end{itemize}
+
+Chapter 20 discusses techniques for selecting a function implementation based on constraints.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

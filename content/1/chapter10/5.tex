@@ -1,0 +1,99 @@
+
+Compare the following class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, int N>
+class ArrayInClass {
+	public:
+	T array[N];
+};
+\end{lstlisting}
+
+with a similar plain class:
+
+\begin{lstlisting}[style=styleCXX]
+class DoubleArrayInClass {
+	public:
+	double array[10];
+};
+\end{lstlisting}
+
+The latter becomes essentially equivalent to the former if we replace the parameters T and N by double and 10 respectively. In C++, the name of this replacement is denoted as
+
+\begin{lstlisting}[style=styleCXX]
+ArrayInClass<double,10>
+\end{lstlisting}
+
+Note how the name of the template is followed by template arguments in angle brackets.
+
+Regardless of whether these arguments are themselves dependent on template parameters, the combination of the template name, followed by the arguments in angle brackets, is called a templateid.
+
+This name can be used much like a corresponding nontemplate entity would be used. For example:
+
+\begin{lstlisting}[style=styleCXX]
+int main()
+{
+	ArrayInClass<double,10> ad;
+	ad.array[0] = 1.0;
+}
+\end{lstlisting}
+
+It is essential to distinguish between template parameters and template arguments. In short, you can
+say that “parameters are initialized by arguments.”
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In the academic world, arguments are sometimes called actual parameters, whereas parameters are called formal parameters.
+\end{tcolorbox}
+
+Or more precisely:
+
+\begin{itemize}
+\item 
+Template parameters are those names that are listed after the keyword template in the template declaration or definition (T and N in our example).
+
+\item 
+Template arguments are the items that are substituted for template parameters (double and 10 in our example). Unlike template parameters, template arguments can be more than just “names.”
+
+\end{itemize}
+
+The substitution of template parameters by template arguments is explicit when indicated with a template-id, but there are various situations when the substitution is implicit (e.g., if template parameters are substituted by their default arguments).
+
+A fundamental principle is that any template argument must be a quantity or value that can be determined at compile time. As becomes clear later, this requirement translates into dramatic benefits for the run-time costs of template entities. Because template parameters are eventually substituted by compile-time values, they can themselves be used to form compile-time expressions. This was exploited in the ArrayInClass template to size the member array array. The size of an array must be a constant-expression, and the template parameter N qualifies as such.
+
+We can push this reasoning a little further: Because template parameters are compile-time entities, they can also be used to create valid template arguments. Here is an example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Dozen {
+	public:
+	ArrayInClass<T,12> contents;
+};
+\end{lstlisting}
+
+Note how in this example the name T is both a template parameter and a template argument. Thus, a mechanism is available to enable the construction of more complex templates from simpler ones. Of course, this is not fundamentally different from the mechanisms that allow us to assemble types and functions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,99 @@
+Partial specialization, SFINAE, and std::enable\_if allow us to enable or disable templates as a whole. C++17 additionally introduces a compile-time if statement that allows is to enable or disable specific statements based on compile-time conditions. With the syntax if constexpr(...), the compiler uses a compile-time expression to decide whether to apply the then part or the else part (if any).
+
+As a first example, consider the variadic function template print() introduced in Section 4.1.1 on page 55. It prints its arguments (of arbitrary types) using recursion. Instead of providing a separate function to end the recursion, the constexpr if feature allows us to decide locally whether to continue the recursion:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Although the code reads if constexpr, the feature is called constexpr if, because it is the “constexpr” form of if (and for historical reasons).
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+void print (T const& firstArg, Types const&... args)
+{
+	std::cout << firstArg << ’\n’;
+	if constexpr(sizeof...(args) > 0) {
+		print(args...); // code only available if sizeof...(args)>0 (since C++17)
+	}
+}
+\end{lstlisting}
+
+Here, if print() is called for one argument only, args becomes an empty parameter pack so that sizeof...(args) becomes 0. As a result, the recursive call of print() becomes a discarded statement, for which the code is not instantiated. Thus, a corresponding function is not required to exist and the recursion ends.
+
+The fact that the code is not instantiated means that only the first translation phase (the definition time) is performed, which checks for correct syntax and names that don’t depend on template parameters (see Section 1.1.3 on page 6). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T t)
+{
+	if constexpr(std::is_integral_v<T>) {
+		if (t > 0) {
+			foo(t-1); // OK
+		}
+	}
+	else {
+		undeclared(t); // error if not declared and not discarded (i.e. T is not integral)
+		undeclared(); // error if not declared (even if discarded)
+		static_assert(false, "no integral"); // always asserts (even if discarded)
+		static_assert(!std::is_integral_v<T>, "no integral"); // OK
+	}
+}
+\end{lstlisting}
+
+Note that if constexpr can be used in any function, not only in templates. We only need a compiletime expression that yields a Boolean value. For example:
+
+\begin{lstlisting}[style=styleCXX]
+int main()
+{
+	if constexpr(std::numeric_limits<char>::is_signed) {
+		foo(42); // OK
+	}
+	else {
+		undeclared(42); // error if undeclared() not declared
+		static_assert(false, "unsigned"); // always asserts (even if discarded)
+		static_assert(!std::numeric_limits<char>::is_signed,
+		"char is unsigned"); // OK
+	}
+}
+\end{lstlisting}
+
+With this feature, we can, for example, use our isPrime() compile-time function, introduced in Section 8.2, to perform additional code if a given size is not a prime number:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, std::size_t SZ>
+void foo (std::array<T,SZ> const& coll)
+{
+	if constexpr(!isPrime(SZ)) {
+		... // special additional handling if the passed array has no prime number as size
+	}
+	...
+}
+\end{lstlisting}
+
+See Section 14.6 for further details.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

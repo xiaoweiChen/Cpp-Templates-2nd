@@ -1,0 +1,127 @@
+
+
+There are several ways to organize template source code. This section presents the most popular approach: the inclusion model.
+
+\subsubsubsection{9.1.1\hspace{0.2cm}Linker Errors}
+
+Most C and C++ programmers organize their nontemplate code largely as follows:
+
+\begin{itemize}
+\item
+Classes and other types are entirely placed in header files. Typically, this is a file with a .hpp (or .H, .h, .hh, .hxx) filename extension.
+
+\item
+For global (noninline) variables and (noninline) functions, only a declaration is put in a header file, and the definition goes into a file compiled as its own translation unit. Such a CPP file typically is a file with a .cpp (or .C, .c, .cc, or .cxx) filename extension.
+\end{itemize}
+
+This works well: It makes the needed type definition easily available throughout the program and avoids duplicate definition errors on variables and functions from the linker.
+
+With these conventions in mind, a common error about which beginning template programmers complain is illustrated by the following (erroneous) little program. As usual for “ordinary code,” we declare the template in a header file:
+
+\noindent
+\textit{basics/myfirst.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef MYFIRST_HPP
+#define MYFIRST_HPP
+
+// declaration of template
+template<typename T>
+void printTypeof (T const&);
+
+#endif // MYFIRST_HPP
+\end{lstlisting}
+
+printTypeof() is the declaration of a simple auxiliary function that prints some type information. The implementation of the function is placed in a CPP file:
+
+
+\noindent
+\textit{basics/myfirst.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <typeinfo>
+#include "myfirst.hpp"
+
+// implementation/definition of template
+template<typename T>
+void printTypeof (T const& x)
+{
+	std::cout << typeid(x).name() << ’\n’;
+}
+\end{lstlisting}
+
+The example uses the typeid operator to print a string that describes the type of the expression passed to it. It returns an lvalue of the static type std::type\_info, which provides a member function name() that shows the types of some expressions. The C++ standard doesn’t actually say that name() must return something meaningful, but on good C++ implementations, you should get a string that gives a good description of the type of the expression passed to typeid.
+ 
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}With some implementations this string is mangled (encoded with types of arguments and names of surrounding scopes to distinguish it from other names), but a demangler is available to turn it into human-readable text.
+\end{tcolorbox}
+
+Finally, we use the template in another CPP file, into which our template declaration is \#included:
+
+\noindent
+\textit{basics/myfirstmain.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "myfirst.hpp"
+// use of the template
+int main()
+{
+	double ice = 3.0;
+	printTypeof(ice); // call function template for type double
+}
+\end{lstlisting}
+
+A C++ compiler will most likely accept this program without any problems, but the linker will probably report an error, implying that there is no definition of the function printTypeof().
+
+The reason for this error is that the definition of the function template printTypeof() has not been instantiated. In order for a template to be instantiated, the compiler must know which definition should be instantiated and for what template arguments it should be instantiated. Unfortunately, in the previous example, these two pieces of information are in files that are compiled separately. Therefore, when our compiler sees the call to printTypeof() but has no definition in sight to instantiate this function for double, it just assumes that such a definition is provided elsewhere and creates a reference (for the linker to resolve) to that definition. On the other hand, when the compiler processes the file myfirst.cpp, it has no indication at that point that it must instantiate the template definition it contains for specific arguments.
+
+\subsubsubsection{9.1.2\hspace{0.2cm}Templates in Header Files}
+
+The common solution to the previous problem is to use the same approach that we would take with macros or with inline functions: We include the definitions of a template in the header file that declares that template.
+
+That is, instead of providing a file myfirst.cpp, we rewrite myfirst.hpp so that it contains all template declarations and template definitions:
+
+\noindent
+\textit{basics/myfirst2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef MYFIRST_HPP
+#define MYFIRST_HPP
+
+#include <iostream>
+#include <typeinfo>
+
+// declaration of template
+template<typename T>
+void printTypeof (T const&);
+
+// implementation/definition of template
+template<typename T>
+void printTypeof (T const& x)
+{
+	std::cout << typeid(x).name() << ’\n’;
+}
+
+#endif // MYFIRST_HPP
+\end{lstlisting}
+
+This way of organizing templates is called the inclusion model. With this in place, you should find that our program now correctly compiles, links, and executes.
+
+There are a few observations we can make at this point. The most notable is that this approach has considerably increased the cost of including the header file myfirst.hpp. In this example, the cost is not the result of the size of the template definition itself but the result of the fact that we must also include the headers used by the definition of our template—in this case <iostream> and <typeinfo>. You may find that this amounts to tens of thousands of lines of code because headers like <iostream> contain many template definitions of their own.
+
+This is a real problem in practice because it considerably increases the time needed by the compiler to compile significant programs. We will therefore examine some possible ways to approach this problem, including precompiled headers (see Section 9.3) and the use of explicit template instantiation (see Section 14.5).
+
+Despite this build-time issue, we do recommend following this inclusion model to organize your templates when possible until a better mechanism becomes available. At the time of writing this book in 2017, such a mechanism is in the works: modules, which is introduced in Section 17.11 on page 366. They are a language mechanism that allows the programmer to more logically organize code in such a way that a compiler can separately compile all declarations and then efficiently and selectively import the processed declarations whenever needed.
+
+Another (more subtle) observation about the inclusion approach is that noninline function templates are distinct from inline functions and macros in an important way: They are not expanded at the call site. Instead, when they are instantiated, they create a new copy of a function. Because this is an automatic process, a compiler could end up creating two copies in two different files, and some linkers could issue errors when they find two distinct definitions for the same function. In theory, this should not be a concern of ours: It is a problem for the C++ compilation system to accommodate. In practice, things work well most of the time, and we don’t need to deal with this issue at all. For large projects that create their own library of code, however, problems occasionally show up. A discussion of instantiation schemes in Chapter 14 and a close study of the documentation that came with the C++ translation system (compiler) should help address these problems.
+
+Finally, we need to point out that what applies to the ordinary function template in our example also applies to member functions and static data members of class templates, as well as to member function templates.
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,403 @@
+Ordinary compilation errors are normally quite succinct and to the point. For example, when a compiler says “class X has no member ’fun’,” it usually isn’t too hard to figure out what is wrong in our code (e.g., we might have mistyped run as fun). Not so with templates. Let’s look at some examples.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Simple Type Mismatch}
+
+Consider the following relatively simple example using the C++ standard library:
+
+\noindent
+\textit{basics/errornovel1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <map>
+#include <algorithm>
+int main()
+{
+	std::map<std::string,double> coll;
+	...
+	// find the first nonempty string in coll:
+	auto pos = std::find_if (coll.begin(), coll.end(),
+	[] (std::string const& s) {
+		return s != "";
+	});
+}
+\end{lstlisting}
+
+It contains a fairly small mistake: In the lambda used to find the first matching string in the collection, we check against a given string. However, the elements in a map are key/value pairs, so that we should expect a std::pair<std::string const, double>.
+
+A version of the popular GNU C++ compiler reports the following error:
+
+\begin{tcblisting}{commandshell={}}
+1 In file included from /cygdrive/p/gcc/gcc61-include/bits/stl_algobase.h:71:0,
+2 from /cygdrive/p/gcc/gcc61-include/bits/char_traits.h:39,
+3 from /cygdrive/p/gcc/gcc61-include/string:40,
+4 from errornovel1.cpp:1:
+5 /cygdrive/p/gcc/gcc61-include/bits/predefined_ops.h: In instantiation 
+of ’bool __gnu_cxx::__ops::_Iter_pred<_Predicate>::operator()(_Iterator) 
+[with _Iterator = std::_Rb_tree_iterator<std::pair<const std::__cxx11::
+basic_string<char>, double> >; _Predicate = main()::<lambda(const string&)>]’:
+6 /cygdrive/p/gcc/gcc61-include/bits/stl_algo.h:104:42: required from 
+’_InputIterator std::__find_if(_InputIterator, _InputIterator, _Predicate, 
+std::input_iterator_tag) [with _InputIterator = std::_Rb_tree_iterator<std::
+pair<const std::__cxx11::basic_string <char>, double> >; _Predicate = 
+__gnu_cxx::__ops::_Iter_pred<main()::<lambda(const string&)> >]’
+7 /cygdrive/p/gcc/gcc61-include/bits/stl_algo.h:161:23: required from 
+’_Iterator std::__find_if(_Iterator, _Iterator, _Predicate) 
+[with _Iterator = std::_Rb_tree_iterator<std::pair<const
+std::__cxx11::basic_string<char>, double> >; _Predicate =
+__gnu_cxx::__ops::_Iter_pred<main()::<lambda(const string&)> 
+>]’
+8 /cygdrive/p/gcc/gcc61-include/bits/stl_algo.h:3824:28: 
+required from ’_IIter std::find_if(_IIter, _IIter, _Predicate) 
+[with _IIter = std::_Rb_tree_iterator<std::pair<conststd::
+__cxx11::basic_string<char>, double> >; _Predicate = main()
+::<lambda(const string&)>]’
+9 errornovel1.cpp:13:29: required from here
+10 /cygdrive/p/gcc/gcc61-include/bits/predefined_ops.h:234:11: 
+error: no match for call to ’(main()::<lambda(const string&)>) 
+(std::pair<const std::__cxx11::basic_string<char>, double>&)’
+11 { return bool(_M_pred(*__it)); }
+12            ^~~~~~~~~~~~~~~~~~~~
+13 /cygdrive/p/gcc/gcc61-include/bits/predefined_ops.h:234:11: 
+note: candidate: bool (*)(const string&) {aka bool (*)
+	(const std::__cxx11::basic_string<char>&)} <conversion>
+14 /cygdrive/p/gcc/gcc61-include/bits/predefined_ops.h:234:11: 
+note: candidate expects 2 arguments, 2 provided
+15 errornovel1.cpp:11:52: note: candidate: main()::<lambda(
+const string&)>
+16 [] (std::string const& s) {
+17                             ^
+18 errornovel1.cpp:11:52: note: no known conversion for 
+argument 1 from ’std::pair<const std::__cxx11::basic_string<char>, 
+double>’ to ’const string& {aka const std::__cxx11::basic_string
+<char>&}’
+\end{tcblisting}
+
+A message like this starts looking more like a novel than a diagnostic. It can also be overwhelming to the point of discouraging novice template users. However, with some practice, messages like this become manageable, and the errors are at least relatively easily located.
+
+The first part of this error message says that an error occurred in a function template instance deep inside an internal predefined\_ops.h header, included from errornovel1.cpp via various other headers. Here and in the following lines, the compiler reports what was instantiated with which arguments. In this case, it all started with the statement ending on line 13 of errornovel1.cpp, which is:
+
+\begin{lstlisting}[style=styleCXX]
+auto pos = 
+std::find_if (coll.begin(), coll.end(),
+	[] (std::string const& s) {
+		return s != "";
+	});
+\end{lstlisting}
+
+This caused the instantiation of a find\_if template on line 115 of the stl\_algo.h header, where the code
+
+\begin{lstlisting}[style=styleCXX]
+_IIter std::find_if(_IIter, _IIter, _Predicate)
+\end{lstlisting}
+
+is instantiated with
+
+\begin{lstlisting}[style=styleCXX]
+_IIter = std::_Rb_tree_iterator<std::pair<const std::__cxx11::basic_string<char>, double> >
+_Predicate = main()::<lambda(const string&)>
+\end{lstlisting}
+
+The compiler reports all this in case we simply were not expecting all these templates to be instantiated. It allows us to determine the chain of events that caused the instantiations.
+
+However, in our example, we’re willing to believe that all kinds of templates needed to be instantiated, and we just wonder why it didn’t work. This information comes in the last part of the message: The part that says “no match for call” implies that a function call could not be resolved because the types of the arguments and the parameter types didn’t match. It lists what is called
+
+\begin{lstlisting}[style=styleCXX]
+(main()::<lambda(const string&)>) (std::pair<const std::__cxx11::basic_string<char>, double>&)
+\end{lstlisting}
+
+and code that caused this call:
+
+\begin{lstlisting}[style=styleCXX]
+{ return bool(_M_pred(*__it)); }
+\end{lstlisting}
+
+Furthermore, just after this, the line containing “note: candidate:” explains that there was a single candidate type expecting a const string\& and that this candidate is defined in line 11 of errornovel1.cpp as lambda [] (std::string const\& s) combined with a reason why a possible candidate didn’t fit:
+
+\begin{tcblisting}{commandshell={}}
+no known conversion for argument 1
+from ’std::pair<const std::__cxx11::basic_string<char>, double>’
+to ’const string& {aka const std::__cxx11::basic_string<char>&}’
+\end{tcblisting}
+
+which describes the problem we have.
+
+There is no doubt that the error message could be better. The actual problem could be emitted before the history of the instantiation, and instead of using fully expanded template instantiation names like std::\_\_cxx11::basic\_string<char>, using just std::string might be enough. However, it is also true that all the information in this diagnostic could be useful in some situations. It is therefore not surprising that other compilers provide similar information (although some use the structuring techniques mentioned).
+
+For example, the Visual C++ compiler outputs something like:
+
+\begin{tcblisting}{commandshell={}}
+1 c:\tools_root\cl\inc\algorithm(166): error C2664: ’bool main::<lambda_b863c1c7cd07048816
+f454330789acb4>::operator ()(const std::string &) const’: cannot convert argument 1 from
+’std::pair<const _Kty,_Ty>’ to ’const std::string &’
+2 with
+3 [
+4 _Kty=std::string,
+5 _Ty=double
+6 ]
+7 c:\tools_root\cl\inc\algorithm(166): note: Reason: cannot convert from ’std::pair<const
+_Kty,_Ty>’ to ’const std::string’
+8 with
+9 [
+10 _Kty=std::string,
+11 _Ty=double
+12 ]
+13 c:\tools_root\cl\inc\algorithm(166): note: No user-defined-conversion operator available
+that can perform this conversion, or the operator cannot be called
+14 c:\tools_root\cl\inc\algorithm(177): note: see reference to function template instantiat
+ion ’_InIt std::_Find_if_unchecked<std::_Tree_unchecked_iterator<_Mytree>,_Pr>(_InIt,_In
+It,_Pr &)’ being compiled
+15 with
+16 [
+17 _InIt=std::_Tree_unchecked_iterator<std::_Tree_val<std::_Tree_simple_types
+<std::pair<const std::string,double>>>>,
+18 _Mytree=std::_Tree_val<std::_Tree_simple_types<std::pair<const std::string,
+double>>>,
+19 _Pr=main::<lambda_b863c1c7cd07048816f454330789acb4>
+20 ]
+21 main.cpp(13): note: see reference to function template instantiation ’_InIt std::find_if
+<std::_Tree_iterator<std::_Tree_val<std::_Tree_simple_types<std::pair<const _Kty,_Ty>>>>
+,main::<lambda_b863c1c7cd07048816f454330789acb4>>(_InIt,_InIt,_Pr)’ being compiled
+22 with
+23 [
+24 _InIt=std::_Tree_iterator<std::_Tree_val<std::_Tree_simple_types<std::pair<
+const std::string,double>>>>,
+25 _Kty=std::string,
+26 _Ty=double,
+27 _Pr=main::<lambda_b863c1c7cd07048816f454330789acb4>
+28 ]
+\end{tcblisting}
+
+Here, again, we provide the chain of instantiations with the information telling us what was instantiated by which arguments and where in the code, and we see twice that we
+
+\begin{tcblisting}{commandshell={}}
+cannot convert from ’std::pair<const _Kty,_Ty>’ to ’const std::string’
+with
+[
+    _Kty=std::string,
+    _Ty=double
+]
+\end{tcblisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Missing const on Some Compilers}
+
+Unfortunately, it sometimes happens that generic code is a problem only with some compilers. Consider the following example:
+
+\noindent
+\textit{basics/errornovel2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <unordered_set>
+class Customer
+{
+private:
+	std::string name;
+public:
+	Customer (std::string const& n)
+	: name(n) {
+	}
+	std::string getName() const {
+		return name;
+	}
+};
+
+int main()
+{
+	// provide our own hash function:
+	struct MyCustomerHash {
+		// NOTE: missing const is only an error with g++ and clang:
+		std::size_t operator() (Customer const& c) {
+			return std::hash<std::string>()(c.getName());
+		}
+	};
+
+	// and use it for a hash table of Customers:
+	std::unordered_set<Customer,MyCustomerHash> coll;
+	...
+}
+\end{lstlisting}
+
+With Visual Studio 2013 or 2015, this code compiles as expected. However, with g++ or clang, the code causes significant error messages. On g++ 6.1, for example, the first error message is as follows:
+
+\begin{tcblisting}{commandshell={}}
+1 In file included from /cygdrive/p/gcc/gcc61-include/bits/hashtable.h:35:0,
+2 from /cygdrive/p/gcc/gcc61-include/unordered_set:47,
+3 from errornovel2.cpp:2:
+4 /cygdrive/p/gcc/gcc61-include/bits/hashtable_policy.h: In instantiation of ’struct std::
+__detail::__is_noexcept_hash<Customer, main()::MyCustomerHash>’:
+5 /cygdrive/p/gcc/gcc61-include/type_traits:143:12: required from ’struct std::__and_<
+std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<Customer,
+main()::MyCustomerHash> >’
+6 /cygdrive/p/gcc/gcc61-include/type_traits:154:38: required from ’struct std::__not_<
+std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_
+hash<Customer, main()::MyCustomerHash> > >’
+7 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: required from ’class std::
+unordered_set<Customer, main()::MyCustomerHash>’
+8 errornovel2.cpp:28:47: required from here
+9 /cygdrive/p/gcc/gcc61-include/bits/hashtable_policy.h:85:34: error: no match for call to
+’(const main()::MyCustomerHash) (const Customer&)’
+10 noexcept(declval<const _Hash&>()(declval<const _Key&>()))>
+11 ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+12 errornovel2.cpp:22:17: note: candidate: std::size_t main()::MyCustomerHash::operator()(
+const Customer&) <near match>
+13 std::size_t operator() (const Customer& c) {
+	14 ^~~~~~~~
+	15 errornovel2.cpp:22:17: note: passing ’const main()::MyCustomerHash*’ as ’this’ argument
+	discards qualifiers
+\end{tcblisting}
+
+immediately followed by more than 20 other error messages:
+
+\begin{tcblisting}{commandshell={}}
+16 In file included from /cygdrive/p/gcc/gcc61-include/bits/move.h:57:0,
+18 from /cygdrive/p/gcc/gcc61-include/bits/stl_pair.h:59,
+19 from /cygdrive/p/gcc/gcc61-include/bits/stl_algobase.h:64,
+20 from /cygdrive/p/gcc/gcc61-include/bits/char_traits.h:39,
+21 from /cygdrive/p/gcc/gcc61-include/string:40,
+22 from errornovel2.cpp:1:
+23 /cygdrive/p/gcc/gcc61-include/type_traits: In instantiation of ’struct std::__not_<std::
+__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
+Customer, main()::MyCustomerHash> > >’:
+24 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: required from ’class std::
+unordered_set<Customer, main()::MyCustomerHash>’
+25 errornovel2.cpp:28:47: required from here
+26 /cygdrive/p/gcc/gcc61-include/type_traits:154:38: error: ’value’ is not a member of ’std
+::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
+Customer, main()::MyCustomerHash> >’
+27 : public integral_constant<bool, !_Pp::value>
+28 ^~~~
+29 In file included from /cygdrive/p/gcc/gcc61-include/unordered_set:48:0,
+30 from errornovel2.cpp:2:
+31 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h: In instantiation of ’class std::
+unordered_set<Customer, main()::MyCustomerHash>’:
+32 errornovel2.cpp:28:47: required from here
+33 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: error: ’value’ is not a member
+of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
+__is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
+34 typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
+35 ^~~~~~~~~~
+36 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:102:45: error: ’value’ is not a member
+of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
+__is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
+37 typedef typename _Hashtable::key_type key_type;
+38 ^~~~~~~~
+...__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
+Customer, main()::MyCustomerHash> > >’:
+24 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: required from ’class std::
+unordered_set<Customer, main()::MyCustomerHash>’
+25 errornovel2.cpp:28:47: required from here
+26 /cygdrive/p/gcc/gcc61-include/type_traits:154:38: error: ’value’ is not a member of ’std
+::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
+Customer, main()::MyCustomerHash> >’
+27 : public integral_constant<bool, !_Pp::value>
+28 ^~~~
+29 In file included from /cygdrive/p/gcc/gcc61-include/unordered_set:48:0,
+30 from errornovel2.cpp:2:
+31 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h: In instantiation of ’class std::
+unordered_set<Customer, main()::MyCustomerHash>’:
+32 errornovel2.cpp:28:47: required from here
+33 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: error: ’value’ is not a member
+of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
+__is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
+34 typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
+35 ^~~~~~~~~~
+36 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:102:45: error: ’value’ is not a member
+of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
+__is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
+37 typedef typename _Hashtable::key_type key_type;
+38 ^~~~~~~~
+...
+\end{tcblisting}
+
+Again, it’s hard to read the error message (even finding the beginning and end of each message is a chore). The essence is that deep in header file hashtable\_policy.h in the instantiation of std::unordered\_set<> required by
+
+\begin{lstlisting}[style=styleCXX]
+std::unordered_set<Customer,MyCustomerHash> coll;
+\end{lstlisting}
+
+there is no match for the call to
+
+\begin{lstlisting}[style=styleCXX]
+const main()::MyCustomerHash (const Customer&)
+\end{lstlisting}
+
+in the instantiation of
+
+\begin{lstlisting}[style=styleCXX]
+noexcept(declval<const _Hash&>()(declval<const _Key&>()))>
+\end{lstlisting}
+
+(declval<const \_Hash\&>() is an expression of type main()::MyCustomerHash). A possible “near match” candidate is
+
+\begin{lstlisting}[style=styleCXX]
+std::size_t main()::MyCustomerHash::operator()(const Customer&)
+\end{lstlisting}
+
+which is declared as
+
+\begin{lstlisting}[style=styleCXX]
+std::size_t operator() (const Customer& c) {
+\end{lstlisting}
+
+and the last note says something about the problem:
+
+\begin{tcblisting}{commandshell={}}
+passing ’const main()::MyCustomerHash*’ as ’this’ argument discards qualifiers
+\end{tcblisting}
+
+Can you see what the problem is? This implementation of the std::unordered\_set class template requires that the function call operator for the hash object be a const member function (see also Section 11.1.1 on page 159). When that’s not the case, an error arises deep in the guts of the algorithm.
+
+All other error messages cascade from the first and go away when a const qualifier is simply added to the hash function operator:
+
+\begin{lstlisting}[style=styleCXX]
+std::size_t operator() (const Customer& c) const {
+	...
+}
+\end{lstlisting}
+
+Clang 3.9 gives the slightly better hint at the end of the first error message that operator() of the hash functor is not marked const:
+
+\begin{tcblisting}{commandshell={}}
+...
+errornovel2.cpp:28:47: note: in instantiation of template class ’std::unordered_set<Customer
+, MyCustomerHash, std::equal_to<Customer>, std::allocator<Customer> >’ requested here
+std::unordered_set<Customer,MyCustomerHash> coll;
+^
+errornovel2.cpp:22:17: note: candidate function not viable: ’this’ argument has type ’const
+MyCustomerHash’, but method is not marked const
+std::size_t operator() (const Customer& c) {
+	^
+\end{tcblisting}
+
+Note that clang here mentions default template parameters such as std::allocator<Customer>, while gcc skips them.
+
+As you can see, it is often helpful to have more than one compiler available to test your code. Not only does it help you write more portable code, but where one compiler produces a particularly inscrutable error message, another might provide more insight.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

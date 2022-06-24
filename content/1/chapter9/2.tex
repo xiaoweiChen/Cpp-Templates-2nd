@@ -1,0 +1,37 @@
+Declaring functions to be inline is a common tool to improve the running time of programs. The inline specifier was meant to be a hint for the implementation that inline substitution of the function body at the point of call is preferred over the usual function call mechanism.
+
+However, an implementation may ignore the hint. Hence, the only guaranteed effect of inline is to allow a function definition to appear multiple times in a program (usually because it appears in a header file that is included in multiple places).
+
+Like inline functions, function templates can be defined in multiple translation units. This is usually achieved by placing the definition in a header file that is included by multiple CPP files.
+
+This doesn’t mean, however, that function templates use inline substitutions by default. It is entirely up to the compiler whether and when inline substitution of a function template body at the point of call is preferred over the usual function call mechanism. Perhaps surprisingly, compilers are often better than programmers at estimating whether inlining a call would lead to a net performance improvement. As a result, the precise policy of a compiler with respect to inline varies from compiler to compiler, and even depends on the options selected for a specific compilation.
+
+Nevertheless, with appropriate performance monitoring tools, a programmer may have better information than a compiler and may therefore wish to override compiler decisions (e.g., when tuning software for particular platforms, such as mobiles phones, or particular inputs). Sometimes this is only possible with compiler-specific attributes such as noinline or always\_inline.
+
+It’s worth pointing out at this point that full specializations of function templates act like ordinary functions in this regard: Their definition can appear only once unless they’re defined inline (see Section 16.3 on page 338). See also Appendix A for a broader, detailed overview of this topic.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,84 @@
+
+Even without templates, C++ header files can become very large and therefore take a long time to compile. Templates add to this tendency, and the outcry of waiting programmers has in many cases driven vendors to implement a scheme usually known as precompiled headers (PCH). This scheme operates outside the scope of the standard and relies on vendor-specific options. Although we leave the details on how to create and use precompiled header files to the documentation of the various C++ compilation systems that have this feature, it is useful to gain some understanding of how it works. 
+
+When a compiler translates a file, it does so starting from the beginning of the file and working through to the end. As it processes each token from the file (which may come from \#included files), it adapts its internal state, including such things as adding entries to a table of symbols so they may be looked up later. While doing so, the compiler may also generate code in object files.
+
+The precompiled header scheme relies on the fact that code can be organized in such a manner that many files start with the same lines of code. Let’s assume for the sake of argument that every file to be compiled starts with the same N lines of code. We could compile these N lines and save the complete state of the compiler at that point in a precompiled header. Then, for every file in our program, we could reload the saved state and start compilation at line N+1. At this point it is worthwhile to note that reloading the saved state is an operation that can be orders of magnitude faster than actually compiling the first N lines. However, saving the state in the first place is typically more expensive than just compiling the N lines. The increase in cost varies roughly from 20 to 200 percent. 
+
+The key to making effective use of precompiled headers is to ensure that—as much as possible—files start with a maximum number of common lines of code. In practice this means the files must start with the same \#include directives, which (as mentioned earlier) consume a substantial portion of our build time. Hence, it can be very advantageous to pay attention to the order in which headers are included. For example, the following two files:
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <list>
+...
+\end{lstlisting}
+
+and
+
+\begin{lstlisting}[style=styleCXX]
+#include <list>
+#include <vector>
+...
+\end{lstlisting}
+
+\noindent
+inhibit the use of precompiled headers because there is no common initial state in the sources.
+
+Some programmers decide that it is better to \#include some extra unnecessary headers than to pass on an opportunity to accelerate the translation of a file using a precompiled header. This decision can considerably ease the management of the inclusion policy. For example, it is usually relatively straightforward to create a header file named std.hpp that includes all the standard headers:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In theory, the standard headers do not actually need to correspond to physical files. In practice, however, they do, and the files are very large.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <string>
+#include <vector>
+#include <deque>
+#include <list>
+...
+\end{lstlisting}
+
+This file can then be precompiled, and every program file that makes use of the standard library can then simply be started as follows:
+
+\begin{lstlisting}[style=styleCXX]
+#include "std.hpp"
+...
+\end{lstlisting}
+
+Normally this would take a while to compile, but given a system with sufficient memory, the precompiled header scheme allows it to be processed significantly faster than almost any single standard header would require without precompilation. The standard headers are particularly convenient in this way because they rarely change, and hence the precompiled header for our std.hpp file can be built once. Otherwise, precompiled headers are typically part of the dependency configuration of a project (e.g., they are updated as needed by the popular make tool or an integrated development environment’s (IDE) project build tool).
+
+One attractive approach to manage precompiled headers is to create layers of precompiled headers that go from the most widely used and stable headers (e.g., our std.hpp header) to headers that aren’t expected to change all the time and therefore are still worth precompiling. However, if headers are under heavy development, creating precompiled headers for them can take more time than what is saved by reusing them. A key concept to this approach is that a precompiled header for a more stable layer can be reused to improve the precompilation time of a less stable header. For example, suppose that in addition to our std.hpp header (which we have precompiled), we also define a core.hpp header that includes additional facilities that are specific to our project but nonetheless achieve a certain level of stability:
+
+\begin{lstlisting}[style=styleCXX]
+#include "std.hpp"
+#include "core_data.hpp"
+#include "core_algos.hpp"
+...
+\end{lstlisting}
+
+Because this file starts with \#include "std.hpp", the compiler can load the associated precompiled header and continue with the next line without recompiling all the standard headers. When the file is completely processed, a new precompiled header can be produced. Applications can then use \#include "core.hpp" to provide access quickly to large amounts of functionality because the compiler can load the latter precompiled header.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

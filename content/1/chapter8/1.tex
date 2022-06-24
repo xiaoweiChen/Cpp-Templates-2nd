@@ -1,0 +1,134 @@
+Templates are instantiated at compile time (in contrast to dynamic languages, where genericity is handled at run time). It turns out that some of the features of C++ templates can be combined with the instantiation process to produce a sort of primitive recursive “programming language” within the C++ language itself.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In fact, it was Erwin Unruh who first found it out by presenting a program computing prime numbers at compile time. See Section 23.7 for details.
+\end{tcolorbox}
+
+For this reason, templates can be used to “compute a program.” Chapter 23 will cover the whole story and all features, but here is a short example of what is possible.
+
+The following code finds out at compile time whether a given number is a prime number:
+
+\noindent
+\textit{basics/isprime.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<unsigned p, unsigned d> // p: number to check, d: current divisor
+struct DoIsPrime {
+	static constexpr bool value = (p%d != 0) && DoIsPrime<p,d-1>::value;
+};
+
+template<unsigned p> // end recursion if divisor is 2
+struct DoIsPrime<p,2> {
+	static constexpr bool value = (p%2 != 0);
+};
+
+template<unsigned p> // primary template
+struct IsPrime {
+	// start recursion with divisor from p/2:
+	static constexpr bool value = DoIsPrime<p,p/2>::value;
+};
+
+// special cases (to avoid endless recursion with template instantiation):
+template<>
+struct IsPrime<0> { static constexpr bool value = false; };
+template<>
+struct IsPrime<1> { static constexpr bool value = false; };
+template<>
+struct IsPrime<2> { static constexpr bool value = true; };
+template<>
+struct IsPrime<3> { static constexpr bool value = true; };
+\end{lstlisting}
+
+The IsPrime<> template returns in member value whether the passed template parameter p is a prime number. To achieve this, it instantiates DoIsPrime<>, which recursively expands to an expression checking for each divisor d between p/2 and 2 whether the divisor divides p without remainder.
+
+For example, the expression
+
+\begin{lstlisting}[style=styleCXX]
+IsPrime<9>::value
+\end{lstlisting}
+
+\noindent
+expands to
+
+\begin{lstlisting}[style=styleCXX]
+DoIsPrime<9,4>::value
+\end{lstlisting}
+
+\noindent
+which expands to
+
+\begin{lstlisting}[style=styleCXX]
+9%4!=0 && DoIsPrime<9,3>::value
+\end{lstlisting}
+
+\noindent
+which expands to
+
+\begin{lstlisting}[style=styleCXX]
+9%4!=0 && 9%3!=0 && DoIsPrime<9,2>::value
+\end{lstlisting}
+
+\noindent
+which expands to
+
+\begin{lstlisting}[style=styleCXX]
+9%4!=0 && 9%3!=0 && 9%2!=0
+\end{lstlisting}
+
+\noindent
+which evaluates to false, because 9\%3 is 0.
+
+As this chain of instantiations demonstrates:
+
+\begin{itemize}
+\item 
+We use recursive expansions of DoIsPrime<> to iterate over all divisors from p/2 down to 2 to find out whether any of these divisors divide the given integer exactly (i.e., without remainder).
+
+\item 
+The partial specialization of DoIsPrime<> for d equal to 2 serves as the criterion to end the recursion.
+\end{itemize}
+
+Note that all this is done at compile time. That is,
+
+\begin{lstlisting}[style=styleCXX]
+IsPrime<9>::value
+\end{lstlisting}
+
+\noindent
+expands to false at compile time.
+
+The template syntax is arguably clumsy, but code similar to this has been valid since C++98 (and earlier) and has proven useful for quite a few libraries.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Before C++11, it was common to declare the value members as enumerator constants instead of static data members to avoid the need to have an out-of-class definition of the static data member (see Section 23.6 for details). For example:
+\begin{lstlisting}[style=styleCXX]
+enum f value = (p%d != 0) && DoIsPrime<p,d-1>::value g;
+\end{lstlisting}
+\end{tcolorbox}
+
+See Chapter 23 for details.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

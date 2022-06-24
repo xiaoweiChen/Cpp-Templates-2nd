@@ -1,0 +1,99 @@
+When passing arguments by value, each argument must in principle be copied. Thus, each parameter becomes a copy of the passed argument. For classes, the object created as a copy generally is initialized by the copy constructor.
+
+Calling a copy constructor can become expensive. However, there are various way to avoid expensive copying even when passing parameters by value: In fact, compilers might optimize away copy operations copying objects and can become cheap even for complex objects by using move semantics.
+
+For example, let’s look at a simple function template implemented so that the argument is passed by value:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printV (T arg) {
+	...
+}
+\end{lstlisting}
+
+When calling this function template for an integer, the resulting code is
+
+\begin{lstlisting}[style=styleCXX]
+void printV (int arg) {
+	...
+}
+\end{lstlisting}
+
+Parameter arg becomes a copy of any passed argument, whether it is an object or a literal or a value returned by a function.
+
+If we define a std::string and call our function template for it:
+
+\begin{lstlisting}[style=styleCXX]
+std::string s = "hi";
+printV(s);
+\end{lstlisting}
+
+the template parameter T is instantiated as std::string so that we get
+
+\begin{lstlisting}[style=styleCXX]
+void printV (std::string arg)
+{
+	...
+}
+\end{lstlisting}
+
+Again, when passing the string, arg becomes a copy of s. This time the copy is created by the copy constructor of the string class, which is a potentially expensive operation, because in principle this copy operation creates a full or “deep” copy so that the copy internally allocates its own memory to hold the value.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The implementation of the string class might itself have some optimizations to make copying cheaper. One is the small string optimization (SSO), using some memory directly inside the object to hold the value without allocating memory as long as the value is not too long. Another is the copy-on-write optimization, which creates a copy using the same memory as the source as long as neither source nor the copy is modified. However, the copy-on-write optimization has significant drawbacks in multithreaded code. For this reason, it is forbidden for standard strings since C++11.
+\end{tcolorbox}
+
+However, the potential copy constructor is not always called. Consider the following:
+
+\begin{lstlisting}[style=styleCXX]
+std::string returnString();
+std::string s = "hi";
+printV(s); // copy constructor
+printV(std::string("hi")); // copying usually optimized away (if not, move constructor)
+printV(returnString()); // copying usually optimized away (if not, move constructor)
+printV(std::move(s)); // move constructor
+\end{lstlisting}
+
+In the first call we pass an lvalue, which means that the copy constructor is used. However, in the second and third calls, when directly calling the function template for prvalues (temporary objects created on the fly or returned by another function; see Appendix B), compilers usually optimize passing the argument so that no copying constructor is called at all. Note that since C++17, this optimization is required. Before C++17, a compiler that doesn’t optimize the copying away, must at least have to try to use move semantics, which usually makes copying cheap. In the last call, when passing an xvalue (an existing nonconstant object with std::move()), we force to call the move constructor by signaling that we no longer need the value of s.
+
+Thus, calling an implementation of printV() that declares the parameter to be passed by value usually is only expensive if we pass an lvalue (an object we created before and typically still use afterwards, as we didn’t use std::move() to pass it). Unfortunately, this is a pretty common case. One reason is that it is pretty common to create objects early to pass them later (after some modifications) to other functions.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Passing by Value Decays}
+
+There is another property of passing by value we have to mention: When passing arguments to a parameter by value, the type decays. This means that raw arrays get converted to pointers and that qualifiers such as const and volatile are removed (just like using the value as initializer for an object declared with auto):
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The term decay comes from C, and also applies to the type conversion from a function to a function pointer (see Section 11.1.1).
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printV (T arg) {
+	...
+}
+
+std::string const c = "hi";
+printV(c); // c decays so that arg has type std::string
+
+printV("hi"); // decays to pointer so that arg has type char const*
+
+int arr[4];
+printV(arr); // decays to pointer so that arg has type char const*
+\end{lstlisting}
+
+Thus, when passing the string literal "hi", its type char const[3] decays to char const* so that this is the deduced type of T. Thus, the template is instantiated as follows:
+
+\begin{lstlisting}[style=styleCXX]
+void printV (char const* arg)
+{
+	...
+}
+\end{lstlisting}
+
+This behavior is derived from C and has its benefits and drawbacks. Often it simplifies the handling of passed string literals, but the drawback is that inside printV() we can’t distinguish between passing a pointer to a single element and passing a raw array. For this reason, we will discuss how to deal with string literals and other raw arrays in Section 7.4.
+
+
+
+

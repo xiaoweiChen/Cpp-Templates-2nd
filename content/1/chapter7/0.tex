@@ -1,0 +1,77 @@
+Since the beginning, C++ has provided call-by-value and call-by-reference, and it is not always easy to decide which one to choose: Usually calling by reference is cheaper for nontrivial objects but more complicated. C++11 added move semantics to the mix, which means that we now have different ways to pass by reference:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}A constant rvalue reference X const\&\& is also possible but there is no established semantic meaning for it.
+\end{tcolorbox}
+
+\begin{enumerate}
+\item 
+X const\& (constant lvalue reference):
+
+The parameter refers to the passed object, without the ability to modify it.
+
+\item 
+X\& (nonconstant lvalue reference):
+
+The parameter refers to the passed object, with the ability to modify it.
+
+\item 
+X\&\& (rvalue reference):
+
+The parameter refers to the passed object, with move semantics, meaning that you can modify or “steal” the value.
+\end{enumerate}
+
+Deciding how to declare parameters with known concrete types is complicated enough. In templates, types are not known, and therefore it becomes even harder to decide which passing mechanism is appropriate.
+
+Nevertheless, in Section 1.6.1 we did recommend passing parameters in function templates by value unless there are good reasons, such as the following:
+
+\begin{itemize}
+\item 
+Copying is not possible
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note that since C++17 you can pass temporary entities (rvalues) by value even if no copy or move constructor is available (see Section B.2.1). So, since C++17 the additional constraint is that copying for lvalues is not possible.
+\end{tcolorbox}
+
+\item 
+Parameters are used to return data.
+
+\item 
+Templates just forward the parameters to somewhere else by keeping all the properties of the original arguments
+
+\item 
+There are significant performance improvements
+\end{itemize}
+
+This chapter discusses the different approaches to declare parameters in templates, motivating the general recommendation to pass by value, and providing arguments for the reasons not to do so. It also discusses the tricky problems you run into when dealing with string literals and other raw arrays.
+
+When reading this chapter, it is helpful to be familiar with the terminology of value categories (lvalue, rvalue, prvalue, xvalue, etc.), which is explained in Appendix B.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

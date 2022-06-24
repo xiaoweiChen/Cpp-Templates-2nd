@@ -1,0 +1,116 @@
+As we learned in the previous sections, we have very different ways to declare parameters that depend on template parameters:
+
+\begin{itemize}
+\item 
+Declare to pass the arguments by value:
+
+This approach is simple, it decays string literals and raw arrays, but it doesn’t provide the best performance for large objects. Still the caller can decide to pass by reference using std::cref() and std::ref(), but the caller must be careful that doing so is valid.
+
+\item 
+Declare to pass the arguments by-reference:
+
+This approach often provides better performance for somewhat large objects, especially when passing
+
+\begin{itemize}
+\item[-]
+existing objects (lvalues) to lvalue references,
+
+\item[-]
+temporary objects (prvalues) or objects marked as movable (xvalue) to rvalue references,
+
+\item[-]
+or both to forwarding references.
+\end{itemize}
+
+Because in all these cases the arguments don’t decay, you may need special care when passing string literals and other raw arrays. For forwarding references, you also have to beware that with this approach template parameters implicitly can deduce to reference types.
+\end{itemize}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Don’t Be Over-Generic}
+
+Note that, in practice, function templates often are not for arbitrary types of arguments. Instead, some constraints apply. For example, you may know that only vectors of some type are passed. In this case, it is better not to declare such a function too generically, because, as discussed, surprising side effects may occur. Instead, use the following declaration:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printVector (std::vector<T> const& v)
+{
+	...
+}
+\end{lstlisting}
+
+With this declaration of parameter v in printVector(), we can be sure that the passed T can’t become a reference because vectors can’t use references as element types. Also, it is pretty clear that passing a vector by value almost always can become expensive because the copy constructor of std::vector<> creates a copy of the elements. For this reason, it is probably never useful to declare such a vector parameter to be passed by value. If we declare parameter v just as having type T deciding, between call-by-value and call-by-reference becomes less obvious.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{The std::make\_pair() Example}
+
+std::make\_pair<>() is a good example to demonstrate the pitfalls of deciding a parameter passing mechanism. It is a convenience function template in the C++ standard library to create std::pair<> objects using type deduction. Its declaration changed through different versions of the C++ standard:
+
+\begin{itemize}
+\item
+In the first C++ standard, C++98, make\_pair<>() was declared inside namespace std to use call-by-reference to avoid unnecessary copying:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+pair<T1,T2> make_pair (T1 const& a, T2 const& b)
+{
+	return pair<T1,T2>(a,b);
+}
+\end{lstlisting}
+
+This, however, almost immediately caused significant problems when using pairs of string literals or raw arrays of different size.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}See C++ library issue 181 [LibIssue181] for details
+\end{tcolorbox}
+
+\item
+As a consequence, with C++03 the function definition was changed to use call-by-value:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+pair<T1,T2> make_pair (T1 a, T2 b)
+{
+	return pair<T1,T2>(a,b);
+}
+\end{lstlisting}
+
+As you can read in the rationale for the issue resolution, “it appeared that this was a much smaller change to the standard than the other two suggestions, and any efficiency concerns were more than offset by the advantages of the solution.”
+
+\item[-]
+However, with C++11, make\_pair() had to support move semantics, so that the arguments had to become forwarding references. For this reason, the definition changed roughly again as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+constexpr pair<typename decay<T1>::type, typename decay<T2>::type>
+make_pair (T1&& a, T2&& b)
+{
+	return pair<typename decay<T1>::type,
+				typename decay<T2>::type>(forward<T1>(a),
+										  forward<T2>(b));
+}
+\end{lstlisting}
+
+The complete implementation is even more complex: To support std::ref() and std::cref(), the function also unwraps instances of std::reference\_wrapper into real references.
+\end{itemize}
+
+The C++ standard library now perfectly forwards passed arguments in many places in similar way, often combined with using std::decay<>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

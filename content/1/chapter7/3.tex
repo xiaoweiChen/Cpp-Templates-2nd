@@ -1,0 +1,100 @@
+Since C++11, you can let the caller decide, for a function template argument, whether to pass it by value or by reference. When a template is declared to take arguments by value, the caller can use std::cref() and std::ref(), declared in header file <functional>, to pass the argument by reference. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printT (T arg) {
+	...
+}
+
+std::string s = "hello";
+printT(s); // pass s by reference
+printT(std::cref(s)); // pass s “as if by reference”
+\end{lstlisting}
+
+However, note that std::cref() does not change the handling of parameters in templates. Instead, it uses a trick: It wraps the passed argument s by an object that acts like a reference. In fact, it creates an object of type std::reference\_wrapper<> referring to the original argument and passes this object by value. The wrapper more or less supports only one operation: an implicit type conversion back to the original type, yielding the original object.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}You can also call get() on a reference wrapper and use it as function object.
+\end{tcolorbox}
+
+So, whenever you have a valid operator for the passed object, you can use the reference wrapper instead. For example:
+
+\noindent
+\textit{basics/cref.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <functional> // for std::cref()
+#include <string>
+#include <iostream>
+
+void printString(std::string const& s)
+{
+	std::cout << s << ’\n’;
+}
+
+template<typename T>
+void printT (T arg)
+{
+	printString(arg); // might convert arg back to std::string
+}
+
+int main()
+{
+	std::string s = "hello";
+	printT(s); // print s passed by value
+	printT(std::cref(s)); // print s passed “as if by reference”
+}
+\end{lstlisting}
+
+The last call passes by value an object of type std::reference\_wrapper<string const> to the parameter arg, which then passes and therefore converts it back to its underlying type std::string.
+
+Note that the compiler has to know that an implicit conversion back to the original type is necessary. For this reason, std::ref() and std::cref() usually work fine only if you pass objects through generic code. For example, directly trying to output the passed object of the generic type T will fail because there is no output operator defined for std::reference\_wrapper<>:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printV (T arg) {
+	std::cout << arg << ’\n’;
+}
+...
+std::string s = "hello";
+printV(s); // OK
+printV(std::cref(s)); // ERROR: no operator << for reference wrapper defined
+\end{lstlisting}
+
+Also, the following fails because you can’t compare a reference wrapper with a char const* or std::string:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+bool isless(T1 arg1, T2 arg2)
+{
+	return arg1 < arg2;
+}
+...
+std::string s = "hello";
+if (isless(std::cref(s) < "world")) ... // ERROR
+if (isless(std::cref(s) < std::string("world"))) ... // ERROR
+\end{lstlisting}
+
+It also doesn’t help to give arg1 and arg2 a common type T:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+bool isless(T arg1, T arg2)
+{
+	return arg1 < arg2;
+}
+\end{lstlisting}
+
+because then the compiler gets conflicting types when trying to deduce T for arg1 and arg2.
+
+Thus, the effect of class std::reference\_wrapper<> is to be able to use a reference as a “first class object,” which you can copy and therefore pass by value to function templates. You can also use it in classes, for example, to hold references to objects in containers. But you always finally need a conversion back to the underlying type.
+
+
+
+
+
+
+
+
+
+
+

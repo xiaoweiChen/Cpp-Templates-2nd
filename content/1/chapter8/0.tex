@@ -1,0 +1,26 @@
+C++ has always included some simple ways to compute values at compile time. Templates considerably increased the possibilities in this area, and further evolution of the language has only added to this toolbox.
+
+In the simple case, you can decide whether or not to use certain or to choose between different template code. But the compiler even can compute the outcome of control flow at compile time, provided all necessary input is available.
+
+In fact, C++ has multiple features to support compile-time programming:
+
+\begin{itemize}
+\item 
+Since before C++98, templates have provided the ability to compute at compile time, including using loops and execution path selection. (However, some consider this an “abuse” of template features, e.g., because it requires nonintuitive syntax.)
+
+\item 
+With partial specialization we can choose at compile time between different class template implementations depending on specific constraints or requirements.
+
+\item 
+With the SFINAE principle, we can allow selection between different function template implementations for different types or different constraints.
+
+\item 
+ In C++11 and C++14, compile-time computing became increasingly better supported with the constexpr feature using “intuitive” execution path selection and, since C++14, most statement kinds (including for loops, switch statements, etc.).
+
+\item 
+C++17 introduced a “compile-time if” to discard statements depending on compile-time conditions or constraints. It works even outside of templates.
+\end{itemize}
+
+This chapter introduces these features with a special focus on the role and context of templates.
+
+

@@ -1,9 +1,241 @@
 
-
+Now let’s discuss the different flavors of passing by reference. In all cases, no copy gets created (because the parameter just refers to the passed argument). Also, passing the argument never decays. However, sometimes passing is not possible, and if passing is possible, there are cases in which the resulting type of the parameter may cause problems.
 
 \subsubsubsection{7.2.1\hspace{0.2cm}Passing by Constant Reference}
 
+To avoid any (unnecessary) copying, when passing nontemporary objects, we can use constant references. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printR (T const& arg) {
+	...
+}
+\end{lstlisting}
+
+With this declaration, passing an object never creates a copy (whether it’s cheap or not):
+
+\begin{lstlisting}[style=styleCXX]
+std::string returnString();
+std::string s = "hi";
+printR(s); // no copy
+printR(std::string("hi")); // no copy
+printR(returnString()); // no copy
+printR(std::move(s)); // no copy
+\end{lstlisting}
+
+Even an int is passed by reference, which is a bit counterproductive but shouldn’t matter that much. 
+
+Thus:
+
+\begin{lstlisting}[style=styleCXX]
+int i = 42;
+printR(i); // passes reference instead of just copying i
+\end{lstlisting}
+
+results in printR() being instantiated as:
+
+\begin{lstlisting}[style=styleCXX]
+void printR(int const& arg) {
+	...
+}
+\end{lstlisting}
+
+Under the hood, passing an argument by reference is implemented by passing the address of the argument. Addresses are encoded compactly, and therefore transferring an address from the caller to the callee is efficient in itself. However, passing an address can create uncertainties for the compiler when it compiles the caller’s code: What is the callee doing with that address? In theory, the callee can change all the values that are “reachable” through that address. That means, that the compiler has to assume that all the values it may have cached (usually, in machine registers) are invalid after the call. Reloading all those values can be quite expensive. You may be thinking that we are passing by constant reference: Cannot the compiler deduce from that that no change can happen? Unfortunately, that is not the case because the caller may modify the referenced object through its own, non-const reference.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The use of const\_cast is another, more explicit, way to modify the referenced object.
+\end{tcolorbox}
+
+This bad news is moderated by inlining: If the compiler can expand the call inline, it can reason about the caller and the callee together and in many cases “see” that the address is not used for anything but passing the underlying value. Function templates are often very short and therefore likely candidates for inline expansion. However, if a template encapsulates a more complex algorithm, inlining is less likely to happen.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Passing by Reference Does Not Decay}
+
+When passing arguments to parameters by reference, they do not decay. This means that raw arrays are not converted to pointers and that qualifiers such as const and volatile are not removed. However, because the call parameter is declared as T const\&, the template parameter T itself is not deduced as const. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printR (T const& arg) {
+	...
+}
+
+std::string const c = "hi";
+printR(c); // T deduced as std::string, arg is std::string const&
+
+printR("hi"); // T deduced as char[3], arg is char const(&)[3]
+
+int arr[4];
+printR(arr); // T deduced as int[4], arg is int const(&)[4]
+\end{lstlisting}
+
+Thus, local objects declared with type T in printR() are not constant.
+
 \subsubsubsection{7.2.2\hspace{0.2cm}Passing by Nonconstant Reference}
 
+When you want to return values through passed arguments (i.e., when you want to use out or inout parameters), you have to use nonconstant references (unless you prefer to pass them via pointers). Again, this means that when passing the arguments, no copy gets created. The parameters of the called function template just get direct access to the passed argument.
+
+Consider the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void outR (T& arg) {
+	...
+}
+\end{lstlisting}
+
+Note that calling outR() for a temporary (prvalue) or an existing object passed with std::move() (xvalue) usually is not allowed:
+
+\begin{lstlisting}[style=styleCXX]
+std::string returnString();
+std::string s = "hi";
+outR(s); // OK: T deduced as std::string, arg is std::string&
+outR(std::string("hi")); // ERROR: not allowed to pass a temporary (prvalue)
+outR(returnString()); // ERROR: not allowed to pass a temporary (prvalue)
+outR(std::move(s)); // ERROR: not allowed to pass an xvalue
+\end{lstlisting}
+
+You can pass raw arrays of nonconstant types, which again don’t decay:
+
+\begin{lstlisting}[style=styleCXX]
+int arr[4];
+outR(arr); // OK: T deduced as int[4], arg is int(&)[4]
+\end{lstlisting}
+
+Thus, you can modify elements and, for example, deal with the size of the array. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void outR (T& arg) {
+	if (std::is_array<T>::value) {
+		std::cout << "got array of " << std::extent<T>::value << " elems\n";
+	}
+	...
+}
+\end{lstlisting}
+
+However, templates are a bit tricky here. If you pass a const argument, the deduction might result in arg becoming a declaration of a constant reference, which means that passing an rvalue is suddenly allowed, where an lvalue is expected:
+
+\begin{lstlisting}[style=styleCXX]
+std::string const c = "hi";
+outR(c); // OK: T deduced as std::string const
+outR(returnConstString()); // OK: same if returnConstString() returns const string
+outR(std::move(c)); // OK: T deduced as std::string const
+outR("hi"); // OK: T deduced as char const[3]
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}When passing std::move(c), std::move() first converts c to std::string const\&\&, which then has the effect that T is deduced as std::string const.
+\end{tcolorbox}
+
+Of course, any attempt to modify the passed argument inside the function template is an error in such cases. Passing a const object is possible in the call expression itself, but when the function is fully instantiated (which may happen later in the compilation process) any attempt to modify the value will trigger an error (which, however, might happen deep inside the called template; see Section 9.4).
+
+If you want to disable passing constant objects to nonconstant references, you can do the following:
+
+\begin{itemize}
+\item 
+Use a static assertion to trigger a compile-time error:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void outR (T& arg) {
+	static_assert(!std::is_const<T>::value,
+				  "out parameter of foo<T>(T&) is const");
+	...
+}
+\end{lstlisting}
+
+\item 
+Disable the template for this case either by using std::enable\_if<> (see Section 6.3):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		 typename = std::enable_if_t<!std::is_const<T>::value>
+void outR (T& arg) {
+	...
+}
+\end{lstlisting}
+
+or concepts once they are supported (see Section 6.5 and Appendix E):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires !std::is_const_v<T>
+void outR (T& arg) {
+	...
+}
+\end{lstlisting}
+
+\end{itemize}
+
 \subsubsubsection{7.2.3\hspace{0.2cm}Passing by Forwarding Reference}
+
+One reason to use call-by-reference is to be able to perfect forward a parameter (see Section 6.1). But remember that when a forwarding reference is used, which is defined as an rvalue reference of a template parameter, special rules apply. Consider the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void passR (T&& arg) { // arg declared as forwarding reference
+	...
+}
+\end{lstlisting}
+
+You can pass everything to a forwarding reference and, as usual when passing by reference, no copy gets created:
+
+\begin{lstlisting}[style=styleCXX]
+std::string s = "hi";
+passR(s); // OK: T deduced as std::string& (also the type of arg)
+passR(std::string("hi")); // OK: T deduced as std::string, arg is std::string&&
+passR(returnString()); // OK: T deduced as std::string, arg is std::string&&
+passR(std::move(s)); // OK: T deduced as std::string, arg is std::string&&
+passR(arr); // OK: T deduced as int(&)[4] (also the type of arg)
+\end{lstlisting}
+
+However, the special rules for type deduction may result in some surprises:
+
+\begin{lstlisting}[style=styleCXX]
+std::string const c = "hi";
+passR(c); // OK: T deduced as std::string const&
+passR("hi"); // OK: T deduced as char const(&)[3] (also the type of arg)
+int arr[4];
+passR("hi"); // OK: T deduced as int (&)[4] (also the type of arg)
+\end{lstlisting}
+
+In each of these cases, inside passR() the parameter arg has a type that “knows” whether we passed an rvalue (to use move semantics) or a constant/nonconstant lvalue. This is the only way to pass an argument, such that it can be used to distinguish behavior for all of these three cases.
+
+This gives the impression that declaring a parameter as a forwarding reference is almost perfect. But beware, there is no free lunch.
+
+For example, this is the only case where the template parameter T implicitly can become a reference type. As a consequence, it might become an error to use T to declare a local object without initialization:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void passR(T&& arg) { // arg is a forwarding reference
+	T x; // for passed lvalues, x is a reference, which requires an initializer
+	...
+}
+
+foo(42); // OK: T deduced as int
+int i;
+foo(i); // ERROR: T deduced as int&, which makes the declaration of x in passR() invalid
+\end{lstlisting}
+
+See Section 15.6.2 for further details about how you can deal with this situation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

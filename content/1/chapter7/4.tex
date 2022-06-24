@@ -1,3 +1,113 @@
 
+So far, we have seen the different effects for templates parameters when using string literals and raw arrays:
+
+\begin{itemize}
+\item 
+Call-by-value decays so that they become pointers to the element type.
+
+\item 
+Any form of call-by-reference does not decay so that the arguments become references that still refer to arrays.
+\end{itemize}
+
+Both can be good and bad. When decaying arrays to pointers, you lose the ability to distinguish between handling pointers to elements from handling passed arrays. On the other hand, when dealing with parameters where string literals may be passed, not decaying can become a problem, because string literals of different size have different types. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo (T const& arg1, T const& arg2)
+{
+	...
+}
+
+foo("hi", "guy"); // ERROR
+\end{lstlisting}
+
+Here, foo("hi","guy") fails to compile, because "hi" has type char const[3], while "guy" has type char const[4], but the template requires them to have the same type T. Only if the string literals were to have the same length would such code compile. For this reason, it is strongly recommended to use string literals of different lengths in test cases.
+
+By declaring the function template foo() to pass the argument by value the call is possible:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo (T arg1, T arg2)
+{
+	...
+}
+
+foo("hi", "guy"); // compiles, but ...
+\end{lstlisting}
+
+But, that doesn’t mean that all problems are gone. Even worse, compile-time problems may have become run-time problems. Consider the following code, where we compare the passed argument using operator==:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo (T arg1, T arg2)
+{
+	if (arg1 == arg2) { // OOPS: compares addresses of passed arrays
+		...
+	}
+}
+
+foo("hi", "guy"); // compiles, but ...
+\end{lstlisting}
+
+As written, you have to know that you should interpret the passed character pointers as strings. But that’s probably the case anyway, because the template also has to deal with arguments coming from string literals that have been decayed already (e.g., by coming from another function called by value or being assigned to an object declared with auto).
+
+Nevertheless, in many cases decaying is helpful, especially for checking whether two objects (both passed as arguments or one passed as argument and the other expecting the argument) have or convert to the same type. One typical usage is perfect forwarding. But if you want to use perfect forwarding, you have to declare the parameters as forwarding references. In those cases, you might explicitly decay the arguments using the type trait std::decay<>(). See the story of std::make\_pair() in Section 7.6 on page 120 for a concrete example.
+
+Note that other type traits sometimes also implicitly decay, such as std::common\_type<>, which yields the common type of two passed argument types (see Section 1.3.3 and Section D.5).
 
 \subsubsubsection{7.4.1\hspace{0.2cm}Special Implementations for String Literals and Raw Arrays}
+
+You might have to distinguish your implementation according to whether a pointer or an array was passed. This, of course, requires that a passed array wasn’t decayed yet.
+
+To distinguish these cases, you have to detect whether arrays are passed. Basically, there are two options:
+
+\begin{itemize}
+\item 
+You can declare template parameters so that they are only valid for arrays:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, std::size_t L1, std::size_t L2>
+void foo(T (&arg1)[L1], T (&arg2)[L2])
+{
+	T* pa = arg1; // decay arg1
+	T* pb = arg2; // decay arg2
+	if (compareArrays(pa, L1, pb, L2)) {
+		...
+	}
+}
+\end{lstlisting}
+
+Here, arg1 and arg2 have to be raw arrays of the same element type T but with different sizes L1 and L2. However, note that you might need multiple implementations to support the various forms of raw arrays (see Section 5.4).
+
+\item 
+You can use type traits to detect whether an array (or a pointer) was passed:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T,
+		 typename = std::enable_if_t<std::is_array_v<T>>>
+void foo (T&& arg1, T&& arg2)
+{
+	...
+}
+\end{lstlisting}
+\end{itemize}
+
+Due to these special handling, often the best way to deal with arrays in different ways is simply to use different function names. Even better, of course, is to ensure that the caller of a template uses std::vector or std::array. But as long as string literals are raw arrays, we always have to take them into account.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

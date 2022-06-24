@@ -1,0 +1,93 @@
+C++11 introduced a new feature, constexpr, that greatly simplifies various forms of compile-time computation. In particular, given proper input, a constexpr function can be evaluated at compile time. While in C++11 constexpr functions were introduced with stringent limitations (e.g., each constexpr function definition was essentially limited to consist of a return statement), most of these restrictions were removed with C++14. Of course, successfully evaluating a constexpr function still requires that all computational steps be possible and valid at compile time: Currently, that excludes things like heap allocation or throwing exceptions.
+
+Our example to test whether a number is a prime number could be implemented as follows in C++11:
+
+\noindent
+\textit{basics/isprime11.hpp}
+\begin{lstlisting}[style=styleCXX]
+constexpr bool
+doIsPrime (unsigned p, unsigned d) // p: number to check, d: current divisor
+{
+	return d!=2 ? (p%d!=0) && doIsPrime(p,d-1) // check this and smaller divisors
+	: (p%2!=0); // end recursion if divisor is 2
+}
+
+constexpr bool isPrime (unsigned p)
+{
+	return p < 4 ? !(p<2) // handle special cases
+	: doIsPrime(p,p/2); // start recursion with divisor from p/2
+}
+\end{lstlisting}
+
+Due to the limitation of having only one statement, we can only use the conditional operator as a selection mechanism, and we still need recursion to iterate over the elements. But the syntax is ordinary C++ function code, making it more accessible than our first version relying on template instantiation.
+
+With C++14, constexpr functions can make use of most control structures available in general C++ code. So, instead of writing unwieldy template code or somewhat arcane one-liners, we can now just use a plain for loop:
+
+\noindent
+\textit{basics/isprime14.hpp}
+\begin{lstlisting}[style=styleCXX]
+constexpr bool isPrime (unsigned int p)
+{
+	for (unsigned int d=2; d<=p/2; ++d) {
+		if (p % d == 0) {
+			return false; // found divisor without remainder
+		}
+	}
+	return p > 1; // no divisor without remainder found
+}
+\end{lstlisting}
+
+With both the C++11 and C++14 versions of our constexpr isPrime() implementations, we can simply call
+
+\begin{lstlisting}[style=styleCXX]
+isPrime(9)
+\end{lstlisting}
+
+\noindent
+to find out whether 9 is a prime number. Note that it can do so at compile time, but it need not necessarily do so. In a context that requires a compile-time value (e.g., an array length or a nontype template argument), the compiler will attempt to evaluate a call to a constexpr function at compile time and issue an error if that is not possible (since a constant must be produced in the end). In other contexts, the compiler may or may not attempt the evaluation at compile time but if such an evaluation fails, no error is issued and the call is left as a run-time call instead.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}At the time of writing this book in 2017, compilers do appear to attempt compile-time evaluation even when not strictly necessary.
+\end{tcolorbox}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+constexpr bool b1 = isPrime(9); // evaluated at compile time
+\end{lstlisting}
+
+will compute the value at compile time. The same is true with
+
+\begin{lstlisting}[style=styleCXX]
+const bool b2 = isPrime(9); // evaluated at compile time if in namespace scope
+\end{lstlisting}
+
+\noindent
+provided b2 is defined globally or in a namespace. At block scope, the compiler can decide whether to compute it at compile or run time.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Theoretically, even with constexpr, the compiler can decide to compute the initial value of b at run time. The compiler only has to check that it can compute the value at compile time.
+\end{tcolorbox}
+
+This, for example, is also the case here:
+
+\begin{lstlisting}[style=styleCXX]
+bool fiftySevenIsPrime() {
+	return isPrime(57); // evaluated at compile or running time
+}
+\end{lstlisting}
+
+\noindent
+the compiler may or may not evaluate the call to isPrime at compile time.
+
+On the other hand:
+
+\begin{lstlisting}[style=styleCXX]
+int x;
+...
+std::cout << isPrime(x); // evaluated at run time
+\end{lstlisting}
+
+\noindent
+will generate code that computes at run time whether x is a prime number.
+

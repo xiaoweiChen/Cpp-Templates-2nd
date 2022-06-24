@@ -1,0 +1,26 @@
+
+\begin{itemize}
+\item 
+When testing templates, use string literals of different length.
+
+\item 
+Template parameters passed by value decay, while passing them by reference does not decay.
+
+\item 
+The type trait std::decay<> allows you to decay parameters in templates passed by reference.
+
+\item 
+In some cases std::cref() and std::ref() allow you to pass arguments by reference when function templates declare them to be passed by value.
+
+\item 
+Passing template parameters by value is simple but may not result in the best performance.
+
+\item 
+Pass parameters to function templates by value unless there are good reasons to do otherwise.
+
+\item 
+Ensure that return values are usually passed by value (which might mean that a template parameter can’t be specified directly as a return type).
+
+\item 
+Always measure performance when it is important. Do not rely on intuition; it’s probably wrong.
+\end{itemize}

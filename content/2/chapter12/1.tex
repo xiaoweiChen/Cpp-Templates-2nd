@@ -1,5 +1,42 @@
 
+C++ currently supports four fundamental kinds of templates: class templates, function templates, variable templates, and alias templates. Each of these template kinds can appear in namespace scope, but also in class scope. In class scope they become nested class templates, member function templates, static data member templates, and member alias templates. Such templates are declared much like ordinary classes, functions, variables, and type aliases (or their class member counterparts) except for being introduced by a parameterization clause of the form
 
+\begin{lstlisting}[style=styleCXX]
+template<parameters here>
+\end{lstlisting}
+
+Note that C++17 introduced another construct that is introduced with such a parameterization clause: deduction guides (see Section 2.9 on page 42 and Section 15.12.1 on page 314). Those aren’t called templates in this book (e.g., they are not instantiated), but the syntax was chosen to be reminiscent of function templates.
+
+We’ll come back to the actual template parameter declarations in a later section. First, some examples illustrate the four kinds of templates. They can occur in namespace scope (globally or in a namespace) as follows:
+
+\noindent
+\textit{details/definitions1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T> // a namespace scope class template
+class Data {
+	public:
+	static constexpr bool copyable = true;
+	...
+};
+
+template<typename T> // a namespace scope function template
+void log (T x) {
+	...
+}
+
+template<typename T> // a namespace scope variable template (since C++14)
+T zero = 0;
+
+template<typename T> // a namespace scope variable template (since C++14)
+bool dataCopyable = Data<T>::copyable;
+
+template<typename T> // a namespace scope alias template
+using DataList = Data<T*>;
+\end{lstlisting}
+
+Note that in this example, the static data member Data<T>::copyable is not a variable template, even though it is indirectly parameterized through the parameterization of the class template Data. However, a variable template can appear in class scope (as the next example will illustrate), and in that case it is a static data member template.
+
+The following example shows the four kinds of templates as class members that are defined within their parent class:
 
 \subsubsubsection{12.1.1\hspace{0.2cm}Virtual Member Functions}
 

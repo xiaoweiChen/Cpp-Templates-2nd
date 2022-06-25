@@ -1,11 +1,142 @@
 
-
-
-
-
+std::invoke() is just one example of useful utilities provided by the C++ standard library for implementing generic libraries. In what follows, we survey some other important ones.
 
 \subsubsubsection{11.2.1\hspace{0.2cm}Type Traits}
 
+The standard library provides a variety of utilities called type traits that allow us to evaluate and modify types. This supports various cases where generic code has to adapt to or react on the capabilities of the types for which they are instantiated. For example:
+
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+template<typename T>
+class C
+{
+	// ensure that T is not void (ignoring const or volatile):
+	static_assert(!std::is_same_v<std::remove_cv_t<T>,void>,
+					"invalid instantiation of class C for void type");
+public:
+	template<typename V>
+	void f(V&& v) {
+		if constexpr(std::is_reference_v<T>) {
+			... // special code if T is a reference type
+		}
+		if constexpr(std::is_convertible_v<std::decay_t<V>,T>) {
+			... // special code if V is convertible to T
+		}
+		if constexpr(std::has_virtual_destructor_v<V>) {
+			... // special code if V has virtual destructor
+		}
+	}
+};
+\end{lstlisting}
+
+As this example demonstrates, by checking certain conditions we can choose between different implementations of the template. Here, we use the compile-time if feature, which is available since C++17 (see Section 8.5 on page 134), but we could have used std::enable\_if, partial specialization, or SFINAE to enable or disable helper templates instead (see Chapter 8 for details).
+
+However, note that type traits must be used with particular care: They might behave differently than the (naive) programmer might expect. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::remove_const_t<int const&> // yields int const&
+\end{lstlisting}
+
+Here, because a reference is not const (although you can’t modify it), the call has no effect and yields the passed type.
+
+As a consequence, the order of removing references and const matters:
+
+\begin{lstlisting}[style=styleCXX]
+std::remove_const_t<std::remove_reference_t<int const&>> // int
+std::remove_reference_t<std::remove_const_t<int const&>> // int const
+\end{lstlisting}
+
+Instead, you might call just
+
+\begin{lstlisting}[style=styleCXX]
+std::decay_t<int const&> // yields int
+\end{lstlisting}
+
+which, however, would also convert raw arrays and functions to the corresponding pointer types. Also there are cases where type traits have requirements. Not satisfying those requirements results in undefined behavior.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}There was a proposal for C++17 to require that violations of preconditions of type traits must always result in a compile-time error. However, because some type traits have over-constraining requirements, such as always requiring complete types, this change was postponed.
+\end{tcolorbox}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+make_unsigned_t<int> // unsigned int
+make_unsigned_t<int const&> // undefined behavior (hopefully error)
+\end{lstlisting}
+
+Sometimes the result may be surprising. For example:
+
+\begin{lstlisting}[style=styleCXX]
+add_rvalue_reference_t<int> // int&&
+add_rvalue_reference_t<int const> // int const&&
+add_rvalue_reference_t<int const&> // int const& (lvalue-ref remains lvalue-ref)
+\end{lstlisting}
+
+Here we might expect that add\_rvalue\_reference always results in an rvalue reference, but the reference-collapsing rules of C++ (see Section 15.6.1 on page 277) cause the combination of an lvalue reference and rvalue reference to produce an lvalue reference.
+
+As another example:
+
+\begin{lstlisting}[style=styleCXX]
+is_copy_assignable_v<int> // yields true (generally, you can assign an int to an int)
+is_assignable_v<int,int> // yields false (can’t call 42 = 42)
+\end{lstlisting}
+
+While is\_copy\_assignable just checks in general whether you can assign ints to another (checking the operation for lvalues), is\_assignable takes the value category (see Appendix B) into account (here checking whether you can assign a prvalue to a prvalue). That is, the first expression is equivalent to
+
+\begin{lstlisting}[style=styleCXX]
+is_assignable_v<int&,int&> // yields true
+\end{lstlisting}
+
+For the same reason:
+
+\begin{lstlisting}[style=styleCXX]
+is_swappable_v<int> // yields true (assuming lvalues)
+is_swappable_v<int&,int&> // yields true (equivalent to the previous check)
+is_swappable_with_v<int,int> // yields false (taking value category into account)
+\end{lstlisting}
+
+For all these reasons, carefully note the exact definition of type traits. We describe the standard ones in detail in Appendix D.
+
 \subsubsubsection{11.2.2\hspace{0.2cm}std::addressof()}
 
+The std::addressof<>() function template yields the actual address of an object or function. It works even if the object type has an overloaded operator \&. Even though the latter is somewhat rare, it might happen (e.g., in smart pointers). Thus, it is recommended to use addressof() if you need an address of an object of arbitrary type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f (T&& x)
+{
+	auto p = &x; // might fail with overloaded operator &
+	auto q = std::addressof(x); // works even with overloaded operator &
+	...
+}
+\end{lstlisting}
+
 \subsubsubsection{11.2.3\hspace{0.2cm}std::declval()}
+
+The std::declval<>() function template can be used as a placeholder for an object reference of a specific type. The function doesn’t have a definition and therefore cannot be called (and doesn’t create an object). Hence, it can only be used in unevaluated operands (such as those of decltype and sizeof constructs). So, instead of trying to create an object, you can assume you have an object of the corresponding type.
+
+For example, the following declaration deduces the default return type RT from the passed template parameters T1 and T2:
+
+\noindent
+\textit{basics/maxdefaultdeclval.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+template<typename T1, typename T2,
+		 typename RT = std::decay_t<decltype(true ? std::declval<T1>()
+												  : std::declval<T2>())>>
+RT max (T1 a, T2 b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+To avoid that we have to call a (default) constructor for T1 and T2 to be able to call operator ?: in the expression to initialize RT, we use std::declval to “use” objects of the corresponding type without creating them. This is only possible in the unevaluated context of decltype, though.
+
+Don’t forget to use the std::decay<> type trait to ensure the default return type can’t be a reference, because std::declval() itself yields rvalue references. Otherwise, calls such as max(1, 2) will get a return type of int\&\&. See Section 19.3.4 on page 415 for details.
+
+
+
+
+
+

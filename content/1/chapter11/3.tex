@@ -1,0 +1,74 @@
+As shown in Section 6.1 on page 91, we can use forwarding references and std::forward<> to “perfectly forward” generic parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f (T&& t) // t is forwarding reference
+{
+	g(std::forward<T>(t)); // perfectly forward passed argument t to g()
+}
+\end{lstlisting}
+
+However, sometimes we have to perfectly forward data in generic code that does not come through a parameter. In that case, we can use auto\&\& to create a variable that can be forwarded. Assume, for example, that we have chained calls to functions get() and set() where the return value of get() should be perfectly forwarded to set():
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T x)
+{
+	set(get(x));
+}
+\end{lstlisting}
+
+Suppose further that we need to update our code to perform some operation on the intermediate value produced by get(). We do this by holding the value in a variable declared with auto\&\&:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(T x)
+{
+	auto&& val = get(x);
+	...
+	// perfectly forward the return value of get() to set():
+	set(std::forward<decltype(val)>(val));
+}
+\end{lstlisting}
+
+This avoids extraneous copies of the intermediate value.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

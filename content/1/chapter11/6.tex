@@ -1,0 +1,30 @@
+Let’s list some things to remember when implementing generic libraries (note that some of them might be introduced later in this book):
+
+\begin{itemize}
+\item 
+Use forwarding references to forward values in templates (see Section 6.1 on page 91). If the values do not depend on template parameters, use auto\&\& (see Section 11.3 on page 167).
+
+\item 
+When parameters are declared as forwarding references, be prepared that a template parameter has a reference type when passing lvalues (see Section 15.6.2 on page 279).
+
+\item 
+Use std::addressof() when you need the address of an object depending on a template parameter to avoid surprises when it binds to a type with overloaded operator\& (Section 11.2.2 on page 166)
+
+\item 
+For member function templates, ensure that they don’t match better than the predefined copy/move constructor or assignment operator (Section 6.4 on page 99).
+
+\item 
+Consider using std::decay when template parameters might be string literals and are not passed by value (Section 7.4 on page 116 and Section D.4 on page 731).
+
+\item 
+If you have out or inout parameters depending on template parameters, be prepared to deal with the situation that const template arguments may be specified (see, e.g., Section 7.2.2 on page 110).
+
+\item 
+Be prepared to deal with the side effects of template parameters being references (see Section 11.4 on page 167 for details and Section 19.6.1 on page 432 for an example). In particular, you might want to ensure that the return type can’t become a reference (see Section 7.5 on page 117).
+
+\item 
+Be prepared to deal with incomplete types to support, for example, recursive data structures (see Section 11.5 on page 171).
+
+\item 
+Overload for all array types and not just T[SZ] (see Section 5.4 on page 71).
+\end{itemize}

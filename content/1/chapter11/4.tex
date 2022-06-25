@@ -1,0 +1,195 @@
+Although it is not common, template type parameters can become reference types. For example:
+
+\noindent
+\textit{basics/tmplparamref.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+void tmplParamIsReference(T) {
+	std::cout << "T is reference: " << std::is_reference_v<T> << ’\n’;
+}
+int main()
+{
+	std::cout << std::boolalpha;
+	int i;
+	int& r = i;
+	tmplParamIsReference(i); // false
+	tmplParamIsReference(r); // false
+	tmplParamIsReference<int&>(i); // true
+	tmplParamIsReference<int&>(r); // true
+}
+\end{lstlisting}
+
+Even if a reference variable is passed to tmplParamIsReference(), the template parameter T is deduced to the type of the referenced type (because, for a reference variable v, the expression v has the referenced type; the type of an expression is never a reference). However, we can force the reference case by explicitly specifying the type of T:
+
+\begin{lstlisting}[style=styleCXX]
+tmplParamIsReference<int&>(r);
+tmplParamIsReference<int&>(i);
+\end{lstlisting}
+
+Doing this can fundamentally change the behavior of a template, and, as likely as not, a template may not have been designed with this possibility in mind, thereby triggering errors or unexpected behavior. Consider the following example:
+
+\noindent
+\textit{basics/referror1.cpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T Z = T{}>
+class RefMem {
+private:
+	T zero;
+public:
+	RefMem() : zero{Z} {
+	}
+};
+
+int null = 0;
+
+int main()
+{
+	RefMem<int> rm1, rm2;
+	rm1 = rm2; // OK
+	
+	RefMem<int&> rm3; // ERROR: invalid default value for N
+	RefMem<int&, 0> rm4; // ERROR: invalid default value for N
+	
+	extern int null;
+	RefMem<int&,null> rm5, rm6;
+	rm5 = rm6; // ERROR: operator= is deleted due to reference member
+}
+\end{lstlisting}
+
+Here we have a class with a member of template parameter type T, initialized with a nontype template parameter Z that has a zero-initialized default value. Instantiating the class with type int works as expected. However, when trying to instantiate it with a reference, things become tricky:
+
+\begin{itemize}
+\item 
+The default initialization no longer works.
+
+\item 
+You can no longer pass just 0 as initializer for an int.
+
+\item 
+And, perhaps most surprising, the assignment operator is no longer available because classes with nonstatic reference members have deleted default assignment operators.
+\end{itemize}
+
+Also, using reference types for nontype template parameters is tricky and can be dangerous. Consider this example:
+
+\noindent
+\textit{basics/referror2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <iostream>
+
+template<typename T, int& SZ> // Note: size is reference
+class Arr {
+private:
+	std::vector<T> elems;
+public:
+	Arr() : elems(SZ) { // use current SZ as initial vector size
+	}
+	void print() const {
+		for (int i=0; i<SZ; ++i) { // loop over SZ elements
+			std::cout << elems[i] << ’ ’;
+		}
+	}
+};
+
+int size = 10;
+
+int main()
+{
+	Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
+	
+	Arr<int,size> x; // initializes internal vector with 10 elements
+	x.print(); // OK
+	size += 100; // OOPS: modifies SZ in Arr<>
+	x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
+}
+\end{lstlisting}
+
+Here, the attempt to instantiate Arr for elements of a reference type results in an error deep in the code of class std::vector<>, because it can’t be instantiated with references as elements:
+
+\begin{lstlisting}[style=styleCXX]
+Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
+\end{lstlisting}
+
+The error often leads to the “error novel” described in Section 9.4 on page 143, where the compiler provides the entire template instantiation history from the initial cause of the instantiation down to the actual template definition in which the error was detected.
+
+Perhaps worse is the run-time error resulting from making the size parameter a reference: It allows the recorded size value to change without the container being aware of it (i.e., the size value can become invalid). Thus, operations using the size (like the print() member) are bound to run into undefined behavior (causing the program to crash, or worse):
+
+\begin{lstlisting}[style=styleCXX]
+int int size = 10;
+...
+Arr<int,size> x; // initializes internal vector with 10 elements
+size += 100; // OOPS: modifies SZ in Arr<>
+x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
+\end{lstlisting}
+
+Note that changing the template parameter SZ to be of type int const\& does not address this issue, because size itself is still modifiable.
+
+Arguably, this example is far-fetched. However, in more complex situations, issues like these do occur. Also, in C++17 nontype parameters can be deduced; for example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, decltype(auto) SZ>
+class Arr;
+\end{lstlisting}
+
+Using decltype(auto) can easily produce reference types and is therefore generally avoided in this context (use auto by default). See Section 15.10.3 on page 302 for details.
+
+The C++ standard library for this reason sometimes has surprising specifications and constraints. For example:
+
+\begin{itemize}
+\item 
+In order to still have an assignment operator even if the template parameters are instantiated for references, classes std::pair<> and std::tuple<> implement the assignment operator instead of using the default behavior. For example:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T1, typename T2>
+	struct pair {
+		T1 first;
+		T2 second;
+		...
+		// default copy/move constructors are OK even with references:
+		pair(pair const&) = default;
+		pair(pair&&) = default;
+		...
+		// but assignment operator have to be defined to be available with references:
+		pair& operator=(pair const& p);
+		pair& operator=(pair&& p) noexcept(...);
+		...
+	};
+}
+\end{lstlisting}
+
+\item 
+Because of the complexity of possible side effects, instantiation of the C++17 standard library class templates std::optional<> and std::variant<> for reference types is ill-formed (at least in C++17).
+
+To disable references, a simple static assertion is enough:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class optional
+{
+	static_assert(!std::is_reference<T>::value,
+					"Invalid instantiation of optional<T> for references");
+	...
+};
+\end{lstlisting}
+
+\end{itemize}
+
+Reference types in general are quite unlike other types and are subject to several unique language rules. This impacts, for example, the declaration of call parameters (see Section 7 on page 105) and also the way we define type traits (see Section 19.6.1 on page 432).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

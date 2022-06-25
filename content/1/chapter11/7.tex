@@ -1,0 +1,33 @@
+
+\begin{itemize}
+\item 
+Templates allow you to pass functions, function pointers, function objects, functors, and lambdas as callables.
+
+\item 
+When defining classes with an overloaded operator(), declare it as const (unless the call changes its state).
+
+\item 
+With std::invoke(), you can implement code that can handle all callables, including member functions.
+
+\item 
+Use decltype(auto) to forward a return value perfectly.
+
+\item 
+Type traits are type functions that check for properties and capabilities of types.
+
+\item 
+Use std::addressof() when you need the address of an object in a template.
+
+\item 
+Use std::declval() to create values of specific types in unevaluated expressions.
+
+\item 
+Use auto\&\& to perfectly forward objects in generic code if their type does not depend on template
+parameters.
+
+\item 
+Be prepared to deal with the side effects of template parameters being references.
+
+\item 
+You can use templates to defer the evaluation of expressions (e.g., to support using incomplete types in class templates).
+\end{itemize}

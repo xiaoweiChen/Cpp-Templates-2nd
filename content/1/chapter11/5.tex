@@ -1,0 +1,75 @@
+When implementing templates, sometimes the question comes up whether the code can deal with incomplete types (see Section 10.3.1 on page 154). Consider the following class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Cont {
+private:
+	T* elems;
+public:
+	...
+};
+\end{lstlisting}
+
+So far, this class can be used with incomplete types. This is useful, for example, with classes that refer to elements of their own type:
+
+\begin{lstlisting}[style=styleCXX]
+struct Node
+{
+	std::string value;
+	Cont<Node> next; // only possible if Cont accepts incomplete types
+};
+\end{lstlisting}
+
+However, for example, just by using some traits, you might lose the ability to deal with incomplete types. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Cont {
+private:
+	T* elems;
+public:
+	...
+	typename std::conditional<std::is_move_constructible<T>::value,
+					T&&,
+					T&
+					>::type
+	foo();
+};
+\end{lstlisting}
+
+Here, we use the trait std::conditional (see Section D.5 on page 732) to decide whether the return type of the member function foo() is T\&\& or T\&. The decision depends on whether the template parameter type T supports move semantics. 
+
+The problem is that the trait std::is\_move\_constructible requires that its argument is a complete type (and is not void or an array of unknown bound; see Section D.3.2 on page 721). Thus, with this declaration of foo(), the declaration of struct node fails.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Not all compilers yield an error if std::is\_move\_constructible is not an incomplete type. This is allowed, because for this kind of error, no diagnostics is required. Thus, this is at least a portability problem.
+\end{tcolorbox}
+
+We can deal with this problem by replacing foo() by a member template so that the evaluation of std::is\_move\_constructible is deferred to the point of instantiation of foo():
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Cont {
+private:
+	T* elems;
+public:
+	template<typename D = T> std::conditional<std::is_move_constructible<T>::value,
+					T&&,
+					T&
+					>::type
+	foo();
+};
+\end{lstlisting}
+
+Now, the traits depends on the template parameter D (defaulted to T, the value we want anyway) and the compiler has to wait until foo() is called for a concrete type like Node before evaluating the traits (by then Node is a complete type; it was only incomplete while being defined).
+
+
+
+
+
+
+
+
+
+
+

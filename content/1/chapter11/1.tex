@@ -1,9 +1,321 @@
 
+Many libraries include interfaces to which client code passes an entity that must be “called.” Examples include an operation that must be scheduled on another thread, a function that describes how to hash values to store them in a hash table, an object that describes an order in which to sort elements in a collection, and a generic wrapper that provides some default argument values. The standard library is no exception here: It defines many components that take such callable entities.
 
+One term used in this context is callback. Traditionally that term has been reserved for entities that are passed as function call arguments (as opposed to, e.g., template arguments), and we maintain this tradition. For example, a sort function may include a callback parameter as “sorting criterion,” which is called to determine whether one element precedes another in the desired sorted order.
 
+In C++, there are several types that work well for callbacks because they can both be passed as function call arguments and can be directly called with the syntax f(...):
+
+\begin{itemize}
+\item 
+Pointer-to-function types
+
+\item 
+Class types with an overloaded operator() (sometimes called functors), including lambdas
+
+\item 
+Class types with a conversion function yielding a pointer-to-function or reference-to-function
+\end{itemize}
+
+Collectively, these types are called function object types, and a value of such a type is a function object.
+
+The C++ standard library introduces the slightly broader notion of a callable type, which is either a function object type or a pointer to member. An object of callable type is a callable object, which we refer to as a callable for convenience.
+
+Generic code often benefits from being able to accept any kind of callable, and templates make it possible to do so.
 
 \subsubsubsection{11.1.1\hspace{0.2cm}Supporting Function Objects}
 
+Let’s look how the for\_each() algorithm of the standard library is implemented (using our own name “foreach” to avoid name conflicts and for simplicity skipping returning anything):
+
+\noindent
+\textit{basics/foreach.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Iter, typename Callable>
+void foreach (Iter current, Iter end, Callable op)
+{
+	while (current != end) { // as long as not reached the end
+		op(*current); // call passed operator for current element
+		++current; // and move iterator to next element
+	}
+}
+\end{lstlisting}
+
+The following program demonstrates the use of this template with various function objects:
+
+\noindent
+\textit{basics/foreach.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include "foreach.hpp"
+// a function to call:
+void func(int i)
+{
+	std::cout << "func() called for: " << i << ’\n’;
+}
+
+// a function object type (for objects that can be used as functions):
+class FuncObj {
+	public:
+	void operator() (int i) const { // Note: const member function
+		std::cout << "FuncObj::op() called for: " << i << ’\n’;
+	}
+};
+
+int main()
+{
+	std::vector<int> primes = { 2, 3, 5, 7, 11, 13, 17, 19 };
+	foreach(primes.begin(), primes.end(), // range
+			func); // function as callable (decays to pointer)
+	
+	foreach(primes.begin(), primes.end(), // range
+			&func); // function pointer as callable
+			
+	foreach(primes.begin(), primes.end(), // range
+			FuncObj()); // function object as callable
+	
+	foreach(primes.begin(), primes.end(), // range
+			[] (int i) { // lambda as callable
+				std::cout << "lambda called for: " << i << ’\n’;
+			});
+}
+\end{lstlisting}
+
+Let’s look at each case in detail:
+
+\begin{itemize}
+\item 
+When we pass the name of a function as a function argument, we don’t really pass the function itself but a pointer or reference to it. As with arrays (see Section 7.4 on page 115), function arguments decay to a pointer when passed by value, and in the case of a parameter whose type is a template parameter, a pointer-to-function type will be deduced.
+
+Just like arrays, functions can be passed by reference without decay. However, function types cannot really be qualified with const. If we were to declare the last parameter of foreach() with type Callable const\&, the const would just be ignored. (Generally speaking, references to functions are rarely used in mainstream C++ code.)
+
+\item 
+Our second call explicitly takes a function pointer by passing the address of a function name. This is equivalent to the first call (where the function name implicitly decayed to a pointer value) but is perhaps a little clearer.
+
+\item 
+When passing a functor, we pass a class type object as a callable. Calling through a class type usually amounts to invoking its operator(). So the call
+
+\begin{lstlisting}[style=styleCXX]
+op(*current);
+\end{lstlisting}
+
+is usually transformed into
+
+\begin{lstlisting}[style=styleCXX]
+op.operator()(*current); // call operator() with parameter *current for op
+\end{lstlisting}
+
+Note that when defining operator(), you should usually define it as a constant member function. Otherwise, subtle error messages can occur when frameworks or libraries expect this call not to change the state of the passed object (see Section 9.4 on page 146 for details).
+
+It is also possible for a class type object to be implicitly convertible to a pointer or reference to a surrogate call function (discussed in Section C.3.5 on page 694). In such a case, the call
+
+\begin{lstlisting}[style=styleCXX]
+op(*current);
+\end{lstlisting}
+
+would be transformed into
+
+\begin{lstlisting}[style=styleCXX]
+(op.operator F())(*current);
+\end{lstlisting}
+
+where F is the type of the pointer-to-function or reference-to-function that the class type object can be converted to. This is relatively unusual.
+
+\item 
+Lambda expressions produce functors (called closures), and therefore this case is not different from the functor case. Lambdas are, however, a very convenient shorthand notation to introduce functors, and so they appear commonly in C++ code since C++11.
+
+Interestingly, lambdas that start with [] (no captures) produce a conversion operator to a function pointer. However, that is never selected as a surrogate call function because it is always a worse match than the normal operator() of the closure.
+\end{itemize}
+
 \subsubsubsection{11.1.2\hspace{0.2cm}Dealing with Member Functions and Additional}
 
+One possible entity to call was not used in the previous example: member functions. That’s because calling a nonstatic member function normally involves specifying an object to which the call is applied using syntax like object.memfunc(...) or ptr->memfunc(...) and that doesn’t match the usual pattern function-object(...).
+
+Fortunately, since C++17, the C++ standard library provides a utility std::invoke() that conveniently unifies this case with the ordinary function-call syntax cases, thereby enabling calls to any callable object with a single form. The following implementation of our foreach() template uses std::invoke():
+
+\noindent
+\textit{basics/foreachinvoke.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+#include <functional>
+template<typename Iter, typename Callable, typename... Args>
+void foreach (Iter current, Iter end, Callable op, Args const&... args)
+{
+	while (current != end) { // as long as not reached the end of the elements
+		std::invoke(op, // call passed callable with
+					args..., // any additional args
+					*current); // and the current element
+		++current;
+	}
+}
+\end{lstlisting}
+
+Here, besides the callable parameter, we also accept an arbitrary number of additional parameters. The foreach() template then calls std::invoke() with the given callable followed by the additional given parameters along with the referenced element. std::invoke() handles this as follows:
+
+\begin{itemize}
+\item 
+If the callable is a pointer to member, it uses the first additional argument as the this object. All remaining additional parameters are just passed as arguments to the callable.
+
+\item 
+Otherwise, all additional parameters are just passed as arguments to the callable.
+\end{itemize}
+
+Note that we can’t use perfect forwarding here for the callable or additional parameters: The first call might “steal” their values, leading to unexpected behavior calling op in subsequent iterations.
+
+With this implementation, we can still compile our original calls to foreach() above. Now, in addition, we can also pass additional arguments to the callable and the callable can be a member function.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}std::invoke() also allows a pointer to data member as a callback type. Instead of calling a function, it returns the value of the corresponding data member in the object referred to by the additional argument.
+\end{tcolorbox}
+
+The following client code illustrates this:
+
+\noindent
+\textit{basics/foreachinvoke.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <string>
+#include "foreachinvoke.hpp"
+
+// a class with a member function that shall be called
+class MyClass {
+	public:
+	void memfunc(int i) const {
+		std::cout << "MyClass::memfunc() called for: " << i << ’\n’;
+	}
+};
+
+int main()
+{
+	std::vector<int> primes = { 2, 3, 5, 7, 11, 13, 17, 19 };
+	// pass lambda as callable and an additional argument:
+	foreach(primes.begin(), primes.end(), // elements for 2nd arg of lambda
+			[](std::string const& prefix, int i) { // lambda to call
+				std::cout << prefix << i << ’\n’;
+			},
+			"- value: "); // 1st arg of lambda
+			
+	// call obj.memfunc() for/with each elements in primes passed as argument
+	MyClass obj;
+	foreach(primes.begin(), primes.end(), // elements used as args
+			&MyClass::memfunc, // member function to call
+			obj); // object to call memfunc() for
+}
+\end{lstlisting}
+
+The first call of foreach() passes its fourth argument (the string literal "- value: ") to the first parameter of the lambda, while the current element in the vector binds to the second parameter of the lambda. The second call passes the member function memfunc() as the third argument to be called for obj passed as the fourth argument.
+
+See Section D.3.1 for type traits that yield whether a callable can be used by std::invoke().
+
 \subsubsubsection{11.1.3\hspace{0.2cm}Wrapping Function Calls}
+
+A common application of std::invoke() is to wrap single function calls (e.g., to log the calls, measure their duration, or prepare some context such as starting a new thread for them). Now, we can support move semantics by perfect forwarding both the callable and all passed arguments:
+
+\noindent
+\textit{basics/invoke.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for std::invoke()
+#include <functional> // for std::forward()
+
+template<typename Callable, typename... Args>
+decltype(auto) call(Callable&& op, Args&&... args)
+{
+	return std::invoke(std::forward<Callable>(op), // passed callable with
+					   std::forward<Args>(args)...); // any additional args
+}
+\end{lstlisting}
+
+The other interesting aspect is how to deal with the return value of a called function to “perfectly forward” it back to the caller. To support returning references (such as a std::ostream\&) you have to use decltype(auto) instead of just auto:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Callable, typename... Args>
+decltype(auto) call(Callable&& op, Args&&... args)
+\end{lstlisting}
+
+decltype(auto) (available since C++14) is a placeholder type that determines the type of variable, return type, or template argument from the type of the associated expression (initializer, return value, or template argument). See Section 15.10.3 on page 301 for details.
+
+If you want to temporarily store the value returned by std::invoke() in a variable to return it after doing something else (e.g., to deal with the return value or log the end of the call), you also have to declare the temporary variable with decltype(auto):
+
+\begin{lstlisting}[style=styleCXX]
+decltype(auto) ret{std::invoke(std::forward<Callable>(op),
+				   std::forward<Args>(args)...)};
+...
+return ret;
+\end{lstlisting}
+
+Note that declaring ret with auto\&\& is not correct. As a reference, auto\&\& extends the lifetime of the returned value until the end of its scope (see Section 11.3 on page 167) but not beyond the return statement to the caller of the function.
+
+However, there is also a problem with using decltype(auto): If the callable has return type void, the initialization of ret as decltype(auto) is not allowed, because void is an incomplete type. You have the following options:
+
+\begin{itemize}
+\item 
+Declare an object in the line before that statement, whose destructor performs the observable behavior that you want to realize. For example:
+
+\begin{lstlisting}[style=styleCXX]
+struct cleanup {
+	~cleanup() {
+		... // code to perform on return
+	}
+} dummy;
+return std::invoke(std::forward<Callable>(op),
+					std::forward<Args>(args)...);
+\end{lstlisting}
+
+\item 
+Implement the void and non-void cases differently:
+
+\noindent
+\textit{basics/invokeret.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for std::invoke()
+#include <functional> // for std::forward()
+#include <type_traits> // for std::is_same<> and invoke_result<>
+
+template<typename Callable, typename... Args>
+decltype(auto) call(Callable&& op, Args&&... args)
+{
+	if constexpr(std::is_same_v<std::invoke_result_t<Callable, Args...>,
+	void>) {
+		// return type is void:
+		std::invoke(std::forward<Callable>(op),
+					std::forward<Args>(args)...);
+		...
+		return;
+	}
+	else {
+		// return type is not void:
+		decltype(auto) ret{std::invoke(std::forward<Callable>(op),
+							std::forward<Args>(args)...)};
+		...
+		return ret;
+	}
+}
+\end{lstlisting}
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+if constexpr(std::is_same_v<std::invoke_result_t<Callable, Args...>, void>)
+\end{lstlisting}
+
+we test at compile time whether the return type of calling callable with Args... is void. See Section D.3.1 on page 717 for details about std::invoke\_result<>.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}std::invoke\_result<> is available since C++17. Since C++11, to get the return type you could call: typename std::result\_of<Callable(Args...)>::type
+\end{tcolorbox}
+
+\end{itemize}
+
+Future C++ versions might hopefully avoid the need for such as special handling of void (see Section 17.7 on page 361).
+
+
+
+
+
+
+
+
+
+
+
+

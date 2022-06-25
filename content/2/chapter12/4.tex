@@ -1,14 +1,400 @@
 
+Variadic templates, introduced in Section 4.1 on page 55, are templates that contain at least one template parameter pack (see Section 12.2.4 on page 188).
 
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The term variadic is borrowed from C’s variadic functions, which accept a variable number of function arguments. Variadic templates also borrowed from C the use of the ellipsis to denote zero or more arguments and are intended as a type-safe replacement for C’s variadic functions for some applications.
+\end{tcolorbox}
+
+Variadic templates are useful when a template’s behavior can be generalized to any number of arguments. The Tuple class template introduced in Section 12.2.4 on page 188 is one such type, because a tuple can have any number of elements, all of which are treated the same way. We can also imagine a simple print() function that takes any number of arguments and displays each of them in sequence.
+
+When template arguments are determined for a variadic template, each template parameter pack in the variadic template will match a sequence of zero or more template arguments. We refer to this sequence of template arguments as an argument pack. The following example illustrates how the template parameter pack Types matches to different argument packs depending on the template arguments provided for Tuple:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Tuple {
+	public:
+	static constexpr std::size_t length = sizeof...(Types);
+};
+
+int a1[Tuple<int>::length]; // array of one integer
+int a3[Tuple<short, int, long>::length]; // array of three integers
+\end{lstlisting}
 
 \subsubsubsection{12.4.1\hspace{0.2cm}Pack Expansions}
 
+The sizeof... expression is an example of a pack expansion. A pack expansion is a construct that expands an argument pack into separate arguments. While sizeof... performs this expansion just to count the number of separate arguments, other forms of parameter packs—those that occur where C++ expects a list—can expand to multiple elements within that list. Such pack expansions are identified by an ellipsis (...) to the right of an element in the list. Here is a simple example where we create a new class template MyTuple that derives from Tuple, passing along its arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class MyTuple : public Tuple<Types...> {
+	// extra operations provided only for MyTuple
+};
+
+MyTuple<int, float> t2; // inherits from Tuple<int, float>
+\end{lstlisting}
+
+The template argument Types... is a pack expansion that produces a sequence of template arguments, one for each argument within the argument pack substituted for Types. As illustrated in the example, the instantiation of type MyTuple<int, float> substitutes the argument pack int, float for the template type parameter pack Types. When this occurs in the pack expansion Types..., we get one template argument for int and one for float, so MyTuple<int, float> inherits from Tuple<int, float>.
+
+An intuitive way to understand pack expansions is to think of them in terms of a syntactic expansion, where template parameter packs are replaced with exactly the right number of (non-pack) template parameters and pack expansions are written out as separate arguments, once for each of the non-pack template parameters. For example, here is how MyTuple would look if it were expanded for two parameters:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This syntactic understanding of pack expansions is a useful tool, but it breaks down when the template parameter packs have length zero. Section 12.4.5 on page 207 provides more details about the interpretation of zero-length pack expansions.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+class MyTuple : public Tuple<T1, T2> {
+	// extra operations provided only for MyTuple
+};
+\end{lstlisting}
+
+and for three parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename T3>
+class MyTuple : public Tuple<T1, T2, T3> {
+	// extra operations provided only for MyTuple
+};
+\end{lstlisting}
+
+However, note that you can’t access the individual elements of a parameter pack directly by name, because names such as T1, T2, and so on, are not defined in a variadic template. If you need the types, the only thing you can do is to pass them (recursively) to another class or function.
+
+Each pack expansion has a pattern, which is the type or expression that will be repeated for each argument in the argument pack and typically comes before the ellipsis that denotes the pack expansion. Our prior examples have had only trivial patterns—the name of the parameter pack—but patterns can be arbitrarily complex. For example, we can define a new type PtrTuple that derives from a Tuple of pointers to its argument types:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class PtrTuple : public Tuple<Types*...> {
+	// extra operations provided only for PtrTuple
+};
+
+PtrTuple<int, float> t3; // Inherits from Tuple<int*, float*>
+\end{lstlisting}
+
+The pattern for the pack expansion Types*... in the example above is Types*. Repeated substitution into this pattern produces a sequence of template type arguments, all of which are pointers to the types in the argument pack substituted for Types. Under the syntactic interpretation of pack expansions, here is how PtrTuple would look if it were expanded for three parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename T3>
+class PtrTuple : public Tuple<T1*, T2*, T3*> {
+	// extra operations provided only for PtrTuple
+};
+\end{lstlisting}
+
 \subsubsubsection{12.4.2\hspace{0.2cm}Where Can Pack Expansions Occur?}
+
+Our examples thus far have focused on the use of pack expansions to produce a sequence of template arguments. In fact, pack expansions can be used essentially anywhere in the language where the grammar provides a comma-separated list, including:
+
+\begin{itemize}
+\item 
+In the list of base classes.
+
+\item 
+In the list of base class initializers in a constructor.
+
+\item 
+In a list of call arguments (the pattern is the argument expression).
+
+\item 
+In a list of initializers (e.g., in a braced initializer list).
+
+\item 
+In the template parameter list of a class, function, or alias template.
+
+\item 
+In the list of exceptions that can be thrown by a function (deprecated in C++11 and C++14, and disallowed in C++17).
+
+\item 
+Within an attribute, if the attribute itself supports pack expansions (although no such attribute is defined by the C++ standard).
+
+\item 
+When specifying the alignment of a declaration.
+
+\item 
+When specifying the capture list of a lambda.
+
+\item 
+In the parameter list of a function type.
+
+\item 
+In using declarations (since C++17; see Section 4.4.5 on page 65).
+\end{itemize}
+
+We’ve already mentioned sizeof... as a pack-expansion mechanism that does not actually produce a list. C++17 also adds fold expressions, which are another mechanism that does not produce a comma-separated list (see Section 12.4.6 on page 207).
+
+Some of these pack-expansion contexts are included merely for the sake of completeness, so we will focus our attention on only those pack-expansion contexts that tend to be useful in practice. Since pack expansions in all contexts follow the same principles and syntax, you should be able to extrapolate from the examples given here should you find a need for the more esoteric pack-expansion contexts.
+
+A pack expansion in a list of base classes expands to some number of direct base classes. Such expansions can be useful to aggregate externally supplied data and functionality via mixins, which are classes intended to be “mixed into” a class hierarchy to provide new behaviors. For example, the following Point class uses pack expansions in several different contexts to allow arbitrary mixins:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Mixins are discussed in further detail in Section 21.3 on page 508.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Mixins>
+class Point : public Mixins... { // base class pack expansion
+	double x, y, z;
+public:
+	Point() : Mixins()... { } // base class initializer pack expansion
+	
+	template<typename Visitor>
+	void visitMixins(Visitor visitor) {
+		visitor(static_cast<Mixins&>(*this)...); // call argument pack expansion
+	}
+};
+
+struct Color { char red, green, blue; };
+struct Label { std::string name; };
+Point<Color, Label> p; // inherits from both Color and Label
+\end{lstlisting}
+
+The Point class uses a pack expansion to take each of the supplied mixins and expand it into a public base class. The default constructor of Point then applies a pack expansion in the base initializer list to value-initialize each of the base classes introduced via the mixin mechanism.
+
+The member function template visitMixins is the most interesting in that it uses the results of a pack expansion as arguments to a call. By casting *this to each of the mixin types, the pack expansion produces call arguments that refer to each of the base classes corresponding to the mixins. Actually writing a visitor for use with visitMixins, which can make use of such an arbitrary number of function call arguments, is covered in Section 12.4.3 on page 204.
+
+A pack expansion can also be used within a template parameter list to create a nontype or template parameter pack:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts>
+struct Values {
+	template<Ts... Vs>
+	struct Holder {
+	};
+};
+
+int i;
+Values<char, int, int*>::Holder<’a’, 17, &i> valueHolder;
+\end{lstlisting}
+
+Note that once the type arguments for Values<...> have been specified, the nontype argument list for Values<...>::Holder has a fixed length; the parameter pack Vs is thus not a variable-length parameter pack.
+
+Values is a nontype template parameter pack for which each of the actual template arguments can have a different type, as specified by the types provided for the template type parameter pack Types. Note that the ellipsis in the declaration of Values plays a dual role, both declaring the template parameter as a template parameter pack and declaring the type of that template parameter pack as a pack expansion. While such template parameter packs are rare in practice, the same principle applies in a much more general context: function parameters.
 
 \subsubsubsection{12.4.3\hspace{0.2cm}Function Parameter Packs}
 
+A function parameter pack is a function parameter that matches zero or more function call arguments. Like a template parameter pack, a function parameter pack is introduced using an ellipsis (...) prior to (or in the place of) the function parameter name and, also like a template parameter pack, a function parameter pack must be expanded by a pack expansion whenever it is used. Template parameter packs and function parameter packs together are referred to as parameter packs.
+
+Unlike template parameter packs, function parameter packs are always pack expansions, so their declared types must include at least one parameter pack. In the following example, we introduce a new Point constructor that copy-initializes each of the mixins from supplied constructor arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Mixins>
+class Point : public Mixins...
+{
+	double x, y, z;
+public:
+	// default constructor, visitor function, etc. elided
+	Point(Mixins... mixins) // mixins is a function parameter pack
+		: Mixins(mixins)... { } // initialize each base with the supplied mixin value
+};
+
+struct Color { char red, green, blue; };
+struct Label { std::string name; };
+Point<Color, Label> p({0x7F, 0, 0x7F}, {"center"});
+\end{lstlisting}
+
+A function parameter pack for a function template may depend on template parameter packs declared in that template, which allows the function template to accept an arbitrary number of call arguments without losing type information:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+void print(Types... values);
+
+int main()
+{
+	std::string welcome("Welcome to ");
+	print(welcome, "C++ ", 2011, ’\n’); // calls print<std::string, char const*,
+} // int, char>
+\end{lstlisting}
+
+When calling the function template print() with some number of arguments, the types of the arguments will be placed in the argument pack to be substituted for the template type parameter pack Types, while the actual argument values will be placed into an argument pack to be substituted for the function parameter pack values. The process by which the arguments are determined from the call is described in detail in Chapter 15. For now, it suffices to note that the ith type in Types is the type of the i th value in Values and that both of these parameter packs are available within the body of the function template print().
+
+The actual implementation of print() uses recursive template instantiation, a template metaprogramming technique described in Section 8.1 on page 123 and Chapter 23.
+
+There is a syntactic ambiguity between an unnamed function parameter pack appearing at the end of a parameter list and a C-style “vararg” parameter. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void c_style(int, T...);
+template<typename... T> void pack(int, T...);
+\end{lstlisting}
+
+In the first case, the “T...” is treated as “T, ...”: an unnamed parameter of type T followed by a C-style vararg parameter. In the second case, the “T...” construct is treated as a function parameter pack because T is a valid expansion pattern. The disambiguation can be forced by adding a comma before the ellipsis (which ensures the ellipsis is treated as a C-style “vararg” parameter) or by following the ... by an identifier, which makes it a named function parameter pack. Note that in generic lambdas, a trailing ... will be treated as denoting a parameter pack if the type that immediately precedes it (with no intervening comma) contains auto.
+
 \subsubsubsection{12.4.4\hspace{0.2cm}Multiple and Nested Pack Expansions}
+
+The pattern of a pack expansion can be arbitrarily complex and may include multiple, distinct parameter packs. When instantiating a pack expansion containing multiple parameter packs, all of the parameter packs must have the same length. The resulting sequence of types or values will be formed element-wise by substituting the first argument of each parameter pack into the pattern, followed by the second argument of each parameter pack, and so on. For example, the following function copies all of its arguments before forwarding them on to the function object f:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename F, typename... Types>
+void forwardCopy(F f, Types const&... values) {
+	f(Types(values)...);
+}
+\end{lstlisting}
+
+The call argument pack expansion names two parameters packs, Types and values. When instantiating this template, the element-wise expansion of the Types and values parameter packs produces a series of object constructions, which builds a copy of the ith value in values by casting it to the ith type in Types. Under the syntactic interpretation of pack expansions, a three-argument forwardCopy would look like this:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename F, typename T1, typename T2, typename T3>
+void forwardCopy(F f, T1 const& v1, T2 const& v2, T3 const& v3) {
+	f(T1(v1), T2(v2), T3(v3));
+}
+\end{lstlisting}
+
+Pack expansions themselves may also be nested. In such cases, each occurrence of a parameter pack is “expanded” by its nearest enclosing pack expansion (and only that pack expansion). The following examples illustrates a nested pack expansion involving three different parameter packs:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... OuterTypes>
+class Nested {
+	template<typename... InnerTypes>
+	void f(InnerTypes const&... innerValues) {
+		g(OuterTypes(InnerTypes(innerValues)...)...);
+	}
+};
+\end{lstlisting}
+
+In the call to g(), the pack expansion with pattern InnerTypes(innerValues) is the innermost pack expansion, which expands both InnerTypes and innerValues and produces a sequence of function call arguments for the initialization of an object denoted by OuterTypes. The outer pack expansion’s pattern includes the inner pack expansion, producing a set of call arguments for the function g(), created from the initialization of each of the types in OuterTypes from the sequence of function call arguments produced by the inner expansion. Under the syntactic interpretation of this pack expansion, where OuterTypes has two arguments and both InnerTypes and innerValues have three arguments, the nesting becomes more apparent:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename O1, typename O2>
+class Nested {
+	template<typename I1, typename I2, typename I3>
+	void f(I1 const& iv1, I2 const& iv2, I3 const& iv3) {
+		g(O1(I1(iv1), I2(iv2), I3(iv3)),
+		O2(I1(iv1), I2(iv2), I3(iv3)),
+		O3(I1(iv1), I2(iv2), I3(iv3)));
+	}
+};
+\end{lstlisting}
+
+Multiple and nested pack expansions are a powerful tool (e.g., see Section 26.2 on page 608).
+
 
 \subsubsubsection{12.4.5\hspace{0.2cm}Zero-Length Pack Expansions}
 
+The syntactic interpretation of pack expansions can be a useful tool for understanding how an instantiation of a variadic template will behave with different numbers of arguments. However, the syntactic interpretation often fails in the presence of zero-length argument packs. To illustrate this, consider the Point class template from Section 12.4.2 on page 202, syntactically substituted with zero arguments:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+class Point : {
+	Point() : { }
+};
+\end{lstlisting}
+
+The code as written above is ill-formed, since the template  parameter list is now empty and the empty base class and base class initializer lists each have a stray colon character.
+
+Pack expansions are actually semantic constructs, and the substitution of an argument pack of any size does not affect how the pack expansion (or its enclosing variadic template) is parsed. Rather, when a pack expansion expands to an empty list, the program behaves (semantically) as if the list were not present. The instantiation Point<> ends up having no base classes, and its default constructor has no base class initializers but is otherwise well-formed. This semantic rules holds even when the syntactic interpretation of zero-length pack expansion would be well-defined (but different) code. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+void g(Types... values) {
+	T v(values...);
+}
+\end{lstlisting}
+
+The variadic function template g() creates a value v that is direct-initialized from the sequence of values it is given. If that sequence of values is empty, the declaration of v looks, syntactically, like a function declaration T v(). However, since substitution into a pack expansion is semantic and cannot affect the kind of entity produced by parsing, v is initialized with zero arguments, that is, value-initialization.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}There is a similar restriction on members of class templates and nested classes within class templates: If a member is declared with a type that does not appear to be a function type, but after instantiation the type of that member is a function type, the program is ill-formed because the semantic interpretation of the member has changed from a data member to a member function.
+\end{tcolorbox}
+
 \subsubsubsection{12.4.6\hspace{0.2cm}Fold Expressions}
+
+A recurring pattern in programming is the fold of an operation on a sequence of values. For example, a right fold of a function fn over a sequence x[1], x[2], ..., x[n-1], x[n] is given by fn(x[1], fn(x[2], fn(..., fn(x[n-1], x[n])...)))
+
+While exploring a new language feature, the C++ committee ran into the need to deal with such constructs for the special case of a logical binary operator (i.e., \&\& or ||) applied to a pack expansion. Without an extra feature, we might write the following code to achieve that for the \&\& operator:
+
+\begin{lstlisting}[style=styleCXX]
+bool and_all() { return true; }
+template<typename T>
+	bool and_all(T cond) { return cond; }
+template<typename T, typename... Ts>
+	bool and_all(T cond, Ts... conds) {
+		return cond && and_all(conds...);
+	}
+\end{lstlisting}
+
+With C++17, a new feature called fold expressions was added (see Section 4.2 on page 58 for an introduction). It applies to all binary operators except ., ->, and [].
+
+Given an unexpanded expression pattern pack and a nonpattern expression value, C++17 allows us to write for any such operator op, either
+
+\begin{lstlisting}[style=styleCXX]
+(pack op ... op value)
+\end{lstlisting}
+
+for a right fold of the operator (called a binary right fold), or
+
+\begin{lstlisting}[style=styleCXX]
+(value op ... op pack)
+\end{lstlisting}
+
+or a left fold (called a binary left fold). Note that the parentheses are required here. See Section 4.2 on page 58 for some basic examples.
+
+The fold operation applies to the sequence that results from expanding the pack and adding value as either the last element of the sequence (for a right fold) or the first element of the sequence (for a left fold).
+
+With this feature available, code like
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... T> bool g() {
+	return and_all(trait<T>()...);
+}
+\end{lstlisting}
+
+(where and\_all is as defined above), can instead be written as
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... T> bool g() {
+	return (trait<T>() && ... && true);
+}
+\end{lstlisting}
+
+As you’d expect, fold expressions are pack expansions. Note  that if the pack is empty, the type of the fold expression can still be determined from the non-pack operand (value in the forms above).
+
+However, the designers of this feature also wanted an option to leave out the value operand. Two other forms are therefore available in C++17: The unary right fold
+
+\begin{lstlisting}[style=styleCXX]
+(pack op ... )
+\end{lstlisting}
+
+and the unary left fold
+
+\begin{lstlisting}[style=styleCXX]
+(... op pack)
+\end{lstlisting}
+
+Again, the parentheses are required. Clearly this creates a problem for empty expansions: How do we determine their type and value? The answer is that an empty expansion of a unary fold is generally an error, with three exceptions:
+
+\begin{itemize}
+\item
+An empty expansion of a unary fold of \&\& produces the value true,.
+
+\item
+An empty expansion of a unary fold of || produces the value false
+
+\item
+An empty expansion of a unary fold of the comma operator (,) produces a void expression.
+\end{itemize}
+
+Note that this will create surprises if you overload one of these special operators in a somewhat unusual way. For example:
+
+\begin{lstlisting}[style=styleCXX]
+struct BooleanSymbol {
+	...
+};
+
+BooleanSymbol operator||(BooleanSymbol, BooleanSymbol);
+
+template<typename... BTs> void symbolic(BTs... ps) {
+	BooleanSymbol result = (ps || ...);
+	...
+}
+\end{lstlisting}
+
+Suppose we call symbolic with types that are derived from BooleanSymbol. For all expansions, the result will produce a BooleanSymbol value except for the empty expansion, which will produce a bool value.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Because overloading these three special operators is unusual, this problem is fortunately rare (but subtle). The original proposal for fold expressions included empty expansion values for more common operators like + and *, which would have caused more serious problems.
+\end{tcolorbox}
+
+We therefore generally caution against the use of unary fold expressions, and recommend using binary fold expressions instead (with an explicitly specified empty expansion value).
+
+
+
+
+
+

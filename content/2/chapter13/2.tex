@@ -1,5 +1,7 @@
 
+There are many small details to looking up names in C++, but we will focus only on a few major concepts. The details are necessary to ensure only that (1) normal cases are treated intuitively, and (2) pathological cases are covered in some way by the standard.
 
+Qualified names are looked up in the scope implied by the qualifying construct. If that scope is a class, then base classes may also be searched. However, enclosing scopes are not considered when looking up qualified names. The following illustrates this basic principle:
 
 \subsubsubsection{13.2.1\hspace{0.2cm}Argument-Dependent Lookup}
 

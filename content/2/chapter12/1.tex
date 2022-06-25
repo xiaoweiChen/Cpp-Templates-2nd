@@ -38,9 +38,316 @@ Note that in this example, the static data member Data<T>::copyable is not a var
 
 The following example shows the four kinds of templates as class members that are defined within their parent class:
 
+\noindent
+\textit{details/definitions2.hpp}
+\begin{lstlisting}[style=styleCXX]
+class Collection {
+	public:
+	template<typename T> // an in-class member class template definition
+	class Node {
+		...
+	};
+
+	template<typename T> // an in-class (and therefore implicitly inline)
+	T* alloc() { // member function template definition
+		...
+	}
+
+	template<typename T> // a member variable template (since C++14)
+	static T zero = 0;
+	
+	template<typename T> // a member alias template
+	using NodePtr = Node<T>*;
+};
+\end{lstlisting}
+
+Note that in C++17, variables—including static data members—and variable templates can be “inline,” which means that their definition can be repeated across translation units. This is redundant for variable templates, which can always be defined in multiple translation units. Unlike member functions, however, a static data member being defined in its enclosing class does not make it inline: The keyword inline must be specified in all cases.
+
+Finally, the following code demonstrates how member templates that are not alias templates can be defined out-of-class:
+
+\noindent
+\textit{details/definitions3.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T> // a namespace scope class template
+class List {
+	public:
+	List() = default; // because a template constructor is defined
+	
+	template<typename U> // another member class template,
+	class Handle; // without its definition
+	
+	template<typename U> // a member function template
+	List (List<U> const&); // (constructor)
+	
+	template<typename U> // a member variable template (since C++14)
+	static U zero;
+};
+
+template<typename T> // out-of-class member class template definition
+  template<typename U>
+class List<T>::Handle {
+	...
+};
+
+template<typename T> // out-of-class member function template definition
+  template<typename T2>
+List<T>::List (List<T2> const& b)
+{
+	...
+}
+
+template<typename T> // out-of-class static data member template definition
+  template<typename U>
+U List<T>::zero = 0;
+\end{lstlisting}
+
+Member templates defined outside their enclosing class may need multiple template<...> parameterization clauses: one for every enclosing class template and one for the member template itself. The clauses are listed starting from the outermost class template.
+
+Note also that a constructor template (a special kind of member function template) disables the implicit declaration of the default constructor (because it is only implicitly declared if no other constructor is declared). Adding a defaulted declaration
+
+\begin{lstlisting}[style=styleCXX]
+List() = default;
+\end{lstlisting}
+
+ensures an instance of List<T> is default-constructible with the semantics of an implicitly declared constructor.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Union Templates}
+
+Union templates are possible too (and they are considered a kind of class template):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+union AllocChunk {
+	T object;
+	unsigned char bytes[sizeof(T)];
+};
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Default Call Arguments}
+
+Function templates can have default call arguments just like ordinary function declarations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void report_top (Stack<T> const&, int number = 10);
+template<typename T>
+
+void fill (Array<T>&, T const& = T{}); // T{} is zero for built-in types
+\end{lstlisting}
+
+The latter declaration shows that a default call argument could depend on a template parameter. It also can be defined as (the only way possible before C++11, see Section 5.2 on page 68)
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void fill (Array<T>&, T const& = T()); // T() is zero for built-in types
+\end{lstlisting}
+
+When the fill() function is called, the default argument is not instantiated if a second function call argument is supplied. This ensures that no error is issued if the default call argument cannot be instantiated for a particular T. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class Value {
+public:
+	explicit Value(int); // no default constructor
+};
+
+void init (Array<Value>& array)
+{
+	Value zero(0);
+	fill(array, zero); // OK: default constructor not used
+	fill(array); // ERROR: undefined default constructor for Value is used
+}
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Nontemplate Members of Class Templates}
+
+In addition to the four fundamental kinds of templates declared inside a class, you can also have ordinary class members parameterized by being part of a class template They are occasionally (erroneously) also referred to as member templates. Although they can be parameterized, such definitions aren’t quite first-class templates. Their parameters are entirely determined by the template of which they are members. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<int I>
+class CupBoard
+{
+	class Shelf; // ordinary class in class template
+	void open(); // ordinary function in class template
+	enum Wood : unsigned char; // ordinary enumeration type in class template
+	static double totalWeight; // ordinary static data member in class template
+};
+\end{lstlisting}
+
+The corresponding definitions only specify a parameterization clause for the parent class templates, but not for the member itself, because it is not a template (i.e., no parameterization clause is associated with the name appearing after the last ::):
+
+\begin{lstlisting}[style=styleCXX]
+emplate<int I> // definition of ordinary class in class template
+class CupBoard<I>::Shelf {
+	...
+};
+
+template<int I> // definition of ordinary function in class template
+void CupBoard<I>::open()
+{
+	...
+}
+
+template<int I> // definition of ordinary enumeration type class in class template
+enum CupBoard<I>::Wood {
+	Maple, Cherry, Oak
+};
+
+template<int I> // definition of ordinary static member in class template
+double CupBoard<I>::totalWeight = 0.0;
+\end{lstlisting}
+
+Since C++17, the static totalWeight member can be initialized inside the class template using inline:
+
+\begin{lstlisting}[style=styleCXX]
+template<int I>
+class CupBoard
+	...
+	inline static double totalWeight = 0.0;
+};
+\end{lstlisting}
+
+Although such parameterized definitions are commonly called templates, the term doesn’t quite apply to them. A term that has been occasionally suggested for these entities is temploid. Since C++17, the C++ standard does define the notion of a templated entity, which includes templates and temploids as well as, recursively, any entity defined or created in templated entities (that includes, e.g., a friend function defined inside a class template (see Section 2.4 on page 30) or the closure type of a lambda expression appearing in a template). Neither temploid nor templated entity has gained much traction so far, but they may be useful terms to communicate more precisely about C++ templates in the future.
+
 \subsubsubsection{12.1.1\hspace{0.2cm}Virtual Member Functions}
+
+Member function templates cannot be declared virtual. This constraint is imposed because the usual implementation of the virtual function call mechanism uses a fixed-size table with one entry per virtual function. However, the number of instantiations of a member function template is not fixed until the entire program has been translated. Hence, supporting virtual member function templates would require support for a whole new kind of mechanism in C++ compilers and linkers.
+
+In contrast, the ordinary members of class templates can be virtual because their number is fixed when a class is instantiated:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Dynamic {
+	public:
+	virtual ~Dynamic(); // OK: one destructor per instance of Dynamic<T>
+	
+	template<typename T2>
+	virtual void copy (T2 const&);
+						// ERROR: unknown number of instances of copy()
+						// given an instance of Dynamic<T>
+};
+\end{lstlisting}
 
 \subsubsubsection{12.1.2\hspace{0.2cm}Linkage of Templates}
 
+Every template must have a name, and that name must be unique within its scope, except that function templates can be overloaded (see Chapter 16). Note especially that, unlike class types, class templates cannot share a name with a different kind of entity:
+
+\begin{lstlisting}[style=styleCXX]
+int C;
+...
+class C; // OK: class names and nonclass names are in a different “space”
+
+int X;
+...
+template<typename T>
+class X; // ERROR: conflict with variable X
+struct S;
+...
+template<typename T>
+class S; // ERROR: conflict with struct S
+\end{lstlisting}
+
+Template names have linkage, but they cannot have C linkage. Nonstandard linkages may have an implementation-dependent meaning (however, we don’t know of an implementation that supports nonstandard name linkages for templates):
+
+\begin{lstlisting}[style=styleCXX]
+extern "C++" template<typename T>
+void normal(); // this is the default: the linkage specification could be left out
+
+extern "C" template<typename T>
+void invalid(); // ERROR: templates cannot have C linkage
+
+extern "Java" template<typename T>
+void javaLink(); // nonstandard, but maybe some compiler will someday
+				// support linkage compatible with Java generics
+\end{lstlisting}
+
+Templates usually have external linkage. The only exceptions are namespace scope function templates with the static specifier, templates that are direct or indirect members of an unnamed namespace (which have internal linkage), and member templates of unnamed classes (which have no linkage). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> // refers to the same entity as a declaration of the
+void external(); // same name (and scope) in another file
+
+template<typename T> // unrelated to a template with the same name in
+static void internal(); // another file
+
+template<typename T> // redeclaration of the previous declaration
+static void internal();
+
+namespace {
+	template<typename> // also unrelated to a template with the same name
+	void otherInternal(); // in another file, even one that similarly appears
+} // in an unnamed namespace
+
+namespace {
+	template<typename> // redeclaration of the previous template declaration
+	void otherInternal();
+}
+
+struct {
+	template<typename T> void f(T) {} // no linkage: cannot be redeclared
+} x;
+\end{lstlisting}
+
+Note that since the latter member template has no linkage, it must be defined within the unnamed class because there is no way to provide a definition outside the class.
+
+Currently templates cannot be declared in function scope or local class scope, but generic lambdas (see Section 15.10.6 on page 309), which have associated closure types that contain member function templates, can appear in local scopes, which effectively implies a kind of local member function template.
+
+The linkage of an instance of a template is that of the template. For example, a function internal<void>() instantiated from the template internal declared above will have internal linkage. This has an interesting consequence in the case of variable templates. Indeed, consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> T zero = T{};
+\end{lstlisting}
+
+All instantiations of zero have external linkage, even something like zero<int const>. That’s perhaps counterintuitive given that
+
+\begin{lstlisting}[style=styleCXX]
+int const zero_int = int{};
+\end{lstlisting}
+
+has internal linkage because it is declared with a const type. Similarly, all instantiations of the template
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> int const max_volume = 11;
+\end{lstlisting}
+
+have external linkage, despite all those instantiations also having type int const.
+
 \subsubsubsection{12.1.3\hspace{0.2cm}Primary Templates}
+
+Normal declarations of templates declare primary templates. Such template declarations are declared without adding template arguments in angle brackets after the template name:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> class Box; // OK: primary template
+template<typename T> class Box<T>; // ERROR: does not specialize
+
+template<typename T> void translate(T); // OK: primary template
+template<typename T> void translate<T>(T); // ERROR: not allowed for functions
+
+template<typename T> constexpr T zero = T{}; // OK: primary template
+template<typename T> constexpr T zero<T> = T{}; // ERROR: does not specialize
+\end{lstlisting}
+
+Nonprimary templates occur when declaring partial specializations of class or variable templates. Those are discussed in Chapter 16. Function templates must always be primary templates (see Section 17.3 on page 356 for a discussion of a potential future language change).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

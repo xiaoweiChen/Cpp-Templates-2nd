@@ -1,0 +1,74 @@
+C++ classifies names in a variety of ways—a large variety of ways, in fact. To help cope with this abundance of terminology, we provide Table 13.1 and Table 13.2, which describe these classifications. Fortunately, you can gain good insight into most C++ template issues by familiarizing yourself with two major naming concepts:
+
+\begin{enumerate}
+\item 
+A name is a qualified name if the scope to which it belongs is explicitly denoted using a scoperesolution operator (::) or a member access operator (. or ->). For example, this->count is a qualified name, but count is not (even though the plain count might actually refer to a class member).
+
+\item 
+A name is a dependent name if it depends in some way on a template parameter. For example, std::vector<T>::iterator is usually a dependent name if T is a template parameter, but it is a nondependent name if T is a known type alias (such as the T from using T = int).
+\end{enumerate}
+
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Classification} & \textbf{Explanation and Notes}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \\ \hline
+		Identifier              & \begin{tabular}[c]{@{}l@{}}A name that consists solely of an uninterrupted sequences of letters,\\ underscores (\_), and digits. It cannot start with a digit, and some \\ identifiers are reserved for the implementation: You should not \\ introduce them in your programs (as a rule of thumb, avoid leading \\ underscores and double underscores). The concept of “letter” \\ should be taken broadly and includes special universal character \\ names (UCNs) that encode glyphs from nonalphabetical languages.\end{tabular}      \\ \hline
+		Operator-function-id    & \begin{tabular}[c]{@{}l@{}}The keyword operator followed by the symbol for an operator—for\\ example, operator new and operator {[} {]}.\end{tabular}                                                                                                                                                                                                                                                                                                                                                                                     \\ \hline
+		Conversion-function-id  & \begin{tabular}[c]{@{}l@{}}Used to denote a user-defined implicit conversion operator—for\\ example, operator int\&, which could also be obfuscated as\\ operator int bitand.\end{tabular}                                                                                                                                                                                                                                                                                                                                                \\ \hline
+		Literal-operator-id     & \begin{tabular}[c]{@{}l@{}}Used to denote a user-defined literal operator—for example,\\ operator ""\_km, which will be used when writing a literal such\\ as 100\_km (introduced in C++11).\end{tabular}                                                                                                                                                                                                                                                                                                                                 \\ \hline
+		Template-id             & \begin{tabular}[c]{@{}l@{}}The name of a template followed by template arguments enclosed\\ in angle brackets; for example, List\textless{}T, int, 0\textgreater{}. A templateid may \\ also be an operator-function-id or a literal-operator-id followed \\ by template arguments enclosed in angle brackets; for example,\\ operator+\textless{}X\textless{}int\textgreater{}\textgreater{}.\end{tabular}                                                                                                                               \\ \hline
+		Unqualified-id          & \begin{tabular}[c]{@{}l@{}}The generalization of an identifier. It can be any of the above \\ (identifier, operator-function-id, conversion-function-id, \\ literal-operator-id, or template-id) or a “destructor name” \\ (e.g., notations like $\sim$Data or $\sim$List\textless{}T, T, N\textgreater{}).\end{tabular}                                                                                                                                                                                                                  \\ \hline
+		Qualified-id            & \begin{tabular}[c]{@{}l@{}}An unqualified-id that is qualified with the name of a class, enum, or\\ namespace, or just with the global scope resolution operator. Note\\ that such a name itself can be qualified. Examples are ::X, S::x,\\ Array\textless{}T\textgreater{}::y, and ::N::A\textless{}T\textgreater{}::z.\end{tabular}                                                                                                                                                                                                    \\ \hline
+		Qualified name          & \begin{tabular}[c]{@{}l@{}}This term is not defined in the standard, but we use it to refer to\\ names that undergo qualified lookup. Specifically, this is a qualifiedid \\ or an unqualified-id that is used after an explicit member access\\ operator (. or -\textgreater{}). Examples are S::x, this-\textgreater{}f, and p-\textgreater{}A::m.\\ However, just class\_mem in a context that is implicitly equivalent to\\ this-\textgreater{}class\_mem is not a qualified name: The member access must\\ be explicit.\end{tabular} \\ \hline
+		Unqualified name        & \begin{tabular}[c]{@{}l@{}}An unqualified-id that is not a qualified name. This is not a standard\\ term but corresponds to names that undergo what the standard calls\\ unqualified lookup.\end{tabular}                                                                                                                                                                                                                                                                                                                                 \\ \hline
+		Name                    & Either a qualified or an unqualified name.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		Classification    & Explanation and Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \\ \hline
+		Dependent name    & \begin{tabular}[c]{@{}l@{}}name that depends in some way on a template parameter. Typically,\\ a qualified or unqualified name that explicitly contains a template \\ parameter is dependent. Furthermore, a qualified name that is qualified by\\ a member access operator (. or -\textgreater{}) is typically dependent if the type\\ of the expression on the left of the access operator is type-dependent,\\ a concept that is discussed in Section 13.3.6 on page 233. In particular, \\ b in this-\textgreater{}b is generally a dependent name when it appears in a\\ template. Finally, a name that is subject to argument-dependent lookup\\ (described in Section 13.2 on page 217), such as ident in a call of the\\ form ident(x, y) or + in the expression x + y, is a dependent name\\ if and only if any of the argument expressions is type-dependent.\end{tabular} \\ \hline
+		Nondependent name & A name that is not a dependent name by the above description.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{center}
+Table 13.2. Name Taxonomy 
+\end{center}
+
+It is useful to read through the tables to gain some familiarity with the terms that are sometimes used to describe C++ template issues, but it is not essential to remember the exact meaning of every term. Should the need arise, they can be found easily in the index.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

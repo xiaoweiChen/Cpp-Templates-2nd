@@ -1,13 +1,402 @@
 
+There are three basic kinds of template parameters:
 
+\begin{enumerate}
+\item 
+Type parameters (these are by far the most common)
+
+\item 
+Nontype parameters
+
+\item 
+Template template parameters
+\end{enumerate}	
+
+Any of these basic kinds of template parameters can be used as the basis of a template parameter pack (see Section 12.2.4 on page 188).
+
+Template parameters are declared in the introductory parameterization clause of a template declaration.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}An exception since C++14 are the implicit template type parameters for a generic lambda; see Section 15.10.6 on page 309.
+\end{tcolorbox}
+
+Such declarations do not necessarily need to be named:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename, int>
+class X; // X<> is parameterized by a type and an integer
+\end{lstlisting}
+
+A parameter name is, of course, required if the parameter is referred to later in the template. Note also that a template parameter name can be referred to in a subsequent parameter declaration (but not before):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, // the first parameter is used
+		T Root, // in the declaration of the second one and
+		template<T> class Buf> // in the declaration of the third one
+class Structure;
+\end{lstlisting}
 
 \subsubsubsection{12.2.1\hspace{0.2cm}Type Parameters}
 
+Type parameters are introduced with either the keyword typename or the keyword class: The two are entirely equivalent.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The keyword class does not imply that the substituting argument should be a class type. It could be any accessible type.
+\end{tcolorbox}
+
+The keyword must be followed by a simple identifier, and that identifier must be followed by a comma to denote the start of the next parameter declaration, a closing angle bracket (>) to denote the end of the parameterization clause, or an equal sign (=) to denote the beginning of a default template argument.
+
+Within a template declaration, a type parameter acts much like a type alias (see Section 2.8 on page 38). For example, it is not possible to use an elaborated name of the form class T when T is a template parameter, even if T were to be substituted by a class type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Allocator>
+class List {
+	class Allocator* allocptr; // ERROR: use “Allocator* allocptr”
+	friend class Allocator; // ERROR: use “friend Allocator”
+	...
+};
+\end{lstlisting}
+
 \subsubsubsection{12.2.2\hspace{0.2cm}Nontype Parameters}
+
+Nontype template parameters stand for constant values that can be determined at compile or link time.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Template template parameters do not denote types either; however, they are distinct from nontype parameters. This oddity is historical: Template template parameters were added to the language after type parameters and nontype parameters.
+\end{tcolorbox}
+
+The type of such a parameter (in other words, the type of the value for which it stands) must be one of the following:
+
+\begin{itemize}
+\item 
+An integer type or an enumeration type
+
+\item 
+A pointer type
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}At the time of this writing, only “pointer to object” and “pointer to function” types are permitted, which excludes types like void*. However, all compilers appear to accept void* also.
+\end{tcolorbox}
+
+\item 
+A pointer-to-member type
+
+\item
+An lvalue reference type (both references to objects and references to functions are acceptable)
+
+\item 
+std::nullptr\_t
+
+\item 
+A type containing auto or decltype(auto) (since C++17 only; see Section 15.10.1 on page 296)
+\end{itemize}
+
+All other types are currently excluded (although floating-point types may be added in the future; see Section 17.2 on page 356).
+
+Perhaps surprisingly, the declaration of a nontype template parameter can in some cases also start with the keyword typename:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, // a type parameter
+		typename T::Allocator* Allocator> // a nontype parameter
+class List;
+\end{lstlisting}
+
+or with the keyword class:
+
+\begin{lstlisting}[style=styleCXX]
+template<class X*> // a nontype parameter of pointer type
+class Y;
+\end{lstlisting}
+
+The two cases are easily distinguished because the first is followed by a simple identifier and then one of a small set of tokens (’=’ for a default argument, ’,’ to indicate that another template parameter follows, or a closing > to end the template parameter list). Section 5.1 on page 67 and Section 13.3.2 on page 229 explain the need for the keyword typename in the first nontype parameter.
+
+Function and array types can be specified, but they are  implicitly adjusted to the pointer type to which they decay:
+
+\begin{lstlisting}[style=styleCXX]
+template<int buf[5]> class Lexer; // buf is really an int*
+template<int* buf> class Lexer; // OK: this is a redeclaration
+template<int fun()> struct FuncWrap; // fun really has pointer to
+								     // function type
+template<int (*)()> struct FuncWrap; // OK: this is a redeclaration
+\end{lstlisting}
+
+Nontype template parameters are declared much like variables, but they cannot have nontype specifiers like static, mutable, and so forth. They can have const and volatile qualifiers, but if such a qualifier appears at the outermost level of the parameter type, it is simply ignored:
+
+\begin{lstlisting}[style=styleCXX]
+template<int const length> class Buffer; // const is useless here
+template<int length> class Buffer; // same as previous declaration
+\end{lstlisting}
+
+Finally, nonreference nontype parameters are always prvalues when used in expressions. 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}See Appendix B for a discussion of value categories such as rvalues and lvalues.
+\end{tcolorbox}
+
+Their address cannot be taken, and they cannot be assigned to. A nontype parameter of lvalue reference type, on the other hand, can be used to denote an lvalue:
+
+\begin{lstlisting}[style=styleCXX]
+template<int& Counter>
+struct LocalIncrement {
+	LocalIncrement() { Counter = Counter + 1; } // OK: reference to an integer
+	~LocalIncrement() { Counter = Counter - 1; }
+};
+\end{lstlisting}
+
+Rvalue references are not permitted.
 
 \subsubsubsection{12.2.3\hspace{0.2cm}Template Template Parameters}
 
+Template template parameters are placeholders for class or alias templates. They are declared much like class templates, but the keywords struct and union cannot be used:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename X> class C> // OK
+void f(C<int>* p);
+
+template<template<typename X> struct C> // ERROR: struct not valid here
+void f(C<int>* p);
+
+template<template<typename X> union C> // ERROR: union not valid here
+void f(C<int>* p);
+\end{lstlisting}
+
+C++17 allows the use of typename instead of class: That change was motivated by the fact that template template parameters can be substituted not only by class templates but also by alias templates (which instantiate to arbitrary types). So, in C++17, our example above can be written instead as
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename X> typename C> // OK since C++17
+void f(C<int>* p);
+\end{lstlisting}
+
+In the scope of their declaration, template template parameters are used just like other class or alias templates.
+
+The parameters of template template parameters can have default template arguments. These default arguments apply when the corresponding parameters are not specified in uses of the template template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename T,
+				  typename A = MyAllocator> class Container>
+class Adaptation {
+	Container<int> storage; // implicitly equivalent to Container<int,MyAllocator>
+	...
+};
+\end{lstlisting}
+
+T and A are the names of the template parameter of the template template parameter Container. These names be used only in the declaration of other parameters of that template template parameter. The following contrived template illustrates this concept:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename T, T*> class Buf> // OK
+class Lexer {
+	static T* storage; // ERROR: a template template parameter cannot be used here
+	...
+};
+\end{lstlisting}
+
+Usually however, the names of the template parameters of a template template parameter are not needed in the declaration of other template parameters and are therefore often left unnamed altogether. For example, our earlier Adaptation template could be declared as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename,
+				  typename = MyAllocator> class Container>
+class Adaptation {
+	Container<int> storage; // implicitly equivalent to Container<int,MyAllocator>
+	...
+};
+\end{lstlisting}
+
 \subsubsubsection{12.2.4\hspace{0.2cm}Template Parameter Packs}
 
+Since C++11, any kind of template parameter can be turned into a template parameter pack by introducing an ellipsis (...) prior to the template parameter name or, if the template parameter is unnamed, where the template parameter name would occur:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types> // declares a template parameter pack named Types
+class Tuple;
+\end{lstlisting}
+
+A template parameter pack behaves like its underlying template parameter, but with a crucial difference: While a normal template parameter matches exactly one template argument, a template parameter pack can match any number of template arguments. This means that the Tuple class template declared above accepts any number of (possibly distinct) types as template arguments:
+
+\begin{lstlisting}[style=styleCXX]
+using IntTuple = Tuple<int>; // OK: one template argument
+using IntCharTuple = Tuple<int, char>; // OK: two template arguments
+using IntTriple = Tuple<int, int, int>; // OK: three template arguments
+using EmptyTuple = Tuple<>; // OK: zero template arguments
+\end{lstlisting}
+
+Similarly, template parameter packs of nontype and template template parameters can accept any number of nontype or template template arguments, respectively:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, unsigned... Dimensions>
+class MultiArray; // OK: declares a nontype template parameter pack
+
+using TransformMatrix = MultiArray<double, 3, 3>; // OK: 3x3 matrix
+
+template<typename T, template<typename,typename>... Containers>
+void testContainers(); // OK: declares a template template parameter pack
+\end{lstlisting}
+
+The MultiArray example requires all nontype template arguments to be of the same type unsigned. C++17 introduced the possibility of deduced nontype template arguments, which allows us to work around that restriction to some extent—see Section 15.10.1 on page 298 for details. 
+
+Primary class templates, variable templates, and alias templates may have at most one template parameter pack and, if present, the template parameter pack must be the last template parameter. Function templates have a weaker restriction: Multiple template parameter packs are permitted, as long as each template parameter subsequent to a template parameter pack either has a default value (see the next section) or can be deduced (see Chapter 15):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types, typename Last>
+class LastType; // ERROR: template parameter pack is not the last template parameter
+
+template<typename... TestTypes, typename T>
+void runTests(T value); // OK: template parameter pack is followed
+// by a deducible template parameter
+
+template<unsigned...> struct Tensor;
+template<unsigned... Dims1, unsigned... Dims2>
+auto compose(Tensor<Dims1...>, Tensor<Dims2...>);
+// OK: the tensor dimensions can be deduced
+\end{lstlisting}
+
+The last example is the declaration of a function with a deduced return type—a C++14 feature. See also Section 15.10.1 on page 296.
+
+Declarations of partial specializations of class and variable templates (see Chapter 16) can have multiple parameter packs, unlike their primary template counterparts. That is because partial specialization are selected through a deduction process that is nearly identical to that used for function templates.
+
+\begin{lstlisting}[style=styleCXX]
+template<typename...> Typelist;
+template<typename X, typename Y> struct Zip;
+template<typename... Xs, typename... Ys>
+	struct Zip<Typelist<Xs...>, Typelist<Ys...>>;
+	// OK: partial specialization uses deduction to determine
+	// the Xs and Ys substitutions
+\end{lstlisting}
+
+Perhaps not surprisingly, a type parameter pack cannot be expanded in its own parameter clause. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts, Ts... vals> struct StaticValues {};
+// ERROR: Ts cannot be expanded in its own parameter list
+\end{lstlisting}
+
+However, nested templates can create similar valid situations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts> struct ArgList {
+	template<Ts... vals> struct Vals {};
+};
+ArgList<int, char, char>::Vals<3, ’x’, ’y’> tada;
+\end{lstlisting}
+
+A template that contains a template parameter pack is called a variadic template because it accepts a variable number of template arguments. Chapter 4 and Section 12.4 on page 200 describe the use of variadic templates.
+
 \subsubsubsection{12.2.5\hspace{0.2cm}Default Template Arguments}
+
+Any kind of template parameter that is not a template parameter pack can be equipped with a default argument, although it must match the corresponding parameter in kind (e.g., a type parameter cannot have a nontype default argument). A default argument cannot depend on its own parameter, because the name of the parameter is not in scope until after the default argument. However, it may depend on previous parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Allocator = allocator<T>>
+class List;
+\end{lstlisting}
+
+A template parameter for a class template, variable template, or alias template can have a default template argument only if default arguments were also supplied for the subsequent parameters. (A similar constraint exists for default function call arguments.) The subsequent default values are usually provided in the same template declaration, but they could also have been declared in a previous declaration of that template. The following example makes this clear:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename T3,
+typename T4 = char, typename T5 = char>
+class Quintuple; // OK
+
+template<typename T1, typename T2, typename T3 = char,
+typename T4, typename T5>
+class Quintuple; // OK: T4 and T5 already have defaults
+
+template<typename T1 = char, typename T2, typename T3,
+typename T4, typename T5>
+class Quintuple; // ERROR: T1 cannot have a default argument
+// because T2 doesn’t have a default
+\end{lstlisting}
+
+Default template arguments for template parameters of function templates do not require subsequent template parameters to have a default template argument:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Template arguments for subsequent template parameters can still be determined by template argument deduction; see Chapter 15.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename R = void, typename T>
+R* addressof(T& value); // OK: if not explicitly specified, R will be void
+\end{lstlisting}
+
+Default template arguments cannot be repeated:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T = void>
+class Value;
+
+template<typename T = void>
+class Value; // ERROR: repeated default argument
+\end{lstlisting}
+
+A number of contexts do not permit default template arguments:
+
+\begin{itemize}
+\item 
+Partial specializations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C;
+...
+template<typename T = int>
+class C<T*>; // ERROR
+\end{lstlisting}
+
+\item 
+Parameter packs:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts = int> struct X; // ERROR
+\end{lstlisting}
+
+\item 
+The out-of-class definition of a member of a class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> struct X
+{
+	T f();
+};
+
+template<typename T = int> T X<T>::f() { // ERROR
+	...
+}
+\end{lstlisting}
+
+\item 
+A friend class template declaration:
+
+\begin{lstlisting}[style=styleCXX]
+struct S {
+	template<typename = void> friend struct F;
+};
+\end{lstlisting}
+
+\item 
+A friend function template declaration unless it is a definition and no declaration of it appears anywhere else in the translation unit:
+
+\begin{lstlisting}[style=styleCXX]
+struct S {
+	template<typename = void> friend void f(); // ERROR: not a definition
+	template<typename = void> friend void g() { // OK so far
+	}
+};
+template<typename> void g(); // ERROR: g() was given a default template argument
+// when defined; no other declaration may exist here
+\end{lstlisting}
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

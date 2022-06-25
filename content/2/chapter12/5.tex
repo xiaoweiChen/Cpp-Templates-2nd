@@ -1,7 +1,198 @@
 
+The basic idea of friend declarations is a simple one: Identify classes or functions that have a privileged connection with the class in which the friend declaration appears. Matters are somewhat complicated, however, by two facts:
+
+\begin{enumerate}
+\item 
+A friend declaration may be the only declaration of an entity.
+
+\item 
+A friend function declaration can be a definition.
+\end{enumerate}
 
 \subsubsubsection{12.5.1\hspace{0.2cm}Friend Classes of Class Templates}
 
+Friend class declarations cannot be definitions and therefore are rarely problematic. In the context of templates, the only new facet of friend class declarations is the ability to name a particular instance of a class template as a friend:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Node;
+
+template<typename T>
+class Tree {
+	friend class Node<T>;
+	...
+};
+\end{lstlisting}
+
+Note that the class template must be visible at the point where one of its instances is made a friend of a class or class template. With an ordinary class, there is no such requirement:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Tree {
+	friend class Factory; // OK even if first declaration of Factory
+	friend class Node<T>; // error if Node isn’t visible
+};
+\end{lstlisting}
+
+Section 13.2.2 on page 220 has more to say about this.
+
+One application, introduced in Section 5.5 on page 75, is the declaration of other class template instantiations to be friends:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Stack {
+	public:
+	...
+	// assign stack of elements of type T2
+	template<typename T2>
+	Stack<T>& operator= (Stack<T2> const&);
+	// to get access to private members of Stack<T2> for any type T2:
+	template<typename> friend class Stack;
+	...
+};
+\end{lstlisting}
+
+C++11 also added syntax to make a template parameter a friend:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Wrap {
+	friend T;
+	...
+};
+\end{lstlisting}
+
+This is valid for any type T but is ignored if T is not actually a class type.
+
 \subsubsubsection{12.5.2\hspace{0.2cm}Friend Functions of Class Templates}
 
+An instance of a function template can be made a friend by making sure the name of the friend function is followed by angle brackets. The angle brackets can contain the template arguments, but if the arguments can be deduced, the angle brackets can be left empty:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+void combine(T1, T2);
+
+class Mixer {
+	friend void combine<>(int&, int&);
+	// OK: T1 = int&, T2 = int&
+	friend void combine<int, int>(int, int);
+	// OK: T1 = int, T2 = int
+	friend void combine<char>(char, int);
+	// OK: T1 = char T2 = int
+	friend void combine<char>(char&, int);
+	// ERROR: doesn’t match combine() template
+	friend void combine<>(long, long) { ... }
+	// ERROR: definition not allowed!
+};
+\end{lstlisting}
+
+Note that we cannot define a template instance (at most, we can define a specialization), and hence a friend declaration that names an instance cannot be a definition.
+
+If the name is not followed by angle brackets, there are two possibilities:
+
+\begin{enumerate}
+\item 
+If the name isn’t qualified (in other words, it doesn’t contain ::), it never refers to a template instance. If no matching nontemplate function is visible at the point of the friend declaration, the friend declaration is the first declaration of that function. The declaration could also be a definition.
+
+\item 
+If the name is qualified (it contains ::), the name must refer to a previously declared function or function template. A matching function is preferred over a matching function template. However, such a friend declaration cannot be a definition.
+\end{enumerate}
+
+An example may help clarify the various possibilities:
+
+\begin{lstlisting}[style=styleCXX]
+void multiply(void*); // ordinary function
+
+template<typename T>
+void multiply(T); // function template
+
+class Comrades {
+	friend void multiply(int) { }
+	// defines a new function ::multiply(int)
+	
+	friend void ::multiply(void*);
+	// refers to the ordinary function above,
+	// not to the multiply<void*> instance
+	
+	friend void ::multiply(int);
+	// refers to an instance of the template
+	
+	friend void ::multiply<double*>(double*);
+	// qualified names can also have angle brackets,
+	// but a template must be visible
+	
+	friend void ::error() { }
+	// ERROR: a qualified friend cannot be a definition
+};
+\end{lstlisting}
+
+In our previous examples, we declared the friend functions in an ordinary class. The same rules apply
+when we declare them in class templates, but the template parameters may participate in identifying
+the function that is to be a friend:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Node {
+	Node<T>* allocate();
+	...
+};
+
+template<typename T>
+class List {
+	friend Node<T>* Node<T>::allocate();
+	...
+};
+\end{lstlisting}
+
+A friend function may also be defined within a class template, in which case it is only instantiated when it is actually used. This typically requires the friend function to use the class template itself in the type of the friend function, which makes it easier to express functions on the class template that can be called as if they were visible in namespace scope:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Creator {
+	friend void feed(Creator<T>) { // every T instantiates a different function ::feed()
+		...
+	}
+};
+
+int main()
+{
+	Creator<void> one;
+	feed(one); // instantiates ::feed(Creator<void>)
+	Creator<double> two;
+	feed(two); // instantiates ::feed(Creator<double>)
+}
+\end{lstlisting}
+
+In this example, every instantiation of Creator generates a different function. Note that even though these functions are generated as part of the instantiation of a template, the functions themselves are ordinary functions, not instances of a template. However, they are considered templated entities (see Section 12.1 on page 181) and their definition is instantiated only when used. Also note that because the body of these functions is defined inside a class definition, they are implicitly inline. Hence, it is not an error for the same function to be generated in two different translation units. Section 13.2.2 on page 220 and Section 21.2.1 on page 497 have more to say about this topic.
+
 \subsubsubsection{12.5.3\hspace{0.2cm}Friend Templates}
+
+Usually when declaring a friend that is an instance of a function or a class template, we can express exactly which entity is to be the friend. Sometimes it is nonetheless useful to express that all instances of a template are friends of a class. This requires a friend template. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class Manager {
+	template<typename T>
+	friend class Task;
+	
+	template<typename T>
+	friend void Schedule<T>::dispatch(Task<T>*);
+	
+	template<typename T>
+		friend int ticket() {
+			return ++Manager::counter;
+		}
+	static int counter;
+};
+\end{lstlisting}
+
+Just as with ordinary friend declarations, a friend template can be a definition only if it names an unqualified function name that is not followed by angle brackets.
+
+A friend template can declare only primary templates and members of primary templates. Any partial specializations and explicit specializations associated with a primary template are automatically considered friends too.
+
+
+
+
+
+
+
+

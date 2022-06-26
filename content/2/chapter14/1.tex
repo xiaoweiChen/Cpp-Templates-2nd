@@ -1,0 +1,89 @@
+When a C++ compiler encounters the use of a template specialization, it will create that specialization by substituting the required arguments for the template parameters.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The term specialization is used in the general sense of an entity that is a specific instance of a template (see Chapter 10). It does not refer to the explicit specialization mechanism described in Chapter 16.
+\end{tcolorbox}
+
+This is done automatically and requires no direction from the client code (or from the template definition, for that matter). This on-demand instantiation feature sets C++ templates apart from similar facilities in other early compiled languages (like Ada or Eiffel; some of these languages require explicit instantiation directives, whereas others use run-time dispatch mechanisms to avoid the instantiation process altogether). It is sometimes also called implicit or automatic instantiation.
+
+On-demand instantiation implies that the compiler often needs access to the full definition (in other words, not just the declaration) of the template and some of its members at the point of use. Consider the following tiny source code file:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> class C; // #1 declaration only
+
+C<int>* p = 0; // #2 fine: definition of C<int> not needed
+template<typename T>
+
+class C {
+	public:
+	void f(); // #3 member declaration
+}; // #4 class template definition completed
+
+void g (C<int>& c) // #5 use class template declaration only
+{
+	c.f(); // #6 use class template definition;
+} // will need definition of C::f()
+
+// in this translation unit
+template<typename T>
+void C<T>::f() // required definition due to #6
+{ }
+\end{lstlisting}
+
+At point \#1 in the source code, only the declaration of the template is available, not the definition (such a declaration is sometimes called a forward declaration). As is the case with ordinary classes, we do not need the definition of a class template to be visible to declare pointers or references to this type, as was done at point \#2 . For example, the type of the parameter of function g() does not require the full definition of the template C. However, as soon as a component needs to know the size of a template specialization or if it accesses a member of such a specialization, the entire class template definition is required to be visible. This explains why at point \#6 in the source code, the class template definition must be seen; otherwise, the compiler cannot verify that the member exists and is accessible (not private or protected). Furthermore, the member function definition is needed too, since the call at point \#6 requires C<int>::f() to exist.
+
+Here is another expression that needs the instantiation of the previous class template because the size of C<void> is needed:
+
+\begin{lstlisting}[style=styleCXX]
+C<void>* p = new C<void>;
+\end{lstlisting}
+
+In this case, instantiation is needed so that the compiler can determine the size of C<void>, which the new-expression needs to determine how much storage to allocate. You might observe that for this particular template, the type of the argument X substituted for T will not influence the size of the template because in any case, C<X> is an empty class. However, a compiler is not required to avoid instantiation by analyzing the template definition (and all compilers do perform the instantiation in practice). Furthermore, instantiation is also needed in this example to determine whether C<void> has an accessible default constructor and to ensure C<void> does not declare member operators new or delete.
+
+The need to access a member of a class template is not always very explicitly visible in the source code. For example, C++ overload resolution requires visibility into class types for parameters of candidate functions:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C {
+public:
+	C(int); // a constructor that can be called with a single parameter
+}; // may be used for implicit conversions
+
+void candidate(C<double>); // #1
+void candidate(int) { } // #2
+
+int main()
+{
+	candidate(42); // both previous function declarations can be called
+}
+\end{lstlisting}
+
+The call candidate(42) will resolve to the overloaded declaration at point \#2 . However, the declaration at point \#1 could also be instantiated to check whether it is a viable candidate for the call (it is in this case because the one-argument constructor can implicitly convert 42 to an rvalue of type C<double>). Note that the compiler is allowed (but not required) to perform this instantiation if it can resolve the call without it (as could be the case in this example because an implicit conversion would not be selected over an exact match). Note also that the instantiation of C<double> could trigger an error, which may be surprising.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

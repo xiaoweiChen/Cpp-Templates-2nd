@@ -1,7 +1,184 @@
 
+The examples so far illustrate requirements that are not fundamentally different from the requirements when using nontemplate classes. Many uses require a class type to be complete (see Section 10.3.1 on page 154). For the template case, the compiler will generate this complete definition from the class template definition.
 
+A pertinent question now arises: How much of the template is instantiated? A vague answer is the following: Only as much as is really needed. In other words, a compiler should be “lazy” when instantiating templates. Let’s look at exactly what this laziness entails.
 
 \subsubsubsection{14.2.1\hspace{0.2cm}Partial and Full Instantiation}
 
+As we have seen, the compiler sometimes doesn’t need to substitute the complete definition of a class or function template. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> T f (T p) { return 2*p; }
+decltype(f(2)) x = 2;
+\end{lstlisting}
+
+In this example, the type indicated by decltype(f(2)) does not require the complete instantiation of the function template f(). A compiler is therefore only permitted to substitute the declaration of f(), but not its “body.” This is sometimes called partial instantiation.
+
+Similarly, if an instance of a class template is referred to without the need for that instance to be a complete type, the compiler should not perform a complete instantiation of that class template instance. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> class Q {
+	using Type = typename T::Type;
+};
+
+Q<int>* p = 0; // OK: the body of Q<int> is not substituted
+\end{lstlisting}
+
+Here, the full instantiation of Q<int> would trigger an error, because T::Type doesn’t make sense when T is int. But because Q<int> need not be complete in this example, no full instantiation is performed and the code is okay (albeit suspicious).
+
+Variable templates also have a “full” vs. “partial” instantiation distinction. The following example illustrates it:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> T v = T::default_value();
+decltype(v<int>) s; // OK: initializer of v<int> not instantiated
+\end{lstlisting}
+
+A full instantiation of v<int> would elicit an error, but that is not needed if we only need the type of the variable template instance.
+
+Interestingly, alias templates do not have this distinction: There are no two ways of substituting them.
+
+In C++, when speaking about “template instantiation” without being specific about full or partial instantiation, the former is intended. That is, instantiation is full instantiation by default.
+
 \subsubsubsection{14.2.2\hspace{0.2cm}Instantiated Components}
+
+When a class template is implicitly (fully) instantiated, each declaration of its members is instantiated as well, but the corresponding definitions are not (i.e., the member are partially instantiated). There are a few exceptions to this. First, if the class template contains an anonymous union, the members of that union’s definition are also instantiated.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Anonymous unions are always special in this way: Their members can be considered to be members of the enclosing class. An anonymous union is primarily a construct that says that some class members share the same storage.
+\end{tcolorbox}
+
+The other exception occurs with virtual member functions. Their definitions may or may not be instantiated as a result of instantiating a class template. Many implementations will, in fact, instantiate the definition because the internal structure that enables the virtual call mechanism requires the virtual functions actually to exist as linkable entities. 
+
+Default function call arguments are considered separately when instantiating templates. Specifically, they are not instantiated unless there is a call to that function (or member function) that actually makes use of the default argument. If, on the other hand, the function is called with explicit arguments that override the default, then the default arguments are not instantiated.
+
+Similarly, exception specifications and default member initializers are not instantiated unless they are needed.
+
+Let’s put together some examples that illustrate some of these principles:
+
+\noindent
+\textit{details/lazy1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Safe {
+};
+
+template<int N>
+class Danger {
+	int arr[N]; // OK here, although would fail for N<=0
+};
+
+template<typename T, int N>
+class Tricky {
+	public:
+	void noBodyHere(Safe<T> = 3); // OK until usage of default value results in an error
+	void inclass() {
+		Danger<N> noBoomYet; // OK until inclass() is used with N<=0
+	}
+	struct Nested {
+		Danger<N> pfew; // OK until Nested is used with N<=0
+	};
+	union { // due anonymous union:
+		Danger<N> anonymous; // OK until Tricky is instantiated with N<=0
+		int align;
+	};
+	void unsafe(T (*p)[N]); // OK until Tricky is instantiated with N<=0
+	void error() {
+		Danger<-1> boom; // always ERROR (which not all compilers detect)
+	}
+};
+\end{lstlisting}
+
+A standard C++ compiler will examine these template definitions to check the syntax and general semantic constraints. While doing so, it will “assume the best” when checking constraints involving template parameters. For example, the parameter N in the member Danger::arr could be zero or negative (which would be invalid), but it is assumed that this isn’t the case.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Some compilers, such as GCC, allow zero-length arrays as extensions and may therefore accept this code even when N ends up being 0.
+\end{tcolorbox}
+
+The definitions of inclass(), struct Nested, and the anonymous union are thus not a problem.
+
+For the same reason, the declaration of the member unsafe(T (*p)[N]) is not a problem, as long as N is an unsubstituted template parameter.
+
+The default argument specification (= 3) on the declaration of the member noBodyHere() is suspicious because the template Safe<> isn’t initializable with an integer, but the assumption is that either the default argument won’t actually be needed for the generic definition of Safe<T> or that Safe<T> will be specialized (see Chapter 16) to enable initialization with an integer value However, the definition of the member function error() is an error even when the template is not instantiated, because the use of Danger<-1> requires a complete definition of the class Danger<-1>, and generating that class runs into an attempt to define an array with negative size. Interestingly, while the standard clearly states that this code is invalid, it also allows compilers not to diagnose the error when the template instance is not actually used. That is, since Tricky<T,N>::error() is not used for any concrete T and N, a compiler is not required to issue an error for this case. For example, GCC and Visual C++ do not diagnose this error at the time of this writing.
+
+Now let’s analyze what happens when we add the following definition:
+
+\begin{lstlisting}[style=styleCXX]
+Tricky<int, -1> inst;
+\end{lstlisting}
+
+This causes the compiler to (fully) instantiate Tricky<int, -1> by substituting int for T and -1 for N in the definition of template Tricky<>. Not all the member definitions will be needed, but the default constructor and the destructor (both implicitly declared in this case) are definitely called, and hence their definitions must be available somehow (which is the case in our example, since they are implicitly generated). As explained above, the members of Tricky<int, -1> are partially instantiated (i.e., their declarations are substituted): That process can potentially result in errors. For example, the declaration of unsafe(T (*p)[N]) creates an array type with a negative of number elements, and that is an error. Similarly, the member anonymous now triggers an error, because type Danger<-1> cannot be completed. In contrast, the definitions of the members inclass() and struct Nested are not yet instantiated, and thus no errors occur from their need for the complete type Danger<-1> (which contains an invalid array definition as we discussed earlier).
+
+As written, when instantiating a template, in practice, the definitions of virtual members should also be provided. Otherwise, linker errors are likely to occur. For example:
+
+\noindent
+\textit{details/lazy2.cpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class VirtualClass {
+	public:
+	virtual ~VirtualClass() {}
+	virtual T vmem(); // Likely ERROR if instantiated without definition
+};
+
+int main()
+{
+	VirtualClass<int> inst;
+}
+\end{lstlisting}
+
+Finally, a note about operator->. Consider:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C {
+	public:
+	T operator-> ();
+};
+\end{lstlisting}
+
+Normally, operator-> must return a pointer type or another class type to which operator-> applies. This suggests that the completion of C<int> triggers an error, because it declares a return type of int for operator->. However, because certain natural class template definitions trigger these kinds of definitions,the language rule is more flexible.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Typical examples are smart pointer templates (e.g., the standard std::unique\_ptr<T>)
+\end{tcolorbox}
+
+A user-defined operator-> is only required to return a type to which another (e.g., built-in) operator-> applies if that operator is actually selected by overload resolution. This is true even outside templates (although the relaxed behavior is less useful in those contexts). Hence, the declaration here triggers no error, even though int is substituted for the return type.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -3,10 +3,295 @@ There are many small details to looking up names in C++, but we will focus only 
 
 Qualified names are looked up in the scope implied by the qualifying construct. If that scope is a class, then base classes may also be searched. However, enclosing scopes are not considered when looking up qualified names. The following illustrates this basic principle:
 
+\begin{lstlisting}[style=styleCXX]
+int x;
+
+class B {
+	public:
+	int i;
+};
+
+class D : public B {
+};
+
+void f(D* pd)
+{
+	pd->i = 3; // finds B::i
+	D::x = 2; // ERROR: does not find ::x in the enclosing scope
+}
+\end{lstlisting}
+
+In contrast, unqualified names are typically looked up in successively more enclosing scopes (although in member function definitions, the scope of the class and its base classes is searched before any other enclosing scopes). This is called ordinary lookup. Here is a basic example showing the main idea underlying ordinary lookup:
+
+\begin{lstlisting}[style=styleCXX]
+extern int count; // #1
+
+int lookup_example(int count) // #2
+{
+	if (count < 0) {
+		int count = 1; // #3
+		lookup_example(count); // unqualified count refers to #3
+	}
+	return count + ::count; // the first (unqualified) count refers to #2 ;
+} // the second (qualified) count refers to #1
+\end{lstlisting}
+
+A more recent twist to the lookup of unqualified names is that—in addition to ordinary lookup—they may sometimes undergo argument-dependent lookup (ADL).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In C++98/C++03, this was also called Koenig lookup (or extended Koenig lookup) after Andrew Koenig, who first proposed a variation of this mechanism.
+\end{tcolorbox}
+
+Before proceeding with the details of ADL, let’s motivate the mechanism with our perennial max() template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T a, T b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+Suppose now that we need to apply this template to a type defined in another namespace:
+
+\begin{lstlisting}[style=styleCXX]
+namespace BigMath {
+	class BigNumber {
+		...
+	};
+	bool operator < (BigNumber const&, BigNumber const&);
+	...
+}
+
+using BigMath::BigNumber;
+
+void g (BigNumber const& a, BigNumber const& b)
+{
+	...
+	BigNumber x = ::max(a,b);
+	...
+}
+\end{lstlisting}
+
+The problem here is that the max() template is unaware of the BigMath namespace, but ordinary lookup would not find the operator < applicable to values of type BigNumber. Without some special rules, this greatly reduces the applicability of templates in the presence of C++ namespaces. ADL is the C++ answer to those “special rules.”
+
 \subsubsubsection{13.2.1\hspace{0.2cm}Argument-Dependent Lookup}
+
+
+ADL applies primarily to unqualified names that look like they name a nonmember function in a function call or operator invocation. ADL does not happen if ordinary lookup finds
+
+\begin{itemize}
+\item 
+the name of a member function,
+
+\item 
+the name of a variable,
+
+\item 
+the name of a type, or
+
+\item 
+the name of a block-scope function declaration.
+\end{itemize}
+
+ADL is also inhibited if the name of the function to be called is enclosed in parentheses.
+
+Otherwise, if the name is followed by a list of argument expressions enclosed in parentheses, ADL proceeds by looking up the name in namespaces and classes “associated with” the types of the call arguments. The precise definition of these associated namespaces and associated classes is given later, but intuitively they can be thought of as being all the namespaces and classes that are fairly directly connected to a given type. For example, if the type is a pointer to a class X, then the associated classes and namespace would include X as well as any namespaces or classes to which X belongs.
+
+The precise definition of the set of associated namespaces and associated classes for a given type is determined by the following rules:
+
+\begin{itemize}
+\item 
+For built-in types, this is the empty set.
+
+\item 
+For pointer and array types, the set of associated namespaces and classes is that of the underlying type.
+
+\item 
+For enumeration types, the associated namespace is the namespace in which the enumeration is declared.
+
+\item 
+For class members, the enclosing class is the associated class.
+
+\item 
+For class types (including union types), the set of associated classes is the type itself, the enclosing class, and any direct and indirect base classes. The set of associated namespaces is the namespaces in which the associated classes are declared. If the class is a class template instance, then the types of the template type arguments and the classes and namespaces in which the template template arguments are declared are also included.
+
+\item 
+For function types, the sets of associated namespaces and classes comprise the namespaces and classes associated with all the parameter types and those associated with the return type.
+
+\item 
+For pointer-to-member-of-class-X types, the sets of associated namespaces and classes include those associated with X in addition to those associated with the type of the member. (If it is a pointer-to-member-function type, then the parameter and return types can contribute too.)
+\end{itemize}
+
+ADL then looks up the name in all the associated namespaces as if the name had been qualified with each of these namespaces in turn, except that using directives are ignored. The following example illustrates this:
+
+\noindent
+\textit{details/adl.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+namespace X {
+	template<typename T> void f(T);
+}
+
+namespace N {
+	using namespace X;
+	enum E { e1 };
+	void f(E) {
+		std::cout << "N::f(N::E) called\n";
+	}
+}
+
+void f(int)
+{
+	std::cout << "::f(int) called\n";
+}
+
+int main()
+{
+	::f(N::e1); // qualified function name: no ADL
+	f(N::e1); // ordinary lookup finds ::f() and ADL finds N::f(),
+} // the latter is preferred
+\end{lstlisting}
+
+Note that in this example, the using directive in namespace N is ignored when ADL is performed. Hence X::f() is never even a candidate for the call in main().
 
 \subsubsubsection{13.2.2\hspace{0.2cm}Argument-Dependent Lookup of Friend Declarations}
 
+A friend function declaration can be the first declaration of the nominated function. If this is the case, then the function is assumed to be declared in the nearest namespace scope (which may be the global scope) enclosing the class containing the friend declaration. However, such a friend declaration is not directly visible in that scope. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C {
+	...
+	friend void f();
+	friend void f(C<T> const&);
+	...
+};
+
+void g (C<int>* p)
+{
+	f(); // is f() visible here?
+	f(*p); // is f(C<int> const&) visible here?
+}
+\end{lstlisting}
+
+If friend declarations were visible in the enclosing namespace, then instantiating a class template may make visible the declaration of ordinary functions. This would lead to surprising behavior: The call f() would result in a compilation error unless an instantiation of the class C occurred earlier in the program!
+
+On the other hand, it can be useful to declare (and define) a function in a friend declaration only (see Section 21.2.1 on page 497 for a technique that relies on this behavior). Such a function can be found when the class of which they are a friend is among the associated classes considered by ADL.
+
+Reconsider our last example. The call f() has no associated classes or namespaces because there are no arguments: It is an invalid call in our example. However, the call f(*p) does have the associated class C<int> (because this is the type of *p), and the global namespace is also associated (because this is the namespace in which the type of *p is declared). Therefore, the second friend function declaration could be found provided the class C<int> was actually fully instantiated prior to the call. To ensure this, it is assumed that a call involving a lookup for friends in associated classes actually causes the class to be instantiated (if not done already).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Although this was clearly intended by those who wrote the C++ standard, it is not clearly spelled out in the standard.
+\end{tcolorbox}
+
+The ability of argument-dependent lookup to find friend declarations and definition is sometimes referred to as friend name injection. However, this term is somewhat misleading, because it is the name of a pre-standard C++ feature that did in fact “inject” the names of friend declarations into the enclosing scope, making them visible to normal name lookup. In our example above, this would mean that both calls would be well-formed. This chapter’s afternotes further detail the history of friend name injection.
+
 \subsubsubsection{13.2.3\hspace{0.2cm}Injected Class Names}
 
+The name of a class is injected inside the scope of that class itself and is therefore accessible as an unqualified name in that scope. (However, it is not accessible as a qualified name because this is the notation used to denote the constructors.) For example:
+
+\noindent
+\textit{details/adl.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+int C;
+
+class C {
+private:
+	int i[2];
+public:
+	static int f() {
+		return sizeof(C);
+	}
+};
+
+int f()
+{
+	return sizeof(C);
+}
+
+int main()
+{
+	std::cout << "C::f() = " << C::f() << ’,’
+	<< " ::f() = " << ::f() << ’\n’;
+}
+\end{lstlisting}
+
+The member function C::f() returns the size of type C, whereas the function ::f() returns the size of the variable C (in other words, the size of an int object).
+
+Class templates also have injected class names. However, they’re stranger than ordinary injected class names: They can be followed by template arguments (in which case they are injected class template names), but if they are not followed by template arguments they represent the class with its parameters as its arguments (or, for a partial specialization, its specialization arguments) if the context expects a type, or a template if the context expects a template. This explains the following situation:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename> class TT> class X {
+};
+
+template<typename T> class C {
+	C* a; // OK: same as “C<T>* a;”
+	C<void>& b; // OK
+	X<C> c; // OK: C without a template argument list denotes the template C
+	X<::C> d; // OK: ::C is not the injected class name and therefore always
+			  // denotes the template
+};
+\end{lstlisting}
+
+Note how the unqualified name refers to the injected name and is not considered the name of the template if it is not followed by a list of template arguments. To compensate, we can force the name of the template to be found by using the file scope qualifier ::.
+
+The injected class name for a variadic template has an additional wrinkle: If the injected class name were directly formed by using the variadic template’s template parameters as the template arguments, the injected class name would contain template parameter packs that have not been expanded (see Section 12.4.1 on page 201 for details of pack expansion). Therefore, when forming the injected class name for a variadic template, the template argument that corresponds to a template parameter pack is a pack expansion whose pattern is that template parameter pack:
+
+\begin{lstlisting}[style=styleCXX]
+template<int I, typename... T> class V {
+	V* a; // OK: same as “V<I, T...>* a;”
+	V<0, void> b; // OK
+};
+\end{lstlisting}
+
 \subsubsubsection{13.2.4\hspace{0.2cm}Current Instantiations}
+
+The injected class name of a class or class template is effectively an alias for the type being defined. For a nontemplate class, this property is obvious, because the class itself is the only type with that name and in that scope. However, inside a class template or a nested class within a class template, each template instantiation produces a different type. This property is particularly interesting in that context, because it means that the injected class name refers to the same instantiation of the class template rather than some other specialization of that class template (the same holds for nested classes of class templates).
+
+Within a class template, the injected class name or any type that is equivalent to the injected class name (including looking through type alias declarations) of any enclosing class or class template is said to refer to a current instantiation. Types that depend on a template parameter (i.e., dependent types) but do not refer to a current instantiation are said to refer to an unknown specialization, which may be instantiated from the same class template or some entirely different class template. The following example illustrates the difference:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> class Node {
+	using Type = T;
+	Node* next; // Node refers to a current instantiation
+	Node<Type>* previous; // Node<Type> refers to a current instantiation
+	Node<T*>* parent; // Node<T*> refers to an unknown specialization
+};
+\end{lstlisting}
+
+Identifying whether a type refers to a current instantiation can be confusing in the presence of nested classes and class templates. The injected class names of enclosing classes and class templates (or types equivalent to them) do refer to a current instantiation, while the names of other nested classes or class templates do not:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> class C {
+	using Type = T;
+	struct I {
+		C* c; // C refers to a current instantiation
+		C<Type>* c2; // C<Type> refers to a current instantiation
+		I* i; // I refers to a current instantiation
+	};
+
+	struct J {
+		C* c; // C refers to a current instantiation
+		C<Type>* c2; // C<Type> refers to a current instantiation
+		I* i; // I refers to an unknown specialization,
+			  // because I does not enclose J
+		J* j; // J refers to a current instantiation
+	};
+};
+\end{lstlisting}
+
+When a type refers to a current instantiation, the contents of that instantiated class are guaranteed to be instantiated from the class template or nested class thereof that is currently being defined. This has implications for name lookup when parsing templates—the subject of our next section—but it also leads to an alternative, more game-like way to determine whether a type X within the definition of a class template refers to a current instantiation or an unknown specialization: If another programmer can write an explicit specialization (described in detail in Chapter 16) such that X refers to that specialization, then X refers to an unknown specialization. For example, consider the instantiation of the type C<int>::J in the context of the above example: We know the definition of C<T>::J used to instantiate the concrete type (since that’s the type we’re instantiating). Moreover, because an explicit specialization cannot specialize a template or member of a template without also specializing all of the enclosing templates or members, C<int> will be instantiated from the enclosing class definition. Hence, the references to J and C<int> (where Type is int) within J refer to a current instantiation. On the other hand, one could write an explicit specialization for C<int>::I as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<> struct C<int>::I {
+	// definition of the specialization
+};
+\end{lstlisting}
+
+Here, the specialization of C<int>::I provides a completely different definition than the one that was visible from the definition of C<T>::J, so the I inside the definition of C<T>::J refers to an unknown specialization.
+
+

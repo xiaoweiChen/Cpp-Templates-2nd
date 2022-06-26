@@ -1,0 +1,33 @@
+The first compiler really to parse template definitions was developed by a company called Taligent in the mid-1990s. Before that—and even several years after that—most compilers treated templates as a sequence of tokens to be played back through the parser at instantiation time. Hence no parsing was done, except for a minimal amount sufficient to find the end of a template definition. At the time of this writing, the Microsoft Visual C++ compiler still works this way. The Edison Design Group’s (EDG’s) compiler front end uses a hybrid technique where templates are treated internally as a sequence of annotated tokens, but a “generic parsing” is performed to validate the syntax in modes where that is desirable (EDG’s product emulates multiple other compilers; in particular, it can closely emulate the behavior of Microsoft’s compiler).
+
+Bill Gibbons was Taligent’s representative to the C++ committee and was the principal advocate for making templates unambiguously parsable. The Taligent effort was not released until the compiler was acquired and completed by Hewlett-Packard (HP), to become the aC++ compiler. Among its competitive advantages, the aC++ compiler was quickly recognized for its high-quality diagnostics. The fact that template diagnostics were not always delayed until instantiation time undoubtedly contributed to this perception.
+
+Relatively early during the development of templates, Tom Pennello—a widely recognized parsing expert working for Metaware—noted some of the problems associated with angle brackets. Stroustrup also comments on that topic in [StroustrupDnE] and argues that humans prefer to read angle brackets rather than parentheses. However, other possibilities exist, and Pennello specifically proposed braces (e.g., Listf::Xg) at a C++ standards meeting in 1991 (held in Dallas).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Braces are not entirely without problems either. Specifically, the syntax to specialize class templates would require nontrivial adaptation.
+\end{tcolorbox}
+
+At that time the extent of the problem was more limited because templates nested inside other templates—called member templates—were not valid, and thus the discussion of Section 13.3.3 on page 230 was largely irrelevant. As a result, the committee declined the proposal to replace the angle brackets.
+
+The name lookup rule for nondependent names and dependent base classes that is described in Section 13.4.2 on page 237 was introduced in the C++ standard in 1993. It was described to the “general public” in Bjarne Stroustrup’s [StroustrupDnE] in early 1994. Yet the first generally available implementation of this rule did not appear until early 1997 when HP incorporated it into their aC++ compiler, and by then large amounts of code derived class templates from dependent bases. Indeed, when the HP engineers started testing their implementation, they found that most of the programs that used templates in nontrivial ways no longer compiled.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Fortunately, they found out before they released the new functionality.
+\end{tcolorbox}
+
+In particular, all implementations of the Standard Template Library (STL) broke the rule in many hundreds—and sometimes thousands—of places.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Ironically, the first of these implementations had been developed by HP as well.
+\end{tcolorbox}
+
+To ease the transition process for their customers, HP softened the diagnostic associated with code that assumed that nondependent names could be found in dependent base classes as follows: When a nondependent name used in the scope of a class template is not found using the standard rules, aC++ peeks inside the dependent bases. If the name is still not found, a hard error is issued and compilation fails. However, if the name is found in a dependent base, a warning is issued, and the name is marked to be treated as if it were dependent, so that lookup will be reattempted at instantiation time. 
+
+The lookup rule that causes a name in nondependent bases to hide an identically named template parameter (Section 13.4.1 on page 236) is an oversight, but suggestions to change the rule have not garnered support from the C++ standardization committee. It is best to avoid code with template parameter names that are also used in nondependent base classes. Good naming conventions are helpful for such problems.
+
+Friend name injection was considered harmful because it made the validity of programs more sensitive to the ordering of instantiations. Bill Gibbons (who at the time was working on the Taligent compiler) was among the most vocal supporters of addressing the problem, because eliminating instantiation order dependencies enabled new and interesting C++ development environments (on which Taligent was rumored to be working). However, the Barton-Nackman trick (Section 21.2.1 on page 497) required a form of friend name injection, and it is this particular technique that caused it to remain in the language in its current (weakened) form based on ADL.
+
+Andrew Koenig first proposed ADL for operator functions only (which is why ADL is sometimes called Koenig lookup). The motivation was primarily aesthetics: Explicitly qualifying operator names with their enclosing namespace looks awkward at best (e.g., instead of a+b we may need to write N::operator+(a, b)), and having to write using declarations for every operator can lead to unwieldy code. Hence, it was decided that operators would be looked up in the namespaces associated with arguments. ADL was later extended to ordinary function names to accommodate a limited kind of friend name injection and to support a two-phase lookup model for templates and their instantiations (Chapter 14). The generalized ADL rules are also called extended Koenig lookup.
+
+The specification for the angle bracket hack was added to C++11 by David Vandevoorde through his paper N1757. He also added the digraph hack via the resolution of Core issue 1104, to address a request of the United States’ review of a draft of the C++11 standard.

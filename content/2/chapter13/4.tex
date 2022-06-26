@@ -1,5 +1,186 @@
 
+Class templates can inherit or be inherited from. For many purposes, there is nothing significantly different between the template and nontemplate scenarios. However, there is one important subtlety when deriving a class template from a base class referred to by a dependent name. Let’s first look at the somewhat simpler case of nondependent base classes.
 
 \subsubsubsection{13.4.1\hspace{0.2cm}Nondependent Base Classes}
 
+n a class template, a nondependent base class is one with a complete type that can be determined without knowing the template arguments. In other words, the name of this base is denoted using a nondependent name. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename X>
+class Base {
+	public:
+	int basefield;
+	using T = int;
+};
+
+class D1: public Base<Base<void>> { // not a template case really
+	public:
+	void f() { basefield = 3; } // usual access to inherited member
+};
+
+template<typename T>
+class D2 : public Base<double> { // nondependent base
+	public:
+	void f() { basefield = 7; } // usual access to inherited member
+	T strange; // T is Base<double>::T, not the template parameter!
+};
+\end{lstlisting}
+
+Nondependent bases in templates behave very much like bases in ordinary nontemplate classes, but there is a slightly unfortunate surprise: When an unqualified name is looked up in the templated derivation, the nondependent bases are considered before the list of template parameters. This means that in the previous example, the member strange of the class template D2 always has the type T corresponding to Base<double>::T (in other words, int). For example, the following function is not valid C++ (assuming the previous declarations):
+
+\begin{lstlisting}[style=styleCXX]
+void g (D2<int*>& d2, int* p)
+{
+	d2.strange = p; // ERROR: type mismatch!
+}
+\end{lstlisting}
+
+This is counterintuitive and requires the writer of the derived template to be aware of names in the nondependent bases from which it derives—even when that derivation is indirect or the names are private. It would probably have been preferable to place template parameters in the scope of the entity they “templatize.”
+
 \subsubsubsection{13.4.2\hspace{0.2cm}Dependent Base Classes}
+
+In the previous example, the base class is fully determined. It does not depend on a template parameter. This implies that a C++ compiler can look up nondependent names in those base classes as soon as the template definition is seen. An alternative—not allowed by the C++ standard—would consist in delaying the lookup of such names until the template is instantiated. The disadvantage of this alternative approach is that it also delays any error messages resulting from missing symbols until instantiation. Hence, the C++ standard specifies that a nondependent name appearing in a template is looked up as soon as it is encountered. Keeping this in mind, consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class DD : public Base<T> { // dependent base
+	public:
+	void f() { basefield = 0; } // #1 problem...
+};
+
+template<> // explicit specialization
+class Base<bool> {
+	public:
+	enum { basefield = 42 }; // #2 tricky!
+};
+
+void g (DD<bool>& d)
+{
+	d.f(); // #3 oops?
+}
+\end{lstlisting}
+
+At point \#1 we find our reference to a nondependent name basefield: It must be looked up right away. Suppose we look it up in the template Base and bind it to the int member that we find therein. However, shortly after this we override the generic definition of Base with an explicit specialization. As it happens, this specialization changes the meaning of the basefield member to which we already committed! So, when we instantiate the definition of DD::f at point \#3 , we find that we too eagerly bound the nondependent name at point \#1 . There is no modifiable basefield in DD<bool> that was specialized at point \#2 , and an error message should have been issued.
+
+To circumvent this problem, standard C++ says that nondependent names are not looked up in dependent base classes (but they are still looked up as soon as they are encountered).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} This is part of the two-phase lookup rules that distinguish between a first phase when template definitions are first seen and a second phase when templates are instantiated (see Section 14.3.1 on page 249).
+\end{tcolorbox}
+
+So, a standard C++ compiler will emit a diagnostic at point \#1 . To correct the code, it suffices to make the name basefield dependent because dependent names can be looked up only at the time of instantiation, and at that time the concrete base instance that must be explored will be known. For example, at point \#3 , the compiler will know that the base class of DD<bool> is Base<bool> and that this has been explicitly specialized by the programmer. In this case, our preferred way to make the name dependent is as follows:
+
+\begin{lstlisting}[style=styleCXX]
+// Variation 1:
+template<typename T>
+class DD1 : public Base<T> {
+	public:
+	void f() { this->basefield = 0; } // lookup delayed
+};
+\end{lstlisting}
+
+An alternative consists in introducing a dependency using a qualified name:
+
+\begin{lstlisting}[style=styleCXX]
+// Variation 2:
+template<typename T>
+class DD2 : public Base<T> {
+	public:
+	void f() { Base<T>::basefield = 0; }
+};
+\end{lstlisting}
+
+Care must be taken with this solution, because if the unqualified nondependent name is used to form a virtual function call, then the qualification inhibits the virtual call mechanism and the meaning of the program changes. Nonetheless, there are situations when the first variation cannot be used and this alternative is appropriate:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class B {
+	public:
+	enum E { e1 = 6, e2 = 28, e3 = 496 };
+	virtual void zero(E e = e1);
+	virtual void one(E&);
+};
+
+template<typename T>
+class D : public B<T> {
+	public:
+	void f() {
+		typename D<T>::E e; // this->E would not be valid syntax
+		this->zero(); // D<T>::zero() would inhibit virtuality
+		one(e); // one is dependent because its argument
+	} // is dependent
+};
+\end{lstlisting}
+
+Note how we used D<T>::E instead of B<T>::E in this example. In this case, either one works. In multiple-inheritance cases, however, we may not know which base class provides the desired member (in which case using the derived class for qualification works) or multiple base classes may declare the same name (in which case we may have to use a specific base class name for disambiguation).
+
+Note that the name one in the call one(e) is dependent on the template parameter simply because the type of one of the call’s explicit arguments is dependent. Implicitly used default arguments with a type that depends on a template parameter do not count because the compiler cannot verify this until it already has decided the lookup—a chicken-and-egg problem. To avoid subtlety, we prefer to use the this-> prefix in all situations that allow it—even for nontemplate code.
+
+If you find that the repeated qualifications are cluttering up your code, you can bring a name from a dependent base class in the derived class once and for all:
+
+\begin{lstlisting}[style=styleCXX]
+// Variation 3:
+template<typename T>
+class DD3 : public Base<T> {
+	public:
+	using Base<T>::basefield; // #1 dependent name now in scope
+	void f() { basefield = 0; } // #2 fine
+};
+\end{lstlisting}
+
+The lookup at point \#2 succeeds and finds the using declaration of point \#1 . However, the using declaration is not verified until instantiation time and our goal is achieved. There are some subtle limitations to this scheme. For example, if multiple bases are derived from, the programmer must select exactly which one contains the desired member.
+
+When searching for a qualified name within the current instantiation, the C++ standard specifies that name lookup first search in the current instantiation and in all nondependent bases, similar to the way it performs unqualified lookup for that name. If any name is found, then the qualified name refers to a member of a current instantiation and will not be a dependent name.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}However, the lookup is nonetheless repeated when the template is instantiated, and if a different result is produced in that context, the program is ill-formed.
+\end{tcolorbox}
+
+If no such name is found, and the class has any dependent bases, then the qualified name refers to a member of an unknown specialization. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class NonDep {
+	public:
+	using Type = int;
+};
+
+template<typename T>
+class Dep {
+	public:
+	using OtherType = T;
+};
+
+template<typename T>
+class DepBase : public NonDep, public Dep<T> {
+	public:
+	void f() {
+		typename DepBase<T>::Type t; // finds NonDep::Type;
+		// typename keyword is optional
+		typename DepBase<T>::OtherType* ot; // finds nothing; DepBase<T>::OtherType
+		// is a member of an unknown specialization
+	}
+};
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

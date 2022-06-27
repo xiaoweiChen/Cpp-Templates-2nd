@@ -1,4 +1,158 @@
 
+It is possible to create explicitly a point of instantiation for a template specialization. The construct that achieves this is called an explicit instantiation directive. Syntactically, it consists of the keyword template followed by a declaration of the specialization to be instantiated. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f(T)
+{ }
+
+// four valid explicit instantiations:
+template void f<int>(int);
+template void f<>(float);
+template void f(long);
+template void f(char);
+\end{lstlisting}
+
+Note that every instantiation directive is valid. Template arguments can be deduced (see Chapter 15).
+
+Members of class templates can also be explicitly instantiated in this way:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class S {
+	public:
+	void f() {
+	}
+};
+
+template void S<int>::f();
+
+template class S<void>;
+\end{lstlisting}
+
+Furthermore, all the members of a class template specialization can be explicitly instantiated by explicitly instantiating the class template specialization. Because these explicit instantiation directives ensure that a definition of the named template specialization (or member thereof) is created, the explicit instantiation directives above are more accurately referred to as explicit instantiation definitions. A template specialization that is explicitly instantiated should not be explicitly specialized, and vice versa, because that would imply that the two definitions could be different (thus violating the ODR).
+
 \subsubsubsection{14.5.1\hspace{0.2cm}Manual Instantiation}
 
+Many C++ programmers have observed that automatic template instantiation has a nontrivial negative impact on build times. This is particularly true with compilers that implement greedy instantiation (Section 14.4.1 on page 256), because the same template specializations may be instantiated and optimized in many different translation units.
+
+A technique to improve build times consists in manually instantiating those template specializations that the program requires in a single location and inhibiting the instantiation in all other translation units. One portable way to ensure this inhibition is to not provide the template definition except in the translation unit where it is explicitly instantiated.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In the 1998 and 2003 C++ standards, this was the only portable way to inhibit instantiation in other translation units.
+\end{tcolorbox}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+template<typename T> void f(); // no definition: prevents instantiation
+								// in this translation unit
+void g()
+{
+	f<int>();
+}
+
+// translation unit 2:
+template<typename T> void f()
+{
+	// implementation
+}
+
+template void f<int>(); // manual instantiation
+
+void g();
+
+int main()
+{
+	g();
+}
+\end{lstlisting}
+
+In the first translation unit, the compiler cannot see the definition of the function template f, so it will not (cannot) produce an instantiation of f<int>. The second translation unit provides the definition of f<int> via an explicit instantiation definition; without it, the program would fail to link.
+
+Manual instantiation has a clear disadvantage: We must carefully keep track of which entities to instantiate. For large projects this quickly becomes an excessive burden; hence we do not recommend it. We have worked on several projects that initially underestimated this burden, and we came to regret our decision as the code matured.
+
+However, manual instantiation also has a few advantages because the instantiation can be tuned to the needs of the program. Clearly, the overhead of large headers is avoided, as is the overhead of repeatedly instantiating the same templates with the same arguments in multiple translation units. Moreover, the source code of template definition can be kept hidden, but then no additional instantiations can be created by a client program.
+
+Some of the burden of manual instantiation can be alleviated by placing the template definition into a third source file, conventionally with the extension .tpp. For our function f, this breaks down into:
+
+\begin{lstlisting}[style=styleCXX]
+// f.hpp:
+template<typename T> void f(); // no definition: prevents instantiation
+
+// t.hpp:
+#include "f.hpp"
+template<typename T> void f() // definition
+{
+	// implementation
+}
+
+// f.cpp:
+#include "f.tpp"
+
+template void f<int>(); // manual instantiation
+\end{lstlisting}
+
+This structure provides some flexibility. One can include only f.hpp to get the declaration of f, with no automatic instantiation. Explicit instantiations can be manually added to f.cpp as needed. Or, if manual instantiations become too onerous, one can also include f.tpp to enable automatic instantiation.
+
 \subsubsubsection{14.5.2\hspace{0.2cm}Explicit Instantiation Declarations}
+
+A more targeted approach to the elimination of redundant automatic instantiations is the use of an explicit instantiation declaration, which is an explicit instantiation directive prefixed by the keyword extern. An explicit instantiation declaration generally suppresses automatic instantiation of the named template specialization, because it declares that the named template specialization will be defined somewhere in the program (by an explicit instantiation definition). We say generally, because there are many exceptions to this:
+
+\begin{itemize}
+\item 
+Inline functions can still be instantiated for the purpose of expanding them inline (but no separate object code is generated).
+
+\item 
+Variables with deduced auto or decltype(auto) types and functions with deduced return types can still be instantiated to determine their types.
+
+\item 
+Variables whose values are usable as constant-expressions can still be instantiated so their values can be evaluated.
+
+\item 
+Variables of reference types can still be instantiated so the entity they reference can be resolved.
+
+\item 
+Class templates and alias templates can still be instantiated to check the resulting types.
+\end{itemize}
+
+Using explicit instantiation declarations, we can provide the template definition for f in the header (t.hpp), then suppress automatic instantiation for commonly used specializations, as follows:
+
+\begin{lstlisting}[style=styleCXX]
+// t.hpp:
+template<typename T> void f()
+{ }
+
+extern template void f<int>(); // declared but not defined
+extern template void f<float>(); // declared but not defined
+
+// t.cpp:
+template void f<int>(); // definition
+template void f<float>(); // definition
+\end{lstlisting}
+
+Each explicit instantiation declaration must be paired with a corresponding explicit instantiation definition, which must follow the explicit instantiation declaration. Omitting the definition will result in a linker error.
+
+Explicit instantiation declarations can be used to improve compile or link times when certain specializations are used in many different translation units. Unlike with manual instantiation, which requires manually updating the list of explicit instantiation definitions each time a new specialization is required, explicit instantiation declarations can be introduced as an optimization at any point. However, the compile-time benefits may not be as significant as with manual instantiation, both because some redundant automatic instantiation is likely to occur and because the template definitions are still parsed as part of the header.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} An interesting part of this optimization problem is to determine exactly which specializations are good candidates for explicit instantiation declarations. Low-level utilities such as the common Unix tool nm can be useful in identifying which automatic instantiations actually made it into the object files that comprise a program.
+\end{tcolorbox}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

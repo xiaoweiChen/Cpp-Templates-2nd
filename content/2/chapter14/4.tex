@@ -1,6 +1,200 @@
 
+In this section we review some ways in which C++ implementations support the inclusion model. All these implementations rely on two classic components: a compiler and a linker. The compiler translates source code to object files, which contain machine code with symbolic annotations (crossreferencing other object files and libraries). The linker creates executable programs or libraries by combining the object files and resolving the symbolic cross-references they contain. In what follows, we assume such a model even though it is entirely possible (but not popular) to implement C++ in other ways. For example, one might imagine a C++ interpreter.
+
+When a class template specialization is used in multiple translation units, a compiler will repeat the instantiation process in every translation unit. This poses very few problems because class definitions do not directly create low-level code. They are used only internally by a C++ implementation to verify and interpret various other expressions and declarations. In this regard, the multiple instantiations of a class definition are not materially different from the multiple inclusions of a class definition— typically through header file inclusion—in various translation units.
+
+However, if you instantiate a (noninline) function template, the situation may be different. If you were to provide multiple definitions of an ordinary noninline function, you would violate the ODR. Assume, for example, that you compile and link a program consisting of the following two files:
+
+\begin{lstlisting}[style=styleCXX]
+// a.cpp:
+int main()
+{ }
+
+// b.cpp:
+int main()
+{ }
+\end{lstlisting}
+
+C++ compilers will compile each module separately without any problems because indeed they are valid C++ translation units. However, your linker will most likely protest if you try to link the two together: Duplicate definitions are not allowed.
+
+In contrast, consider the template case:
+
+\begin{lstlisting}[style=styleCXX]
+// t.hpp:
+// common header (inclusion model)
+template<typename T>
+class S {
+	public:
+	void f();
+};
+
+template<typename T>
+void S::f() // member definition
+{ }
+void helper(S<int>*);
+
+// a.cpp:
+#include "t.hpp"
+void helper(S<int>* s)
+{
+	s->f(); // #1 first point of instantiation of S::f
+}
+
+// b.cpp:
+#include "t.hpp"
+int main()
+{
+	S<int> s;
+	helper(&s);
+	s.f(); // #2 second point of instantiation of S::f
+}
+\end{lstlisting}
+
+If the linker treats instantiated member functions of class templates just like it does for ordinary functions or member functions, the compiler needs to ensure that it generates code at only one of the two POIs: at points \#1 or \#2 , but not both. To achieve this, a compiler has to carry information from one translation unit to the other, and this is something C++ compilers were never required to do prior to the introduction of templates. In what follows, we discuss the three broad classes of solutions that have been used by C++ implementers.
+
+Note that the same problem occurs with all linkable entities produced by template instantiation: instantiated function templates and member function templates, as well as instantiated static data members and instantiated variable templates.
+
 \subsubsubsection{14.4.1\hspace{0.2cm}Greedy Instantiation}
+
+The first C++ compilers that popularized greedy instantiation were produced by a company called Borland. It has grown to be by far the most commonly used technique among the various C++ systems.
+
+Greedy instantiation assumes that the linker is aware that certain entities—linkable template instantiations in particular—may in fact appear in duplicate across the various object files and libraries. The compiler will typically mark these entities in a special way. When the linker finds multiple instances, it keeps one and discards all the others. There is not much more to it than that.
+
+In theory, greedy instantiation has some serious drawbacks:
+
+\begin{itemize}
+\item 
+The compiler may be wasting time on generating and optimizing N instantiations, of which only one will be kept.
+
+\item 
+Linkers typically do not check that two instantiations are identical because some insignificant differences in generated code can validly occur for multiple instances of one template specialization. These small differences should not cause the linker to fail. (These differences could result from tiny differences in the state of the compiler at the instantiation times.) However, this often also results in the linker not noticing more substantial differences, such as when one instantiation was compiled with strict floating-point math rules whereas the other was compiled with relaxed, higher-performance floating-point math rules.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Current systems have grown to detect certain other differences, however. For example, they might report if one instantiation has associated debugging information and another does not.
+\end{tcolorbox}
+
+\item 
+The sum of all the object files could potentially be much larger than with alternatives because the same code may be duplicated many times.
+
+\item 
+The sum of all the object files could potentially be much larger than with alternatives because the same code may be duplicated many times.
+\end{itemize}
+
+In practice, these shortcomings do not seem to have caused major problems. Perhaps this is because greedy instantiation contrasts very favorably with the alternatives in one important aspect: The traditional source-object dependency is preserved. In particular, one translation unit generates but one object file, and each object file contains compiled code for all the linkable definitions in the corresponding source file (which includes the instantiated definitions). Another important benefit is that all function template instances are candidates for inlining without resorting to expensive “link-time” optimization mechanisms (and, in practice, function template instances are often small functions that benefit from inlining). The other instantiation mechanisms treat inline function template instances specially to ensure they can be expanded inline. However, greedy instantiation allows even noninline function template instances to be expanded inline.
+
+Finally, it may be worth noting that the linker mechanism that allows duplicate definitions of linkable entities is also typically used to handle duplicate spilled inlined functions
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}When a compiler is unable to “inline” every call to a function that you marked with the keyword inline, a separate copy of the function is emitted in the object file. This may happen in multiple object files.
+\end{tcolorbox}
+
+and virtual function dispatch tables.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Virtual function calls are usually implemented as indirect calls through a table of pointers to functions. See [LippmanObjMod] for a thorough study of such implementation aspects of C++.
+\end{tcolorbox}
+
+If this mechanism is not available, the alternative is usually to emit these items with internal linkage, at the expense of generating larger code. The requirement that an inline function have a single address makes it difficult to implement that alternative in a standard-conforming way.
 
 \subsubsubsection{14.4.2\hspace{0.2cm}Queried Instantiation}
 
+In the mid-1990s, a company called Sun Microsystems
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Sun Microsystems was later acquired by Oracle.
+\end{tcolorbox}
+
+released a reimplementation of its C++ compiler (version 4.0) with a new and interesting solution of the instantiation problem, which we call queried instantiation. Queried instantiation is conceptually remarkably simple and elegant, and yet it is chronologically the most recent class of instantiation schemes that we review here. In this scheme, a database shared by the compilations of all translation units participating in a program is maintained. This database keeps track of which specializations have been instantiated and on what source code they depend. The generated specializations themselves are typically stored with this information in the database. Whenever a point of instantiation for a linkable entity is encountered, one of three things can happen:
+
+\begin{enumerate}
+\item 
+No specialization is available: In this case, instantiation occurs, and the resulting specialization is entered in the database.
+
+\item 
+A specialization is available but is out of date because source changes have occurred since it was generated. Here, too, instantiation occurs, but the resulting specialization replaces the one previously stored in the database.
+
+\item 
+An up-to-date specialization is available in the database. Nothing needs to be done.
+\end{enumerate}
+
+Although conceptually simple, this design presents a few implementation challenges:
+
+\begin{itemize}
+\item 
+It is not trivial to maintain correctly the dependencies of the database contents with respect to the state of the source code. Although it is not incorrect to mistake the third case for the second, doing so increases the amount of work done by the compiler (and hence overall build time).
+
+\item 
+It is quite common to compile multiple source files concurrently. Hence, an industrial-strength implementation needs to provide the appropriate amount of concurrency control in the database.
+\end{itemize}
+
+Despite these challenges, the scheme can be implemented quite efficiently. Furthermore, there are no obvious pathological cases that would make this solution scale poorly, in contrast, for example, with greedy instantiation, which may lead to a lot of wasted work.
+
+The use of a database may also present some problems to the programmer, unfortunately. The origin of most of these problems lies in that fact that the traditional compilation model inherited from most C compilers no longer applies: A single translation unit no longer produces a single standalone object file. Assume, for example, that you wish to link your final program. This link operation needs not only the contents of each of the object files associated with your various translation units, but also the object files stored in the database. Similarly, if you create a binary library, you need to ensure that the tool that creates that library (typically a linker or an archiver) is aware of the database contents. More generally, any tool that operates on object files may need to be made aware of the contents of the database. Many of these problems can be alleviated by not storing the instantiations in the database, but instead by emitting the object code in the object file that caused the instantiation in the first place.
+
+Libraries present yet another challenge. A number of generated specializations may be packaged in a library. When the library is added to another project, that project’s database may need to be made aware of the instantiations that are already available. If not, and if the project creates some of its own points of instantiation for the specializations present in the library, duplicate instantiation may occur. A possible strategy to deal with such situations is to use the same linker technology that enables greedy instantiation: Make the linker aware of generated specializations and have it weed out duplicates (which should nonetheless occur much less frequently than with greedy instantiation). Various other subtle arrangements of sources, object files, and libraries can lead to frustrating problems such as missing instantiations because the object code containing the required instantiation was not linked in the final executable program.
+
+Ultimately, queried instantiation did not survive in the marketplace, and even Sun’s compiler now uses greedy instantiation.
+
 \subsubsubsection{14.4.3\hspace{0.2cm}Iterated Instantiation}
+
+The first compiler to support C++ templates was Cfront 3.0—a direct descendant of the compiler that Bjarne Stroustrup wrote to develop the language.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Do not let this phrase mislead you into thinking that Cfront was an academic prototype: It was used in industrial contexts and formed the basis of many commercial C++ compiler offerings. Release 3.0 appeared in 1991 but was plagued with bugs. Version 3.0.1 followed soon thereafter and made templates usable.
+\end{tcolorbox}
+
+An inflexible constraint on Cfront was that it had to be very portable from platform to platform, and this meant that it (1) used the C language as a common target representation across all target platforms and (2) used the local target linker. In particular, this implied that the linker was not aware of templates. In fact, Cfront emitted template instantiations as ordinary C functions, and therefore it had to avoid duplicate instantiations. Although the Cfront source model was different from the standard inclusion model, its instantiation strategy can be adapted to fit the inclusion model. As such, it also merits recognition as the first incarnation of iterated instantiation. The Cfront iteration can be described as follows:
+
+
+\begin{enumerate}
+\item 
+Compile the sources without instantiating any required linkable specializations.
+
+\item 
+Link the object files using a prelinker.
+
+\item 
+The prelinker invokes the linker and parses its error messages to determine whether any are the result of missing instantiations. If so, the prelinker invokes the compiler on sources that contain the needed template definitions, with options to generate the missing instantiations.
+
+\item 
+Repeat step 3 if any definitions are generated.
+\end{enumerate}
+
+The need to iterate step 3 is prompted by the observation that the instantiation of one linkable entity may lead to the need for another such entity that was not yet instantiated. Eventually the iteration will “converge,” and the linker will succeed in building a complete program.
+
+The drawbacks of the original Cfront scheme are quite severe:
+
+\begin{itemize}
+\item 
+The perceived time to link is augmented not only by the prelinker overhead but also by the cost of every required recompilation and relinking. Some users of Cfront-based systems reported link times of “a few days” compared with “about an hour” with the alternative schemes reported earlier.
+
+\item 
+Diagnostics (errors, warnings) are delayed until link time. This is especially painful when linking becomes expensive and the developer must wait hours just to find out about a typo in a template definition.
+
+\item 
+Special care must be taken to remember where the source containing a particular definition is located (step 1). Cfront in particular used a central repository, which had to deal with some of the challenges of the central database in the queried instantiation approach. In particular, the original Cfront implementation was not engineered to support concurrent compilations.
+\end{itemize}
+
+The iteration principle was subsequently refined both by the Edison Design Group’s (EDG) implementation and by HP’s aC++,
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}HP’s aC++ was grown out of technology from a company called Taligent (later absorbed by International Business Machines, or IBM). HP also added greedy instantiation to aC++ and made that the default mechanism.
+\end{tcolorbox}
+
+eliminating some of the drawbacks of the original Cfront implementation. In practice, these implementations work quite well, and, although a build “from scratch” is typically more time consuming than the alternative schemes, subsequent build times are quite competitive. Still, relatively few C++ compilers use iterated instantiation anymore.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

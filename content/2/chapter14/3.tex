@@ -1,6 +1,193 @@
 
+Template instantiation is the process of obtaining a regular type, function, or variable from a corresponding template entity by appropriately substituting the template parameters. This may sound fairly straightforward, but in practice many details need to be formally established.
+
 \subsubsubsection{14.3.1\hspace{0.2cm}Two-Phase Lookup}
+
+In Chapter 13 we saw that dependent names cannot be resolved when parsing templates. Instead, they are looked up again at the point of instantiation. Nondependent names, however, are looked up early so that many errors can be diagnosed when the template is first seen. This leads to the concept of two-phase lookup:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Besides two-phase lookup, terms such as two-stage lookup or two-phase name lookup are also used.
+\end{tcolorbox}
+
+The first phase is the parsing of a template, and the second phase is its instantiation:
+
+\begin{enumerate}
+\item 
+During the first phase, while parsing a template, nondependent names are looked up using both the ordinary lookup rules and, if applicable, the rules for argument-dependent lookup (ADL). Unqualified dependent names (which are dependent because they look like the name of a function in a function call with dependent arguments) are looked up using the ordinary lookup rules, but the result of the lookup is not considered complete until an additional lookup is performed in the second phase (when the template is instantiated).
+
+\item 
+During the second phase, while instantiating a template at a point called the point of instantiation (POI), dependent qualified names are looked up (with the template parameters replaced with the template arguments for that specific instantiation), and an additional ADL is performed for the unqualified dependent names that were looked up using ordinary lookup in the first phase.
+\end{enumerate}
+
+For unqualified dependent names, the initial ordinary lookup—while not complete—is used to decide whether the name is a template. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+namespace N {
+	template<typename> void g() {}
+	enum E { e };
+}
+
+template<typename> void f() {}
+
+template<typename T> void h(T P) {
+	f<int>(p); // #1
+	g<int>(p); // #2 ERROR
+}
+
+int main() {
+	h(N::e); // calls template h with T = N::E
+}
+\end{lstlisting}
+
+In line \#1 , when seeing the name f followed by a <, the compiler has to decide whether that < is an angle bracket or a less-than sign. That depends on whether f is known to be the name of a template or not; in this case, ordinary lookup finds the declaration of f, which is indeed a template, and so parsing succeeds with angle brackets.
+
+Line \#2 , however, produces an error because no template g is found using ordinary lookup; the < is thus treated as a less-than sign, which is a syntax error in this example. If we could get past this issue, we’d eventually find the template N::g using ADL when instantiating h for T = N::E (since N is a namespace associated with E), but we cannot get that far until we successfully parse the generic definition of h.
 
 \subsubsubsection{14.3.2\hspace{0.2cm}Points of Instantiation}
 
+We have already illustrated that there are points in the source of template clients where a C++ compiler must have access to the declaration or the definition of a template entity. A point of instantiation (POI) is created when a code construct refers to a template specialization in such a way that the definition of the corresponding template needs to be instantiated to create that specialization. The POI is a point in the source where the substituted template could be inserted. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class MyInt {
+	public:
+	MyInt(int i);
+};
+
+MyInt operator - (MyInt const&);
+
+bool operator > (MyInt const&, MyInt const&);
+
+using Int = MyInt;
+
+template<typename T>
+void f(T i)
+{
+	if (i>0) {
+		g(-i);
+	}
+}
+// #1
+void g(Int)
+{
+	// #2
+	f<Int>(42); // point of call
+	// #3
+}
+// #4
+\end{lstlisting}
+
+When a C++ compiler sees the call f<Int>(42), it knows the template f will need to be instantiated for T substituted with MyInt: A POI is created. Points \#2 and \#3 are very close to the point of call, but they cannot be POIs because C++ does not allow us to insert the definition of ::f<Int>(Int) there. The essential difference between point \#1 and point \#4 is that at point \#4 the function g(Int) is visible, and hence the template-dependent call g(-i) can be resolved. However, if point \#1 were the POI, then that call could not be resolved because g(Int) is not yet visible. Fortunately, C++ defines the POI for a reference to a function template specialization to be immediately after the nearest namespace scope declaration or definition that contains that reference. In our example, this is point \#4 .
+
+You may wonder why this example involved the type MyInt rather than simple int. The answer lies in the fact that the second lookup performed at the POI is only an ADL. Because int has no associated namespace, the POI lookup would therefore not take place and would not find function g.
+
+Hence, if we were to replace the type alias declaration for Int with
+
+\begin{lstlisting}[style=styleCXX]
+using Int = int;
+\end{lstlisting}
+
+the previous example would no longer compile. The following example suffers from a similar problem:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f1(T x)
+{
+	g1(x); // #1
+}
+
+void g1(int)
+{ }
+
+int main()
+{
+	f1(7); // ERROR: g1 not found!
+}
+// #2 POI for f1<int>(int)
+\end{lstlisting}
+
+The call f1(7) creates a POI for f1<int>(int) just outside of main() at point \#2 . In this instantiation, the key issue is the lookup of function g1. When the definition of the template f1 is first encountered, it is noted that the unqualified name g1 is dependent because it is the name of a function in a function call with dependent arguments (the type of the argument x depends on the template parameter T). Therefore, g1 is looked up at point \#1 using ordinary lookup rules; however, no g1 is visible at this point. At point \#2 , the POI, the function is looked up again in associated namespaces and classes, but the only argument type is int, and it has no associated namespaces and classes. Therefore, g1 is never found even though ordinary lookup at the POI would have found g1.
+
+The point of instantiation for variable templates is handled similarly to that of function templates.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Surprisingly, this is not clearly specified in the standard at the time of this writing. However, it is not expected to be a controversial issue.
+\end{tcolorbox}
+
+For class template specializations, the situation is different, as the following example illustrates:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class S {
+	public:
+	T m;
+};
+// #1
+unsigned long h()
+{
+	// #2
+	return (unsigned long)sizeof(S<int>);
+	// #3
+}
+// #4
+\end{lstlisting}
+
+Again, the function scope points \#2 and \#3 cannot be POIs because a definition of a namespace scope class S<int> cannot appear there (and templates can generally not appear in function scope).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The call operator of generic lambdas are a subtle exception to that observation.
+\end{tcolorbox}
+
+If we were to follow the rule for function template instances, the POI would be at point \#4 , but then the expression sizeof(S<int>) is invalid because the size of S<int> cannot be determined until point \#4 is reached. Therefore, the POI for a reference to a generated class instance is defined to be the point immediately before the nearest namespace scope declaration or definition that contains the reference to that instance. In our example, this is point \#1 .
+
+When a template is actually instantiated, the need for additional instantiations may appear. Consider a short example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class S {
+	public:
+	using I = int;
+};
+
+// #1
+template<typename T>
+void f()
+{
+	S<char>::I var1 = 41;
+	typename S<T>::I var2 = 42;
+}
+
+int main()
+{
+	f<double>();
+}
+// #2 : #2a , #2b
+\end{lstlisting}
+
+Our preceding discussion already established that the POI for f<double>() is at point \#2 . The function template f() also refers to the class specialization S<char> with a POI that is therefore at point \#1 . It references S<T> too, but because this is still dependent, we cannot really instantiate it at this point. However, if we instantiate f<double>() at point \#2 , we notice that we also need to instantiate the definition of S<double>. Such secondary or transitive POIs are defined slightly differently. For function templates, the secondary POI is exactly the same as the primary POI. For class entities, the secondary POI immediately precedes (in the nearest enclosing namespace scope) the primary POI. In our example, this means that the POI of f<double>() can be placed at point \#2b , and just before it—at point \#2a —is the secondary POI for S<double>. Note how this differs from the POI for S<char>.
+
+A translation unit often contains multiple POIs for the same instance. For class template instances, only the first POI in each translation unit is retained, and the subsequent ones are ignored (they are not really considered POIs). For instances of function and variable templates, all POIs are retained. In either case, the ODR requires that the instantiations occurring at any of the retained POIs be equivalent, but a C++ compiler does not need to verify and diagnose violations of this rule. This allows a C++ compiler to pick just one nonclass POI to perform the actual instantiation without worrying that another POI might result in a different instantiation.
+
+In practice, most compilers delay the actual instantiation of most function templates to the end of the translation unit. Some instantiations cannot be delayed, including cases where instantiation is needed to determine a deduced return type (see Section 15.10.1 on page 296 and Section 15.10.4 on page 303) and cases where the function is constexpr and must be evaluated to produce a constant result. Some compilers instantiate inline functions when they’re first used to potentially inline the call right away.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In modern compilers the inlining of calls is typically handled by a mostly language-independent component of the compiler dedicated to optimizations (a “back end” or “middle end”). However, C++ “front ends” (the C++-specific part of the C++ compiler) that were designed in the earlier days of C++ may also have the ability to expand calls inline because older back ends were  too conservative when considering calls for inline expansion.
+\end{tcolorbox}
+
+This effectively moves the POIs of the corresponding template specializations to the end of the translation unit, which is permitted by the C++ standard as an alternative POI.
+
 \subsubsubsection{14.3.3\hspace{0.2cm}The Inclusion Model}
+
+Whenever a POI is encountered, the definition of the corresponding template must somehow be accessible. For class specializations this means that the class template definition must have been seen earlier in the translation unit. For the POIs of function and variable templates (and member functions and static data members of class templates) this is also needed, and typically template definitions are simply added to header files that are \#included into the translation unit, even when they’re nontype templates. This source model for template definitions is  called the inclusion model, and it is the only automatic source model for templates supported by the  current C++ standard.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The original C++98 standard also provided a separation model. It never gained popularity and was removed just before publishing the C++11 standard.
+\end{tcolorbox}
+
+Although the inclusion model encourages programmers to place all their template definitions in header files so that they are available to satisfy any POIs that may arise, it is also possible to explicitly manage instantiations using explicit instantiation declarations and explicit instantiation definitions (see Section 14.5 on page 260). Doing so is logistically not trivial and most of the time programmers will prefer to rely on the automatic instantiation mechanism instead. One challenge for an implementation with the automatic scheme is to deal with the possibility of having POIs for the same specialization of a function or variable templates (or the same member function or static data member of a class template instance) across different translation units. We discuss approaches to this problem next.
+
+
+
+
+
+
+

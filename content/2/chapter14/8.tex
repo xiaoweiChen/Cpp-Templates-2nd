@@ -1,0 +1,33 @@
+This chapter deals with two related but different issues: the C++ template compilation model and various C++ template instantiation mechanisms.
+
+The compilation model determines the meaning of a template at various stages of the translation of a program. In particular, it determines what the various constructs in a template mean when it is instantiated. Name lookup is an essential ingredient of the compilation model.
+
+Standard C++ only supports a single compilation model, the inclusion model. However, the 1998 and 2003 standards also supported a separation model of template compilation, which allowed a template definition to be written in a different translation unit from its instantiations. These exported templates were only ever implemented once, by the Edison Design Group (EDG).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Ironically, EDG was the most vocal opponent of the feature when it was added to the working paper for the original standard.
+\end{tcolorbox}
+
+Their implementation effort determined that (1) implementing the separation model of C++ templates was vastly more difficult and time consuming than had been anticipated, and (2) the presumed benefits of the separation model, such as improved compile times, did not materialize due to complexities of the model. As the development of the 2011 standard was wrapping up, it became clear that other implementers were not going to support the feature, and the C++ standards committee voted to remove exported templates from the language. We refer readers interested in the details of the separation model to the first edition of this book ([VandevoordeJosuttisTemplates1st]), which describes the behavior of exported templates. 
+
+The instantiation mechanisms are the external mechanisms that allow C++ implementations to create instantiations correctly. These mechanisms may be constrained by requirements of the linker and other software building tools. While instantiation mechanisms differ from one implementation to the next (and each has its trade-offs), they generally do not have a significant impact on day-to-day programming in C++.
+
+Shortly after C++11 was completed, Walter Bright, Herb Sutter, and Andrei Alexandrescu proposed a “static if” feature not unlike constexpr if (via paper N3329). It was, however, a more general feature that could appear even outside of function definitions. (Walter Bright is the principal designer and implementer of the D programming language, which has a similar feature.) For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<unsigned long N>
+struct Fact {
+	static if (N <= 1) {
+		constexpr unsigned long value = 1;
+	} else {
+		constexpr unsigned long value = N*Fact<N-1>::value;
+	}
+};
+\end{lstlisting}
+
+Note how class-scope declarations are made conditional in this example. This powerful ability was controversial, however, with some committee members fearing that it might be abused and others not liking some technical aspects of the proposal (such as the fact that no scope is introduced by the braces and the discarded branch is not parsed at all).
+
+A few years later, Ville Voutilainen came back with a proposal (P0128) that was mostly what would become constexpr if statements. It went through a few minor design iterations (involving tentative keywords static\_if and constexpr\_if) and, with the help of Jens Maurer, Ville eventually shepherded the proposal into the language (via paper P0292r2).
+
+
+

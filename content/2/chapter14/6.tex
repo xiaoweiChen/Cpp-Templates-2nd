@@ -1,0 +1,108 @@
+As introduced in Section 8.5 on page 134, C++17 added a new statement kind that turns out to be remarkably useful when writing templates: compile-time if. It also introduces a new wrinkle in the instantiation process.
+
+The following example illustrates its basic operation:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> bool f(T p) {
+	if constexpr (sizeof(T) <= sizeof(long long)) {
+		return p>0;
+	} else {
+		return p.compare(0) > 0;
+	}
+}
+
+bool g(int n) {
+	return f(n); // OK
+}
+\end{lstlisting}
+
+The compile-time if is an if statement, where the if keyword is immediately followed by the constexpr keyword (as in this example).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} Although the code reads if constexpr, the feature is called constexpr if, because it is the “constexpr” form of if.
+\end{tcolorbox}
+
+The parenthesized condition that follows must have a constant Boolean value (implicit conversions to bool are included in that consideration). The compiler therefore knows which branch will be selected; the other branch is called the discarded branch. Of particular interest is that during the instantiation of templates (including generic lambdas), the discarded branch is not instantiated. That is necessary for our example to be valid: We are instantiating f(T) with T = int, which means that the else branch is discarded. If it weren’t discarded, it would be instantiated and we’d run into an error for the expression p.compare(0) (which isn’t valid when p is a simple integer).
+
+Prior to C++17 and its constexpr if statements, avoiding such errors required explicit template specialization or overloading (see Chapter 16) to achieve similar effects.
+
+The example above, in C++14, might be implemented as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<bool b> struct Dispatch { // only to be instantiated when b is false
+	static bool f(T p) { // (due to next specialization for true)
+		return p.compare(0) > 0;
+	}
+};
+
+template<> struct Dispatch<true> {
+	static bool f(T p) {
+		return p > 0;
+	}
+};
+
+template<typename T> bool f(T p) {
+	return Dispatch<sizeof(T) <= sizeof(long long)>::f(p);
+}
+
+bool g(int n) {
+	return f(n); // OK
+}
+\end{lstlisting}
+
+Clearly, the constexpr if alternative expresses our intention far more clearly and concisely. However, it requires implementations to refine the unit of instantiation: Whereas previously function definitions were always instantiated as a whole, now it must be possible to inhibit the instantiation of parts of them.
+
+Another very handy use of constexpr if is expressing the recursion needed to handle function parameter packs. To generalize the example, introduced in Section 8.5 on page 134:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Head, typename... Remainder>
+void f(Head&& h, Remainder&&... r) 
+	doSomething(std::forward<Head>(h));
+	if constexpr (sizeof...(r) != 0) {
+		// handle the remainder recursively (perfectly forwarding the arguments):
+		f(std::forward<Remainder>(r)...);
+	}
+}
+\end{lstlisting}
+
+Without constexpr if statements, this requires an additional overload of the f() template to ensure that recursion terminates.
+
+Even in nontemplate contexts, constexpr if statements have a somewhat unique effect:
+
+\begin{lstlisting}[style=styleCXX]
+void h();
+void g() {
+	if constexpr (sizeof(int) == 1) {
+		h();
+	}
+}
+\end{lstlisting}
+
+On most platforms, the condition in g() is false and the call to h() is therefore discarded. As a consequence, h() need not necessarily be defined at all (unless it is used elsewhere, of course). Had the keyword constexpr been omitted in this example, a lack of a definition for h() would often elicit an error at link time.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Optimization may nonetheless mask the error. With constexpr if the problem is guaranteed not to exist.
+\end{tcolorbox}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,92 @@
+The basic deduction process compares the types of an argument of a function call with the corresponding parameterized type of a function template and attempts to conclude the correct substitution  for one or more of the deduced parameters. Each argument-parameter pair is analyzed independently, and if the conclusions differ in the end, the deduction process fails. Consider the following  example:
+ 
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max (T a, T b)
+{
+	return b < a ? a : b;
+}
+
+auto g = max(1, 1.0);
+\end{lstlisting} 
+ 
+Here the first call argument is of type int, so the parameter T of our original max() template is tentatively deduced to be int. The second call argument is a double, however, and so T should be double for this argument: This conflicts with the previous conclusion. Note that we say that “the  deduction process fails,” not that “the program is invalid.” After all, it is possible that the deduction  process would succeed for another template named max (function templates can be overloaded much  like ordinary functions; see Section 1.5 on page 15 and Chapter 16).
+ 
+If all the deduced template parameters are consistently determined, the deduction process can still fail if substituting the arguments in the rest of the function declaration results in an invalid construct. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+typename T::ElementT at (T a, int i)
+{
+	return a[i];
+}
+
+void f (int* p)
+{
+	int x = at(p, 7);
+}
+\end{lstlisting} 
+
+Here T is concluded to be int* (there is only one parameter type where T appears, so there are obviously no analysis conflicts). However, substituting int* for T in the return type T::ElementT is clearly invalid C++, and the deduction process fails.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In this case, deduction failure leads to an error. However, this falls under the SFINAE principle (see Section 8.4 on page 129): If there were another function for which deduction succeeds, the code could be valid.
+\end{tcolorbox}
+
+We still need to explore how argument-parameter matching proceeds. We describe it in terms of matching a type A (derived from the call argument type) to a parameterized type P (derived from the call parameter declaration). If the call parameter is declared with a reference declarator, P is taken to be the type referenced, and A is the type of the argument. Otherwise, however, P is the declared parameter type, and A is obtained from the type of the argument by decaying array and function types to pointer types, ignoring top-level const and volatile qualifiers. 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Decay is the term used to refer to the implicit conversion of function and array types to pointer types.
+\end{tcolorbox}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void f(T); // parameterized type P is T
+template<typename T> void g(T&); // parameterized type P is also T
+
+double arr[20];
+int const seven = 7;
+
+f(arr); // nonreference parameter: T is double*
+g(arr); // reference parameter: T is double[20]
+f(seven); // nonreference parameter: T is int
+g(seven); // reference parameter: T is int const
+f(7); // nonreference parameter: T is int
+g(7); // reference parameter: T is int => ERROR: can’t pass 7 to int&
+\end{lstlisting} 
+
+For a call f(arr), the array type of arr decays to type double*, which is the type deduced for T. In f(seven) the const qualification is stripped and hence T is deduced to be int. In contrast, calling g(x) deduces T to be type double[20] (no decay occurs). Similarly, g(seven) has an lvalue argument of type int const, and because const and volatile qualifiers are not dropped when matching reference parameters, T is deduced to be int const. However, note that g(7) would deduce T to be int (because nonclass rvalue expressions never have const or volatile qualified types), and the call would fail because an argument 7 cannot be passed to a parameter of type int\&.
+
+The fact that no decay occurs for arguments bound to reference parameters can be surprising when the arguments are string literals. Reconsider our max() template declared with references:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T const& max(T const& a, T const& b);
+\end{lstlisting} 
+
+It would be reasonable to expect that for the expression max("Apple", "Pie") T is deduced to be char const*. However, the type of "Apple" is char const[6], and the type of "Pie" is char const[4]. No array-to-pointer decay occurs (because the deduction involves reference parameters), and therefore T would have to be both char[6] and char[4] for deduction to succeed. That is, of course, impossible. See Section 7.4 on page 115 for a discussion about how to deal with this situation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

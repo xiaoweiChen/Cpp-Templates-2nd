@@ -1,3 +1,133 @@
 
 
+The SFINAE (substitution failure is not an error) principle, introduced in Section 8.4 on page 129, is an important aspect of template argument deduction that prevents unrelated function templates from causing errors during overload resolution.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}SFINAE also applies to the substitution of partial class template specializations. See Section 16.4 on page 347
+\end{tcolorbox}
+
+For example, consider a pair of function templates that extracts the beginning iterator for a container or an array:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, unsigned N>
+T* begin(T (&array)[N])
+{
+	return array;
+}
+
+template<typename Container>
+typename Container::iterator begin(Container& c)
+{
+	return c.begin();
+}
+
+int main()
+{
+	std::vector<int> v;
+	int a[10];
+	
+	::begin(v); // OK: only container begin() matches, because the first deduction fails
+	::begin(a); // OK: only array begin() matches, because the second substitution fails
+}
+\end{lstlisting}
+
+The first call to begin(), in which the argument is a std::vector<int>, attempts template argument deduction for both begin() function templates:
+
+\begin{itemize}
+\item 
+Template argument deduction for the array begin() fails, because a std::vector is not an array, so it is ignored.
+
+\item 
+Template argument deduction for the container begin() succeeds with Container deduced to std::vector<int>, so that the function template is instantiated and called.
+\end{itemize}
+
+The second call to begin(), in which the argument is an array, also partially fails:
+
+\begin{itemize}
+\item 
+Deduction for the array begin() succeeds with T deduced to int and N deduced to 10.
+
+\item 
+Deduction for the container begin() determines that Container should be replaced by int[10]. While in general this substitution is fine, the produced return type Container::iterator is invalid, because an array type does not have a nested type named iterator. In any other context, trying to access a nested type that does not exist would cause an immediate compile-time error. During the substitution of template arguments, SFINAE turns such errors into deduction failures, and the function template is removed from consideration. Thus, the second begin() candidate is ignored and the specialization of the first begin() function template is called.
+\end{itemize}
+
 \subsubsubsection{15.7.1\hspace{0.2cm}Immediate Context}
+
+SFINAE protects against attempts to form invalid types or expressions, including errors due to ambiguities or access control violations, that occur within the immediate context of the function template substitution. Defining the immediate context of a function template substitution is more easily done by defining what is not in that context.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The immediate context includes many things, including various kinds of lookup, alias template substitutions, overload resolution, etc. Arguably the term is a bit of a misnomer, because some of the activities it includes are not closely tied to the function template being substituted.
+\end{tcolorbox}
+
+Specifically, during function template substitution for the purpose of deduction, anything that happens during the instantiation of
+
+\begin{itemize}
+\item 
+the definition of a class template (i.e., its “body” and list of base classes),
+
+\item 
+the definition of a function template (“body” and, in the case of a constructor, its constructorinitializers),
+
+\item 
+the initializer of a variable template,
+
+\item 
+a default argument,
+
+\item 
+a default member initializer, or
+
+\item 
+an exception specification
+\end{itemize}
+
+is not part of the immediate context of that function template substitution. Any implicit definition of special member functions triggered by the substitution process is not part of the immediate context of the substitution either. Everything else is part of that context.
+
+So if substituting the template parameters of a function template declaration requires the instantiation of the body of a class template because a member of that class is being referred to, an error during that instantiation is not in the immediate context of the function template substitution and is therefore a real error (even if another function template matches without error). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Array {
+	public:
+	using iterator = T*;
+};
+
+template<typename T>
+void f(Array<T>::iterator first, Array<T>::iterator last);
+
+template<typename T>
+void f(T*, T*);
+
+int main()
+{
+	f<int&>(0, 0); // ERROR: substituting int& for T in the first function template
+} // instantiates Array<int&>, which then fails
+\end{lstlisting}
+
+The main difference between this example and the prior example is where the failure occurs. In the prior example, the failure occurred when forming a type typename Container::iterator that was in the immediate context of the substitution of function template begin(). In this example, the failure occurs in the instantiation of Array<int\&>, which—although it was triggered from the function template’s context—actually occurs in the context of the class template Array. Therefore, the SFINAE principle does not apply, and the compiler will produce an error.
+
+Here is a C++14 example—relying on deduced return types (see Section 15.10.1 on page 296)—that involves an error during the instantiation of a function template definition:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> auto f(T p) {
+	return p->m;
+}
+
+int f(...);
+
+template<typename T> auto g(T p) -> decltype(f(p));
+
+int main()
+{
+	g(42);
+}
+\end{lstlisting}
+
+The call g(42) deduces T to be int. Making that substitution in the declaration of g() requires us to determine the type of f(p) (where p is now known to be of type int) and therefore to determine the return type of f(). There are two candidates for f(). The nontemplate candidate is a match, but not a very good one because it matches with an ellipsis parameter. Unfortunately, the template candidate has a deduced return type, and so we must instantiate its definition to determine that return type. That instantiation fails because p->m is not valid when p is an int and since the failure is outside the immediate context of the substitution (because it’s in a subsequent instantiation of a function definition), the failure produces an error. Because of this, we recommend avoiding deduced return types if they can easily be specified explicitly.
+
+SFINAE was originally intended to eliminate surprising errors due to unintended matches with function template overloading, as with the container begin() example. However, the ability to detect an invalid expression or type enables remarkable compile-time techniques, allowing one to determine whether a particular syntax is valid. These techniques are discussed in Section 19.4 on page 416.
+
+See especially Section 19.4.4 on page 424 for an example of making a type trait SFINAE-friendly to avoid problems due to the immediate context issue.
+
+
+

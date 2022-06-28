@@ -1,6 +1,5 @@
 The C++ standard library includes a number of templates that are only commonly used with a few basic types. For example, the std::basic\_string class template is most commonly used with char (because std::string is a type alias of std::basic\_string<char>) or wchar\_t, although it is possible to instantiate it with other character-like types. Therefore, it is common for standard library implementations to introduce explicit instantiation declarations for these common cases. For example:
 
-
 \begin{lstlisting}[style=styleCXX]
 namespace std {
 	template<typename charT, typename traits = char_traits<charT>,

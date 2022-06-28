@@ -1,0 +1,73 @@
+When the argument of a function call is an initializer list, that argument doesn’t have a specific type, so in general no deduction will be performed from that given pair (A, P) because there is no A. For example:
+
+\begin{lstlisting}[style=styleCXX]
+#include <initializer_list>
+
+template<typename T> void f(T p);
+
+int main() {
+	f({1, 2, 3}); // ERROR: cannot deduce T from a braced list
+}
+\end{lstlisting}
+
+However, if the parameter type P, after removing references and top-level const and volatile qualifiers, is equivalent to std::initializer\_list<P0> for some type P0 that has a deducible pattern, deduction proceeds by comparing P0 to the type of each element in the initializer list, succeeding only if all of the elements have the same type:
+
+\noindent
+\textit{basics/initlist.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <initializer_list>
+
+template<typename T> void f(std::initializer_list<T>);
+
+int main()
+{
+	f({2, 3, 5, 7, 9}); // OK: T is deduced to int
+	f({’a’, ’e’, ’i’, ’o’, ’u’, 42}); // ERROR: T deduced to both char and int
+}
+\end{lstlisting}
+
+Similarly, if the parameter type P is a reference to an array type with element type P0 for some type P0 that has a deducible pattern, deduction proceeds by comparing P0 to the type of each element in the initializer list, succeeding only if all of the elements have the same type. Furthermore, if the bound has a deducible pattern (i.e., just names a nontype template parameter), then that bound is deduced to the number of elements in the list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

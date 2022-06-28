@@ -1,6 +1,130 @@
 
+The deduction process matches each argument to each parameter to determine the values of template arguments. When performing template argument deduction for variadic templates, however, the 1:1 relationship between parameters and arguments no longer holds, because a parameter pack can match multiple arguments. In this case, the same parameter pack (P) is matched to multiple arguments (A), and each matching produces additional values for any template parameter packs in P:
 
+\begin{lstlisting}[style=styleCXX]
+template<typename First, typename... Rest>
+void f(First first, Rest... rest);
+
+void g(int i, double j, int* k)
+{
+	f(i, j, k); // deduces First to int, Rest to fdouble, int*g
+}
+\end{lstlisting}
+
+Here, the deduction for the first function parameter is simple, since it does not involve any parameter packs. The second function parameter, rest, is a function parameter pack. Its type is a pack expansion (Rest...) whose pattern is the type Rest: This pattern serves as P, to be compared against the types A of the second and third call arguments. When compared against the first such A (the type double), the first value in the template parameter pack Rest is deduced to double. Similarly, when compared against the second such A (the type int*), the second value in the template parameter pack Rest is deduced to int*. Thus, deduction determines the value of the parameter pack Rest to be the sequence \{double, int*\}. Substituting the results of that deduction and the deduction for the first function parameter yields the function type void(int, double, int*), which matches the argument types at the call site.
+
+Because deduction for function parameter packs uses the pattern of the expansion for its comparison, the pattern can be arbitrarily complex, and values for multiple template parameters and parameter packs can be determined from each of the argument types. Consider the deduction behavior of the functions h1() and h2(), below:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U> class pair { };
+
+template<typename T, typename... Rest>
+	void h1(pair<T, Rest> const&...);
+
+template<typename... Ts, typename... Rest>
+	void h2(pair<Ts, Rest> const&...);
+
+void foo(pair<int, float> pif, pair<int, double> pid,
+pair<double, double> pdd)
+{
+	h1(pif, pid); // OK: deduces T to int, Rest to ffloat, doubleg
+	h2(pif, pid); // OK: deduces Ts to fint, intg, Rest to ffloat, doubleg
+	h1(pif, pdd); // ERROR: T deduced to int from the 1st arg, but to double from the 2nd
+	h2(pif, pdd); // OK: deduces Ts to fint, doubleg, Rest to ffloat, doubleg
+}
+\end{lstlisting}
+
+For both h1() and h2(), P is a reference type that is adjusted to the unqualified version of the reference (pair<T, Rest> or pair<Ts, Rest>, respectively) for deduction against each argument type. Since all parameters and arguments are specializations of class template pair, the template arguments are compared. For h1(), the first template argument (T) is not a parameter pack, so its value is deduced independently for each argument. If the deductions differ, as in the second call to h1(), deduction fails. For the second pair template argument in both h1() and h2() (Rest), and for the first pair argument in h2() (Ts), deduction determines successive values for the template parameter packs from each of the argument types in A.
+
+Deduction for parameter packs is not limited to function parameter packs where the argumentparameter pairs come from call arguments. In fact, this deduction is used wherever a pack expansion is at the end of a function parameter list or a template argument list.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}If a pack expansion occurs anywhere else in a function parameter list or template argument list, that pack expansion is considered a nondeduced context.
+\end{tcolorbox}
+
+For example, consider two similar operations on a simple Tuple type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types> class Tuple { };
+
+template<typename... Types>
+bool f1(Tuple<Types...>, Tuple<Types...>);
+
+template<typename... Types1, typename... Types2>
+bool f2(Tuple<Types1...>, Tuple<Types2...>);
+
+void bar(Tuple<short, int, long> sv,
+		Tuple<unsigned short, unsigned, unsigned long> uv)
+{
+	f1(sv, sv); // OK: Types is deduced to fshort, int, longg
+	f2(sv, sv); // OK: Types1 is deduced to fshort, int, longg,
+				// Types2 is deduced to fshort, int, longg
+	f1(sv, uv); // ERROR: Types is deduced to fshort, int, longg from the 1st arg, but
+				// to funsigned short, unsigned, unsigned longg from the 2nd
+	f2(sv, uv); // OK: Types1 is deduced to fshort, int, longg,
+				// Types2 is deduced to funsigned short, unsigned, unsigned longg
+}
+\end{lstlisting}
+
+In both f1() and f2(), the template parameter packs are deduced by comparing the pattern of the pack expansion embedded within the Tuple type (e.g., Types for h1()) against each of the template arguments of the Tuple type provided by the call argument, deducing successive values for the corresponding template parameter pack. The function f1() uses the same template parameter pack Types in both function parameters, ensuring that deduction only succeeds when the two function call arguments have the same Tuple specialization as their type. The function f2(), on the other hand, uses different parameter packs for the Tuple types in each of its function parameters, so the types of the function call arguments can be different—so long as both are specializations of Tuple.
 
 \subsubsubsection{15.5.1\hspace{0.2cm}Literal Operator Templates}
+
+Literal operator templates have their argument determined in a unique way. The following example illustrates this:
+
+\begin{lstlisting}[style=styleCXX]
+template<char...> int operator "" _B7(); // #1
+...
+int a = 121_B7; // #2
+\end{lstlisting}
+
+Here, the initializer for \#2 contains a user-defined literal, which is turned into a call to the literal operator template \#2 with the template argument list <’1’, ’2’, ’1’>. Thus, an implementation of the literal operator such as
+
+\begin{lstlisting}[style=styleCXX]
+template<char... cs>
+int operator"" _B7()
+{
+	std::array<char,sizeof...(cs)> chars{cs...}; // initialize array of passed chars
+	for (char c : chars) { // and use it (print it here)
+		std::cout << "’" << c << "’ ";
+	}
+	std::cout << ’\n’;
+	return ...;
+}
+\end{lstlisting}
+
+will output ’1’ ’2’ ’1’ ’.’ ’5’ for 121.5\_B7.
+
+Note that this technique is only supported for numeric literals that are valid even without the suffix. For example:
+
+\begin{lstlisting}[style=styleCXX]
+auto b = 01.3_B7; // OK: deduces <’0’, ’1’, ’.’, ’3’>
+auto c = 0xFF00_B7; // OK: deduces <’0’, ’x’, ’F’, ’F’, ’0’, ’0’>
+auto d = 0815_B7; // ERROR: 8 is no valid octal literal
+auto e = hello_B7; // ERROR: identifier hello_B7 is not defined
+auto f = "hello"_B7; // ERROR: literal operator _B7 does not match
+\end{lstlisting}
+
+See Section 25.6 on page 599 for an application of the feature to compute integral literals at compile time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

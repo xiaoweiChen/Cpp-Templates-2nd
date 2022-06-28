@@ -1,0 +1,106 @@
+Parameterized types that are considerably more complex than just “T” can be matched to a given argument type. Here are a few examples that are still fairly basic:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f1(T*);
+
+template<typename E, int N>
+void f2(E(&)[N]);
+
+template<typename T1, typename T2, typename T3>
+void f3(T1 (T2::*)(T3*));
+
+class S {
+	public:
+	void f(double*);
+};
+
+void g (int*** ppp)
+{
+	bool b[42];
+	f1(ppp); // deduces T to be int**
+	f2(b); // deduces E to be bool and N to be 42
+	f3(&S::f); // deduces T1 = void, T2 = S, and T3 = double
+}
+\end{lstlisting} 
+
+Complex type declarations are built from more elementary constructs (pointer, reference, array, and function declarators; pointer-to-member declarators; template-ids; and so forth), and the matching process proceeds from the top-level construct and recurses through the composing elements. It is fair to say that most type declaration constructs can be matched in this way, and these are called deduced contexts. However, a few constructs are not deduced contexts. For example:
+
+\begin{itemize}
+\item 
+Qualified type names. For example, a type name like Q<T>::X will never be used to deduce a template parameter T.
+
+\item 
+Nontype expressions that are not just a nontype parameter. For example, a type name like S<I+1> will never be used to deduce I. Neither will T be deduced by matching against a parameter of type int(\&)[sizeof(S<T>)].
+\end{itemize}
+
+These limitations should come as no surprise because the deduction would, in general, not be unique (or even finite), although this limitation of qualified type names is sometimes easily overlooked. A nondeduced context does not automatically imply that the program is in error or even that the parameter being analyzed cannot participate in type deduction. To illustrate this, consider the following, more intricate example:
+
+\noindent
+\textit{basics/fppm.cpp}
+\begin{lstlisting}[style=styleCXX]
+template<int N>
+class X {
+	public:
+	using I = int;
+	void f(int) {
+	}
+};
+
+template<int N>
+void fppm(void (X<N>::*p)(typename X<N>::I));
+
+int main()
+{
+	fppm(&X<33>::f); // fine: N deduced to be 33
+}
+\end{lstlisting}
+
+In the function template fppm(), the subconstruct X<N>::I is a nondeduced context. However, the member-class component X<N> of the pointer-to-member type is a deducible context, and when the parameter N, which is deduced from it, is plugged in the nondeduced context, a type compatible with that of the actual argument \&X<33>::f is obtained. The deduction therefore succeeds on that argument-parameter pair.
+
+Conversely, it is possible to deduce contradictions for a parameter type entirely built from deduced contexts. For example, assuming suitably declared class templates X and Y:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f(X<Y<T>, Y<T>>);
+
+void g()
+{
+	f(X<Y<int>, Y<int>>()); // OK
+	f(X<Y<int>, Y<char>>()); // ERROR: deduction fails
+}
+\end{lstlisting}
+
+The problem with the second call to the function template f() is that the two arguments deduce different arguments for the parameter T, which is not valid. (In both cases, the function call argument is a temporary object obtained by calling the default constructor of the class template X.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

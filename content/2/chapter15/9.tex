@@ -1,0 +1,135 @@
+When a function template argument cannot be deduced, it may be possible to explicitly specify it following the function template name. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> T default_value()
+{
+	return T{};
+}
+
+int main()
+{
+	return default_value<int>();
+}
+\end{lstlisting}
+
+This may be done also for template parameters that are deducible:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void compute(T p)
+{
+	...
+}
+
+int main()
+{
+	compute<double>(2);
+}
+\end{lstlisting}
+
+Once a template argument is explicitly specified, its corresponding parameter is no longer subject to deduction. That, in turn, allows conversions to take place on the function call parameter that would not be possible in a deduced call. In the example above, the argument 2 in the call compute<double>(2) will be implicitly converted to double.
+
+It is possible to explicitly specify some template arguments while having others be deduced. However, the explicitly specified ones are always matched left-to-right with the template parameters. Therefore, parameters that cannot be deduced (or that are likely to be specified explicitly) should be specified first. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Out, typename In>
+Out convert(In p)
+{
+	...
+}
+
+int main() {
+	auto x = convert<double>(42); // the type of parameter p is deduced,
+	// but the return type is explicitly specified
+}
+\end{lstlisting}
+
+It is occasionally useful to specify an empty template argument list to ensure the selected function is a template instance while still using deduction to determine the template arguments:
+
+\begin{lstlisting}[style=styleCXX]
+int f(int); // #1
+template<typename T> T f(T); // #2
+int main() {
+	auto x = f(42); // calls #1
+	auto y = f<>(42); // calls #2
+}
+\end{lstlisting}
+
+Here f(42) selects the nontemplate function because overload resolution prefers an ordinary function over a function template if all other things are equal. However, for f<>(42) the presence of a template argument list rules out the nontemplate function (even though no actual template arguments are specified).
+
+In the context of friend function declarations, the presence of an explicit template argument list has an interesting effect. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+void f();
+template<typename> void f();
+namespace N {
+	class C {
+		friend int f(); // OK
+		friend int f<>(); // ERROR: return type conflict
+	};
+}
+\end{lstlisting}
+
+When a plain identifier is used to name a friend function, that function is only looked up within the nearest enclosing scope, and if it is not found there, a new entity is declared in that scope (but it remains “invisible” except when looked up via argument-dependent lookup (ADL); see Section 13.2.2 on page 220). That is what happens with our first friend declaration above: No f is declared within namespace N, and so a new N::f() is “invisibly” declared.
+
+However, when the identifier naming the friend is followed by a template argument list, a template must be visible through normal lookup at that point, and normal lookup will go up any number of scopes that may be required. So, our second declaration above will find the global function template f(), but the compiler will then issue an error because the return types do not match (since no ADL is performed here, the declaration created by the preceding friend function declaration is ignored).
+
+Explicitly specified template arguments are substituted using SFINAE principles: If the substitution leads to an error in the immediate context of that substitution, the function template is discarded, but other templates may still succeed. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> typename T::EType f(); // #1
+template<typename T> T f(); // #2
+
+int main() {
+	auto x = f<int*>();
+}
+\end{lstlisting}
+
+Here, substituting int* for T in candidate \#1 causes substitution to fail, but in candidate \#2 it succeeds, and therefore that is the candidate selected. In fact, if after substitution exactly one candidate remains, then the name of the function template with the explicit template arguments behaves pretty much like an ordinary function name, including decaying to a pointer-to-function type in many contexts. That is, replacing main() above by
+
+\begin{lstlisting}[style=styleCXX]
+int main() {
+	auto x = f<int*>; // OK: x is a pointer to function
+}
+\end{lstlisting}
+
+produces a valid translation unit. However, the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void f(T);
+template<typename T> void f(T, T);
+
+int main() {
+	auto x = f<int*>; // ERROR: there are two possible f<int*> here
+}
+\end{lstlisting}
+
+is not valid because f<int*> does not identify a single function in that case.
+
+Variadic function templates can be used with explicit template arguments also:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename ... Ts> void f(Ts ... ps);
+
+int main() {
+	f<double, double, int>(1, 2, 3); // OK: 1 and 2 are converted to double
+}
+\end{lstlisting}
+
+Interestingly, a pack can be partially explicitly specified and partially deduced:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename ... Ts> void f(Ts ... ps);
+
+int main() {
+	f<double, int>(1, 2, 3); // OK: the template arguments are <double, int, int>
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+

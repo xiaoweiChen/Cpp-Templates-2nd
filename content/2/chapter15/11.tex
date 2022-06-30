@@ -1,0 +1,64 @@
+Alias templates (see Section 2.8 on page 39) are “transparent” with respect to deduction. That means that wherever an alias template appears with some template arguments, that alias’s definition (i.e., the type to the right of the =) is substituted with the arguments, and the resulting pattern is what is used for the deduction. For example, template argument deduction succeeds in the following three calls:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{deduce/aliastemplate.cpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename Cont>
+class Stack;
+
+template<typename T>
+using DequeStack = Stack<T, std::deque<T>>;
+
+template<typename T, typename Cont>
+void f1(Stack<T, Cont>);
+
+template<typename T>
+void f2(DequeStack<T>);
+
+template<typename T>
+void f3(Stack<T, std::deque<T>); // equivalent to f2
+
+void test(DequeStack<int> intStack)
+{
+	f1(intStack); // OK: T deduced to int, Cont deduced to std::deque<int>
+	f2(intStack); // OK: T deduced to int
+	f3(intStack); // OK: T deduced to int
+}
+\end{lstlisting}
+
+n the first call (to f1()), the use of the alias template DequeStack in the type of intStack has no effect on deduction: The specified type DequeStack<int> is treated as its substituted type Stack<int, std::deque<int>>. The second and third calls have the same deduction behavior, because DequeStack<T> in f2() and the substituted form Stack<T, std::deque<T>> in f3() are equivalent. For the purposes of template argument deduction, template aliases are transparent: They can be used to clarify and simplify code but have no effect on how deduction operates.
+
+Note that this is possible because alias templates cannot be specialized (see Chapter 16 for details on the topic of template specialization). Suppose the following were possible:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> using A = T;
+template<> using A<int> = void; // ERROR, but suppose it were possible...
+\end{lstlisting}
+
+Then we would not be able to match A<T> against type void and conclude that T must be void because both A<int> and A<void> are equivalent to void. The fact that this is not possible guarantees that each use of an alias can be generically expanded according to its definition, which allows it to be transparent for deduction.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

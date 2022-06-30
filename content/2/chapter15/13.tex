@@ -1,0 +1,20 @@
+Template argument deduction for function templates was part of the original C++ design. In fact, the alternative provided by explicit template arguments did not become part of C++ until many years later.
+
+SFINAE is a term that was introduced in the first edition of this book. It quickly became very popular throughout the C++ programming community. However, in C++98, SFINAE was not as powerful as it is now: It only applied to a limited set of type operations and did not cover arbitrary expressions or access control. As more template techniques began to rely on SFINAE (see Section 19.4 on page 416), the need to generalize the SFINAE conditions became apparent. Steve Adamczyk and John Spicer developed the wording that achieved that in C++11 (through paper N2634). Although the wording changes in the standard are relatively small, the implementation effort in some compilers turned out to be disproportionaly large.
+
+The auto type specifier and the decltype construct were among the earliest additions to C++03 that would eventually become C++11. Their development was spearheaded by Bjarne Stroustrup and Jaakko Jarvi (see their papers N1607 for the ¨ auto type specifier and N2343 for decltype).
+
+Stroustrup had already considered the auto syntax in his original implementation of C++ (known as Cfront). When the feature was added to C++11, the original meaning of auto as a storage specifier (inherited from the C language) was retained and a disambiguation rule decided how the keyword should be interpreted. While implementing the feature in the Edison Design Group’s front end, David Vandevoorde discovered that this rule was likely to produce surprises for C++11 programmers (N2337). After examining the issue, the standardization committee decided to drop the traditional use of auto altogether (everywhere the keyword auto is used in a C++03 program, it could just as well be left out) through paper N2546 (by David Vandevoorde and Jens Maurer). This was an unusual precedent of dropping a feature from the language without first deprecating it, but it has since been proven to be the right decision.
+
+GNU’s GCC compiler accepted an extension typeof not unlike the decltype feature, and programmers had found it useful in template programming. Unfortunately, it was a feature developed in the context of the C language and not a perfect fit for C++. The C++ committee could therefore not incorporate it as is, but neither could it modify it, because that would break existing code relying on GCC’s behavior. That is why decltype is not spelled typeof. Jason Merrill and others have made strong arguments that it would be preferable to have distinct operators instead of the current subtle difference between decltype(x) and decltype((x)), but they were not convincing enough to change the final specification.
+
+The ability to declare nontype template parameters with auto in C++17 was primarily developed by Mike Spertus, with help from James Touton, David Vandevoorde, and many others. The specification changes for the feature are written up in P0127R2. Interestingly, it is not clear that the ability to use decltype(auto) instead of auto was intentionally made part of the language (it was apparently not discussed by the committee, but it falls out of the specification).
+
+Mike Spertus also drove the development of class template argument deduction in C++17, with Richard Smith and Faisal Vali contributing significant technical ideas (including the idea of deduction guides). Paper P0091R3 has the specification that was voted into the working paper for the next language standard.
+
+Structured bindings were primarily driven by Herb Sutter, who wrote paper P0144R1 with Gabriel Dos Reis and Bjarne Stroustrup to propose the feature. Many tweaks were made during committee discussions, including the use of brackets to delimit the decomposing identifiers. Jens Maurer translated the proposal into a final specification for the standard (P0217R3).
+
+
+
+
+

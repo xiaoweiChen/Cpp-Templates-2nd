@@ -1,7 +1,373 @@
 
+C++17 introduces a new kind of deduction: Deducing the template parameters of a class type from the arguments specified in an initializer of a variable declaration or a functional-notation type conversion. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, typename T3 = T2>
+class C
+{
+	public:
+	// constructor for 0, 1, 2, or 3 arguments:
+	C (T1 x = T1{}, T2 y = T2{}, T3 z = T3{});
+	...
+};
+
+C c1(22, 44.3, "hi"); // OK in C++17: T1 is int, T2 is double, T3 is char const*
+C c2(22, 44.3); // OK in C++17: T1 is int, T2 and T3 are double
+C c3("hi", "guy"); // OK in C++17: T1, T2, and T3 are char const*
+C c4; // ERROR: T1 and T2 are undefined
+C c5("hi"); // ERROR: T2 is undefined
+\end{lstlisting}
+
+Note that all parameters must be determined by the deduction process or from default arguments. It is not possible to explicitly specify a few arguments and deduce others. For example:
+
+\begin{lstlisting}[style=styleCXX]
+C<string> c10("hi","my", 42); // ERROR: only T1 explicitly specified, T2 not deduced
+C<> c11(22, 44.3, 42); // ERROR: neither T1 nor T2 explicitly specified
+C<string,string> c12("hi","my"); // OK: T1 and T2 are deduced, T3 has default
+\end{lstlisting}
 
 \subsubsubsection{15.12.1\hspace{0.2cm}Deduction Guides}
 
+Consider first a small change to our earlier example from Section 15.8.2 on page 288:
+
+\begin{lstlisting}[style=styleCXX]
+emplate<typename T>
+class S {
+	private:
+	T a;
+	public:
+	S(T b) : a(b) {
+	}
+};
+
+template<typename T> S(T) -> S<T>; // deduction guide
+
+S x{12}; // OK since C++17, same as: S<int> x{12};
+S y(12); // OK since C++17, same as: S<int> y(12);
+auto z = S{12}; // OK since C++17, same as: auto z = S<int>{12};
+\end{lstlisting}
+
+Note in particular the addition of a new template-like construct called a deduction guide. It looks a little like a function template, but it differs syntactically from a function template in a few ways:
+
+\begin{itemize}
+\item 
+The part that looks like a trailing return type cannot be written as a traditional return type. We call the type it designates (S<T> in our example) as the guided type.
+
+\item 
+There is no leading auto keyword to indicate that a trailing return type follows.
+
+\item 
+The “name” of a deduction guide must be the unqualified name of a class template declared earlier in the same scope.
+
+\item 
+The guided type of the guide must be a template-id whose template name corresponds to the guide name.
+
+\item 
+It can be declared with the explicit specifier.
+\end{itemize}	
+
+In the declaration S x(12); the specifier S is called a placeholder class type.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note the distinction between a placeholder type, which is auto or decltype(auto) and can resolve to any kind of type, and a placeholder class type, which is a template name and can only resolve to a class type that is an instance of the indicated template.
+\end{tcolorbox}
+
+When such a placeholder is used, the name of the variable being declared must follow immediately and that in turn must be followed by an initializer. The following is therefore invalid:
+	
+\begin{lstlisting}[style=styleCXX]
+S* p = &x; // ERROR: syntax not permitted
+\end{lstlisting}
+
+With the guide as written in the example, the declaration S x(12); deduces the type of the variable by treating the deduction guides associated with class S as an overload set and attempting overload resolution with the initializer against that overload set. In this case, the set has only one guide in it, and it successfully deduces T to be int and the guide’s guided type to be S<int>.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}As with ordinary function template deduction, SFINAE could apply if, for example, substituting the deduced arguments in the guided type failed. That is not the case in this simple example.
+\end{tcolorbox}
+
+That guided type is therefore selected as the type of the declaration.
+
+Note that in the case of multiple declarators following a class template name requiring deduction, the initializer for each of those declarators has to produce the same type. For example, with the declarations above:
+
+\begin{lstlisting}[style=styleCXX]
+S s1(1), s2(2.0); // ERROR: deduces S both as S<int> and S<double>
+\end{lstlisting}
+
+This is similar to the constraints when deducing the C++11 placeholder type auto.
+
+In the previous example, there is an implicit connection between the deduction guide we declared and the constructor S(T b) declared in class S. However, such a connection is not required, which means that deduction guides can be used with aggregate class templates:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct A
+{
+	T val;
+};
+
+template<typename T> A(T) -> A<T>; // deduction guide
+\end{lstlisting}
+
+Without the deduction guide, we are always required (even in C++17) to specify explicit template arguments:
+
+\begin{lstlisting}[style=styleCXX]
+A<int> a1{42}; // OK
+A<int> a2(42); // ERROR: not aggregate initialization
+A<int> a3 = {42}; // OK
+A a4 = 42; // ERROR: can’t deduce type
+\end{lstlisting}
+
+But with the guide as written above, we can write:
+
+\begin{lstlisting}[style=styleCXX]
+A a4 = { 42 }; // OK
+\end{lstlisting}
+
+A subtlety in cases like these, however, is that the initializer must still be a valid aggregate initializer; that is, it must use a braced initializer list. The following alternatives are therefore not permitted:
+
+\begin{lstlisting}[style=styleCXX]
+A a5(42); // ERROR: not aggregate initialization
+A a6 = 42; // ERROR: not aggregate initialization
+\end{lstlisting}
+
 \subsubsubsection{15.12.2\hspace{0.2cm}Implicit Deduction Guides}
 
+Quite often, a deduction guide is desirable for every constructor in a class template. That led the designers of class template argument deduction to include an implicit mechanism for the deduction. It is equivalent to introducing for every constructor and constructor template of the primary class template 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Chapter 16 introduces the ability to “specialize” class templates in various ways. Such specializations do not participate in class template argument deduction.
+\end{tcolorbox}
+
+an implicit deduction guide as follows:
+
+\begin{itemize}
+\item 
+The template parameter list for the implicit guide consists of the template parameters for the class template, followed, in the constructor template case, by the template parameters of the constructor template. The template parameters of the constructor template retain any default arguments.
+
+\item 
+The “function-like” parameters of the guide are copied from the constructor or constructor template.
+
+\item 
+The guided type of the guide is the name of the template with arguments that are the template parameters taken from the class template.
+\end{itemize}	
+
+Let’s apply this on our original simple class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class S {
+	private:
+	T a;
+	public:
+	S(T b) : a(b) {
+	}
+};
+\end{lstlisting}
+
+The template parameter list is typename T, the function-like parameter list becomes just (T b), and the guided type is then S<T>. Thus, we obtain a guide that’s equivalent to the user-declared guide we wrote earlier: That guide was therefore not required to achieve our desired effect! That is, with just the simple class template as originally written (and no deduction guide), we can validly write S x(12); with the expected result that x has type S<int>.
+
+Deduction guides have an unfortunate ambiguity. Consider again our simple class template S and the following initializations:
+
+\begin{lstlisting}[style=styleCXX]
+S x{12}; // x has type S<int>
+S y{s1};
+S z(s1);
+\end{lstlisting}
+
+We already saw that x has type S<int>, but what should the type of x and y be? The two types that arise intuitively are S<S<int>> and S<int>. The committee decided somewhat controversially that it should be S<int> in both cases. Why is this controversial? Consider a similar example with a vector type:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector v{1, 2, 3}; // vector<int>, not surprising
+std::vector w2{v, v}; // vector<vector<int>>
+std::vector w1{v}; // vector<int>!
+\end{lstlisting}
+
+In other words, a braced initializer with one element deduces differently from a braced initializer with multiple elements. Often, the one-element outcome is what is desired, but the inconsistency is somewhat subtle. In generic code, however, it is easy to miss the subtlety:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Ts>
+auto f(T p, Ts... ps) {
+	std::vector v{p, ps...}; // type depends on pack length
+	...
+}
+\end{lstlisting}
+
+Here it is easy to forget that if T is deduced to be a vector type, the type of v will be fundamentally different depending on whether ps is an empty or a nonempty pack.
+
+The addition of implicit template guides themselves was not without controversy. The main argument against their inclusion is that the feature automatically adds interfaces to existing libraries. To understand this, consider once more our simple class template S above. Its definition has been valid since templates were introduced in C++. Suppose, however, that the author of S expands library causing S to be defined in a more elaborate way:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct ValueArg {
+	using Type = T;
+};
+
+template<typename T>
+class S {
+	private:
+	T a;
+	public:
+	using ArgType = typename ValueArg<T>::Type;
+	S(ArgType b) : a(b) {
+	}
+};
+\end{lstlisting}
+
+Prior to C++17, transformations like these (which are not uncommon) did not affect existing code. However, in C++17 they disable implicit deduction guides. To see this, let’s write a deduction guide corresponding to the one produced by the implicit deduction guide construction process outlined above: The template parameter list and the guided type are unchanged, but the function-like parameter is now written in terms of ArgType, which is typename ValueArg<T>::Type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename> S(typename ValueArg<T>::Type) -> S<T>;
+\end{lstlisting}
+
+Recall from Section 15.2 on page 271 that a name qualifier like ValueArg<T>:: is not a deduced context. So a deduction guide of this form is useless and will not resolve a declaration like S x(12);. In other words, a library writer performing this kind of transformation is likely to break client code in C++17.
+
+What is a library writer to do given that situation? Our advice is to carefully consider for each constructor whether you want to offer it as a source for an implicit deduction guide for the remainder of the library’s lifetime. If not, replace each instance of a deducible constructor parameter of type X by something like typename ValueArg<X>::Type. There is unfortunately no simpler way to “opt out” of implicit deduction guides.
+
+
+
 \subsubsubsection{15.12.3\hspace{0.2cm}Other Subtleties}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Injected Class Names}
+
+Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> struct X {
+	template<typename Iter> X(Iter b, Iter e);
+	template<typename Iter> auto f(Iter b, Iter e) {
+		return X(b, e); // What is this?
+	}
+};
+\end{lstlisting}
+
+This code is valid C++14: The X in X(b, e) is the injected class name and is equivalent to X<T> in this context (see Section 13.2.3 on page 221). The rules for class template argument deduction, however, would naturally make that X equivalent to X<Iter>.
+
+In order to maintain backward compatibility, however, class template argument deduction is disabled if the name of the template is an injected class name.
+
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Forwarding References}
+
+Consider another example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> struct Y {
+	Y(T const&);
+	Y(T&&);
+};
+void g(std::string s) {
+	Y y = s;
+}
+\end{lstlisting}
+
+Clearly, the intent here is that we deduce T to be std::string through the implicit deduction guide associated with the copy constructor. Writing the implicit deduction guides as explicitly declared guides reveals a surprise, however:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> Y(T const&) -> Y<T>; // #1
+template<typename T> Y(T&&) -> Y<T>; // #2
+\end{lstlisting}
+
+Recall from Section 15.6 on page 277 that T\&\& behaves specially during template argument deduction: As a forwarding reference, it causes T to be deduced to a reference type if the corresponding call argument is an lvalue. In our example above, the argument in the deduction process is the expression s, which is an lvalue. Implicit guide \#1 deduces T to be std::string but requires the argument to be adjusted from std::string to std::string const. Guide \#2 , however, would normally deduce T to be a reference type std::string\& and produce a parameter of that same type (because of the reference collapsing rule), which is a better match because no const must be added for type adjustment purposes.
+
+This outcome would be rather surprising and likely would result in instantiation errors (when the class template parameter is used in contexts that do not permit reference types) or, worse, silent production of misbehaving instantiations (e.g., producing dangling references).
+
+The C++ standardization committee therefore decided to disable the special deduction rule for T\&\& when performing deduction for implicit deduction guides if the T was originally a class template parameter (as opposed to a constructor template parameter; for those, the special deduction rule remains). The example above thus deduces T to be std::string, as would be expected.
+
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{The explicit Keyword}
+
+A deduction guide can be declared with the keyword explicit. It is then considered only for directinitialization cases, not for copy-initialization cases. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U> struct Z {
+	Z(T const&);
+	Z(T&&);
+};
+
+template<typename T> Z(T const&) -> Z<T, T&>; // #1
+template<typename T> explicit Z(T&&) -> Z<T, T>; // #2
+
+Z z1 = 1; // only considers #1 ; same as: Z<int, int&> z1 = 1;
+Z z2{2}; // prefers #2 ; same as: Z<int, int> z2{2};
+\end{lstlisting}
+
+Note how the initialization of z1 is copy-initialization, and therefore the deduction guide \#2 is not considered because it is declared explicit.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Copy Construction and Initializer Lists}
+
+Consider the following class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename ... Ts> struct Tuple {
+	Tuple(Ts...);
+	Tuple(Tuple<Ts...> const&);
+};
+\end{lstlisting}
+
+To understand the effect of the implicit guides, let’s write them as explicit declarations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts> Tuple(Ts...) -> Tuple<Ts...>;
+template<typename... Ts> Tuple(Tuple<Ts...> const&) -> Tuple<Ts...>;
+\end{lstlisting}
+
+Now consider some examples:
+
+\begin{lstlisting}[style=styleCXX]
+auto x = Tuple{1,2};
+\end{lstlisting}
+
+This clearly selects the first guide and therefore the first constructor: x is therefore a Tuple<int, int>. Let’s continue with some examples that use syntax that is suggestive of copying x:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple a = x;
+Tuple b(x);
+\end{lstlisting}
+
+For both a and b, both guides match. The first guide selects type Tuple<Tuple<int, int>, whereas the guide associated with the copy constructor produces Tuple<int, int>. Fortunately, the second guide is a better match, and therefore both a and b are copy-constructed from x.
+
+Now, consider some examples using braced initializer lists:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple c{x, x};
+Tuple d{x};
+\end{lstlisting}
+
+The first of these examples (x) can only match the first guide, and so produces Tuple<Tuple<int, int>, Tuple<int, int>>. That is entirely intuitive and not a surprise. That would suggest that the second example should deduce d to be of type Tuple<Tuple<int>>. Instead, however, it is treated as a copy construction (i.e., the second implicit guide is preferred). This also happens with functional-notation casts:
+
+\begin{lstlisting}[style=styleCXX]
+auto e = Tuple{x};
+\end{lstlisting}
+
+Here, e is deduced to be a Tuple<int, int>, not a Tuple<Tuple<int>>.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Guides Are for Deduction Only}
+
+Deduction guides are not function templates: They are only used to deduce template parameters and are not “called.” That means that the difference between passing arguments by reference or by value is not important for guiding declarations. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> struct X {
+	...
+};
+
+template<typename T> struct Y {
+	Y(X<T> const&);
+	Y(X<T>&&);
+};
+
+template<typename T> Y(X<T>) -> Y<T>;
+\end{lstlisting}
+
+Note how the deduction guide does not quite correspond to the two constructors of Y. However, that does not matter, because the guide is only used for deduction. Given a value xtt of type X<TT>—lvalue or rvalue—it will select the deduced type Y<TT>. Then, initialization will perform overload resolution on the constructors of Y<TT> to decide which one to call (which will depend on whether xtt is an lvalue or an rvalue).
+
+
+
+
+

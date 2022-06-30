@@ -1,14 +1,529 @@
 
 
+In the previous section we saw that two function templates with the same name can coexist, even though they may be instantiated so that both have identical parameter types. Here is another simple example of this:
 
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{deduce/funcoverload1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+int f(T)
+{
+	return 1;
+}
+
+template<typename T>
+int f(T*)
+{
+	return 2;
+}
+\end{lstlisting}
+
+When T is substituted by int* in the first template, a function is obtained that has exactly the same parameter (and return) types as the one obtained by substituting int for T in the second template. Not only can these templates coexist, their respective instantiations can coexist even if they have identical parameter and return types.
+
+The following demonstrates how two such generated functions can be called using explicit template argument syntax (assuming the previous template declarations):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{deduce/funcoverload1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include "funcoverload1.hpp"
+int main()
+{
+	std::cout << f<int*>((int*)nullptr); // calls f<T>(T)
+	std::cout << f<int>((int*)nullptr); // calls f<T>(T*)
+}
+\end{lstlisting}
+
+This program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+12
+\end{tcblisting}
+
+To clarify this, let’s analyze the call f<int*>((int*)nullptr) in detail. The syntax f<int*>() indicates that we want to substitute the first template parameter of the template f() with int* without relying on template argument deduction. In this case there is more than one template f(), and therefore an overload set is created containing two functions generated from templates: f<int*>(int*) (generated from the first template) and f<int*>(int**) (generated from the second template). The argument to the call (int*)nullptr has type int*. This matches only the function generated from the first template, and hence that is the function that ends up being called.
+
+For the second call, on the other hand, the created overloading set contains f<int>(int) (generated from the first template) and f<int>(int*) (generated from the second template), so that only the second template matches.
 
 \subsubsubsection{16.2.1\hspace{0.2cm}Signatures}
 
+Two functions can coexist in a program if they have distinct signatures. We define the signature of a function as the following information:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This definition differs from that given in the C++ standard, but its consequences are equivalent.
+\end{tcolorbox}
+
+\begin{enumerate}
+\item 
+The unqualified name of the function (or the name of the function template from which it was 	generated)
+
+\item 
+The class or namespace scope of that name and, if the name has internal linkage, the translation unit in which the name is declared
+
+\item 
+ The const, volatile, or const volatile qualification of the function (if it is a member function with such a qualifier)
+
+\item 
+The \& or \&\& qualification of the function (if it is a member function with such a qualifier)
+
+\item 
+The types of the function parameters (before template parameters are substituted if the function is generated from a function template)
+
+\item 
+Its return type, if the function is generated from a function template
+
+\item 
+The template parameters and the template arguments, if the function is generated from a function template
+\end{enumerate}
+
+This means that the following templates and their instantiations could, in principle, coexist in the same program:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+void f1(T1, T2);
+
+template<typename T1, typename T2>
+void f1(T2, T1);
+
+template<typename T>
+long f2(T);
+
+template<typename T>
+char f2(T);
+\end{lstlisting}
+
+However, they cannot always be used when they’re declared in the same scope because instantiating both creates an overload ambiguity. For example, calling f2(42) when both the templates above are declared will clearly create an ambiguity. Another example is illustrated below:
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+template<typename T1, typename T2>
+void f1(T1, T2)
+{
+	std::cout << "f1(T1, T2)\n";
+}
+
+template<typename T1, typename T2>
+void f1(T2, T1)
+{
+	std::cout << "f1(T2, T1)\n";
+}
+
+// fine so far
+int main()
+{
+	f1<char, char>(’a’, ’b’); // ERROR: ambiguous
+}
+\end{lstlisting}
+
+Here, the function
+
+\begin{lstlisting}[style=styleCXX]
+f1<T1 = char, T2 = char>(T1, T2)
+\end{lstlisting}
+
+can coexist with the function
+
+\begin{lstlisting}[style=styleCXX]
+f1<T1 = char, T2 = char>(T2, T1)
+\end{lstlisting}
+
+but overload resolution will never prefer one over the other. If the templates appear in different translation units, then the two instantiations can actually exist in the same program (and, e.g., a linker should not complain about duplicate definitions because the signatures of the instantiations are distinct):
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+#include <iostream>
+
+template<typename T1, typename T2>
+void f1(T1, T2)
+{
+	std::cout << "f1(T1, T2)\n";
+}
+
+void g()
+{
+	f1<char, char>(’a’, ’b’);
+}
+
+// translation unit 2:
+#include <iostream>
+
+template<typename T1, typename T2>
+void f1(T2, T1)
+{
+	std::cout << "f1(T2, T1)\n";
+}
+
+extern void g(); // defined in translation unit 1
+
+int main()
+{
+	f1<char, char>(’a’, ’b’);
+	g();
+}
+\end{lstlisting}
+
+This program is valid and produces the following output:
+
+\begin{tcblisting}{commandshell={}}
+f1(T2, T1)
+f1(T1, T2)
+\end{tcblisting}
+
 \subsubsubsection{16.2.2\hspace{0.2cm}Partial Ordering of Overloaded Function Templates}
+
+Reconsider our earlier example: We found that after substituting the given template argument lists (<int*> and <int>), overload resolution ended up selecting the right function to call:
+
+\begin{tcblisting}{commandshell={}}
+std::cout << f<int*>((int*)nullptr); // calls f<T>(T)
+std::cout << f<int>((int*)nullptr); // calls f<T>(T*)
+\end{tcblisting}
+
+However, a function is selected even when explicit template arguments are not provided. In this case, template argument deduction comes into play. Let’s slightly modify function main() in the previous example to discuss this mechanism:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{deduce/funcoverload2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+int f(T)
+{
+	return 1;
+}
+
+template<typename T>
+int f(T*)
+{
+	return 2;
+}
+
+int main()
+{
+	std::cout << f(0); // calls f<T>(T)
+	std::cout << f(nullptr); // calls f<T>(T)
+	std::cout << f((int*)nullptr); // calls f<T>(T*)
+}
+\end{lstlisting}
+
+Consider the first call, f(0): The type of the argument is int, which matches the type of the parameter of the first template if we substitute T with int. However, the parameter type of the second template is always a pointer and, hence, after deduction, only an instance generated from the first template is a candidate for the call. In this case overload resolution is trivial.
+
+The same applies to the second call: f(nullptr): The type of the argument is std::nullptr\_t, which again only matches for the first template.
+
+The third call (f((int*)nullptr)) is more interesting: Argument deduction succeeds for both templates, yielding the functions f<int*>(int*) and f<int>(int*). From a traditional overload resolution perspective, both are equally good functions to call with an int* argument, which would suggest that the call is ambiguous (see Appendix C). However, in this sort of case, an additional overload resolution criterion comes into play: The function generated from the more specialized template is selected. Here (as we see shortly), the second template is considered more specialized and thus the output of our example is
+
+\begin{tcblisting}{commandshell={}}
+112
+\end{tcblisting}
 
 \subsubsubsection{16.2.3\hspace{0.2cm}Formal Ordering Rules}
 
+In our last example, it may seem very intuitive that the second template is more special than the first because the first can accommodate just about any argument type, whereas the second allows only pointer types. However, other examples are not necessarily as intuitive. In what follows, we describe the exact procedure to determine whether one function template participating in an overload set is more specialized than the other. Note that these are partial ordering rules: It is possible that given two templates, neither can be considered more specialized than the other. If overload resolution must select between two such templates, no decision can be made, and the program contains an ambiguity error.
+
+Let’s assume we are comparing two identically named function templates that seem viable for a given function call. Overload resolution is decided as follows:
+
+
+\begin{itemize}
+\item 
+Function call parameters that are covered by a default argument and ellipsis parameters that are not used are ignored in what follows.
+
+\item 
+We then synthesize two artificial lists of argument types (or for conversion function templates, a return type) by substituting every template parameter as follows:
+
+\begin{enumerate}
+\item 
+Replace each template type parameter with a unique invented type.
+
+\item 
+Replace each template template parameter with a unique invented class template.
+
+\item 
+Replace each nontype template parameter with a unique invented value of the appropriate type.
+\end{enumerate}
+
+(Types, templates, and values that are invented in this context are distinct from any other types, templates, or values that either the programmer used or the compiler synthesized in other contexts.)
+
+\item 
+If template argument deduction of the second template against the first synthesized list of argument types succeeds with an exact match, but not vice versa, then the first template is more specialized than the second. Conversely, if template argument deduction of the first template against the second synthesized list of argument types succeeds with an exact match, but not vice versa, then the second template is more specialized than the first. Otherwise (either no deduction succeeds or both succeed), there is no ordering between the two templates.
+\end{itemize}
+
+Let’s make this concrete by applying it to the two templates in our last example. From these two templates, we synthesize two lists of argument types by replacing the template parameters as described earlier: (A1) and (A2*) (where A1 and A2 are unique made up types). Clearly, deduction of the first template against the second list of argument types succeeds by substituting A2* for T. However, there is no way to make T* of the second template match the nonpointer type A1 in the first list. Hence, we formally conclude that the second template is more specialized than the first.
+
+Consider a more intricate example involving multiple function parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void t(T*, T const* = nullptr, ...);
+
+template<typename T>
+void t(T const*, T*, T* = nullptr);
+
+void example(int* p)
+{
+	t(p, p);
+}
+\end{lstlisting}
+
+First, because the actual call does not use the ellipsis parameter for the first template and the last parameter of the second template is covered by its default argument, these parameters are ignored in the partial ordering. Note that the default argument of the first template is not used; hence the corresponding parameter participates in the ordering.
+
+The synthesized lists of argument types are (A1*, A1 const*) and (A2 const*, A2*). Template argument deduction of (A1*, A1 const*) versus the second template actually succeeds with the substitution of T with A1 const, but the resulting match is not exact because a qualification adjustment is needed to call t<A1 const>(A1 const*, A1 const*, A1 const* = 0) with arguments of types (A1*, A1 const*). Similarly, no exact match can be found by deducing template arguments for the first template from the argument type list (A2 const*, A2*). Therefore, there is no ordering relationship between the two templates, and the call is ambiguous.
+
+The formal ordering rules generally result in the intuitive selection of function templates. Once in a while, however, an example comes up for which the rules do not select the intuitive choice. It is therefore possible that the rules will be revised to accommodate those examples in the future.
+
 \subsubsubsection{16.2.4\hspace{0.2cm}Templates and Nontemplates}
 
+Function templates can be overloaded with nontemplate functions. All else being equal, the nontemplate function is preferred in selecting the actual function being called. The following example illustrates this:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{details/nontmpl1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <iostream>
+
+template<typename T>
+std::string f(T)
+{
+	return "Template";
+}
+
+std::string f(int&)
+{
+	return "Nontemplate";
+}
+
+int main()
+{
+	int x = 7;
+	std::cout << f(x) << ’\n’; // prints: Nontemplate
+}
+\end{lstlisting}
+
+This outputs
+
+\begin{tcblisting}{commandshell={}}
+Nontemplate
+\end{tcblisting}
+
+However, when const and reference qualifiers differ, priorities for overload resolution can change. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{details/nontmpl2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <iostream>
+
+template<typename T>
+std::string f(T&)
+{
+	return "Template";
+}
+
+std::string f(int const&)
+{
+	return "Nontemplate";
+}
+
+int main()
+{
+	int x = 7;
+	std::cout << f(x) << ’\n’; // prints: Template
+	int const c = 7;
+	std::cout << f(c) << ’\n’; // prints: Nontemplate
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+Template
+Nontemplate
+\end{tcblisting}
+
+Now, the function template f<>(T\&) is a better match when passing a nonconstant int. The reason is that for an int the instantiated f<>(int\&) is a better match than f(int const\&). Thus, the difference is not only the fact that one function is a template and the other is not. In that case the general rules of overload resolution apply (see Section C.2 on page 682). Only when calling f() for a int const, do both signatures have the same type int const\&, so that the nontemplate is preferred.
+
+For this reason, it’s a good idea to declare the member function template as
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+std::string f(T const&)
+{
+	return "Template";
+}
+\end{lstlisting}
+
+Nevertheless, this effect can easily occur accidentally and cause surprising behavior when member functions are defined that accept the same arguments as copy or move constructors. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{details/tmplconstr.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+#include <iostream>
+
+class C {
+	public:
+	C() = default;
+	C (C const&) {
+		std::cout << "copy constructor\n";
+	}
+	C (C&&) {
+		std::cout << "move constructor\n";
+	}
+	template<typename T>
+	C (T&&) {
+		std::cout << "template constructor\n";
+	}
+};
+
+int main()
+{
+	C x;
+	C x2{x}; // prints: template constructor
+	C x3{std::move(x)}; // prints: move constructor
+	C const c;
+	C x4{c}; // prints: copy constructor
+	C x5{std::move(c)}; // prints: template constructor
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+template constructor
+move constructor
+copy constructor
+template constructor
+\end{tcblisting}
+
+Thus, the member function template is a better match for copying a C than the copy constructor. And for std::move(c), which yields type C const\&\& (a type that is possible but usually doesn’t have meaningful semantics), the member function template also is a better match than the move constructor.
+
+For this reason, usually you have to partially disable such member function templates when they might hide copy or move constructors. This is explained in Section 6.4 on page 99.
+
+
 \subsubsubsection{16.2.5\hspace{0.2cm}Variadic Function Templates}
+
+Variadic function templates (see Section 12.4 on page 200) require some special treatment during partial ordering, because deduction for a parameter pack (described in Section 15.5 on page 275) matches a single parameter to multiple arguments. This behavior introduces several interesting situations for function template ordering, illustrated by the following example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{details/variadicoverload.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+int f(T*)
+{
+	return 1;
+}
+
+template<typename... Ts>
+int f(Ts...)
+{
+	return 2;
+}
+
+template<typename... Ts>
+int f(Ts*...)
+{
+	return 3;
+}
+
+int main()
+{
+	std::cout << f(0, 0.0); // calls f<>(Ts...)
+	std::cout << f((int*)nullptr, (double*)nullptr); // calls f<>(Ts*...)
+	std::cout << f((int*)nullptr); // calls f<>(T*)
+}
+\end{lstlisting}
+
+The output of this example, which we will discuss in a moment, is
+
+\begin{tcblisting}{commandshell={}}
+231
+\end{tcblisting}
+
+In the first call, f(0, 0.0), each of the function templates named f is considered. For the first function template, f(T*), deduction fails both because the template parameter T cannot be deduced and because there are more function arguments than parameters for this nonvariadic function template. The second function template, f(Ts...), is variadic: Deduction in this case compares the pattern of a function parameter pack (Ts) against against the types of the two arguments (int and double, respectively), deducing Ts to the sequence (int, double). For the third function template, f(Ts*...), deduction compares the pattern of the function parameter pack Ts* against each of the argument types. This deduction fails (Ts cannot be deduced), leaving only the second function template viable. Function template ordering is not required.
+
+The second call, f((int*)nullptr, (double*)nullptr), is more interesting: Deduction fails for the first function template because there are more function arguments than parameters, but deduction succeeds for the second and third templates. Written explicitly, the resulting calls would be
+
+\begin{lstlisting}[style=styleCXX]
+f<int*,double*>((int*)nullptr, (double*)nullptr) // for second template
+\end{lstlisting}
+
+and
+
+\begin{lstlisting}[style=styleCXX]
+f<int,double>((int*)nullptr, (double*)nullptr) // for third template
+\end{lstlisting}
+
+Partial ordering then considers the second and third templates, both of which are variadic as follows: When applying the formal ordering rules described in Section 16.2.3 on page 331 to a variadic template, each template parameter pack is replaced by a single made-up type, class template, or value. For example, this means that the synthesized argument types for the second and third function templates are A1 and A2*, respectively, where A1 and A2 are unique, made-up types. Deduction of the second template against the third’s list of argument types succeeds by substituting the single-element sequence (A2*) for the parameter pack Ts. However, there is no way to make the pattern Ts* of the third template’s parameter pack match the nonpointer type A1, so the third function template (which accepts pointer arguments) is considered more specialized than the second function template (which accepts any arguments).
+
+The third call, f((int*)nullptr), introduces a new wrinkle: Deduction succeeds for all three of the function templates, requiring partial ordering to compare a nonvariadic template to a variadic template. To illustrate, we compare the first and third function templates. Here, the synthesized argument types are A1* and A2*, where A1 and A2 are unique, made-up types. Deduction of the first template against the third’s synthesized argument list would normally succeed by substituting A2 for T. In the other direction, deduction of the third template against the first’s synthesized argument list succeeds by substituting the single-element sequence (A1) for the parameter pack Ts. Partial ordering between the first and third templates would normally result in an ambiguity. However, a special rule prohibits an argument that originally came from a function parameter pack (e.g., the third template’s parameter pack Ts*...) from matching a parameter that is not a parameter pack (the first template’s parameter T *). Hence, template deduction of the first template against the third’s synthesized argument list fails, and the first template is considered more specialized than the third. This special rule effectively considers nonvariadic templates (those with a fixed number of parameters) to be more specialized than variadic templates (with a variable number of parameters).
+
+The rules described above apply equally to pack expansions that occur in types in the function signature. For example, we can wrap the parameters and arguments of each of the function templates in our previous example into a variadic class template Tuple to arrive at a similar example not involving function parameter packs:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{details/tupleoverload.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename... Ts> class Tuple
+{
+};
+
+template<typename T>
+int f(Tuple<T*>)
+{
+	return 1;
+}
+
+template<typename... Ts>
+int f(Tuple<Ts...>)
+{
+	return 2;
+}
+
+template<typename... Ts>
+int f(Tuple<Ts*...>)
+{
+	return 3;
+}
+
+int main()
+{
+	std::cout << f(Tuple<int, double>()); // calls f<>(Tuple<Ts...>)
+	std::cout << f(Tuple<int*, double*>()); // calls f<>(Tuple<Ts*...>)
+	std::cout << f(Tuple<int*>()); // calls f<>(Tuple<T*>)
+}
+\end{lstlisting}
+
+Function template ordering considers the pack expansions in the template arguments to Tuple analogously to the function parameter packs in our previous example, resulting in the same output:
+
+\begin{tcblisting}{commandshell={}}
+231
+\end{tcblisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

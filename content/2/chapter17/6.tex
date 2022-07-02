@@ -1,0 +1,86 @@
+Template argument deduction for pack expansions only works when the pack expansion occurs at the end of the parameter or argument list. This means that while it is fairly simple to extract the first element from a list:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+struct Front;
+
+template<typename FrontT, typename... Types>
+struct Front<FrontT, Types...> {
+	using Type = FrontT;
+};
+\end{lstlisting}
+
+one cannot easily extract the last element of the list due to the restrictions placed on partial specializations described in Section 16.4 on page 347:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+struct Back;
+
+template<typename BackT, typename... Types>
+struct Back<Types..., BackT> { // ERROR: pack expansion not at the end of
+	using Type = BackT; // template argument list
+};
+\end{lstlisting}
+
+Template argument deduction for variadic function templates is similarly restricted. It is plausible that the rules regarding template argument deduction of pack expansions and partial specializations will be relaxed to allow the pack expansion to occur anywhere in the template argument list, making this kind of operation far simpler. Moreover, it is possible—albeit less likely—that deduction could permit multiple pack expansions within the same parameter list:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types> class Tuple {
+};
+
+template<typename T, typename... Types>
+struct Split;
+
+template<typename T, typename... Before, typename... After>
+struct Split<T, Before..., T, After...> {
+	using before = Tuple<Before...>;
+	using after = Tuple<After...>;
+};
+\end{lstlisting}
+
+Allowing multiple pack expansions introduces additional complexity. For example, does Split separate at the first occurrence of T, the last occurrence, or one in between? How complicated can the deduction process become before the compiler is permitted to give up?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

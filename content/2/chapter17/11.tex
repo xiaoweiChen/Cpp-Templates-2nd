@@ -1,0 +1,67 @@
+Another upcoming major extension, modules, is only peripherally related to templates, but it is still worth mentioning here because template libraries are among the greatest beneficiaries of them.
+
+Currently, library interfaces are specified in header files that are textually \#included into translation units. There are several downsides to this approach, but the two most objectionable ones are that (a) the meaning of the interface text may be accidentally modified by previously included code (e.g., through macros), and (b) reprocessing that text every time quickly dominates build times.
+
+Modules are a feature that allows library interfaces to be compiled into a compiler-specific format, and then those interfaces can be “imported” into translation units without being subject to macro expansion or modification of the meaning of code by the accidental presence of addition declarations. What’s more, a compiler can arrange to read only those parts of a compiled module file that are relevant to the client code, thereby drastically accelerating the compilation process.
+
+Here is what a module definition may look like:
+
+\begin{lstlisting}[style=styleCXX]
+module MyLib;
+
+void helper() {
+	...
+}
+
+export inline void libFunc() {
+	...
+	helper();
+	...
+}
+\end{lstlisting}
+
+This module exports a function libFunc() that can be used in client code as follows:
+
+\begin{lstlisting}[style=styleCXX]
+import MyLib;
+int main() {
+	libFunc();
+}
+\end{lstlisting}
+
+Note that libFunc() is made visible to client code but the function helper() is not, even though the compiled module file will likely contain information about helper() to enable inlining.
+
+The proposal to add modules to C++ is well on its way, and the standardization committee is aiming at integrating it after C++17. One of the concerns in developing such a proposal is how to transition from a world of header files to a world of modules. There are already facilities to enable this to some degree (e.g., the ability to include header files without making their contents part of the module), and additional ones still under discussion (e.g., the ability to export macros from modules).
+
+Modules are particularly useful for template libraries because templates are almost always fully defined in header files. Even including a basic standard header like <vector> amounts to processing tens of thousands of lines of C++ code (even when only a small number of the declarations in that header will be referenced). Other popular libraries increase this by an order of magnitude. Avoiding the costs of all this compilation will be of major interest to the C++ programmers dealing with large, complex code bases.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

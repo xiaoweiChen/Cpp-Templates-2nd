@@ -1,3 +1,71 @@
 
-\subsubsubsection{2.3.1\hspace{0.2cm}Concepts}
+In Chapter 16 we discussed how class templates can be partially specialized, whereas function templates are simply overloaded. The two mechanisms are somewhat different.
+
+Partial specialization doesn’t introduce a completely new template: It is an extension of an existing template (the primary template). When a class template is looked up, only primary templates are considered at first. If, after the selection of a primary template, it turns out that there is a partial specialization of that template with a template argument pattern that matches that of the instantiation, its definition (in other words, its body) is instantiated instead of the definition of the primary template. (Full template specializations work exactly the same way.)
+
+In contrast, overloaded function templates are separate templates that are completely independent of one another. When selecting which template to instantiate, all the overloaded templates are considered together, and overload resolution attempts to choose one as the best fit. At first this might seem like an adequate alternative, but in practice there are a number of limitations:
+
+\begin{itemize}
+\item 
+It is possible to specialize member templates of a class without changing the definition of that class. However, adding an overloaded member does require a change in the definition of a class. In many cases this is not an option because we may not own the rights to do so. Furthermore, the C++ standard does not currently allow us to add new templates to the std namespace, but it does allow us to specialize templates from that namespace.
+
+\item 
+To overload function templates, their function parameters must differ in some material way. Consider a function template R convert(T const\&) where R and T are template parameters. We may very well want to specialize this template for R = void, but this cannot be done using overloading.
+
+\item 
+Code that is valid for a nonoverloaded function may no longer be valid when the function is overloaded. Specifically, given two function templates f(T) and g(T) (where T is a template parameter), the expression g(\&f<int>) is valid only if f is not overloaded (otherwise, there is no way to decide which f is meant).
+
+\item 
+Friend declarations refer to a specific function template or an instantiation of a specific function template. An overloaded version of a function template would not automatically have the privileges granted to the original template.
+\end{itemize}
+
+Together, this list forms a compelling argument in support of a partial specialization construct for function templates.
+
+A natural syntax for partially specializing function templates is the generalization of the class template notation:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T const& max (T const&, T const&); // primary template
+
+template<typename T>
+T* const& max <T*>(T* const&, T* const&); // partial specialization
+\end{lstlisting}
+
+Some language designers worry about the interaction of this partial specialization approach with function template overloading. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void add (T& x, int i); // a primary template
+
+template<typename T1, typename T2>
+void add (T1 a, T2 b); // another (overloaded) primary template
+
+template<typename T>
+void add<T*> (T*&, int); // Which primary template does this specialize?
+\end{lstlisting}
+
+However, we expect such cases would be deemed errors without major impact on the utility of the feature.
+
+This extension was briefly discussed during the standardization of C++11 but gathered relatively little interest in the end. Still, the topic occasionally arises because it neatly solves some common programming problems. Perhaps it will be taken up again in some future version of the C++ standard.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

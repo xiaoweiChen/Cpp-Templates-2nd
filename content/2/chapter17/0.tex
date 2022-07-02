@@ -1,0 +1,45 @@
+
+C++ templates have been evolving almost continuously from their initial design in 1988, through the various standardization milestones in 1998, 2011, 2014, and 2017. It could be argued that templates were at least somewhat related to most major language additions after the original 1998 standard.
+
+The first edition of this book listed a number of extensions that we might see after the first standard, and several of those became reality:
+
+
+\begin{itemize}
+\item 
+The angle bracket hack: C++11 removed the need to insert a space between two closing angle brackets.
+
+\item 
+Default function template arguments: C++11 allows function templates to have default template arguments.
+
+\item 
+Typedef templates: C++11 introduced alias templates, which are similar.
+
+\item 
+The list of template arguments of the partial specialization should not be identical (ignoring renaming) to the list of parameters of the primary template
+
+\item 
+The typeof operator: C++11 introduced the decltype operator, which fills the same role (but uses a different token to avoid a conflict with an existing extension that doesn’t quite meet the needs of the C++ programmers’ community)
+
+\item 
+Static properties: The first edition anticipated a selection of type traits being supported directly by compilers. This has come to pass, although the interface is expressed using the standard library (which is then implemented using compiler extensions for many of the traits).
+
+\item 
+Custom instantiation diagnostics: The new keyword static\_assert implements the idea described by std::instantiation\_error in the first edition of this book.
+
+\item 
+List parameters: This became parameter packs in C++11.
+
+\item 
+Layout control: C++11’s alignof and alignas cover the needs described in the first edition. Furthermore, the C++17 library added a std::variant template to support discriminated unions.
+
+\item 
+Initializer deduction: C++17 added class template argument deduction, which addresses the same issue.
+
+\item 
+Function expressions: C++11’s lambda expressions provides exactly this functionality (with a syntax somewhat different from that discussed in the first edition).
+\end{itemize}
+
+Other directions hypothesized in the first edition have not made it into the modern language, but most are still discussed on occasion and we keep their presentation in this volume. Meanwhile, other ideas are emerging and we present some of those as well.
+
+
+

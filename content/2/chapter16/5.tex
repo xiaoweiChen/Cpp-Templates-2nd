@@ -1,0 +1,58 @@
+When variable templates were added to the draft C++11 standard, several aspects of their specifications were overlooked, and some of those issues have still not been formally resolved. However, actual implementations generally agree on the handling of these issues.
+
+Perhaps the most surprising of these issues is that the standard refers to the ability to partially specialize variable templates, but it does not describe how they are declared or what they mean. What follows is thus based on C++ implementations in practice (which do permit such partial specializations), and not on the C++ standard.
+
+As one would expect, the syntax is similar to full variable template specialization, except that template<> is replaced by an actual template declaration header, and the template argument list following the variable template name must depend on template parameters. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> constexpr std::size_t SZ = sizeof(T);
+
+template<typename T> constexpr std::size_t SZ<T&> = sizeof(void*);
+\end{lstlisting}
+
+As with the full specialization of variable templates, the type of a partial specialization is not required to match that of the primary template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> typename T::iterator null_iterator;
+
+template<typename T, std::size_t N> T* null_iterator<T[N]> = null_ptr;
+// T* doesn’t match T::iterator, and that is fine
+\end{lstlisting}
+
+The rules regarding the kinds of template arguments that can be specified for a variable template partial specialization are identical to those for class template specializations. Similarly, the rules to select a specialization for a given list of concrete template arguments are identical too.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

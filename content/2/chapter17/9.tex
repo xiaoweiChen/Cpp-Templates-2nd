@@ -1,0 +1,71 @@
+n the context of programming, reflection refers to the ability to programmatically inspect features of the program (e.g., answering questions such as Is a type an integer? or What nonstatic data members does a class type contain?). Metaprogramming is the craft of “programming the program,” which usually amounts to programmatically generating new code. Reflective metaprogramming, then, is the craft of automatically synthesizing code that adapts itself to existing properties (often, types) of a program.
+
+In Part III of this book, we will explore how templates can achieve some simple forms of reflection and metaprogramming (in some sense, template instantiation is a form of metaprogramming, because it causes the synthesis of new code). However, the capabilities of C++17 templates are rather limited when it comes to reflection (e.g., it is not possible to answer the question What nonstatic data members does a class type contain?) and the options for metaprogramming are often inconvenient in various ways (in particular, the syntax becomes unwieldy and the performance is disappointing).
+
+Recognizing the potential of new facilities in this area, the C++ standardization committee created a study group (SG7) to explore options for more powerful reflection. That group’s charter was later extended to cover metaprogramming also. Here is an example of one of the options being considered:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void report(T p) {
+	constexpr {
+		std::meta::info infoT = reflexpr(T);
+		for (std::meta::info : std::meta::data_members(infoT)) {
+			-> {
+				std::cout << (: std::meta::name(info) :)
+				<< ": " << p.(.info.) << ’\n’;
+			}
+		}
+	}
+	// code will be injected here
+}
+\end{lstlisting}
+
+Quite a few new things are present in this code. First, the constexpr{...} construct forces the statements in it to be evaluated at compile time, but if it appears in a template, this evaluation is only done when the template is instantiated. Second, the reflexpr() operator produces an expression of opaque type std::meta::info that is a handle to reflected information about its argument (the type substituted for T in this example). A library of standard metafunctions permits querying this metainformation. One of those standard metafunctions is std::meta::data\_members, which produces a sequence of std::meta::info objects describing the direct nonstatic data members of its operand. So the for loop above is really a loop over the nonstatic data members of p.
+
+At the core of the metaprogramming capabilities of this system is the ability to “inject” code in various scopes. The construct->{...} injects statements and/or declarations right after the statement or declaration that kicked off a constexpr evaluation. In this example, that means after the constexpr{...} construct. The code fragments being injected can contain certain patterns to be replaced by computed values. In this example, (:...:) produces a string literal value (the expression std::meta::name(info) produces a string-like object representing the unqualified name of the entity—data member in this case—represented by info). Similarly, the expression (.info.) produces an identifier naming the entity represented by info. Other patterns to produce types, template argument lists, etc. are also proposed.
+
+With all that in place, instantiating the function template report() for a type:
+
+\begin{lstlisting}[style=styleCXX]
+struct X {
+	int x;
+	std::string s;
+};
+\end{lstlisting}
+
+would produce an instantiation similar to
+
+\begin{lstlisting}[style=styleCXX]
+template<> void report(X const& p) {
+	std::cout << "x" << ": " << "p.x" << ’\n’;
+	std::cout << "s" << ": " << "p.s" << ’\n’;
+}
+\end{lstlisting}
+
+That is, this function automatically generates a function to output the nonstatic data member values of a class type.
+
+There are many applications for these types of capabilities. While it is likely that something like this will eventually be adopted into the language, it is unclear in what time frame it can be expected. That said, a few experimental implementations of such systems have been demonstrated at the time of this writing. (Just before going to press with this book, SG7 agreed on the general direction of using constexpr evaluation and a value type somewhat like std::meta::info to deal with reflective metaprogramming. The injection mechanism presented here, however, was not agreed on, and most likely a different system will be pursued.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,76 @@
+It is entirely possible to imagine that class templates could be overloaded on their template parameters. For example, one can imagine creating a family of Array templates that contains both dynamically and statically sized arrays:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Array {
+	// dynamically sized array
+	...
+};
+
+template<typename T, unsigned Size>
+class Array {
+	// fixed size array
+	...
+};
+\end{lstlisting}
+
+The overloading isn’t necessarily restricted to the number of template parameters; the kind of parameters can be varied too:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+class Pair {
+	// pair of fields
+	...
+};
+
+template<int I1, int I2>
+class Pair {
+	// pair of constant integer values
+	...
+};
+\end{lstlisting}
+
+Although this idea has been discussed informally by some language designers, it has not yet been formally presented to the C++ standardization committee.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

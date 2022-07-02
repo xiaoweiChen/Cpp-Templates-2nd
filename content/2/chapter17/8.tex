@@ -1,0 +1,103 @@
+
+Much of the complexity of programming with templates comes from the compiler’s inability to locally check whether a template definition is correct. Instead, most of the checking of a template occurs during template instantiation, when the template definition context and the template instantiation context are intertwined. This mixing of different contexts makes it hard to assign blame: Was the template definition at fault, because it used its template arguments incorrectly, or was the template user at fault, because the supplied template arguments didn’t meet the requirements of the template? The problem can be illustrated with a simple example, which we have annotated with the diagnostics produced by a typical compiler:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T max(T a, T b)
+{
+	return b < a ? a : b; // ERROR: “no match for operator <
+	// (operator types are ’X’ and ’X’)”
+}
+
+struct X {
+};
+bool operator> (X, X);
+
+int main()
+{
+	X a, b;
+	X m = max(a, b); // NOTE: “in instantiation of function template specialization
+					// ’max<X>’ requested here”
+}
+\end{lstlisting}
+
+Note that the actual error (the lack of a proper operator<) is detected within the definition of the function template max(). It is possible that this is truly the error—perhaps max() should have used operator> instead? However, the compiler also provides a note that points to the place that caused the instantiation of max<X>, which may be the real error—perhaps max() is documented to require operator<? The inability to answer this question is what often leads to the “error novel” described in Section 9.4 on page 143, where the compiler provides the entire template instantiation history from the initial cause of the instantiation down to the actual template definition in which the error was detected. The programmer is then expected to determine which of the template definitions (or perhaps the original use of the template) is actually in error.
+
+The idea behind type checking of templates is to describe the requirements of a template within the template itself, so that the compiler can determine whether the template definition or the template use is at fault when compilation fails. One solution to this problem is to describe the template’s requirements as part of the signature of the template itself using a concept:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> requires LessThanComparable<T>
+T max(T a, T b)
+{
+	return b < a ? a : b;
+}
+
+struct X { };
+bool operator> (X, X);
+
+int main()
+{
+	X a, b;
+	X m = max(a, b); // ERROR: X does not meet the LessThanComparable requirement
+}
+\end{lstlisting}
+
+By describing the requirements on the template parameter T, the compiler is able to ensure that the function template max() only uses operations on T that the user is expected to provide (in this case, LessThanComparable describes the need for operator<). Moreover, when using a template, the compiler can check that the supplied template argument provides all of the behavior required for the max() function template to work properly. By separating the type-checking problem, it becomes far easier for the compiler to provide an accurate diagnosis of the problem.
+
+In the example above, LessThanComparable is called a concept: It represents constraints on a type (in the more general case, constraints on a set of types) that a compiler can check. Concept systems can be designed in different ways.
+
+During the standardization cycle for C++11, an elaborate system was fully designed and implemented for concepts that are powerful enough to check both the point of instantiation of a template and the definition of a template. The former means, in our example above, that an error in main() could be caught early with a diagnostic explaining that X doesn’t satisfy the constraints of LessThanComparable. The latter means that when processing the max() template, the compiler checks that no operation not permitted by the  essThanComparable concept is used (and a diagnostic is emitted if that constraint is violated). The C++11 proposal was eventually pulled from the language specification because of various practical considerations (e.g., there were still many minor specification issues whose resolution was threatening a standard that was already running late).
+
+After C++11 eventually shipped, a new proposal (first called concepts lite) was presented and developed by members of the committee. This system does not aim at checking the correctness of a template based on the constraints attached to it. Instead it focuses on the point of instantiations only. So if in our example max() were implemented using the > operator, no error would be issued at that point. However, an error would still be issued in main() because X doesn’t satisfy the constraints of LessThanComparable. The new concepts proposal was implemented and specified in what is called the Concepts TS (TS stands for Technical Specification), called C++ extensions for Concepts.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}See, for example, document N4641 for the version of the Concepts TS in the beginning of 2017.
+\end{tcolorbox}
+
+Currently, the essential elements of that technical specification have been integrated into the draft for the next standard (expected to become C++20). Appendix E covers the language feature as specified in that draft at the time this book went to press.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

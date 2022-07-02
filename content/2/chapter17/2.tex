@@ -1,0 +1,114 @@
+Among the restrictions on nontype template arguments, perhaps the most surprising to beginning and advanced template writers alike is the inability to provide a string literal as a template argument.
+
+The following example seems intuitive enough:
+
+\begin{lstlisting}[style=styleCXX]
+template<char const* msg>
+class Diagnoser {
+	public:
+	void print();
+};
+
+int main()
+{
+	Diagnoser<"Surprise!">().print();
+}
+\end{lstlisting}
+
+However, there are some potential problems. In standard C++, two instances of Diagnoser are the same type if and only if they have the same arguments. In this case the argument is a pointer value—in other words, an address. However, two identical string literals appearing in different source locations are not required to have the same address. We could thus find ourselves in the awkward situation that Diagnoser<"X"> and Diagnoser<"X"> are in fact two different and incompatible types! (Note that the type of "X" is char const[2], but it decays to char const* when passed as a template argument.)
+
+Because of these (and related) considerations, the C++ standard prohibits string literals as arguments to templates. However, some implementations do offer the facility as an extension. They enable this by using the actual string literal contents in the internal representation of the template instance. Although this is clearly feasible, some C++ language commentators feel that a nontype template parameter that can be substituted by a string literal value should be declared differently from one that can be substituted by an address. One possibility would be to capture string literals in a parameter pack of characters. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<char... msg>
+class Diagnoser {
+	public:
+	void print();
+};
+
+int main()
+{
+	// instantiates Diagnoser<’S’,’u’,’r’,’p’,’r’,’i’,’s’,’e’,’!’>
+	Diagnoser<"Surprise!">().print();
+}
+\end{lstlisting}
+
+We should also note an additional technical wrinkle in this issue. Consider the following template declarations, and let’s assume that the language has been extended to accept string literals as template arguments in this case:
+
+\begin{lstlisting}[style=styleCXX]
+template<char const* str>
+class Bracket {
+	public:
+	static char const* address();
+	static char const* bytes();
+};
+
+template<char const* str>
+char const* Bracket<str>::address()
+{
+	return str;
+}
+
+template<char const* str>
+char const* Bracket<str>::bytes()
+{
+	return str;
+}
+\end{lstlisting}
+
+In the previous code, the two member functions are identical except for their names—a situation that is not that uncommon. Imagine that an implementation would instantiate Bracket<"X"> using a process much like macro expansion: In this case, if the two member functions are instantiated in different translation units, they may return different values. Interestingly, a test of some C++ compilers that currently provide this extension reveals that they do suffer from this surprising behavior.
+
+A related issue is the ability to provide floating-point literals (and simple constant floating-point expressions) as template arguments. For example:
+
+
+\begin{lstlisting}[style=styleCXX]
+template<double Ratio>
+class Converter {
+	public:
+	static double convert (double val) {
+		return val*Ratio;
+	}
+};
+
+using InchToMeter = Converter<0.0254>;
+\end{lstlisting}
+
+This too is provided by some C++ implementations and presents no serious technical challenges (unlike the string literal arguments).
+
+C++11 introduced a notion of a literal class type: a class type that can take constant values computed at compile time (including nontrivial computations through constexpr functions). Once such class types became available, it quickly became desirable to allow them for nontype template parameters. However, problems similar to those of the string literal parameters described above arose. In particular, the “equality” of two class-type values is not a trivial matter, because it is in general determined by operator== definitions. This equality determines if two instantiations are equivalent, but in practice, that equivalence must be checkable by the linker by comparing mangled names. One way out may be an option to mark certain literal classes as having a trivial equality criterion that amounts to pairwise comparing of the scalar members of the class. Only class types with such a trivial equality criterion would then be permitted as nontype template parameter types.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

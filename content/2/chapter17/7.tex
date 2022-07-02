@@ -1,0 +1,73 @@
+When programming templates, regularity is a virtue: If a single construct can cover all cases, it makes our template simpler. One aspect of our programs that is somewhat irregular are types. For example, consider the following:
+
+\begin{lstlisting}[style=styleCXX]
+auto&& r = f(); // error if f() returns void
+\end{lstlisting}
+
+That works for just about any type that f() returns except void. The same problem occurs when using decltype(auto):
+
+\begin{lstlisting}[style=styleCXX]
+decltype(auto) r = f(); // error if f()
+\end{lstlisting}
+
+void is not the only irregular type: Function types and reference types often also exhibit behaviors that make them exceptional in some way. However, it turns out that void often complicates our templates and that there is no deep reason for void to be unusual that way. For example, see Section 11.1.3 on page 162 for an example how this complicates the implementation of a perfect std::invoke() wrapper.
+
+We could just decree that void is a normal value type with a unique value (like std::nullptr\_t for nullptr). For backward compatibility purposes, we’d still have to keep a special case for function declarations like the following:
+
+\begin{lstlisting}[style=styleCXX]
+void g(void); // same as void g();
+\end{lstlisting}
+
+However, in most other ways, void would become a complete value type. We could then for example declare void variables and references:
+
+\begin{lstlisting}[style=styleCXX]
+void v = void{};
+void&& rrv = f();
+\end{lstlisting}
+
+Most importantly, many templates would no longer need to be specialized for the void case.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

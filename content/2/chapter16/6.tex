@@ -1,0 +1,16 @@
+Full template specialization was part of the C++ template mechanism from the start. Function template overloading and class template partial specialization, on the other hand, came much later. The HP aC++ compiler was the first to implement function template overloading, and EDG’s C++ front end was the first to implement class template partial specialization. The partial ordering principles described in this chapter were originally invented by Steve Adamczyk and John Spicer (who are both of EDG).
+
+The ability of template specializations to terminate an otherwise infinitely recursive template definition (such as the List<T*> example presented in Section 16.4 on page 348) was known for a long time. However, Erwin Unruh was perhaps the first to note that this could lead to the interesting notion of template metaprogramming: using the template nstantiation mechanism to perform nontrivial computations at compile time. We devote Chapter 23 to this topic.
+
+You may legitimately wonder why only class templates and variable templates can be partially specialized. The reasons are mostly historical. It is probably possible to define the same mechanism for function templates (see Chapter 17). In some ways, the effect of overloading function templates is similar, but there are also some subtle differences. These differences are mostly related to the fact that only the primary template needs to be looked up when a use is encountered. The specializations are considered only afterward, to determine which implementation should be used. In contrast, all overloaded function templates must be brought into an overload set by looking them up, and they may come from different namespaces or classes. This increases the likelihood of unintentionally overloading a template name somewhat.
+
+Conversely, it is also imaginable to allow a form of overloading of class templates and variable templates. Here is an example:
+
+
+\begin{lstlisting}[style=styleCXX]
+// invalid overloading of class templates
+template<typename T1, typename T2> class Pair;
+template<int N1, int N2> class Pair;
+\end{lstlisting}
+
+However, there doesn’t seem to be a pressing need for such a mechanism.

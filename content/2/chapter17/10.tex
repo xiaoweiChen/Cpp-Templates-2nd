@@ -1,0 +1,70 @@
+Parameter packs were introduced in C++11, but dealing with them often requires recursive template instantiation techniques. Recall this outline of code discussed in Section 14.6 on page 263:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Head, typename... Remainder>
+void f(Head&& h, Remainder&&... r) {
+	doSomething(h);
+	if constexpr (sizeof...(r) != 0) {
+		// handle the remainder recursively (perfectly forwarding the arguments):
+		f(r...);
+	}
+}
+\end{lstlisting}
+
+This example is made simpler by exploiting the features of the C++17 compile-time if statement (see Section 8.5 on page 134), but it remains a recursive instantiation technique that may be somewhat expensive to compile.
+
+Several committee proposals have tried to simplify this state of affairs somewhat. One example is the introduction of a notation to pick a specific element from a pack. In particular, for a pack P the notation P.[N] has been suggested as a way to denote element N+1 of that pack. Similarly, there have been proposals to denote “slices” of packs (e.g., using the notation P.[b, e]).
+
+While examining such proposals, it has become clear that they interact somewhat with the notion of reflective metaprogramming discussed above. It is unclear at this time whether specific pack selection mechanisms will be added to the language or whether metaprogramming facilities covering this need will be provided instead.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,27 @@
 
+In the first edition of this book, this section suggested that the future might bring two kinds of relaxations to the rules for the use of typename (see Section 13.3.2 on page 228): Allow typename where it was not previously allowed, and make typename optional where a compiler can relatively easily infer that a qualified name with a dependent qualifier must name a type. The former came to pass (typename in C++11 can be used redundantly in many places), but the latter has not.
 
+Recently, however, there has been a renewed call to make typename optional in various common contexts where the expectation of a type specifier is unambiguous:
 
-\subsubsubsection{2.1.1\hspace{0.2cm}Declaration of Class Templates}
+\begin{itemize}
+\item 
+The return type and parameter types of function and member function declarations in namespace and class scope. Similarly with function and member function templates and with lambda expressions appearing in any scope.
 
-\subsubsubsection{2.1.2\hspace{0.2cm}Implementation of Member Functions}
+\item 
+The types of variable, variable template, and static data member declarations. Again, similarly with variable templates.
+
+\item 
+The type after the = token in an alias or alias template declaration.
+
+\item 
+The default argument of a type parameter of a template.
+
+\item 
+The type appearing in the angle brackets following a static\_cast, const\_cast, dynamic\_cast, or reinterpret\_cast, construct.
+
+\item 
+The type named in a new expression.
+\end{itemize}
+
+Although this is a relatively ad hoc list, it turns out that such a change in the language would allow by far most instances of this use of typename to be dropped, which would make code more compact and more readable.
 

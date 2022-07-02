@@ -1,0 +1,169 @@
+Full template specialization is often useful, but sometimes it is natural to want to specialize a class template or variable template for a family of template arguments rather than just one specific set of template arguments. For example, let’s assume we have a class template implementing a linked list:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class List { // #1
+	public:
+	...
+	void append(T const&);
+	inline std::size_t length() const;
+	...
+};
+\end{lstlisting}
+
+A large project making use of this template may instantiate its members for many types. For member functions that are not expanded inline (say, List<T>::append()), this may cause noticeable growth in the object code. However, we may know that from a low-level point of view, the code for List<int*>::append() and List<void*>::append() is the same. In other words, we’d like to specify that all Lists of pointers share an implementation. Although this cannot be expressed in C++, we can achieve something quite close by specifying that all Lists of pointers should be instantiated from a different template definition:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class List<T*> { // #2
+	private:
+	List<void*> impl;
+	...
+	public:
+	...
+	inline void append(T* p) {
+		impl.append(p);
+	}
+	inline std::size_t length() const {
+		return impl.length();
+	}
+	...
+};
+\end{lstlisting}
+
+In this context, the original template at point \#1 is called the primary template, and the latter definition is called a partial specialization (because the template arguments for which this template definition must be used have been only partially specified). The syntax that characterizes a partial specialization is the combination of a template parameter list declaration (template<...>) and a set of explicitly specified template arguments on the name of the class template (<T*> in our example).
+
+Our code contains a problem because List<void*> recursively contains a member of that same List<void*> type. To break the cycle, we can precede the previous partial specialization with a full specialization:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+class List<void*> { // #3
+	...
+	void append (void* p);
+	inline std::size_t length() const;
+	...
+};
+\end{lstlisting}
+
+This works because matching full specializations are preferred over partial specializations. As a result, all member functions of Lists of pointers are forwarded (through easily inlineable functions) to the implementation of List<void*>. This is an effective way to combat code bloat (of which C++ templates are often accused).
+
+There exist several limitations on the parameter and argument lists of partial specialization declarations. Some of them are as follows:
+
+\begin{enumerate}
+\item 
+The arguments of the partial specialization must match in kind (type, nontype, or template) the corresponding parameters of the primary template.
+
+\item 
+The parameter list of the partial specialization cannot have default arguments; the default arguments of the primary class template are used instead.
+
+\item 
+The nontype arguments of the partial specialization should be either nondependent values or plain nontype template parameters. They cannot be more complex dependent expressions like 2*N (where N is a template parameter).
+
+\item 
+The list of template arguments of the partial specialization should not be identical (ignoring renaming) to the list of parameters of the primary template
+
+\item 
+If one of the template arguments is a pack expansion, it must come at the end of a template argument list.
+\end{enumerate}
+
+An example illustrates these limitations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, int I = 3>
+class S; // primary template
+
+template<typename T>
+class S<int, T>; // ERROR: parameter kind mismatch
+
+template<typename T = int>
+class S<T, 10>; // ERROR: no default arguments
+
+template<int I>
+class S<int, I*2>; // ERROR: no nontype expressions
+
+template<typename U, int K>
+class S<U, K>; // ERROR: no significant difference from primary template
+
+template<typename... Ts>
+class Tuple;
+
+template<typename Tail, typename... Ts>
+class Tuple<Ts..., Tail>; // ERROR: pack expansion not at the end
+
+template<typename Tail, typename... Ts>
+class Tuple<Tuple<Ts...>, Tail>; // OK: pack expansion is at the end of a
+								// nested template argument list
+\end{lstlisting}
+
+Every partial specialization—like every full specialization—is associated with the primary template. When a template is used, the primary template is always the one that is looked up, but then the arguments are also matched against those of the associated specializations (using template argument deduction, as described in Chapter 15) to determine which template implementation is picked. Just as with function template argument deduction, the SFINAE principle applies here: If, while attempting to match a partial specialization an invalid construct is formed, that specialization is silently abandoned and another candidate is examined if one is available. If no matching specializations is found, the primary template is selected. If multiple matching specializations are found, the most specialized one (in the sense defined for overloaded function templates) is selected; if none can be called most specialized, the program contains an ambiguity error.
+
+Finally, we should point out that it is entirely possible for a class template partial specialization to have more or fewer parameters than the primary template. Consider our generic template List, declared at point \#1 , again. We have already discussed how to optimize the list-of-pointers case, but we may want to do the same with certain pointer-to-member types. The following code achieves this for pointer-to-member-pointers:
+
+\begin{lstlisting}[style=styleCXX]
+// partial specialization for any pointer-to-void* member
+template<typename C>
+class List<void* C::*> { // #4
+	public:
+	using ElementType = void* C::*;
+	...
+	void append(ElementType pm);
+	inline std::size_t length() const;
+	...
+};
+
+// partial specialization for any pointer-to-member-pointer type except
+// pointer-to-void* member, which is handled earlier
+// (note that this partial specialization has two template parameters,
+// whereas the primary template only has one parameter)
+// this specialization makes use of the prior one to achieve the
+// desired optimization
+template<typename T, typename C>
+class List<T* C::*> { // #5
+	private:
+	List<void* C::*> impl;
+	...
+	public:
+	using ElementType = T* C::*;
+	...
+	inline void append(ElementType pm) {
+		impl.append((void* C::*)pm);
+	}
+	inline std::size_t length() const {
+		return impl.length();
+	}
+	...
+};
+\end{lstlisting}
+
+In addition to our observation regarding the number of template parameters, note that the common implementation defined at \#4 to which all others are forwarded by the declaration at point \#5 is itself a partial specialization (for the simple pointer case it is a full specialization). However, it is clear that the specialization at point \#4 is more specialized than that at point \#5 ; thus no ambiguity should occur.
+
+Moreover, it is even possible that the number of explicitly written template arguments can differ from the number of template parameters in the primary template. This can happen both with default template arguments and, in a far more useful manner, with variadic templates:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Elements>
+class Tuple; // primary template
+
+template<typename T1>
+class Tuple<T>; // one-element tuple
+
+template<typename T1, typename T2, typename... Rest>
+class Tuple<T1, T2, Rest...>; // tuple with two or more elements
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

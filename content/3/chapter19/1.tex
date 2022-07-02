@@ -1,8 +1,417 @@
 
-
+Computing the sum of a sequence of values is a fairly common computational task. However, this seemingly simple problem provides us with an excellent example to introduce various levels at which policy classes and traits can help.
 
 \subsubsubsection{19.1.1\hspace{0.2cm}Fixed Traits}
 
+Let’s first assume that the values of the sum we want to compute are stored in an array, and we are given a pointer to the first element to be accumulated and a pointer one past the last element to be accumulated. Because this book is about templates, we wish to write a template that will work for many types. The following may seem straightforward by now:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Most examples in this section use ordinary pointers for the sake of simplicity. Clearly, an industrial-strength interface may prefer to use iterator parameters following the conventions of the C++ standard library (see [JosuttisStdLib]). We revisit this aspect of our example later.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+template<typename T>
+T accum (T const* beg, T const* end)
+{
+	T total{}; // assume this actually creates a zero value
+	while (beg != end) {
+		total += *beg;
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+The only slightly subtle decision here is how to create a zero value of the correct type to start our summation. We use value initialization (with the {...} notation) here as introduced in Section 5.2 on page 68. It means that the local object total is initialized either by its default constructor or by zero (which means nullptr for pointers and false for Boolean values).
+
+To motivate our first traits template, consider the following code that makes use of our accum():
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "accum1.hpp"
+#include <iostream>
+int main()
+{
+	// create array of 5 integer values
+	int num[] = { 1, 2, 3, 4, 5 };
+	
+	// print average value
+	std::cout << "the average value of the integer values is "
+			  << accum(num, num+5) / 5
+			  << ’\n’;
+			  
+	// create array of character values
+	char name[] = "templates";
+	int length = sizeof(name)-1;
+	
+	// (try to) print average character value
+	std::cout << "the average value of the characters in \""
+			  << name << "\" is "
+			  << accum(name, name+length) / length
+			  << ’\n’;
+}
+\end{lstlisting}
+
+In the first half of the program, we use accum() to sum five integer values:
+
+\begin{lstlisting}[style=styleCXX]
+int num[] = { 1, 2, 3, 4, 5 };
+...
+accum(num0, num+5)
+\end{lstlisting}
+
+The average integer value is then obtained by simply dividing the resulting sum by the number of values in the array.
+
+The second half of the program attempts to do the same for all letters in the word templates (provided the characters from a to z form a contiguous sequence in the actual character set, which is true for ASCII but not for EBCDIC).2 The result should presumably lie between the value of a and the value of z. On most platforms today, these values are determined by the ASCII codes: a is encoded as 97 and z is encoded as 122. Hence, we may expect a result between 97 and 122. However, on our platform, the output of the program is as follows:
+
+\begin{tcblisting}{commandshell={}}
+the average value of the integer values is 3
+the average value of the characters in "templates" is -5
+\end{tcblisting}
+
+The problem here is that our template was instantiated for the type char, which turns out to be too small a range for the accumulation of even relatively small values. Clearly, we could resolve this by introducing an additional template parameter AccT that describes the type used for the variable total (and hence the return type). However, this would put an extra burden on all users of our template: They would have to specify an extra type in every invocation of our template. In our example, we may therefore need to write the following:
+
+\begin{lstlisting}[style=styleCXX]
+accum<int>(name,name+5)
+\end{lstlisting}
+
+This is not an excessive constraint, but it can be avoided.
+
+An alternative approach to the extra parameter is to create an association between each type T for which accum() is called and the corresponding type that should be used to hold the accumulated value. This association could be considered characteristic of the type T, and therefore the type in which the sum is computed is sometimes called a trait of T. As is turns out, our association can be encoded as specializations of a template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accumtraits2.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct AccumulationTraits;
+
+template<>
+struct AccumulationTraits<char> {
+	using AccT = int;
+};
+
+template<>
+struct AccumulationTraits<short> {
+	using AccT = int;
+};
+
+template<>
+struct AccumulationTraits<int> {
+	using AccT = long;
+};
+
+template<>
+struct AccumulationTraits<unsigned int> {
+	using AccT = unsigned long;
+};
+
+template<>
+struct AccumulationTraits<float> {
+	using AccT = double;
+};
+\end{lstlisting}
+
+The template AccumulationTraits is called a traits template because it holds a trait of its parameter type. (In general, there could be more than one trait and more than one parameter.) We chose not to provide a generic definition of this template because there isn’t a great way to select a good accumulation type when we don’t know what the type is. However, an argument could be made that T itself is often a good candidate for such a type (although clearly not in our earlier example).
+
+With this in mind, we can rewrite our accum() template as follows:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In C++11, you have to declare the return type like type AccT.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include "accumtraits2.hpp"
+template<typename T>
+auto accum (T const* beg, T const* end)
+{
+	// return type is traits of the element type
+	using AccT = typename AccumulationTraits<T>::AccT;
+	
+	AccT total{}; // assume this actually creates a zero value
+	while (beg != end) {
+		total += *beg;
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+The output of our sample program then becomes what we expect:
+
+\begin{tcblisting}{commandshell={}}
+the average value of the integer values is 3
+the average value of the characters in "templates" is 108
+\end{tcblisting}
+
+Overall, the changes aren’t very dramatic considering that we have added a very useful mechanism to customize our algorithm. Furthermore, if new types arise for use with accum(), an appropriate AccT can be associated with it simply by declaring an additional explicit specialization of the AccumulationTraits template. Note that this can be done for any type: fundamental types, types that are declared in other libraries, and so forth.
+
 \subsubsubsection{19.1.2\hspace{0.2cm}Value Traits}
 
+So far, we have seen that traits represent additional type information related to a given “main” type. In this section, we show that this extra information need not be limited to types. Constants and other classes of values can be associated with a type as well.
+
+Our original accum() template uses the default constructor of the return value to initialize the result variable with what is hoped to be a zero-like value:
+
+\begin{lstlisting}[style=styleCXX]
+AccT total{}; // assume this actually creates a zero value
+...
+return total;
+\end{lstlisting}
+
+Clearly, there is no guarantee that this produces a good value to start the accumulation loop. Type AccT may not even have a default constructor.
+
+Again, traits can come to the rescue. For our example, we can add a new value trait to our AccumulationTraits:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accumtraits3.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct AccumulationTraits;
+
+template<>
+struct AccumulationTraits<char> {
+	using AccT = int;
+	static AccT const zero = 0;
+};
+
+template<>
+struct AccumulationTraits<short> {
+	using AccT = int;
+	static AccT const zero = 0;
+};
+
+template<>
+struct AccumulationTraits<int> {
+	using AccT = long;
+	static AccT const zero = 0;
+};
+...
+\end{lstlisting}
+
+In this case, our new trait provides an zero element as a constant that can be evaluated at compile time. Thus, accum() becomes the following:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include "accumtraits3.hpp"
+
+template<typename T>
+auto accum (T const* beg, T const* end)
+{
+	// return type is traits of the element type
+	using AccT = typename AccumulationTraits<T>::AccT;
+	
+	AccT total = AccumulationTraits<T>::zero; // init total by trait value
+	while (beg != end) {
+		total += *beg;
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+In this code, the initialization of the accumulation variable remains straightforward:
+
+\begin{lstlisting}[style=styleCXX]
+AccT total = AccumulationTraits<T>::zero;
+\end{lstlisting}
+
+A drawback of this formulation is that C++ allows us to initialize a static constant data member inside its class only if it has an integral or enumeration type.
+
+constexpr static data members are slightly more general, allowing floating-point types as well as other literal types:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+struct AccumulationTraits<float> {
+	using Acct = float;
+	static constexpr float zero = 0.0f;
+};
+\end{lstlisting}
+
+However, neither const nor constexpr permit nonliteral types to be initialized this way. For example, a user-defined arbitrary-precision BigInt type might not be a literal type, because typically it has to allocate components on the heap, which usually precludes it from being a literal type, or just because the required constructor is not constexpr. The following specialization is then an error:
+
+\begin{lstlisting}[style=styleCXX]
+class BigInt {
+	BigInt(long long);
+	...
+};
+...
+template<>
+struct AccumulationTraits<BigInt> {
+	using AccT = BigInt;
+	static constexpr BigInt zero = BigInt{0}; // ERROR: not a literal type
+};
+\end{lstlisting}
+
+The straightforward alternative is not to define the value trait in its class:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+struct AccumulationTraits<BigInt> {
+	using AccT = BigInt;
+	static BigInt const zero; // declaration only
+};
+\end{lstlisting}
+
+The initializer then goes in a source file and looks something like the following:
+
+\begin{lstlisting}[style=styleCXX]
+BigInt const AccumulationTraits<BigInt>::zero = BigInt{0};
+\end{lstlisting}
+
+Although this works, it has the disadvantage of being more verbose (code must be added in two places), and it is potentially less efficient because compilers are typically unaware of definitions in other files.
+
+In C++17, this can be addressed using inline variables:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+struct AccumulationTraits<BigInt> {
+	using AccT = BigInt;
+	inline static BigInt const zero = BigInt{0}; // OK since C++17
+};
+\end{lstlisting}
+
+An alternative that works prior to C++17 is to use inline member functions for value traits that won’t always yield integral values. Again, such a function can be declared constexpr if it returns a literal type.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Most modern C++ compilers can “see through” calls of simple inline functions. Additionally, the use of constexpr makes it possible to use the value traits in contexts where the expression must be a constant (e.g., in a template argument).
+\end{tcolorbox}
+
+For example, we could rewrite AccumulationTraits as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accumtraits4.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct AccumulationTraits;
+
+template<>
+struct AccumulationTraits<char> {
+	using AccT = int;
+	static constexpr AccT zero() {
+		return 0;
+	}
+};
+
+template<>
+struct AccumulationTraits<short> {
+	using AccT = int;
+	static constexpr AccT zero() {
+		return 0;
+	}
+};
+
+template<>
+struct AccumulationTraits<int> {
+	using AccT = long;
+	static constexpr AccT zero() {
+		return 0;
+	}
+};
+
+template<>
+struct AccumulationTraits<unsigned int> {
+	using AccT = unsigned long;
+	static constexpr AccT zero() {
+		return 0;
+	}
+};
+
+template<>
+struct AccumulationTraits<float> {
+	using AccT = double;
+	static constexpr AccT zero() {
+		return 0;
+	}
+};
+..
+\end{lstlisting}
+
+and then extend these traits for our own types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accumtraits4bigint.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<>
+struct AccumulationTraits<BigInt> {
+	using AccT = BigInt;
+	static BigInt zero() {
+		return BigInt{0};
+	}
+};
+\end{lstlisting}
+
+For the application code, the only difference is the use of function call syntax (instead of the slightly more concise access to a static data member):
+
+\begin{lstlisting}[style=styleCXX]
+AccT total = AccumulationTraits<T>::zero(); // init total by trait function
+\end{lstlisting}
+
+Clearly, traits can be more than just extra types. In our example, they can be a mechanism to provide all the necessary information that accum() needs about the element type for which it is called. This is the key to the notion of traits: Traits provide an avenue to configure concrete elements (mostly types) for generic computations.
+
 \subsubsubsection{19.1.3\hspace{0.2cm}Parameterized Traits}
+
+The use of traits in accum() in the previous sections is called fixed, because once the decoupled trait is defined, it cannot be replaced in the algorithm. There may be cases when such overriding is desirable. For example, we may happen to know that a set of float values can safely be summed into a variable of the same type, and doing so may buy us some efficiency.
+
+We can address this problem by adding a template parameter AT for the trait itself having a default value determined by our traits template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum5.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include "accumtraits4.hpp"
+
+template<typename T, typename AT = AccumulationTraits<T>>
+auto accum (T const* beg, T const* end)
+{
+	typename AT::AccT total = AT::zero();
+	while (beg != end) {
+		total += *beg;
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+In this way, many users can omit the extra template argument, but those with more exceptional needs can specify an alternative to the preset accumulation type. Presumably, most users of this template would never have to provide the second template argument explicitly because it can be configured to an appropriate default for every type deduced for the first argument.
+
+
+
+
+
+
+
+
+

@@ -1,8 +1,162 @@
 
+The initial traits example demonstrates that we can define behavior that depends on types. Traditionally, in C and C++, we define functions that could more specifically be called value functions: They take some values as arguments and return another value as a result. With templates, we can additionally define type functions: functions that takes some type as arguments and produce a type or a constant as a result.
+
+A very useful built-in type function is sizeof, which returns a constant describing the size (in bytes) of the given type argument. Class templates can also serve as type functions. The parameters of the type function are the template parameters, and the result is extracted as a member type or member constant. For example, the sizeof operator could be given the following interface:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/sizeof.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstddef>
+#include <iostream>
+
+template<typename T>
+struct TypeSize {
+	static std::size_t const value = sizeof(T);
+};
+
+int main()
+{
+	std::cout << "TypeSize<int>::value = "
+	<< TypeSize<int>::value << ’\n’;
+}
+\end{lstlisting}
+
+This may not seem very useful, since we have the built-in sizeof operator available, but note that TypeSize<T> is a type, and it can therefore be passed as a class template argument itself. Alternatively, TypeSize is a template and can be passed as a template template argument.
+
+In what follows, we develop a few more general-purpose type functions that can be used as traits classes in this way.
 
 \subsubsubsection{19.3.1\hspace{0.2cm}Element Types}
 
+Assume that we have a number of container templates, such as std::vector<> and std::list<>, as well as built-in arrays. We want a type function that, given such a container type, produces the element type. This can be achieved using partial specialization:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/elementtype.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <list>
+
+template<typename T>
+struct ElementT; // primary template
+
+template<typename T>
+struct ElementT<std::vector<T>> { // partial specialization for std::vector
+	using Type = T;
+};
+
+template<typename T>
+struct ElementT<std::list<T>> { // partial specialization for std::list
+	using Type = T;
+};
+
+...
+template<typename T, std::size_t N>
+struct ElementT<T[N]> { // partial specialization for arrays of known bounds
+	using Type = T;
+};
+
+template<typename T>
+struct ElementT<T[]> { // partial specialization for arrays of unknown bounds
+	using Type = T;
+};
+...
+\end{lstlisting}
+
+Note that we should provide partial specializations for all possible array types (see Section 5.4 on page 71 for details).
+
+We can use the type function as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/elementtype.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "elementtype.hpp"
+#include <vector>
+#include <iostream>
+#include <typeinfo>
+
+template<typename T>
+void printElementType (T const& c)
+{
+	std::cout << "Container of "
+	<< typeid(typename ElementT<T>::Type).name()
+	<< " elements.\n";
+}
+
+int main()
+{
+	std::vector<bool> s;
+	printElementType(s);
+	int arr[42];
+	printElementType(arr);
+}
+\end{lstlisting}
+
+The use of partial specialization allows us to implement the type function without requiring the container types to know about it. In many cases, however, the type function is designed along with the applicable types, and the implementation can be simplified. For example, if the container types define a member type value\_type (as the standard containers do), we can write the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename C>
+struct ElementT {
+	using Type = typename C::value_type;
+};
+\end{lstlisting}
+
+This can be the default implementation, and it does not exclude specializations for container types that do not have an appropriate member type value\_type defined.
+
+Nonetheless, it is usually advisable to provide member type definitions for class template type parameters so that they can be accessed more easily in generic code (like the standard container templates do). The following sketches the idea:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2, ...>
+class X {
+	public:
+	using ... = T1;
+	using ... = T2;
+	...
+};
+\end{lstlisting}
+
+How is a type function useful? It allows us to parameterize a template in terms of a container type without also requiring parameters for the element type and other characteristics. For example, instead of
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename C>
+T sumOfElements (C const& c);
+\end{lstlisting}
+
+which requires syntax like sumOfElements<int>(list) to specify the element type explicitly, we can declare
+
+\begin{lstlisting}[style=styleCXX]
+template<typename C>
+typename ElementT<C>::Type sumOfElements (C const& c);
+\end{lstlisting}
+
+where the element type is determined from the type function.
+
+Observe how the traits are implemented as an extension to existing types; that is, we can define these type functions even for fundamental types and types of closed libraries.
+
+In this case, the type ElementT is called a traits class because it is used to access a trait of the given container type C (in general, more than one trait can be collected in such a class). Thus, traits classes are not limited to describing characteristics of container parameters but of any kind of “main parameters.”
+
+As a convenience, we can create an alias template for type functions. For example, we could introduce
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using ElementType = typename ElementT<T>::Type;
+\end{lstlisting}
+
+which allows us to further simplify the declaration of sumOfElements above to
+
+\begin{lstlisting}[style=styleCXX]
+template<typename C>
+ElementType<C> sumOfElements (C const& c);
+\end{lstlisting}
+
+
 \subsubsubsection{19.3.2\hspace{0.2cm}Transformation Traits}
+
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Removing References}
 
 \subsubsubsection{19.3.3\hspace{0.2cm}Predicate Traits}
 

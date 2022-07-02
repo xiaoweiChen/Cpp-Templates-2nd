@@ -1,9 +1,293 @@
 
+So far we have equated accumulation with summation. However, we can imagine other kinds of accumulations. For example, we could multiply the sequence of given values. Or, if the values were strings, we could concatenate them. Even finding the maximum value in a sequence could be formulated as an accumulation problem. In all these alternatives, the only accum() operation that needs to change is total += *beg. This operation can be called a policy of our accumulation process.
+
+Here is an example of how we could introduce such a policy in our accum() function template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum6.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include "accumtraits4.hpp"
+#include "sumpolicy1.hpp"
+
+template<typename T,
+		typename Policy = SumPolicy,
+		typename Traits = AccumulationTraits<T>>
+auto accum (T const* beg, T const* end)
+{
+	using AccT = typename Traits::AccT;
+	AccT total = Traits::zero();
+	while (beg != end) {
+		Policy::accumulate(total, *beg);
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+In this version of accum() SumPolicy is a policy class, that is, a class that implements one or more policies for an algorithm through an agreed-upon interface.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} We could generalize this to a policy parameter, which could be a class (as discussed) or a pointer to a function.
+\end{tcolorbox}
+
+SumPolicy could be written as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/sumpolicy1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef SUMPOLICY_HPP
+#define SUMPOLICY_HPP
+class SumPolicy {
+	public:
+	template<typename T1, typename T2>
+	static void accumulate (T1& total, T2 const& value) {
+		total += value;
+	}
+};
+#endif // SUMPOLICY_HPP
+\end{lstlisting}
+
+By specifying a different policy to accumulate values, we can compute different things. Consider, for example, the following program, which intends to determine the product of some values:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum6.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "accum6.hpp"
+#include <iostream>
+
+class MultPolicy {
+	public:
+	template<typename T1, typename T2>
+	static void accumulate (T1& total, T2 const& value) {
+		total *= value;
+	}
+};
+int main()
+{
+	// create array of 5 integer values
+	int num[] = { 1, 2, 3, 4, 5 };
+	
+	// print product of all values
+	std::cout << "the product of the integer values is "
+			<< accum<int,MultPolicy>(num, num+5)
+			<< ’\n’;
+}
+\end{lstlisting}
+
+However, the output of this program isn’t what we would like:
+
+\begin{tcblisting}{commandshell={}}
+the product of the integer values is 0
+\end{tcblisting}
+
+The problem here is caused by our choice of initial value: Although 0 works well for summation, it does not work for multiplication (a zero initial value forces a zero result for accumulated multiplications). This illustrates that different traits and policies may interact, underscoring the importance of careful template design.
+
+In this case, we may recognize that the initialization of an accumulation loop is a part of the accumulation policy. This policy may or may not make use of the trait zero(). Other alternatives are not to be forgotten: Not everything must be solved with traits and policies. For example, the std::accumulate() function of the C++ standard library takes the initial value as a third (function call) argument.
+
 
 \subsubsubsection{19.2.1\hspace{0.2cm}Traits and Policies: What’s the Difference?}
 
+A reasonable case can be made in support of the fact that policies are just a special case of traits. Conversely, it could be claimed that traits just encode a policy.
+
+The New Shorter Oxford English Dictionary (see [NewShorterOED]) has this to say:
+
+\begin{itemize}
+\item 
+trait n. ... a distinctive feature characterizing a thing
+
+\item 
+policy n. ... any course of action adopted as advantageous or expedient
+\end{itemize}
+
+Based on this, we tend to limit the use of the term policy classes to classes that encode an action of some sort that is largely orthogonal with respect to any other template argument with which it is combined. This is in agreement with Andrei Alexandrescu’s statement in his book Modern C++ Design (see page 8 of [AlexandrescuDesign]):
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Alexandrescu has been the main voice in the world of policy classes, and he has developed a rich set of techniques based on them.
+\end{tcolorbox}
+
+\textit{Policies have much in common with traits but differ in that they put less emphasis on type and more on behavior.}
+
+Nathan Myers, who introduced the traits technique, proposed the following more open-ended definition (see [MyersTraits]):
+
+\textit{Traits class: A class used in place of template parameters. As a class, it aggregates useful types and constants; as a template, it provides an avenue for that “extra level of indirection” that solves all software problems.}
+
+In general, we therefore tend to use the following (slightly fuzzy) definitions:
+
+\begin{itemize}
+\item 
+Traits represent natural additional properties of a template parameter.
+
+\item 
+Policies represent configurable behavior for generic functions and types (often with some commonly used defaults).
+\end{itemize}
+
+To elaborate further on the possible distinctions between the two concepts, we list the following observations about traits:
+
+\begin{itemize}
+\item 
+Traits can be useful as fixed traits (i.e., without being passed through template parameters).
+
+\item 
+Traits parameters usually have very natural default values (which are rarely overridden, or simply cannot be overridden).
+
+\item 
+Traits parameters tend to depend tightly on one or more main parameters.
+
+\item 
+Traits mostly combine types and constants rather than member functions.
+
+\item 
+Traits tend to be collected in traits templates.
+\end{itemize}
+
+For policy classes, we make the following observations:
+
+\begin{itemize}
+\item 
+Policy classes don’t contribute much if they aren’t passed as template parameters.
+
+\item 
+Policy parameters need not have default values and are often specified explicitly (although many generic components are configured with commonly used default policies).
+
+\item 
+Policy parameters are mostly orthogonal to other parameters of a template.
+
+\item 
+Policy classes mostly combine member functions.
+
+\item 
+Policies can be collected in plain classes or in class templates.
+\end{itemize}
+
+However, there is certainly an indistinct line between both terms. For example, the character traits of the C++ standard library also define functional behavior such as comparing, moving, and finding characters. And by replacing these traits, we can define string classes that behave in a caseinsensitive manner (see Section 13.2.15 in [JosuttisStdLib]) while keeping the same character type. Thus, although they are called traits, they have some properties associated with policies.
+
 \subsubsubsection{19.2.2\hspace{0.2cm}Member Templates versus Template Template Parameters}
+
+To implement an accumulation policy, we chose to express SumPolicy and MultPolicy as ordinary classes with a member template. An alternative consists of designing the policy class interface using class templates, which are then used as template template arguments (see Section 5.7 on page 83 and Section 12.2.3 on page 187). For example, we could rewrite SumPolicy as a template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/sumpolicy2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef SUMPOLICY_HPP
+#define SUMPOLICY_HPP
+
+template<typename T1, typename T2>
+class SumPolicy {
+	public:
+	static void accumulate (T1& total, T2 const& value) {
+		total += value;
+	}
+};
+
+#endif // SUMPOLICY_HPP
+\end{lstlisting}
+
+The interface of Accum can then be adapted to use a template template parameter:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum7.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include "accumtraits4.hpp"
+#include "sumpolicy2.hpp"
+
+template<typename T,
+		template<typename,typename> class Policy = SumPolicy,
+		typename Traits = AccumulationTraits<T>>
+auto accum (T const* beg, T const* end)
+{
+	using AccT = typename Traits::AccT;
+	AccT total = Traits::zero();
+	while (beg != end) {
+		Policy<AccT,T>::accumulate(total, *beg);
+		++beg;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+The same transformation can be applied to the traits parameter. (Other variations on this theme are possible: For example, instead of explicitly passing the AccT type to the policy type, it may be advantageous to pass the accumulation trait and have the policy determine the type of its result from a traits parameter.)
+
+The major advantage of accessing policy classes through template template parameters is that it makes it easier to have a policy class carry with it some state information (i.e., static data members) with a type that depends on the template parameters. (In our first approach, the static data members would have to be embedded in a member class template.)
+
+However, a downside of the template template parameter approach is that policy classes must now be written as templates, with the exact set of template parameters defined by our interface. This can make the expression of the traits themselves more verbose and less natural than a simple nontemplate class.
 
 \subsubsubsection{19.2.3\hspace{0.2cm}Combining Multiple Policies and/or Traits}
 
+As our development has shown, traits and policies don’t entirely do away with having multiple template parameters. However, they do reduce their number to something manageable. An interesting question, then, is how to order such multiple parameters.
+
+A simple strategy is to order the parameters according to the increasing likelihood of their default value to be selected. Typically, this would mean that the traits parameters follow the policy parameters because the latter are more often overridden in client code. (The observant reader may have noticed this strategy in our development.) 
+
+If we are willing to add a significant amount of complexity to our code, an alternative exists that essentially allows us to specify the nondefault arguments in any order. Refer to Section 21.4 on page 512 for details.
+
 \subsubsubsection{19.2.4\hspace{0.2cm}Accumulation with General Iterators}
+
+Before we end this introduction to traits and policies, it is   instructive to look at one version of accum() that adds the capability to handle generalized iterators (rather than just pointers), as expected from an industrial-strength generic component. Interestingly, this still allows us to call accum() with pointers because the C++ standard library provides iterator traits. (Traits are everywhere!) Thus, we could have defined our initial version of accum() as follows (ignoring our later refinements):
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In C++11, you have to declare the return type as VT.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/accum0.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef ACCUM_HPP
+#define ACCUM_HPP
+
+#include <iterator>
+
+template<typename Iter>
+auto accum (Iter start, Iter end)
+{
+	using VT = typename std::iterator_traits<Iter>::value_type;
+	VT total{}; // assume this actually creates a zero value
+	while (start != end) {
+		total += *start;
+		++start;
+	}
+	return total;
+}
+
+#endif // ACCUM_HPP
+\end{lstlisting}
+
+The std::iterator\_traits structure encapsulates all the relevant properties of iterators. Because a partial specialization for pointers exists, these traits are conveniently used with any ordinary pointer types. Here is how a standard library implementation may implement this support:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T>
+	struct iterator_traits<T*> {
+		using difference_type = ptrdiff_t;
+		using value_type = T;
+		using pointer = T*;
+		using reference = T&;
+		using iterator_category = random_access_iterator_tag ;
+	};
+}
+\end{lstlisting}
+
+However, there is no type for the accumulation of values to which an iterator refers; hence we still need to design our own AccumulationTraits.
+
+
+
+
+
+
+
+
+

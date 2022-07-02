@@ -1,0 +1,99 @@
+One argument against static polymorphism with templates is that the binding of the interfaces is done by instantiating the corresponding templates. This means that there is no common interface (class) to program against. Instead, any usage of a template simply works if all instantiated code is valid. If it is not, this might lead to hard-to-understand error messages or even cause valid but unintended behavior.
+
+For this reason, C++ language designers have been working on the ability to explicitly provide (and check) interfaces for template parameters. Such an interface is usually called a concept in C++.  It denotes a set of constraints that template arguments have to fulfill to successfully instantiate a template.
+
+Despite many years of work in this area, concepts are still not part of standard C++ as of C++17. Some compilers provide experimental support for such a feature, however, and concepts will likely be part of the next standard after C++17.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}GCC 7, for example, provides the option -fconcepts.
+\end{tcolorbox}
+
+Concepts can be understood as a kind of “interface” for static polymorphism. In our example, this might look as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{poly/conceptsreq.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "coord.hpp"
+template<typename T>
+concept GeoObj = requires(T x) {
+	{ x.draw() } -> void;
+	{ x.center_of_gravity() } -> Coord;
+	...
+};
+\end{lstlisting}
+
+Here, we use the keyword concept to define a concept GeoObj, which constrains a type to have callable members draw() and center\_of\_gravity() with appropriate result types.
+
+Now, we can rewrite some of our example templates to include a requires clause that constrains the template parameters with the GeoObj concept:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{poly/conceptspoly.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "conceptsreq.hpp"
+#include <vector>
+
+// draw any GeoObj
+template<typename T>
+requires GeoObj<T>
+void myDraw (T const& obj)
+{
+	obj.draw(); // call draw() according to type of object
+}
+
+// compute distance of center of gravity between two GeoObjs
+template<typename T1, typename T2>
+requires GeoObj<T1> && GeoObj<T2>
+Coord distance (T1 const& x1, T2 const& x2)
+{
+	Coord c = x1.center_of_gravity() - x2.center_of_gravity();
+	return c.abs(); // return coordinates as absolute values
+}
+
+// draw homogeneous collection of GeoObjs
+template<typename T>
+requires GeoObj<T>
+void drawElems (std::vector<T> const& elems)
+{
+	for (std::size_type i=0; i<elems.size(); ++i) {
+		elems[i].draw(); // call draw() according to type of element
+	}
+}
+\end{lstlisting}
+
+This approach is still noninvasive with respect to the types that can participate in the (static) polymorphic behavior:
+
+\begin{lstlisting}[style=styleCXX]
+// concrete geometric object class Circle
+// - not derived from any class or implementing any interface
+class Circle {
+	public:
+	void draw() const;
+	Coord center_of_gravity() const;
+	...
+};
+\end{lstlisting}
+
+That is, such types are still defined without any specific base class or requirements clause and can still be fundamental data types or types from independent frameworks.
+
+Appendix E includes a more detailed discussion of concepts for C++, as they are expected for the next C++ standard.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

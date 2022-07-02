@@ -1,0 +1,108 @@
+
+Let’s categorize and compare both forms of polymorphism.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Terminology}
+
+Dynamic and static polymorphism provide support for different C++ programming idioms:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}For a detailed discussion of polymorphism terminology, see also Sections 6.5 to 6.7 of [CzarneckiEiseneckerGenProg].
+\end{tcolorbox}
+
+\begin{itemize}
+\item 
+Polymorphism implemented via inheritance is bounded and dynamic:
+
+\begin{itemize}
+\item[-]
+Bounded means that the interfaces of the types participating in the polymorphic behavior are predetermined by the design of the common base class (other terms for this concept are invasive and intrusive).
+
+\item[-]
+Dynamic means that the binding of the interfaces is done at run time (dynamically).
+\end{itemize}
+
+\item 
+Polymorphism implemented via templates is unbounded and static:
+
+\begin{itemize}
+\item[-]
+Unbounded means that the interfaces of the types participating in the polymorphic behavior are not predetermined (other terms for this concept are noninvasive and nonintrusive).
+
+\item[-]
+Static means that the binding of the interfaces is done at compile time (statically).
+\end{itemize}
+\end{itemize}
+
+So, strictly speaking, in C++ parlance, dynamic polymorphism and static polymorphism are shortcuts for bounded dynamic polymorphism and unbounded static polymorphism. In other languages, other combinations exist (e.g., Smalltalk provides unbounded dynamic polymorphism). However, in the context of C++, the more concise terms dynamic polymorphism and static polymorphism do not cause confusion.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Strengths and Weaknesses}
+
+Dynamic polymorphism in C++ exhibits the following strengths:
+
+\begin{itemize}
+\item 
+Heterogeneous collections are handled elegantly.
+
+\item 
+The executable code size is potentially smaller (because only one polymorphic function is needed, whereas distinct template instances must be generated to handle different types).
+
+\item 
+Code can be entirely compiled; hence no implementation source must be published (distributing template libraries usually requires distribution of the source code of the template implementations).
+\end{itemize}
+
+In contrast, the following can be said about static polymorphism in C++:
+
+\begin{itemize}
+\item 
+Collections of built-in types are easily implemented. More generally, the interface commonality need not be expressed through a common base class.
+
+\item 
+Generated code is potentially faster (because no indirection through pointers is needed a priori and nonvirtual functions can be inlined much more often).
+
+\item 
+Concrete types that provide only partial interfaces can still be used if only that part ends up being exercised by the application.
+\end{itemize}
+
+Static polymorphism is often regarded as more type safe than dynamic polymorphism because all the bindings are checked at compile time. For example, there is little danger of inserting an object of the wrong type in a container instantiated from a template. However, in a container expecting pointers to a common base class, there is a possibility that these pointers unintentionally end up pointing to complete objects of different types.
+
+In practice, template instantiations can also cause some grief when different semantic assumptions hide behind identical-looking interfaces. For example, surprises can occur when a template that assumes an associative operator + is instantiated for a type that is not associative with respect to that operator. In practice, this kind of semantic mismatch occurs less often with inheritance-based hierarchies, presumably because the interface specification is more explicitly specified.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Combining Both Forms}
+
+Of course, you could combine both forms of polymorphism. For example, you could derive different kinds of geometric objects from a common base class to be able to handle heterogeneous collections of geometric objects. However, you can still use templates to write code for a certain kind of geometric object.
+
+The combination of inheritance and templates is further described in Chapter 21. We will see (among other things) how the virtuality of a member function can be parameterized and how an additional amount of flexibility is afforded to static polymorphism using the inheritance-based curiously recurring template pattern (or CRTP).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

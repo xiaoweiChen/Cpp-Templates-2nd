@@ -1,0 +1,79 @@
+
+In the early days of C++, enumeration values were the only mechanism to create “true constants” (called constant-expressions) as named members in class declarations. With them, we could, for example, define a Pow3 metaprogram to compute powers of 3 as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/pow3enum.hpp}
+\begin{lstlisting}[style=styleCXX]
+// primary template to compute 3 to the Nth
+template<int N>
+struct Pow3 {
+	enum { value = 3 * Pow3<N-1>::value };
+};
+
+// full specialization to end the recursion
+template<>
+struct Pow3<0> {
+	enum { value = 1 };
+};
+\end{lstlisting}
+
+The standardization of C++98 introduced the concept of in-class static constant initializers, so that our Pow3 metaprogram could look as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/pow3const.hpp}
+\begin{lstlisting}[style=styleCXX]
+// primary template to compute 3 to the Nth
+template<int N>
+struct Pow3 {
+	static int const value = 3 * Pow3<N-1>::value;
+};
+
+// full specialization to end the recursion
+template<>
+struct Pow3<0> {
+	static int const value = 1;
+};
+\end{lstlisting}
+
+However, there is a drawback with this version: Static constant members are lvalues (see Appendix B). So, if we have a declaration such as
+
+\begin{lstlisting}[style=styleCXX]
+void foo(int const&);
+\end{lstlisting}
+
+and we pass it the result of a metaprogram:
+
+\begin{lstlisting}[style=styleCXX]
+foo(Pow3<7>::value);
+\end{lstlisting}
+
+a compiler must pass the address of Pow3<7>::value, and that forces the compiler to instantiate and allocate the definition for the static member. As a result, the computation is no longer limited to a pure “compile-time” effect.
+
+Enumeration values aren’t lvalues (i.e., they don’t have an address). So, when we pass them by reference, no static memory is used. It’s almost exactly as if you passed the computed value as a literal. The first edition of this book therefore preferred the use of enumerator constants for this kind of applications.
+
+C++11, however, introduced constexpr static data members, and those are not limited to integral types. They do not solve the address issue raised above, but in spite of that shortcoming they are now a common way to produce results of metaprograms. They have the advantage of having a correct type (as opposed to an artificial enum type), and that type can be deduced when the static member is declared with the auto type specifier. C++17 added inline static data members, which do solve the address issue raised above, and can be used in conjunction with constexpr.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

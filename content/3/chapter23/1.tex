@@ -1,10 +1,353 @@
 
-
+C++ metaprogramming techniques evolved over time (the Afternotes at the end of this chapter survey some milestones in this area). Let’s discuss and categorize the various approaches to metaprogramming that are in common use in modern C++.
 
 \subsubsubsection{23.1.1\hspace{0.2cm}Value Metaprogramming}
 
+In the first edition of this book, we were limited to the features introduced in the original C++ standard (published in 1998, with minor corrections in 2003). In that world, composing simple compile-time (“meta-”) computations was a minor challenge. We therefore devoted a good chunk of this chapter to doing just that; one fairly advanced example computed the square root of an integer value at compile time using recursive template instantiations. As introduced in Section 8.2 on page 125, C++11 and, especially, C++14 removed most of that challenge with the introduction of constexpr functions.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The C++11 constexpr capabilities were sufficient to solve many common challenges, but the programming model was not always pleasant (e.g., no loop statements were available, so iterative computation had to exploit recursive function calls; see Section 23.2 on page 537). C++14 enabled loop statements and various other constructs.
+\end{tcolorbox}
+
+For example, since C++14, a compile-time function to compute a square root is easily written as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/sqrtconstexpr.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+constexpr T sqrt(T x)
+{
+	// handle cases where x and its square root are equal as a special case to simplify
+	// the iteration criterion for larger x:
+	if (x <= 1) {
+		return x;
+	}
+	// repeatedly determine in which half of a [lo, hi] interval the square root of x is located,
+	// until the interval is reduced to just one value:
+	T lo = 0, hi = x;
+	for (;;) {
+		auto mid = (hi+lo)/2, midSquared = mid*mid;
+		if (lo+1 >= hi || midSquared == x) {
+			// mid must be the square root:
+			return mid;
+		}
+		// continue with the higher/lower half-interval:
+		if (midSquared < x) {
+			lo = mid;
+		}
+		else {
+			hi = mid;
+		}
+	}
+}
+\end{lstlisting}
+
+This algorithm searches for the answer by repeatedly halving an interval known to contain the square root of x (the roots of 0 and 1 are treated as special cases to keep the convergence criterion simple). This sqrt() function can be evaluated at compile or run time:
+
+\begin{lstlisting}[style=styleCXX]
+static_assert(sqrt(25) == 5, ""); // OK (evaluated at compile time)
+static_assert(sqrt(40) == 6, ""); // OK (evaluated at compile time)
+
+std::array<int, sqrt(40)+1> arr; // declares array of 7 elements (compile time)
+long long l = 53478;
+std::cout << sqrt(l) << ’\n’; // prints 231 (evaluated at run time)
+\end{lstlisting}
+
+This function’s implementation may not be the most efficient at run time (where exploiting peculiarities of the machine often pays off), but because it is meant to perform compile-time computations, absolute efficiency is less important than portability. Note that no advanced “template magic” is in sight in that square root example, only the usual template argument deduction for a function template. The code is “plain C++” and is not particularly challenging to read.
+
+Value metaprogramming (i.e., programming the computation of compile-time values) as we did above is occasionally quite useful, but there are two additional kinds of metaprogramming that can be performed with modern C++ (say, C++14 and C++17): type metaprogramming and hybrid metaprogramming.
+
 \subsubsubsection{23.1.2\hspace{0.2cm}Type Metaprogramming}
+
+We already encountered a form of type computation in our discussion of certain traits templates in Chapter 19, which take a type as input and produce a new type from it. For example, our RemoveReferenceT class template computes the underlying type of a reference type. However, the examples we developed in Chapter 19 computed only fairly elementary type operations. By relying on recursive template instantiation—a mainstay of template-based metaprogramming—we can perform type computations that are considerably more complex.
+
+Consider the following small example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/removeallextents.hpp}
+\begin{lstlisting}[style=styleCXX]
+// primary template: in general we yield the given type:
+template<typename T>
+struct RemoveAllExtentsT {
+	using Type = T;
+};
+
+// partial specializations for array types (with and without bounds):
+template<typename T, std::size_t SZ>
+struct RemoveAllExtentsT<T[SZ]> {
+	using Type = typename RemoveAllExtentsT<T>::Type;
+};
+template<typename T>
+struct RemoveAllExtentsT<T[]> {
+	using Type = typename RemoveAllExtentsT<T>::Type;
+};
+
+template<typename T>
+using RemoveAllExtents = typename RemoveAllExtentsT<T>::Type;
+\end{lstlisting}
+
+Here, RemoveAllExtents is a type metafunction (i.e., a computational device that produces a result type) that will remove an arbitrary number of top-level “array layers” from a type.2 You can use it as follows:
+
+\begin{lstlisting}[style=styleCXX]
+RemoveAllExtents<int[]> // yields int
+RemoveAllExtents<int[5][10]> // yields int
+RemoveAllExtents<int[][10]> // yields int
+RemoveAllExtents<int(*)[5]> // yields int(*)[5]
+\end{lstlisting}
+
+The metafunction performs its task by having the partial specialization that matches the top-level array case recursively “invoke” the metafunction itself.
+
+Computing with values would be very limited if all that was available to us were scalar values. Fortunately, just about any programming language has at least one container of values construct that greatly magnifies the power of that language (and most languages have a variety of container kinds, such as arrays/vectors, hash tables, etc.). The same is true of type metaprogramming: Adding a “container of types” construct greatly increases the applicability of the discipline. Fortunately, modern C++ includes mechanisms that enable the development of such a container. Chapter 24 develops a Typelist<...> class template, which is exactly such a container of types, in great detail.
 
 \subsubsubsection{23.1.3\hspace{0.2cm}Hybrid Metaprogramming}
 
+With value metaprogramming and type metaprogramming we can compute values and types at compile time. Ultimately, however, we’re interested in run-time effects, so we use these metaprograms in run time code in places where types and constants are expected. Metaprogramming can do more than that, however: We can programmatically assemble at compile time bits of code with a run-time effect. We call that hybrid metaprogramming.
+
+To illustrate this principle, let’s start with a simple example: computing the dot-product of two std::array values. Recall that std::array is a fixed-length container template declared as follows:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T, size_t N> struct array;
+}
+\end{lstlisting}
+
+where N is the number of elements (of type T) in the array. Given two objects of the same array type, their dot-product can be computed as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, std::size_t N>
+auto dotProduct(std::array<T, N> const& x, std::array<T, N> const& y)
+{
+	T result{};
+	for (std::size_t k = 0; k<N; ++k) {
+		result += x[k]*y[k];
+	}
+	return result;
+}
+\end{lstlisting}
+
+A straightforward compilation of the for-loop will produce branching instructions that on some machines may cause some overhead compared to a straight-line execution of
+
+\begin{lstlisting}[style=styleCXX]
+result += x[0]*y[0];
+result += x[1]*y[1];
+result += x[2]*y[2];
+result += x[3]*y[3];
+...
+\end{lstlisting}
+
+Fortunately, modern compilers will optimize the loop into whichever form is most efficient for the target platform. For the sake of discussion, however, let’s rewrite our dotProduct() implementation in a way that avoids the loop:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This is known as loop unrolling. We generally recommend against explicitly unrolling loops in portable code since the details that determine the best unrolling strategy depend highly on the target platform and the loop body; the compiler usually does a much better job of taking those considerations into account.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, std::size_t N>
+struct DotProductT {
+	static inline T result(T* a, T* b) {
+		return *a * *b + DotProduct<T, N-1>::result(a+1,b+1);
+	}
+};
+
+// partial specialization as end criteria
+template<typename T>
+struct DotProductT<T, 0> {
+	static inline T result(T*, T*) {
+		return T{};
+	}
+};
+
+template<typename T, std::size_t N>
+auto dotProduct(std::array<T, N> const& x,
+				std::array<T, N> const& y)
+{
+	return DotProductT<T, N>::result(x.begin(), y.begin());
+}
+\end{lstlisting}
+
+This new implementation delegates the work to a class template DotProductT. That enables us to use recursive template instantiation with class template partial specialization to end the recursion. Note how each instantiation of DotProductT produces the sum of one term of the dot-product and the dot-product of the remaining components of the array. For values of type std::array<T,N> there will therefore be N instances of the primary template and one instance of the terminating partial specialization. For this to be efficient, it is critical that the compiler inlines every invocation of the static member functions result(). Fortunately, that is generally true when even a moderate level of compiler optimizations is enabled.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}We specify the inline keyword explicitly here because some compilers (notably Clang) take this as hint to try a little harder to inline calls. From a language point of view, these functions are implicitly inline because they are defined in the body of their enclosing class.
+\end{tcolorbox}
+
+The central observation about this code is that it blends a compile-time computation (achieved here through recursive template instantiation) that determines the overall structure of the code with a run-time computation (calling result()) that determines the specific run-time effect.
+
+We mentioned earlier that type metaprogramming is greatly enhanced by the availability of a “container of types.” We’ve already seen that in hybrid metaprogramming a fixed-length array type can be useful. Nonetheless, the true “hero container” of hybrid metaprogramming is the tuple. A tuple is a sequence of values, each with a selectable type. The C++ standard library includes a std::tuple class template that supports that notion. For example,
+
+\begin{lstlisting}[style=styleCXX]
+std::tuple<int, std::string, bool> tVal{42, "Answer", true};
+\end{lstlisting}
+
+defines a variable tVal that aggregates three values of types int, std::string, and bool (in that specific order). Because of the tremendous importance of tuple-like containers for modern C++ programming, we develop one in detail in Chapter 25. The type of tVal above is very similar to a simple struct type like:
+
+\begin{lstlisting}[style=styleCXX]
+struct MyTriple {
+	int v1;
+	std::string v2;
+	bool v3;
+};
+\end{lstlisting}
+
+Given that in std::array and std::tuple we have flexible counterparts to array types and (simple) struct types, it is natural to wonder whether a counterpart to simple union types would also be useful for hybrid computation. The answer is “yes.” The C++ standard library introduced a std::variant template for this purpose in C++17, and we develop a similar component in Chapter 26. 
+
+Because std::tuple and std::variant, like struct types, are heterogeneous types, hybrid metaprogramming that uses such types is sometimes called heterogeneous metaprogramming.
+
 \subsubsubsection{23.1.4\hspace{0.2cm}Hybrid Metaprogramming for Unit Types}
+
+Another example demonstrating the power of hybrid computing is libraries that are able to compute results of values of different unit types. The value computation is performed at run time, but the computation of the resulting units it determined at compile time.
+
+Let’s illustrate this with a highly simplified example. We are going to keep track of units in terms of their ratio (fraction) of a principal unit. For example, if the principal unit for time is a second, a millisecond is represented with ratio 1/1000 and a minute with ratio 60/1. The key, then, is to define a ratio type where each value has its own type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/ratio.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<unsigned N, unsigned D = 1>
+struct Ratio {
+	static constexpr unsigned num = N; // numerator
+	static constexpr unsigned den = D; // denominator
+	using Type = Ratio<num, den>;
+};
+\end{lstlisting}
+
+Now we can define compile-time computations such as adding two units:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/ratioadd.hpp}
+\begin{lstlisting}[style=styleCXX]
+// implementation of adding two ratios:
+template<typename R1, typename R2>
+struct RatioAddImpl
+{
+	private:
+	static constexpr unsigned den = R1::den * R2::den;
+	static constexpr unsigned num = R1::num * R2::den + R2::num * R1::den;
+	public:
+	typedef Ratio<num, den> Type;
+};
+
+// using declaration for convenient usage:
+template<typename R1, typename R2>
+using RatioAdd = typename RatioAddImpl<R1, R2>::Type;
+\end{lstlisting}
+
+This allows us to compute the sum of two ratios at compile time:
+
+\begin{lstlisting}[style=styleCXX]
+using R1 = Ratio<1,1000>;
+using R2 = Ratio<2,3>;
+using RS = RatioAdd<R1,R2>; // RS has type Ratio<2003,2000>
+std::cout << RS::num << ’/’ << RS::den << ’\n’; // prints 2003/3000
+
+using RA = RatioAdd<Ratio<2,3>,Ratio<5,7>>; // RA has type Ratio<29,21>
+std::cout << RA::num << ’/’ << RA::den << ’\n’; // prints 29/21
+\end{lstlisting}
+
+We can now define a class template for durations, parameterized with an arbitrary value type and a unit type that is an instance of Ratio<>:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/duration.hpp}
+\begin{lstlisting}[style=styleCXX]
+// duration type for values of type T with unit type U:
+template<typename T, typename U = Ratio<1>>
+class Duration {
+	public:
+	using ValueType = T;
+	using UnitType = typename U::Type;
+	private:
+	ValueType val;
+	public:
+	constexpr Duration(ValueType v = 0)
+	: val(v) {
+	}
+	constexpr ValueType value() const {
+		return val;
+	}
+};
+\end{lstlisting}
+
+The interesting part is the definition of an operator+ to add two Durations:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/durationadd.hpp}
+\begin{lstlisting}[style=styleCXX]
+// adding two durations where unit type might differ:
+template<typename T1, typename U1, typename T2, typename U2>
+auto constexpr operator+(Duration<T1, U1> const& lhs,
+						 Duration<T2, U2> const& rhs)
+{
+	// resulting type is a unit with 1 a nominator and
+	// the resulting denominator of adding both unit type fractions
+	using VT = Ratio<1,RatioAdd<U1,U2>::den>;
+	// resulting value is the sum of both values
+	// converted to the resulting unit type:
+	auto val = lhs.value() * VT::den / U1::den * U1::num +
+				rhs.value() * VT::den / U2::den * U2::num;
+	return Duration<decltype(val), VT>(val);
+}
+\end{lstlisting}
+
+We allow the arguments to have different unit types, U1 and U2. And we use these unit types to compute the resulting duration to have a unit type that is the corresponding unit fraction (a fraction where the numerator is 1). With all that in place, we can compile the following code:
+
+\begin{lstlisting}[style=styleCXX]
+int x = 42;
+int y = 77;
+
+auto a = Duration<int, Ratio<1,1000>>(x); // x milliseconds
+auto b = Duration<int, Ratio<2,3>>(y); // y 2/3 seconds
+auto c = a + b; // computes resulting unit type 1/3000 seconds
+				// and generates run-time code for c = a*3 + b*2000
+\end{lstlisting}
+
+The key “hybrid” effect is that for the sum c the compiler determines the resulting unit type Ratio<1,3000> at compile time and generates code to compute at run time the resulting value, which is adjusted for the resulting unit type.
+
+Because the value type is a template parameter, we can use class Duration with value types other than int or even use heterogeneous value types (as long as adding the values of these types is defined):
+
+\begin{lstlisting}[style=styleCXX]
+auto d = Duration<double, Ratio<1,3>>(7.5); // 7.5 1/3 seconds
+auto e = Duration<int, Ratio<1>>(4); // 4 seconds
+
+auto f = d + e; // computes resulting unit type 1/3 seconds
+				// and generates code for f = d + e*3
+\end{lstlisting}
+
+In addition, the compiler can even perform the value computation at compile-time if the values are known at compile time, because operator+ for durations is constexpr.
+
+The C++ standard library class template std::chrono uses this approach with several refinements, such as using predefined units (e.g., std::chrono::milliseconds), supporting duration literals (e.g., 10ms), and dealing with overflow.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

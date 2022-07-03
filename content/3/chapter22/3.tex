@@ -1,0 +1,90 @@
+The FunctorBridge class template is responsible for the ownership and manipulation of the underlying function object. It is implemented as an abstract base class, forming the foundation for the dynamic polymorphism of FunctionPtr:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/functorbridge.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename R, typename... Args>
+class FunctorBridge
+{
+	public:
+	virtual ~FunctorBridge() {
+	}
+	virtual FunctorBridge* clone() const = 0;
+	virtual R invoke(Args... args) const = 0;
+};
+\end{lstlisting}
+
+FunctorBridge provides the essential operations needed to manipulate a stored function object through virtual functions: a destructor, a clone() operation to perform copies, and an invoke. operation to call the underlying function object. Don’t forget to define clone() and invoke() to be const member functions.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Making invoke() const is a safety belt against invoking non-const operator() overloads through const FunctionPtr objects, which would violate the expectations of programmers.
+\end{tcolorbox}
+
+Using these virtual functions, we can implement FunctionPtr’s copy constructor and function call operator:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/functionptr-cpinv.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename R, typename... Args>
+FunctionPtr<R(Args...)>::FunctionPtr(FunctionPtr const& other)
+: bridge(nullptr)
+{
+	if (other.bridge) {
+		bridge = other.bridge->clone();
+	}
+}
+
+template<typename R, typename... Args>
+R FunctionPtr<R(Args...)>::operator()(Args... args) const
+{
+	return bridge->invoke(std::forward<Args>(args)...);
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

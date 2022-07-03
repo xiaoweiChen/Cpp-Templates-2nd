@@ -1,5 +1,174 @@
 
+Consider a simple Polygon class that consists of a sequence of points:
+
+\begin{lstlisting}[style=styleCXX]
+class Point
+{
+	public:
+	double x, y;
+	Point() : x(0.0), y(0.0) { }
+	Point(double x, double y) : x(x), y(y) { }
+};
+
+class Polygon
+{
+	private:
+	std::vector<Point> points;
+	public:
+	... // public operations
+};
+\end{lstlisting}
+
+This Polygon class would be more useful if the user could extend the set of information associated with each Point to include application-specific data such as the color of each point, or perhaps associate a label with each point. One option to make this extension possible would be to parameterize Polygon based on the type of the point:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename P>
+class Polygon
+{
+	private:
+	std::vector<P> points;
+	public:
+	... // public operations
+};
+\end{lstlisting}
+
+Users could conceivably create their own Point-like data type that provided the same interface as Point but includes other application-specific data, using inheritance:
+
+\begin{lstlisting}[style=styleCXX]
+class LabeledPoint : public Point
+{
+	public:
+	std::string label;
+	LabeledPoint() : Point(), label("") { }
+	LabeledPoint(double x, double y) : Point(x, y), label("") { }
+};
+\end{lstlisting}
+
+This implementation has its shortcomings. For one, it requires that the type Point be exposed to the user so that the user can derive from it. Also, the author of LabeledPoint needs to be careful to provide exactly the same interface as Point (e.g., inheriting or providing all of the same constructors as Point), or LabeledPoint will not work with Polygon. This constraint becomes more problematic if Point changes from one version of the Polygon template to another: The addition of a new Point constructor could require each derived class to be updated.
+
+Mixins provide an alternative way to customize the behavior of a type without inheriting from it. Mixins essentially invert the normal direction of inheritance, because the new classes are “mixed in” to the inheritance hierarchy as base classes of a class template rather than being created as a new derived class. This approach allows the introduction of new data members and other operations without requiring any duplication of the interface.
+
+A class template that supports mixins will typically accept an arbitrary number of extra classes from which it will derive:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Mixins>
+class Point : public Mixins...
+{
+	public:
+	double x, y;
+	Point() : Mixins()..., x(0.0), y(0.0) { }
+	Point(double x, double y) : Mixins()..., x(x), y(y) { }
+};
+\end{lstlisting}
+
+Now, we can “mix in” a base class containing a label to produce a LabeledPoint:
+
+\begin{lstlisting}[style=styleCXX]
+class Label
+{
+	public:
+	std::string label;
+	Label() : label("") { }
+};
+
+using LabeledPoint = Point<Label>;
+\end{lstlisting}
+
+or even mix in several base classes:
+
+\begin{lstlisting}[style=styleCXX]
+class Color
+{
+	public:
+	unsigned char red = 0, green = 0, blue = 0;
+};
+
+using MyPoint = Point<Label, Color>;
+\end{lstlisting}
+
+With this mixin-based Point, it becomes easy to introduce additional information to Point without changing its interface, so Polygon becomes easier to use and evolve. Users need only apply the implicit conversion from the Point specialization to their mixin class (Label or Color, above) to access that data or interface. Moreover, the Point class can even be entirely hidden, with the mixins provided to the Polygon class template itself:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Mixins>
+class Polygon
+{
+	private:
+	std::vector<Point<Mixins...>> points;
+	public:
+	... // public operations
+};
+\end{lstlisting}
+
+Mixins are useful in cases where a template needs some small level of customization—such as decorating internally stored objects with user-specified data—without requiring the library to expose and document those internal data types and their interfaces.
 
 \subsubsubsection{21.3.1\hspace{0.2cm}Curious Mixins}
 
+Mixins can be made more powerful by combining them with the Curiously Recurring Template Pattern (CRTP) described in Section 21.2 on page 495. Here, each of the mixins is actually a class template that will be provided with the type of the derived class, allowing additional customization to that derived class. A CRTP-mixin version of Point would be written as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<template<typename>... Mixins>
+class Point : public Mixins<Point>...
+{
+	public:
+	double x, y;
+	Point() : Mixins<Point>()..., x(0.0), y(0.0) { }
+	Point(double x, double y) : Mixins<Point>()..., x(x), y(y) { }
+};
+\end{lstlisting}
+
+This formulation requires some more work for each class that will be mixed in, so classes such as Label and Color will need to become class templates. However, the mixed-in classes can now tailor their behavior to the specific instance of the derived class they’ve been mixed into. For example, we can mix the previously discussed ObjectCounter template into Point to count the number of points created by Polygon and compose that mixin with other application-specific mixins as well.
+
 \subsubsubsection{21.3.2\hspace{0.2cm}Parameterized Virtuality}
+
+Mixins also allow us to indirectly parameterize other attributes of the derived class, such as the virtuality of a member function. A simple example shows this rather surprising technique:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/virtual.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+class NotVirtual {
+};
+
+class Virtual {
+	public:
+	virtual void foo() {
+	}
+};
+
+template<typename... Mixins>
+class Base : public Mixins... {
+	public:
+	// the virtuality of foo() depends on its declaration
+	// (if any) in the base classes Mixins...
+	void foo() {
+		std::cout << "Base::foo()" << ’\n’;
+	}
+};
+
+template<typename... Mixins>
+class Derived : public Base<Mixins...> {
+	public:
+	void foo() {
+		std::cout << "Derived::foo()" << ’\n’;
+	}
+};
+
+int main()
+{
+	Base<NotVirtual>* p1 = new Derived<NotVirtual>;
+	p1->foo(); // calls Base::foo()
+	
+	Base<Virtual>* p2 = new Derived<Virtual>;
+	p2->foo(); // calls Derived::foo()
+}
+\end{lstlisting}
+
+This technique can provide a tool to design a class template that is usable both to instantiate concrete classes and to extend using inheritance. However, it is rarely sufficient just to sprinkle virtuality on some member functions to obtain a class that makes a good base class for more specialized functionality. This sort of development method requires more fundamental design decisions. It is therefore usually more practical to design two different tools (class or class template hierarchies) than to try to integrate them all into one template hierarchy.
+
+
+
+
+
+

@@ -1,0 +1,165 @@
+The std::function<> type is effectively a generalized form of a C++ function pointer, providing the same fundamental operations:
+
+\begin{itemize}
+\item 
+It can be used to invoke a function without the caller knowing anything about the function itself.
+
+\item 
+It can be copied, moved, and assigned.
+
+
+\item 
+It can be initialized or assigned from another function (with a compatible signature).
+
+
+\item 
+It has a “null” state that indicates when no function is bound to it.
+\end{itemize}
+
+However, unlike a C++ function pointer, a std::function<> can also store a lambda or any other function object with a suitable operator(), all of which may have different types.
+
+In the remainder of this chapter, we will build our own generalized function pointer class template, FunctionPtr, to provide these same core operations and capabilities and that can be used in place of std::function:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/forupto4.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "functionptr.hpp"
+#include <vector>
+#include <iostream>
+
+void forUpTo(int n, FunctionPtr<void(int)> f)
+{
+	for (int i = 0; i != n; ++i)
+	{
+		f(i); // call passed function f for i
+	}
+}
+
+void printInt(int i)
+{
+	std::cout << i << ’ ’;
+}
+
+int main()
+{
+	std::vector<int> values;
+	
+	// insert values from 0 to 4:
+	forUpTo(5,
+			[&values](int i) {
+				values.push_back(i);
+			});
+		
+	// print elements:
+	forUpTo(5,
+			printInt); // prints 0 1 2 3 4
+	std::cout << ’\n’;
+}
+\end{lstlisting}
+
+The interface to FunctionPtr is fairly straightforward, providing construction, copy, move, destruction, initialization, and assignment from arbitrary function objects and invocation of the underlying function object. The most interesting part of the interface is how it is described entirely within a class template partial specialization, which serves to break the template argument (a function type) into its component pieces (result and argument types):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/functionptr.hpp}
+\begin{lstlisting}[style=styleCXX]
+// primary template:
+template<typename Signature>
+class FunctionPtr;
+
+// partial specialization:
+template<typename R, typename... Args>
+class FunctionPtr<R(Args...)>
+{
+	private:
+	FunctorBridge<R, Args...>* bridge;
+	public:
+	// constructors:
+	FunctionPtr() : bridge(nullptr) {
+	}
+	FunctionPtr(FunctionPtr const& other); // see functionptr-cpinv.hpp
+	FunctionPtr(FunctionPtr& other)
+	: FunctionPtr(static_cast<FunctionPtr const&>(other)) {
+	}
+	FunctionPtr(FunctionPtr&& other) : bridge(other.bridge) {
+		other.bridge = nullptr;
+	}
+	// construction from arbitrary function objects:
+	template<typename F> FunctionPtr(F&& f); // see functionptr-init.hpp
+	
+	// assignment operators:
+	FunctionPtr& operator=(FunctionPtr const& other) {
+		FunctionPtr tmp(other);
+		swap(*this, tmp);
+		return *this;
+	}
+	FunctionPtr& operator=(FunctionPtr&& other) {
+		delete bridge;
+		bridge = other.bridge;
+		other.bridge = nullptr;
+		return *this;
+	}
+	// construction and assignment from arbitrary function objects:
+	template<typename F> FunctionPtr& operator=(F&& f) {
+		FunctionPtr tmp(std::forward<F>(f));
+		swap(*this, tmp);
+		return *this;
+	}
+
+	// destructor:
+	~FunctionPtr() {
+	delete bridge;
+	}
+
+	friend void swap(FunctionPtr& fp1, FunctionPtr& fp2) {
+	std::swap(fp1.bridge, fp2.bridge);
+	}
+	explicit operator bool() const {
+	return bridge == nullptr;
+	}
+
+	// invocation:
+	R operator()(Args... args) const; // see functionptr-cpinv.hpp
+};
+\end{lstlisting}
+
+The implementation contains a single nonstatic member variable, bridge, which will be responsible for both storage and manipulation of the stored function object. Ownership of this pointer is tied to the FunctionPtr object, so most of the implementation provided merely manages this pointer. The unimplemented functions contain the interesting parts of the implementation and is described in the following subsections.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

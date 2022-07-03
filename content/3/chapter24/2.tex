@@ -1,5 +1,12 @@
 
+The fundamental typelist operations Front, PopFront, and PushFront can be composed to create more interesting typelist manipulations. For example, we can replace the first element in a typelist by applying PushFront to the result of PopFront:
 
+\begin{lstlisting}[style=styleCXX]
+using Type = PushFront<PopFront<SignedIntegralTypes>, bool>;
+			// equivalent to Typelist<bool, short, int, long, long long>
+\end{lstlisting}
+
+Going further, we can implement algorithms—searches, transformations, reversals—as template metafunctions operating on typelists.
 
 \subsubsubsection{24.2.1\hspace{0.2cm}Indexing}
 

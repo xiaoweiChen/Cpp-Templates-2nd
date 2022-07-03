@@ -1,0 +1,119 @@
+
+Function objects are useful for providing customizable behavior to templates. For example, the following function template enumerates integer values from 0 up to some value, providing each value to the given function object f:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/forupto1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <iostream>
+
+template<typename F>
+void forUpTo(int n, F f)
+{
+	for (int i = 0; i != n; ++i)
+	{
+		f(i); // call passed function f for i
+	}
+}
+
+void printInt(int i)
+{
+	std::cout << i << ’ ’;
+}
+
+int main()
+{
+	std::vector<int> values;
+	
+	// insert values from 0 to 4:
+	forUpTo(5,
+	[&values](int i) {
+		values.push_back(i);
+	});
+
+	// print elements:
+	forUpTo(5,
+			printInt); // prints 0 1 2 3 4
+	std::cout << ’\n’;
+}
+\end{lstlisting}
+
+The forUpTo() function template can be used with any function object, including a lambda, function pointer, or any class that either implements a suitable operator() or a conversion to a function pointer or reference, and each use of forUpTo() will likely produce a different instantiation of the function template. Our example function template is fairly small, but if the template were large, it is possible that these instantiations could increase code size.
+
+One approach to limit this increase in code size is to turn the function template into a nontemplate, which needs no instantiation. For example, we might attempt to do this with a function pointer:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/forupto2.hpp}
+\begin{lstlisting}[style=styleCXX]
+void forUpTo(int n, void (*f)(int))
+{
+	for (int i = 0; i != n; ++i)
+	{
+		f(i); // call passed function f for i
+	}
+}
+\end{lstlisting}
+
+However, while this implementation will work when passed printInt(), it will produce an error when passed the lambda:
+
+\begin{lstlisting}[style=styleCXX]
+forUpTo(5,
+printInt); // OK: prints 0 1 2 3 4
+
+forUpTo(5,
+		[&values](int i) { // ERROR: lambda not convertible to a function pointer
+			values.push_back(i);
+		});
+\end{lstlisting}
+
+The standard library’s class template std::function<> permits an alternative formulation of forUpTo():
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/forupto3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <functional>
+void forUpTo(int n, std::function<void(int)> f)
+{
+	for (int i = 0; i != n; ++i)
+	{
+		f(i); // call passed function f for i
+	}
+}
+\end{lstlisting}
+
+The template argument to std::function<> is a function type that describes the parameter types the function object will receive and the return type that it should produce, much like a function pointer describes the parameter and result types.
+
+This formulation of forUpTo() provides some aspects of static polymorphism—the ability to work with an unbounded set of types including function pointers, lambdas, and arbitrary classes with a suitable operator()—while itself remaining a nontemplate function with a single implementation. It does so using a technique called type erasure, which bridges the gap between static and dynamic polymorphism.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

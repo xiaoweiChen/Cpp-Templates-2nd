@@ -1,0 +1,105 @@
+A typelist is a type that represents a list of types and can be manipulated by a template metaprogram. It provides the operations typically associated with a list: iterating over the elements (types) in the list, adding elements, or removing elements. However, typelists differ from most run-time data structures, such as std::list, in that they don’t allow mutation. For example, adding an element to an std::list changes the list itself, and that change can be observed by any other part of the program that has access to that list. Adding an element to a typelist, on the other hand, does not change the original typelist: Rather, adding an element to an existing typelist creates a new typelist without modifying the original. Readers familiar with functional programming languages, such as Scheme, ML, and Haskell, will likely recognize the parallels between working with typelists in C++ and lists in those languages.
+
+A typelist is typically implemented as a class template specialization that encodes the contents of the typelist—that is, the types it contains and their order—within its template arguments. A direct implementation of a typelist encodes the elements in a parameter pack:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelist.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Elements>
+class Typelist
+{
+};
+\end{lstlisting}
+
+The elements of a Typelist are written directly as its template arguments. An empty typelist is written as Typelist<>, a typelist containing just int is written  as Typelist<int>, and so on. Here is a typelist containing all of the signed integral types:
+
+\begin{lstlisting}[style=styleCXX]
+using SignedIntegralTypes =
+			Typelist<signed char, short, int, long, long long>;
+\end{lstlisting}
+
+Manipulating this typelist typically requires breaking the typelist into parts, generally by separating the first element in the list (the head) from the remaining elements in the list (the tail). For example, the Front metafunction extracts the first element from the typelist:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class FrontT;
+
+template<typename Head, typename... Tail>
+class FrontT<Typelist<Head, Tail...>>
+{
+	public:
+	using Type = Head;
+};
+
+template<typename List>
+using Front = typename FrontT<List>::Type;
+\end{lstlisting}
+
+Therefore, FrontT<SignedIntegralTypes>::Type (written more succinctly as Front<SignedIntegralTypes>) will produce signed char. Similarly, the PopFront metafunction removes the first element from the typelist. It’s implementation splits the typelist elements into the head and tail, then forms a new Typelist specialization from the elements in the tail.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistpopfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class PopFrontT;
+
+template<typename Head, typename... Tail>
+class PopFrontT<Typelist<Head, Tail...>> {
+	public:
+	using Type = Typelist<Tail...>;
+};
+
+template<typename List>
+using PopFront = typename PopFrontT<List>::Type;
+\end{lstlisting}
+
+PopFront<SignedIntegralTypes> produces the typelist
+
+\begin{lstlisting}[style=styleCXX]
+Typelist<short, int, long, long long>
+\end{lstlisting}
+
+One can also insert elements onto the front of the typelist by capturing all of the existing elements into a template parameter pack, then creating a new Typelist specialization containing all of those elements:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistpushfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename NewElement>
+class PushFrontT;
+
+template<typename... Elements, typename NewElement>
+class PushFrontT<Typelist<Elements...>, NewElement> {
+	public:
+	using Type = Typelist<NewElement, Elements...>;
+};
+
+template<typename List, typename NewElement>
+using PushFront = typename PushFrontT<List, NewElement>::Type;
+\end{lstlisting}
+
+As one might expect,
+
+\begin{lstlisting}[style=styleCXX]
+PushFront<SignedIntegralTypes, bool>
+\end{lstlisting}
+
+produces:
+
+\begin{lstlisting}[style=styleCXX]
+Typelist<bool, signed char, short, int, long, long long>
+\end{lstlisting}
+
+
+
+
+
+
+
+
+

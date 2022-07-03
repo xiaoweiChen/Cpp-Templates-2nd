@@ -1,0 +1,122 @@
+The earliest documented example of a metaprogram was by Erwin Unruh, then representing Siemens on the C++ standardization committee. He noted the computational completeness of the template instantiation process and demonstrated his point by developing the first metaprogram. He used the Metaware compiler and coaxed it into issuing error messages that would contain successive prime numbers. Here is the code that was circulated at a C++ committee meeting in 1994 (modified so that it now compiles on standard conforming compilers):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/unruh.cpp}
+\begin{lstlisting}[style=styleCXX]
+// prime number computation
+// (modified from original from 1994 by Erwin Unruh)
+
+template<int p, int i>
+struct is_prime {
+	enum { pri = (p==2) || ((p%i) && is_prime<(i>2?p:0),i-1>::pri) };
+};
+
+template<>
+struct is_prime<0,0> {
+	enum {pri=1};
+};
+
+template<>
+struct is_prime<0,1> {
+	enum {pri=1};
+};
+
+template<int i>
+struct D {
+	D(void*);
+};
+
+template<int i>
+struct CondNull {
+	static int const value = i;
+};
+template<>
+struct CondNull<0> {
+	static void* value;
+};
+void* CondNull<0>::value = 0;
+
+template<int i>
+struct Prime_print { // primary template for loop to print prime numbers
+	Prime_print<i-1> a;
+	enum { pri = is_prime<i,i-1>::pri };
+	void f() {
+		D<i> d = CondNull<pri ? 1 : 0>::value; // 1 is an error, 0 is fine
+		a.f();
+	}
+};
+
+template<>
+struct Prime_print<1> { // full specialization to end the loop
+	enum {pri=0};
+	void f() {
+		D<1> d = 0;
+	};
+};
+
+#ifndef LAST
+#define LAST 18
+#endif
+
+int main()
+{
+	Prime_print<LAST> a;
+	a.f();
+}
+\end{lstlisting}
+
+If you compile this program, the compiler will print error messages when, in Prime\_print::f(), the initialization of d fails. This happens when the initial value is 1 because there is only a constructor for void*, and only 0 has a valid conversion to void*. For example, on one compiler, we get (among several other messages) the following errors:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}As error handling in compilers differs, some compilers might stop after printing the first error message.
+\end{tcolorbox}
+
+\begin{tcblisting}{commandshell={}}
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<17>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<13>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<11>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<7>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<5>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<3>’
+unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<2>’
+\end{tcblisting}
+
+The concept of C++ template metaprogramming as a serious programming tool was first made popular (and somewhat formalized) by Todd Veldhuizen in his paper Using C++ Template Metaprograms (see [VeldhuizenMeta95]). Todd’s work on Blitz++ (a numeric array library for C++, see [Blitz++]) also introduced many refinements and extensions to metaprogramming (and to expression template techniques, introduced in Chapter 27).
+
+Both the first edition of this book and Andrei Alexandrescu’s “Modern C++ Design” (see [AlexandrescuDesign]) contributed to an explosion of C++ libraries exploiting template-based metaprogramming by cataloging some of the basic techniques that are still in use today. The Boost project (see [Boost]) was instrumental in bringing order to this explosion. Early on, it introduced the MPL (metaprogramming library), which defined a consistent framework for type metaprogramming made popular also through Abrahams and Gurtovoy’s book “C++ Template Metaprogramming” (see [BoostMPL]).
+
+Additional important advances have been made by Louis Dionne in making metaprogramming syntactically more accessible, particularly through his Boost.Hana library (see [BoostHana]). Louis, along with Andrew Sutton, Herb Sutter, David Vandevoorde, and others are now spearheading efforts in the standardization committee to give metaprogramming first-class support in the language. An important basis for that work is the exploration of what program properties should be available through reflection; Matu´s Chochl ˇ ´ık, Axel Naumann, and David Sankel are principal contributors in that area.
+
+In [BartonNackman] John J. Barton and Lee R. Nackman illustrated how to keep track of dimensional units when performing computations. The SIunits library was a more comprehensive library for dealing with physical units developed by Walter Brown ([BrownSIunits]). The std::chrono component in the standard library, which we used as an inspiration for Section 23.1.4 on page 534, only deals with time and dates, and was contributed by Howard Hinnant.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

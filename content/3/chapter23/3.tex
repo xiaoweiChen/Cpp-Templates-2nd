@@ -1,3 +1,152 @@
 
+Let’s analyze the Sqrt<> template introduced in Section 23.2 on page 537. The primary template is the general recursive computation that is invoked with the template parameter N (the value for which to compute the square root) and two other optional parameters. These optional parameters represent the minimum and maximum values the result can have. If the template is called with only one argument, we know that the square root is at least 1 and at most the value itself.
+
+The recursion then proceeds using a binary search technique (often called method of bisection in this context). Inside the template, we compute whether value is in the first or the second half of the range between LO and HI. This case differentiation is done using the conditional operator ?:. If mid2 is greater than N, we continue the search in the first half. If mid2 is less than or equal to N, we use the same template for the second half again. The partial specialization ends the recursive process when LO and HI have the same value M, which is our final value.
+
+Template instantiations are not cheap: Even relatively modest class templates can allocate over a kilobyte of storage for every instance, and that storage cannot be reclaimed until compilation as completed. Let’s therefore examine the details of a simple program that uses our Sqrt template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/sqrt1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include "sqrt1.hpp"
+
+int main()
+{
+	std::cout << "Sqrt<16>::value = " << Sqrt<16>::value << ’\n’;
+	std::cout << "Sqrt<25>::value = " << Sqrt<25>::value << ’\n’;
+	std::cout << "Sqrt<42>::value = " << Sqrt<42>::value << ’\n’;
+	std::cout << "Sqrt<1>::value = " << Sqrt<1>::value << ’\n’;
+}
+\end{lstlisting}
+
+The expression
+
+\begin{lstlisting}[style=styleCXX]
+Sqrt<16>::value
+\end{lstlisting}
+
+is expanded to
+
+\begin{lstlisting}[style=styleCXX]
+Sqrt<16,1,16>::value
+\end{lstlisting}
+
+Inside the template, the metaprogram computes Sqrt<16,1,16>::value as follows:
+
+\begin{lstlisting}[style=styleCXX]
+mid = (1+16+1)/2
+	= 9
+value = (16<9*9) ? Sqrt<16,1,8>::value
+				: Sqrt<16,9,16>::value
+	  = (16<81) ? Sqrt<16,1,8>::value
+				: Sqrt<16,9,16>::value
+	  = Sqrt<16,1,8>::value
+\end{lstlisting}
+
+Thus, the result is computed as Sqrt<16,1,8>::value, which is expanded as follows:
+
+\begin{lstlisting}[style=styleCXX]
+mid = (1+8+1)/2
+	= 5
+value = (16<5*5) ? Sqrt<16,1,4>::value
+				: Sqrt<16,5,8>::value
+	  = (16<25) ? Sqrt<16,1,4>::value
+				: Sqrt<16,5,8>::value
+	  = Sqrt<16,1,4>::value
+\end{lstlisting}
+
+Similarly, Sqrt<16,1,4>::value is decomposed as follows:
+
+\begin{lstlisting}[style=styleCXX]
+mid = (1+4+1)/2
+	= 3
+value = (16<3*3) ? Sqrt<16,1,2>::value
+				: Sqrt<16,3,4>::value
+	  = (16<9) ? Sqrt<16,1,2>::value
+				: Sqrt<16,3,4>::value
+	  = Sqrt<16,3,4>::value
+\end{lstlisting}
+
+Finally, Sqrt<16,3,4>::value results in the following:
+
+\begin{lstlisting}[style=styleCXX]
+mid = (3+4+1)/2
+	= 4
+value = (16<4*4) ? Sqrt<16,3,3>::value
+				: Sqrt<16,4,4>::value
+	  = (16<16) ? Sqrt<16,3,3>::value
+				: Sqrt<16,4,4>::value
+	  = Sqrt<16,4,4>::value
+\end{lstlisting}
+
+and Sqrt<16,4,4>::value ends the recursive process because it matches the explicit specialization that catches equal high and low bounds. The final result is therefore
+
+\begin{lstlisting}[style=styleCXX]
+value = 4
+\end{lstlisting}
+
 \subsubsubsection{23.3.1\hspace{0.2cm}Tracking All Instantiations}
+
+Our analysis above followed the significant instantiations that compute the square root of 16. However, when a compiler evaluates the expression
+
+\begin{lstlisting}[style=styleCXX]
+(16<=8*8) ? Sqrt<16,1,8>::value
+		  : Sqrt<16,9,16>::value
+\end{lstlisting}
+
+it instantiates not only the templates in the positive branch but also those in the negative branch (Sqrt<16,9,16>). Furthermore, because the code attempts to access a member of the resulting class type using the :: operator, all the members inside that class type are also instantiated. This means that the full instantiation of Sqrt<16,9,16> results in the full instantiation of Sqrt<16,9,12> and Sqrt<16,13,16>. When the whole process is examined in detail, we find that dozens of instantiations end up being generated. The total number is almost twice the value of N.
+
+Fortunately, there are techniques to reduce this explosion in the number of instantiations. To illustrate one such important technique, we rewrite our Sqrt metaprogram as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{meta/sqrt2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "ifthenelse.hpp"
+
+// primary template for main recursive step
+template<int N, int LO=1, int HI=N>
+struct Sqrt {
+	// compute the midpoint, rounded up
+	static constexpr auto mid = (LO+HI+1)/2;
+	
+	// search a not too large value in a halved interval
+	using SubT = IfThenElse<(N<mid*mid),
+	Sqrt<N,LO,mid-1>,
+	Sqrt<N,mid,HI>>;
+	static constexpr auto value = SubT::value;
+};
+
+// partial specialization for end of recursion criterion
+template<int N, int S>
+struct Sqrt<N, S, S> {
+	static constexpr auto value = S;
+};
+\end{lstlisting}
+
+The key change here is the use of the IfThenElse template, which was introduced in Section 19.7.1 on page 440. Remember, the IfThenElse template is a device that selects between two types based on a given Boolean constant. If the constant is true, the first type is type-aliased to Type; otherwise, Type stands for the second type. At this point it is important to remember that defining a type alias for a class template instance does not cause a C++ compiler to instantiate the body of that instance. Therefore, when we write
+
+\begin{lstlisting}[style=styleCXX]
+using SubT = IfThenElse<(N<mid*mid),
+						Sqrt<N,LO,mid-1>,
+						Sqrt<N,mid,HI>>;
+\end{lstlisting}
+
+neither Sqrt<N,LO,mid-1> nor Sqrt<N,mid,HI> is fully instantiated. Whichever of these two types ends up being a synonym for SubT is fully instantiated when looking up SubT::value. In contrast to our first approach, this strategy leads to a number of instantiations that is proportional to log2(N): a very significant reduction in the cost of metaprogramming when N gets moderately large.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

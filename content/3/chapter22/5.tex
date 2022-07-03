@@ -1,0 +1,145 @@
+Our FunctionPtr template is nearly a drop-in replacement for a function pointer. However, it does not yet support one operation provided by function pointers: testing whether two FunctionPtr objects will invoke the same function. Adding such an operation requires updating the FunctorBridge with an equals operation:
+
+\begin{lstlisting}[style=styleCXX]
+virtual bool equals(FunctorBridge const* fb) const = 0;
+\end{lstlisting}
+
+along with an implementation within SpecificFunctorBridge that compares the stored function objects when they have the same type:
+
+\begin{lstlisting}[style=styleCXX]
+virtual bool equals(FunctorBridge<R, Args...> const* fb) const override {
+	if (auto specFb = dynamic_cast<SpecificFunctorBridge const*>(fb)) {
+		return functor == specFb->functor;
+	}
+	// functors with different types are never equal:
+	return false;
+}
+\end{lstlisting}
+
+Finally, we implement operator== for FunctionPtr, which first checks for null functors and then delegates to FunctorBridge:
+
+\begin{lstlisting}[style=styleCXX]
+friend bool
+operator==(FunctionPtr const& f1, FunctionPtr const& f2) {
+	if (!f1 || !f2) {
+		return !f1 && !f2;
+	}
+	return f1.bridge->equals(f2.bridge);
+}
+friend bool
+operator!=(FunctionPtr const& f1, FunctionPtr const& f2) {
+	return !(f1 == f2);
+}
+\end{lstlisting}
+
+This implementation is correct. However, it has an unfortunate drawback: If the FunctionPtr is assigned or initialized with a function object that does not have a suitable operator== (which includes lambdas, for example), the program will fail to compile. This may come as a surprise, because FunctionPtrs operator== hasn’t even been used yet, and many other class templates—such as std::vector—can be instantiated with types that don’t have an operator== so long as their own operator== is not used.
+
+This problem with operator== is due to type erasure: Because we are effectively losing the type of the function object once the FunctionPtr has been assigned or initialized, we need to capture all of the information we need to know about the type before that assignment or initialization is complete. This information includes forming a call to the function object’s operator==, because we can’t be sure when it will be needed.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Mechanically, the code for the call to operator== is instantiated because all of the virtual functions of a class template (in this case, SpecificFunctorBridge) are typically instantiated when the class template itself is instantiated.
+\end{tcolorbox}
+
+Fortunately, we can use SFINAE-based traits (discussed in Section 19.4 on page 416) to query whether operator== is available before calling it, with a fairly elaborate trait:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/isequalitycomparable.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval()
+#include <type_traits> // for true_type and false_type
+
+template<typename T>
+class IsEqualityComparable
+{
+	private:
+	// test convertibility of == and ! == to bool:
+	static void* conv(bool); // to check convertibility to bool
+	template<typename U>
+	static std::true_type test(decltype(conv(std::declval<U const&>() ==
+											std::declval<U const&>())),
+							decltype(conv(!(std::declval<U const&>() ==
+											std::declval<U const&>())))
+							);
+	
+	// fallback:
+	template<typename U>
+	static std::false_type test(...);
+	public:
+	static constexpr bool value = decltype(test<T>(nullptr,
+													nullptr))::value;
+};
+\end{lstlisting}
+
+The IsEqualityComparable trait applies the typical form for expression-testing traits as introduced in Section 19.4.1 on page 416: two test() overloads, one of which contains the expressions to test wrapped in decltype, and the other that accepts arbitrary arguments via an ellipsis. The first test() function attempts to compare two objects of type T const using == and then ensures that the result can be both implicitly converted to bool (for the first parameter) and passed to the logical negation operator operator!) with a result convertible to bool. If both operations are well formed, the parameter types themselves will both be void*.
+
+Using the IsEqualityComparable trait, we can construct a TryEquals class template that can either invoke == on the given type (when it’s available) or throw an exception if no suitable == exists:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{bridge/tryequals.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <exception>
+#include "isequalitycomparable.hpp"
+
+template<typename T,
+bool EqComparable = IsEqualityComparable<T>::value>
+struct TryEquals
+{
+	static bool equals(T const& x1, T const& x2) {
+		return x1 == x2;
+	}
+};
+
+class NotEqualityComparable : public std::exception
+{
+};
+
+template<typename T>
+struct TryEquals<T, false>
+{
+	static bool equals(T const& x1, T const& x2) {
+		throw NotEqualityComparable();
+	}
+};
+\end{lstlisting}
+
+Finally, by using TryEquals within our implementation of SpecificFunctorBridge, we are able to provide support for == within FunctionPtr whenever the stored function object types match and the function object supports ==:
+
+\begin{lstlisting}[style=styleCXX]
+virtual bool equals(FunctorBridge<R, Args...> const* fb) const override {
+	if (auto specFb = dynamic_cast<SpecificFunctorBridge const*>(fb)) {
+		return TryEquals<Functor>::equals(functor, specFb->functor);
+	}
+	// functors with different types are never equal:
+	return false;
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

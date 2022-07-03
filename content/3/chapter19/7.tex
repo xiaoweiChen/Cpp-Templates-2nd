@@ -1,7 +1,336 @@
 
+Let’s finally introduce and discuss some other approaches to define traits.
 
 \subsubsubsection{19.7.1\hspace{0.2cm}If-Then-Else}
 
+In the previous section, the final definition of the PlusResultT trait had a completely different implementation depending on the result of another type trait, HasPlusT. We can formulate this ifthen-else behavior with a special type template IfThenElse that takes a Boolean nontype template parameter to select one of two type parameters:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/ifthenelse.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef IFTHENELSE_HPP
+#define IFTHENELSE_HPP
+
+// primary template: yield the second argument by default and rely on
+// a partial specialization to yield the third argument
+// if COND is false
+template<bool COND, typename TrueType, typename FalseType>
+struct IfThenElseT {
+	using Type = TrueType;
+};
+
+// partial specialization: false yields third argument
+template<typename TrueType, typename FalseType>
+struct IfThenElseT<false, TrueType, FalseType> {
+	using Type = FalseType;
+};
+
+template<bool COND, typename TrueType, typename FalseType>
+using IfThenElse = typename IfThenElseT<COND, TrueType, FalseType>::Type;
+#endif // IFTHENELSE_HPP
+\end{lstlisting}
+
+The following example demonstrates an application of this template by defining a type function that determines the lowest-ranked integer type for a given value:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/smallestint.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <limits>
+#include "ifthenelse.hpp"
+template<auto N>
+struct SmallestIntT {
+	using Type =
+	typename IfThenElseT<N <= std::numeric_limits<char>::max(), char,
+	typename IfThenElseT<N <= std::numeric_limits<short>::max(), short,
+	typename IfThenElseT<N <= std::numeric_limits<int>::max(), int,
+	typename IfThenElseT<N <= std::numeric_limits<long>::max(), long,
+	typename IfThenElseT<N <= std::numeric_limits<long long>::max(),
+	long long, // then
+	void // fallback
+	>::Type
+	>::Type
+	>::Type
+	>::Type
+	>::Type;
+};
+\end{lstlisting}
+
+Note that, unlike a normal C++ if-then-else statement, the template arguments for both the “then” and “else” branches are evaluated before the selection is made, so neither branch may contain ill-formed code, or the program is likely to be ill-formed. Consider, for example, a trait that yields the corresponding unsigned type for a given signed type. There is a standard trait, std::make\_unsigned, which does this conversion, but it requires that the passed type is a signed integral type and no bool; otherwise its use results in undefined behavior (see Section D.4 on page 729). So it might be a good idea to implement a trait that yields the corresponding unsigned type if this is possible and the passed type otherwise (thus, avoiding undefined behavior if an inappropriate type is given). The naive implementation does not work:
+
+\begin{lstlisting}[style=styleCXX]
+// ERROR: undefined behavior if T is bool or no integral type:
+template<typename T>
+struct UnsignedT {
+	using Type = IfThenElse<std::is_integral<T>::value
+		&& !std::is_same<T,bool>::value,
+	typename std::make_unsigned<T>::type,
+	T>;
+};
+\end{lstlisting}
+
+The instantiation of UnsignedT<bool> is still undefined behavior, because the compiler will still attempt to form the type from
+
+\begin{lstlisting}[style=styleCXX]
+typename std::make_unsigned<T>::type
+\end{lstlisting}
+
+To address this problem, we need to add an additional level of indirection, so that the IfThenElse arguments are themselves uses of type functions that wrap the result:
+
+\begin{lstlisting}[style=styleCXX]
+// yield T when using member Type:
+template<typename T>
+struct IdentityT {
+	using Type = T;
+};
+
+// to make unsigned after IfThenElse was evaluated:
+template<typename T>
+struct MakeUnsignedT {
+	using Type = typename std::make_unsigned<T>::type;
+};
+
+template<typename T>
+struct UnsignedT {
+	using Type = typename IfThenElse<std::is_integral<T>::value
+									&& !std::is_same<T,bool>::value,
+									MakeUnsignedT<T>,
+									IdentityT<T>
+									>::Type;
+};
+\end{lstlisting}
+
+In this definition of UnsignedT, the type arguments to IfThenElse are both instances of type functions themselves. However, the type functions are not actually evaluated before IfThenElse selects one. Instead, IfThenElse selects the type function instance (of either MakeUnsignedT or IdentityT). The ::Type then evaluates the selected type function instance to produce Type.
+
+It is worth emphasizing here that this relies entirely on the fact that the not-selected wrapper type in the IfThenElse construct is never fully instantiated. In particular, the following does not work:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct UnsignedT {
+	using Type = typename IfThenElse<std::is_integral<T>::value
+		&& !std::is_same<T,bool>::value,
+		MakeUnsignedT<T>::Type,
+		T
+	>::Type;
+};
+\end{lstlisting}
+
+Instead, we have to apply the ::Type for MakeUnsignedT<T> later, which means that we need the IdentityT helper to also apply ::Type later for T in the else branch.
+
+This also means that we cannot use something like
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+	using Identity = typename IdentityT<T>::Type;
+\end{lstlisting}
+
+in this context. We can declare such an alias template, and it may be useful elsewhere, but we cannot make effective use of it in the definition of IfThenElse because any use of Identity<T> immediately causes the full instantiation of IdentityT<T> to retrieve its Type member.
+
+The IfThenElseT template is available in the C++ standard library as std::conditional<> (see Section D.5 on page 732). With it, the UnsignedT trait would be defined as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct UnsignedT {
+	using Type
+	= typename std::conditional_t<std::is_integral<T>::value
+								&& !std::is_same<T,bool>::value,
+								MakeUnsignedT<T>,
+								IdentityT<T>
+								>::Type;
+};
+\end{lstlisting}
+
 \subsubsubsection{19.7.2\hspace{0.2cm}Detecting Nonthrowing Operations}
 
+It is occasionally useful to determine whether a particular operation can throw an exception. For example, a move constructor should be marked noexcept, indicating that it does not throw exceptions, whenever possible. However, whether a move constructor for a particular class throws exceptions or not often depends on whether the move constructors of its members and bases throw. For example, consider the move constructor for a simple class template Pair:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+class Pair {
+	T1 first;
+	T2 second;
+	public:
+	Pair(Pair&& other)
+	: first(std::forward<T1>(other.first)),
+	second(std::forward<T2>(other.second)) {
+	}
+};
+\end{lstlisting}
+
+Pair’s move constructor can throw exceptions when the move operations of either T1 or T2 can throw. Given a trait IsNothrowMoveConstructibleT, we can express this property by using a computed noexcept exception specification in Pair’s move constructor. For example:
+
+\begin{lstlisting}[style=styleCXX]
+Pair(Pair&& other) noexcept(IsNothrowMoveConstructibleT<T1>::value &&
+		 IsNothrowMoveConstructibleT<T2>::value)
+: first(std::forward<T1>(other.first)),
+second(std::forward<T2>(other.second))
+{ }
+\end{lstlisting}
+
+All that remains is to implement the IsNothrowMoveConstructibleT trait. We can directly implement this trait using the noexcept operator, which determines whether a given expression is guaranteed to be nonthrowing:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isnothrowmoveconstructible1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval
+#include <type_traits> // for bool_constant
+
+template<typename T>
+struct IsNothrowMoveConstructibleT
+: std::bool_constant<noexcept(T(std::declval<T>()))>
+{
+};
+\end{lstlisting}
+
+Here, the operator version of noexcept is used, which determines whether an expression is nonthrowing. Because the result is a Boolean value, we can pass it directly to define the base class, std::bool\_constant<>, which is used to define std::true\_type and std::false\_type (see Section 19.3.3 on page 411).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} In C++11 and C++14, we have to specify the base class as std::integral\_constant<bool,...> instead of std::bool\_constant<...>.
+\end{tcolorbox}
+
+However, this implementation should be improved because it is not SFINAE-friendly (see Section 19.4.4 on page 424): If the trait is instantiated with a type that does not have a usable move or copy constructor—making the expression T(std::declval<T\&\&>()) invalid—the entire program is ill-formed:
+
+\begin{lstlisting}[style=styleCXX]
+lass E {
+	public:
+	E(E&&) = delete;
+};
+...
+std::cout << IsNothrowMoveConstructibleT<E>::value; // compile-time ERROR
+\end{lstlisting}
+
+Instead of aborting the compilation, the type trait should yield a value of false.
+
+As discussed in Section 19.4.4 on page 424, we have to check whether the expression computing the result is valid before it is evaluated. Here, we have to find out whether move construction is valid before checking whether it is noexcept. Thus, we revise the first version of the trait by adding a template parameter that defaults to void and a partial that uses std::void\_t for that parameter with an argument that is valid only if move construction is valid:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isnothrowmoveconstructible2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval
+#include <type_traits> // for true_type, false_type, and bool_constant<>
+
+// primary template:
+template<typename T, typename = std::void_t<>>
+struct IsNothrowMoveConstructibleT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T>
+struct IsNothrowMoveConstructibleT
+		<T, std::void_t<decltype(T(std::declval<T>()))>>
+: std::bool_constant<noexcept(T(std::declval<T>()))>
+{
+};
+\end{lstlisting}
+
+If the substitution of std::void\_t<...> in the partial specialization is valid, that specialization is selected, and the noexcept(...) expression in the base class specifier can safely be evaluated. Otherwise, the partial specialization is discarded without instantiating it, and the primary template is instantiated instead (producing a std::false\_type result.
+
+Note that there is no way to check whether a move constructor throws without being able to call it directly. That is, it is not enough that the move constructor is public and not deleted, it also requires that the corresponding type is no abstract class (references or pointers to abstract classes work fine). For this reason, the type trait is named IsNothrowMoveConstructible instead of HasNothrowMoveConstructor. For anything else, we’d need compiler support. 
+
+The C++ standard library provides a corresponding type trait std::is\_move\_constructible<>, which is described in Section D.3.2 on page 721.
+
 \subsubsubsection{19.7.3\hspace{0.2cm}Traits Convenience}
+
+One common complaint with type traits is their relative verbosity, because each use of a type trait typically requires a trailing ::Type and, in a dependent context, a leading typename keyword, both of which are boilerplate. When multiple type traits are composed, this can force some awkward formatting, as in our running example of the array operator+, if we would implement it correctly, ensuring that no constant or reference type is returned:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<
+	typename RemoveCVT<
+		typename RemoveReferenceT<
+			typename PlusResultT<T1, T2>::Type
+		>::Type
+	>::Type
+>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+By using alias templates and variable templates, we can make the usage of the traits, yielding types or values respectively more convenient. However, note that in some contexts these shortcuts are not usable, and we have to use the original class template instead. We already discussed one such situation in our MemberPointerToIntT example, but a more general discussion follows.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Alias Templates and Traits}
+
+As introduced in Section 2.8 on page 39, alias templates offer a way to reduce verbosity. Rather than expressing a type trait as a class template with a type member Type, we can use an alias template directly. For example, the following three alias templates wrap the type traits used above:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using RemoveCV = typename RemoveCVT<T>::Type;
+
+template<typename T>
+using RemoveReference = typename RemoveReferenceT<T>::Type;
+
+template<typename T1, typename T2>
+using PlusResult = typename PlusResultT<T1, T2>::Type;
+\end{lstlisting}
+
+Given these alias templates, we can simplify our operator+ declaration down to
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<RemoveCV<RemoveReference<PlusResultT<T1, T2>>>>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+This second version is clearly shorter and makes the composition of the traits more obvious. Such improvements make alias templates more suitable for some uses of type traits.
+
+However, there are downsides to using alias templates for type traits:
+
+\begin{enumerate}
+\item
+Alias templates cannot be specialized (as noted in Section 16.3 on page 338), and since many of the techniques for writing traits depend on specialization, an alias template will likely need to redirect to a class template anyway.
+
+\item 
+Some traits are meant to be specialized by users, such as a trait that describes whether a particular addition operation is commutative, and it can be confusing to specialize the class template when most uses involve the alias template.
+
+\item
+The use of an alias template will always instantiate the type (e.g., the underlying class template specialization), which makes it harder to avoid instantiating traits that don’t make sense for a given type (as discussed in Section 19.7.1 on page 440).
+\end{enumerate}
+
+Another way to express this last point, is that alias templates cannot be used with metafunction forwarding (see Section 19.3.2 on page 404).
+
+Because the use of alias templates for type traits has both positive and negative aspects, we recommend using them as we have in this section and as it is done in the C++ standard library: Provide both class templates with a specific naming convention (we have chosen the T suffix and the Type type member) and alias templates with a slightly different naming convention (we dropped the T suffix), and have each alias template defined in terms of the underlying class template. This way, we can use alias templates wherever they provide clearer code, but fall back to class templates for more advanced uses.
+
+Note that for historical reasons, the C++ standard library has a different convention. The type traits class templates yield a type in type and have no specific suffix (many were introduced in C++11). Corresponding alias templates (that produce the type directly) started being introduced in C++14, and were given a \_t suffix, since the unsuffixed name was already standardized (see Section D.1 on page 697).
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Variable Templates and Traits}
+
+Traits returning a value require a trailing ::value (or similar member selection) to produce the result of the trait. In this case, constexpr variable templates (introduced in Section 5.6 on page 80) offer a way to reduce this verbosity.
+
+For example, the following variable templates wrap the IsSameT trait defined in Section 19.3.3 on page 410 and the IsConvertibleT trait defined in Section 19.5 on page 428:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+	constexpr bool IsSame = IsSameT<T1,T2>::value;
+	
+template<typename FROM, typename TO>
+	constexpr bool IsConvertible = IsConvertibleT<FROM, TO>::value;
+\end{lstlisting}
+
+Now we can simply write
+
+\begin{lstlisting}[style=styleCXX]
+if (IsSame<T,int> || IsConvertible<T,char>) ...
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+if (IsSameT<T,int>::value || IsConvertibleT<T,char>::value) ...
+\end{lstlisting}
+
+Again, for historical reasons, the C++ standard library has a different convention. The traits class templates producing a result in value have no specific suffix, and many of them were introduced in the C++11 standard. The corresponding variable templates that directly produce the resulting value were introduced in C++17 with a \_v suffix (see Section D.1 on page 697).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The C++ standardization committee is further bound by a long-standing tradition that all standard names consist of lowercase characters and optional underscores to separate them. That is, a name like isSame or IsSame is unlikely to ever be seriously considered for standardization (except for concepts, where this spelling style will be used).
+\end{tcolorbox}
+
+
+
+

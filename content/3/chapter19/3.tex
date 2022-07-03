@@ -153,11 +153,593 @@ ElementType<C> sumOfElements (C const& c);
 
 \subsubsubsection{19.3.2\hspace{0.2cm}Transformation Traits}
 
+In addition to providing access to particular aspects of a main parameter type, traits can also perform transformations on types, such as adding or removing references or const and volatile qualifiers.
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{Removing References}
 
+For example, we can implement a RemoveReferenceT trait that turns reference types into their underlying object or function types, and leaves nonreference types alone:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/removereference.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct RemoveReferenceT {
+	using Type = T;
+};
+
+template<typename T>
+struct RemoveReferenceT<T&> {
+	using Type = T;
+};
+
+template<typename T>
+struct RemoveReferenceT<T&&> {
+	using Type = T;
+};
+\end{lstlisting}
+
+Again, a convenience alias template makes the usage simpler:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using RemoveReference = typename RemoveReference<T>::Type;
+\end{lstlisting}
+
+Removing the reference from a type is typically useful when the type was derived using a construct that sometimes produces reference types, such as the special deduction rule for function parameters of type T\&\& discussed in Section 15.6 on page 277.
+
+The C++ standard library provides a corresponding type trait std::remove\_reference<>, which is described in Section D.4 on page 729.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Adding References}
+
+Similarly, we can take an existing type and create an lvalue or rvalue reference from it (along with the usual convenience alias templates):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/addreference.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct AddLValueReferenceT {
+	using Type = T&;
+};
+
+template<typename T>
+using AddLValueReference = typename AddLValueReferenceT<T>::Type;
+
+template<typename T>
+struct AddRValueReferenceT {
+	using Type = T&&;
+};
+
+template<typename T>
+using AddRValueReference = typename AddRValueReferenceT<T>::Type;
+\end{lstlisting}
+
+The rules of reference collapsing (Section 15.6 on page 277) apply here. For example, calling AddLValueReference<int\&\&> produces type int\& (there is therefore no need to implement them manually via partial specialization).
+
+If we leave AddLValueReferenceT and AddRValueReferenceT as they are and do not introduce specializations of them, then the convenience aliases can actually be simplified to
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using AddLValueReferenceT = T&;
+
+template<typename T>
+using AddRValueReferenceT = T&&;
+\end{lstlisting}
+
+which can be instantiated without instantiating a class template (and is therefore a lighter-weight process). However, this is risky, as we may well want to specialize these template for special cases. For example, as written above, we cannot use void as a template argument for these templates. A few explicit specializations can take care of that:
+
+\begin{lstlisting}[style=styleCXX]
+template<>
+struct AddLValueReferenceT<void> {
+	using Type = void;
+};
+
+template<>
+struct AddLValueReferenceT<void const> {
+	using Type = void const;
+};
+
+template<>
+struct AddLValueReferenceT<void volatile> {
+	using Type = void volatile;
+};
+
+template<>
+struct AddLValueReferenceT<void const volatile> {
+	using Type = void const volatile;
+};
+\end{lstlisting}
+
+and similarly for AddRValueReferenceT. With that in place, the convenience alias template must be formulated in terms of the class templates to ensure that the specializations are picked up also (since alias templates cannot be specialized).
+
+The C++ standard library provides corresponding type traits std::add\_lvalue\_reference<> and std::add\_rvalue\_reference<>, which are described in Section D.4 on page 729. The standard templates include the specializations for void types.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Removing Qualifiers}
+
+Transformation traits can break down or introduce any kind of compound type, not just references. For example, we can remove a const qualifier if present:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/removeconst.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct RemoveConstT {
+	using Type = T;
+};
+
+template<typename T>
+struct RemoveConstT<T const> {
+	using Type = T;
+};
+
+template<typename T>
+using RemoveConst = typename RemoveConstT<T>::Type;
+\end{lstlisting}
+
+Moreover, transformation traits can be composed, such as creating a RemoveCVT trait that removes both const and volatile:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/removecv.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "removeconst.hpp"
+#include "removevolatile.hpp"
+
+template<typename T>
+struct RemoveCVT : RemoveConstT<typename RemoveVolatileT<T>::Type> {
+};
+
+template<typename T>
+using RemoveCV = typename RemoveCVT<T>::Type;
+\end{lstlisting}
+
+There are two things to note with the definition of RemoveCVT. First, it is making use of both RemoveConstT and the related RemoveVolatileT, first removing the volatile (if present) and then passing the resulting type to RemoveConstT.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The order in which the qualifiers is removed has no semantic consequence: We could first remove volatile and then const instead.
+\end{tcolorbox}
+
+Second, it is using metafunction forwarding to inherit the Type member from RemoveConstT rather than declaring its own Type member that is identical to the one in the RemoveConstT specialization. Here, metafunction forwarding is used simply to reduce the amount of typing in the definition of RemoveCVT. However, metafunction forwarding is also useful when the metafunction is not defined for all inputs, a technique that will be discussed further in Section 19.4 on page 416. 
+
+The convenience alias template RemoveCV could be simplified to
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using RemoveCV = RemoveConst<RemoveVolatile<T>>;
+\end{lstlisting}
+
+Again, this works only if RemoveCVT is not specialized. Unlike in the case of AddLValueReference and AddRValueReference, we cannot think of any reasons for such specializations.
+
+The C++ standard library also provides corresponding type traits std::remove\_volatile<>, std::remove\_const<>, and std::remove\_cv<>, which are described in Section D.4 on page 728.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Decay}
+
+To round out our discussion of transformation traits, we develop a trait that mimics type conversions when passing arguments to parameters by value. Derived from C, this means that the arguments decay (turning array types into pointers and function types into pointer-to-function types; see Section 7.4 on page 115 and Section 11.1.1 on page 159) and delete any top-level const, volatile, or reference qualifiers (because top-level type qualifiers on parameter types are ignored when resolving a function call).
+
+The effect of this pass-by-value can be seen in the following program, which prints the actual parameter type produced after the compiler decays the specified type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/passbyvalue.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <typeinfo>
+#include <type_traits>
+
+template<typename T>
+void f(T)
+{ }
+
+template<typename A>
+void printParameterType(void (*)(A))
+{
+	std::cout << "Parameter type: " << typeid(A).name() << ’\n’;
+	std::cout << "- is int: " << std::is_same<A,int>::value << ’\n’;
+	std::cout << "- is const: " << std::is_const<A>::value << ’\n’;
+	std::cout << "- is pointer: " << std::is_pointer<A>::value << ’\n’;
+}
+
+int main()
+{
+	printParameterType(&f<int>);
+	printParameterType(&f<int const>);
+	printParameterType(&f<int[7]>);
+	printParameterType(&f<int(int)>);
+}
+\end{lstlisting}
+
+In the output of the program, the int parameter has been left unchanged, but the int const, int[7], and int(int) parameters have decayed to int, int*, and int(*)(int), respectively.
+
+We can implement a trait that produces the same type conversion of passing by value. To match to the C++ standard library trait std::decay, we name it DecayT.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Using the term decay might be slightly confusing because in C it only implies the conversion from array/-function types to to pointer types, whereas here it also includes the removal of top-level const/volatile qualifiers.
+\end{tcolorbox}
+
+Its implementation combines several of the techniques described above First, we define the nonarray, nonfunction case, which simply deletes any const and volatile qualifiers:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct DecayT : RemoveCVT<T> {
+};
+\end{lstlisting}
+
+Next, we handle the array-to-pointer decay, which requires us to recognize any array types (with or without a bound) using partial specialization:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct DecayT<T[]> {
+	using Type = T*;
+};
+
+template<typename T, std::size_t N>
+struct DecayT<T[N]> {
+	using Type = T*;
+};
+\end{lstlisting}
+
+Finally, we handle the function-to-pointer decay, which has to match any function type, regardless of the return type or the number of parameter types. For this, we employ variadic templates:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename R, typename... Args>
+struct DecayT<R(Args...)> {
+	using Type = R (*)(Args...);
+};
+
+template<typename R, typename... Args>
+struct DecayT<R(Args..., ...)> {
+	using Type = R (*)(Args..., ...);
+};
+\end{lstlisting}
+
+Note that the second partial specialization matches any function type that uses C-style varargs.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Strictly speaking, the comma prior to the second ellipsis (...) is optional but is provided here for clarity. Due to the ellipsis being optional, the function type in the first partial specialization is actually syntactically ambiguous: It can be parsed as either R(Args, ...) (a C-style varargs parameter) or R(Args... name) (a parameter pack). The second interpretation is picked because Args is an unexpanded parameter pack. We can explicitly add the comma in the (rare) cases where the other interpretation is desired.
+\end{tcolorbox}
+
+Together, the primary DecayT template and its four partial specialization implement parameter type decay, as illustrated by this example program:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/decay.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <typeinfo>
+#include <type_traits>
+#include "decay.hpp"
+
+template<typename T>
+void printDecayedType()
+{
+	using A = typename DecayT<T>::Type;
+	td::cout << "Parameter type: " << typeid(A).name() << ’\n’;
+	std::cout << "- is int: " << std::is_same<A,int>::value << ’\n’;
+	std::cout << "- is const: " << std::is_const<A>::value << ’\n’;
+	std::cout << "- is pointer: " << std::is_pointer<A>::value << ’\n’;
+}
+
+int main()
+{
+	printDecayedType<int>();
+	printDecayedType<int const>();
+	printDecayedType<int[7]>();
+	printDecayedType<int(int)>();
+}
+\end{lstlisting}
+
+As usual, we provide a convenience alias template:
+
+\begin{lstlisting}[style=styleCXX]
+template typename T>
+using Decay = typename DecayT<T>::Type;
+\end{lstlisting}
+
+As written, the C++ standard library also provides a corresponding type traits std::decay<>, which is described in Section D.4 on page 731.
+
 \subsubsubsection{19.3.3\hspace{0.2cm}Predicate Traits}
 
-\subsubsubsection{19.3.4\hspace{0.2cm}Result Type Traits}
+So far we have studied and developed type functions of a single type: Given one type, provide other related types or constants. In general, however, we can develop type functions that depend on multiple arguments. This also leads to a special form of type traits, type predicates (type functions yielding a Boolean value).
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{IsSameT}
+
+The IsSameT trait yields whether two types are equal:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/issame0.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+struct IsSameT {
+	static constexpr bool value = false;
+};
+
+template<typename T>
+struct IsSameT<T, T> {
+	static constexpr bool value = true;
+};
+\end{lstlisting}
+
+Here the primary template defines that, in general, two different types passed as template arguments differ. so that the value member is false. However, using partial specialization, when we have the special case that the two passed types are the same, value is true.
+
+For example, the following expression checks whether a passed template parameters is an integer:
+
+\begin{lstlisting}[style=styleCXX]
+if (IsSameT<T, int>::value) ...
+\end{lstlisting}
+
+For traits that produce a constant value, we cannot provide an alias template, but we can provide a constexpr variable template that fulfills the same role:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+constexpr bool isSame = IsSameT<T1, T2>::value;
+\end{lstlisting}
+
+The C++ standard library provides a corresponding type trait std::is\_same<>, which is described in Section D.3.3 on page 726
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{true\_type and false\_type}
+
+We can significantly improve the definition of IsSameT by providing different types for the possible two outcomes, true and false. In fact, if we declare a class template BoolConstant with the two possible instantiations TrueType and FalseType:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/boolconstant.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<bool val>
+struct BoolConstant {
+	using Type = BoolConstant<val>;
+	static constexpr bool value = val;
+};
+using TrueType = BoolConstant<true>;
+using FalseType = BoolConstant<false>;
+\end{lstlisting}
+
+we can define IsSameT so that, depending on whether the two types match, it derives from TrueType or FalseType:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/issame.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "boolconstant.hpp"
+
+template<typename T1, typename T2>
+struct IsSameT : FalseType
+{
+};
+
+template<typename T>
+struct IsSameT<T, T> : TrueType
+{
+};
+\end{lstlisting}
+
+Now, the resulting type of
+
+\begin{lstlisting}[style=styleCXX]
+IsSameT<T,int>
+\end{lstlisting}
+
+implicitly converts to its base class TrueType or FalseType, which not only provides the corresponding value member but also allows us to dispatch to different function implementations or partial class template specializations at compile time. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/issame.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "issame.hpp"
+#include <iostream>
+
+template<typename T>
+void fooImpl(T, TrueType)
+{
+	std::cout << "fooImpl(T,true) for int called\n";
+}
+
+template<typename T>
+void fooImpl(T, FalseType)
+{
+	std::cout << "fooImpl(T,false) for other type called\n";
+}
+
+template<typename T>
+void foo(T t)
+{
+	fooImpl(t, IsSameT<T,int>{}); // choose impl. depending on whether T is int
+}
+
+int main()
+{
+	foo(42); // calls fooImpl(42, TrueType)
+	foo(7.7); // calls fooImpl(42, FalseType)
+}
+\end{lstlisting}
+
+This technique is called tag dispatching and is introduced in Section 20.2 on page 467.
+
+Note that our BoolConstant implementation includes a Type member, which allows us to reintroduce an alias template for IsSameT:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using IsSame = typename IsSameT<T>::Type;
+\end{lstlisting}
+
+That alias template can coexist with the variable template isSame.
+
+In general, traits yielding Boolean values should support tag dispatching by deriving from types such as TrueType and FalseType. However, to be as generic as possible, there should be only one type representing true and one type representing false instead of having each generic library defining its own types for Boolean constants.
+
+Fortunately, the C++ standard library provides corresponding types in <type\_traits> since C++11: std::true\_type and std::false\_type. In C++11 and C++14, they are defined as follows:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	using true_type = integral_constant<bool, true>;
+	using false_type = integral_constant<bool, false>;
+}
+\end{lstlisting}
+
+Since C++17, they are defined as
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	using true_type = bool_constant<true>;
+	using false_type = bool_constant<false>;
+}
+\end{lstlisting}
+
+where bool\_constant is defined in namespace std as
+
+\begin{lstlisting}[style=styleCXX]
+template<bool B>
+using bool_constant = integral_constant<bool, B>;
+\end{lstlisting}
+
+See Section D.1.1 on page 699 for further details.
+
+For this reason, we use std::true\_type and std::false\_type directly for the rest of this book, especially when defining type predicates.
+
+\subsubsubsection{19.3.4\hspace{0.2cm}Result Type Traits} 
+
+Another example of type functions that deal with multiple types are result type traits. They are very useful when writing operator templates. To motivate the idea, let’s write a function template that allows us to add two Array containers:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+Array<T> operator+ (Array<T> const&, Array<T> const&);
+\end{lstlisting}
+
+This would be nice, but because the language allows us to add a char value to an int value, we really would prefer to allow such mixed-type operations with arrays too. We are then faced with determining what the return type of the resulting template should be
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<???> operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+Besides the different approaches introduced in Section 1.3 on page 9, a result type template allows us to fill in the question marks in the previous declaration as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<typename PlusResultT<T1, T2>::Type>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+or, if we assume the availability of a convenience alias template,
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<PlusResult<T1, T2>>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+The PlusResultT trait determines the type produced by adding values of two (possibly different) types with the + operator:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/plus1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+struct PlusResultT {
+	using Type = decltype(T1() + T2());
+};
+
+template<typename T1, typename T2>
+using PlusResult = typename PlusResultT<T1, T2>::Type;
+\end{lstlisting}
+
+This trait template uses decltype to compute the type of the expression T1() + T2(), leaving the hard work of determining the result type (including handling promotion rules and overloaded operators) to the compiler.
+
+However, for the purpose of our motivating example, decltype actually preserves too much information (see Section 15.10.2 on page 298 for a description of decltype’s behavior). For example, our formulation of PlusResultT may produce a reference type, but most likely our Array class template is not designed to handle reference types. More realistically, an overloaded operator+ might return a value of const class type:
+
+\begin{lstlisting}[style=styleCXX]
+class Integer { ... };
+Integer const operator+ (Integer const&, Integer const&);
+\end{lstlisting}
+
+Adding two Array<Integer> values will result in an array of Integer const, which is most likely not what we intended. In fact, what we want is to transform the result type by removing references and qualifiers, as discussed in the previous section:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+Array<RemoveCV<RemoveReference<PlusResult<T1, T2>>>>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+Such nesting of traits is common in template libraries and is often used in the context of metaprogramming. Metaprogramming will be covered in detail in Chapter 23. (The convenience alias templates are particularly helpful with multilevel nesting like this. Without them, we’d have to add a typename and a ::Type suffix at every level.)
+
+At this point, the array addition operator properly computes the result type when adding two arrays of (possibly different) element types. However, our formulation of PlusResultT places an undesirable restriction on the element types T1 and T2: Because the expression T1() + T2() attempts to value-initialize values of types T1 and T2, both of these types must have an accessible, nondeleted, default constructor (or be nonclass types). The Array class itself might not otherwise require value-initialization of its element type, so this is an additional, unnecessary restriction.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{declval}
+
+Fortunately, it is fairly easy to produce values for the + expression without requiring a constructor, by using a function that produces values of a given type T. For this, the C++ standard provides std::declval<>, as introduced in Section 11.2.3 on page 166. It is defined in <utility> simply as follows:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T>
+	add_rvalue_reference_t<T> declval() noexcept;
+}
+\end{lstlisting}
+
+The expression declval<T>() produces a value of type T without requiring a default constructor (or any other operation).
+
+This function template is intentionally left undefined  because it’s only meant to be used within decltype, sizeof, or some other context where no definition is ever needed. It has two other interesting attributes:
+
+\begin{itemize}
+\item 
+For referenceable types, the return type is always an rvalue reference to the type, which allows declval to work even with types that could not normally be returned from a function, such as abstract class types (classes with pure virtual functions) or array types. The transformation from T to T\&\& otherwise has no practical effect on the behavior of declval<T>() when used as an expression: Both are rvalues (if T is an object type), while lvalue reference types are unchanged due to reference collapsing (described in Section 15.6 on page 277).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The difference between the return types T and T\&\& is discoverable by direct use of decltype. However, given declval’s limited use, this is not of practical interest.
+\end{tcolorbox}
+
+\item 
+The noexcept exception specification documents that declval itself does not cause an expression to be considered to throw exceptions. It becomes useful when declval is used in the context of the noexcept operator (Section 19.7.2 on page 443).
+\end{itemize}
+
+With declval, we can eliminate the value-initialization requirement for PlusResultT:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/plus2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+
+template<typename T1, typename T2>
+struct PlusResultT {
+	using Type = decltype(std::declval<T1>() + std::declval<T2>());
+};
+
+template<typename T1, typename T2>
+using PlusResult = typename PlusResultT<T1, T2>::Type;
+\end{lstlisting}
+
+Result type traits offer a way to determine the precise return type of a particular operation and are often useful when describing the result types of function templates.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

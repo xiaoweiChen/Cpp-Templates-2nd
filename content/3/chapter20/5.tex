@@ -1,0 +1,206 @@
+The essence of the EnableIf technique is to enable a particular template or partial specialization only when the template arguments meet some specific criteria. For example, the most efficient form of the advanceIter() algorithm checks that the iterator argument’s category is convertible to std::random\_access\_iterator\_tag, which implies that the  various random-access iterator operations will be available to the algorithm.
+
+What if we took this notion to the extreme and encoded every operation that the template performs on its template arguments as part of the EnableIf condition? The instantiation of such a template could never fail, because template arguments that do not provide the required operations would cause a deduction failure (via EnableIf) rather than allowing the instantiation to proceed. We refer to such templates as “instantiation-safe” templates and sketch the implementation of such templates here.
+
+We start with a very basic template, min(), which computes the minimum of two values. We would typically implement such as a template as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T const& min(T const& x, T const& y)
+{
+	if (y < x) {
+		return y;
+	}
+	return x;
+}
+\end{lstlisting}
+
+This template requires the type T to have a < operator able to compare two T values (specifically, two T const lvalues) and then implicitly convert the result of that comparison to bool for use in the if statement. A trait that checks for the < operator and computes its result type is analogous to the SFINAE-friendly PlusResultT trait discussed in Section 19.4.4 on page 424, but we show the LessResultT trait here for convenience:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/lessresult.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval()
+#include <type_traits> // for true_type and false_type
+
+template<typename T1, typename T2>
+class HasLess {
+	template<typename T> struct Identity;
+	template<typename U1, typename U2> static std::true_type
+		test(Identity<decltype(std::declval<U1>() < std::declval<U2>())>*);
+	template<typename U1, typename U2> static std::false_type
+		test(...);
+	public:
+	static constexpr bool value = decltype(test<T1, T2>(nullptr))::value;
+};
+
+template<typename T1, typename T2, bool HasLess>
+class LessResultImpl {
+	public:
+	using Type = decltype(std::declval<T1>() < std::declval<T2>());
+};
+
+template<typename T1, typename T2>
+class LessResultImpl<T1, T2, false> {
+};
+
+template<typename T1, typename T2>
+class LessResultT
+: public LessResultImpl<T1, T2, HasLess<T1, T2>::value> {
+};
+
+template<typename T1, typename T2>
+using LessResult = typename LessResultT<T1, T2>::Type;
+\end{lstlisting}
+
+This trait can then be composed with the IsConvertible trait to make min() instantiation-safe:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/min2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "isconvertible.hpp"
+#include "lessresult.hpp"
+
+template<typename T>
+EnableIf<IsConvertible<LessResult<T const&, T const&>, bool>,
+		T const&>
+min(T const& x, T const& y)
+{
+	if (y < x) {
+		return y;
+	}
+	return x;
+}
+\end{lstlisting}
+
+It is instructive to try to call this min() function with various types with different < operators (or missing the operator entirely), as in the following example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/min.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "min.hpp"
+
+struct X1 { };
+bool operator< (X1 const&, X1 const&) { return true; }
+
+struct X2 { };
+bool operator<(X2, X2) { return true; }
+
+struct X3 { };
+bool operator<(X3&, X3&) { return true; }
+
+struct X4 { };
+struct BoolConvertible {
+	operator bool() const { return true; } // implicit conversion to bool
+};
+
+struct X5 { };
+BoolConvertible operator< (X5 const&, X5 const&)
+{
+	return BoolConvertible();
+}
+
+struct NotBoolConvertible { // no conversion to bool
+};
+
+struct X6 { };
+NotBoolConvertible operator< (X6 const&, X6 const&)
+{
+	return NotBoolConvertible();
+}
+
+struct BoolLike {
+	explicit operator bool() const { return true; } // explicit conversion to bool
+};
+struct X7 { };
+BoolLike operator< (X7 const&, X7 const&) { return BoolLike(); }
+
+int main()
+{
+	min(X1(), X1()); // X1 can be passed to min()
+	min(X2(), X2()); // X2 can be passed to min()
+	min(X3(), X3()); // ERROR: X3 cannot be passed to min()
+	min(X4(), X4()); // ERROR: X4 can be passed to min()
+	min(X5(), X5()); // X5 can be passed to min()
+	min(X6(), X6()); // ERROR: X6 cannot be passed to min()
+	min(X7(), X7()); // UNEXPECTED ERROR: X7 cannot be passed to min()
+}
+\end{lstlisting}
+
+When compiling this program, notice that while there are errors for four of the different min() calls—for X3, X4, X6, and X7—the errors do not come from the body of min(), as they would have with the non-instantiation-safe variant. Rather, they complain that there is no suitable min() function, because the only option has been eliminated by SFINAE. Clang produces the following diagnostic:
+
+\begin{tcblisting}{commandshell={}}
+min.cpp:41:3: error: no matching function for call to ’min’
+min(X3(), X3()); // ERROR: X3 cannot be passed to min
+^~~
+./min.hpp:8:1: note: candidate template ignored: substitution failure
+[with T = X3]: no type named ’Type’ in
+’LessResultT<const X3 &, const X3 &>’
+min(T const& x, T const& y)
+\end{tcblisting}
+
+Thus, the EnableIf is only allowing instantiation for those template arguments that meet the requirements of the template (X1, X2, and X5), so we never get an error from the body of min(). Moreover, if we had some other overload of min() that might work for these types, overload resolution could have selected one of those instead of failing.
+
+The last type in our example, X7, illustrates some of the subtleties of implementing instantiationsafe templates. In particular, if X7 is passed to the non-instantiation-safe min(), instantiation will succeed. However, the instantiation-safe min() rejects it because BoolLike is not implicitly convertible to bool. The distinction here is particularly subtle: An explicit conversion to bool can be used implicitly in certain contexts, including in Boolean conditions for control-flow statements (if, while, for, and do), the built-in !, \&\&, and || operators, and the ternary operator ?:. In these contexts, the value is said to be contextually converted to bool.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}C++11 introduced the notion of contextual conversion to bool along with explicit conversion operators. Together, they replace uses of the “safe bool” idiom ([KarlssonSafeBool]), which typically involves an (implicit) user-defined conversion to a pointer-to-data member. The pointer-to-data member is used because it can be treated as a bool value but doesn’t have other, unwanted conversions, such as bool being promoted to int as part of arithmetic operations. For example, BoolConvertible() + 5 is (unfortunately) well-formed code.
+\end{tcolorbox}
+
+However, our insistence on having a general, implicit conversion to bool has the effect that our instantiation-safe template is overconstrained; that is, its specified requirements (in the EnableIf) are stronger than its actual requirements (what the template needs to instantiate properly). If, on the other hand, we had entirely forgotten the conversion-to-bool requirement, our min() template would have been underconstrained, and it would have allowed some template arguments that could cause an instantiation failure (such as X6).
+
+To fix the instantiation-safe min(), we need a trait to determine whether a type T is contextually convertible to bool. The control-flow statements are not helpful in defining this trait, because statements cannot occur within a SFINAE context, nor are the logical operations, which can be overloaded for an arbitrary type. Fortunately, the ternary operator ?: is an expression and is not overloadable, so it can be exploited to test whether a type is contextually convertible to bool:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/iscontextualbool.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval()
+#include <type_traits> // for true_type and false_type
+
+template<typename T>
+class IsContextualBoolT {
+	private:
+	template<typename T> struct Identity;
+	template<typename U> static std::true_type
+		test(Identity<decltype(declval<U>()? 0 : 1)>*);
+	template<typename U> static std::false_type
+		test(...);
+	public:
+	static constexpr bool value = decltype(test<T>(nullptr))::value;
+};
+
+template<typename T>
+constexpr bool IsContextualBool = IsContextualBoolT<T>::value;
+\end{lstlisting}
+
+With this new trait, we can provide an instantiation-safe min() with the correct set of requirements in the EnableIf:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/min3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "iscontextualbool.hpp"
+#include "lessresult.hpp"
+
+template<typename T>
+EnableIf<IsContextualBool<LessResult<T const&, T const&>>,
+		T const&>
+min(T const& x, T const& y)
+{
+	if (y < x) {
+		return y;
+	}
+	return x;
+}
+\end{lstlisting}
+
+The techniques used here to make min() instantiation-safe can be extended to describe requirements for nontrivial templates by composing various requirement checks into traits that describe some class of types, such as forward iterators, and combining those traits within EnableIf. Doing so has the advantages of both better overloading behavior and the elimination of the error “novel” that compilers tend to produce while printing errors deep within a nested template instantiation. On the other hand, the error messages provided tend to lack specificity regarding which particular operation failed. Moreover, as we have shown with our small min() example, accurately determining and encoding the exact requirements of the template can be a daunting task. We explore debugging techniques that make use of these traits in Section 28.2 on page 654.
+
+
+
+
+

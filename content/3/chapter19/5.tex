@@ -1,0 +1,129 @@
+Details matter. And for that reason, the general approach for SFINAE-based traits might become more complicated in practice. Let’s illustrate this by defining a trait that can determine whether a given type is convertible to another given type—for example, if we expect a certain base class or one of its derived classes. The IsConvertibleT trait yields whether we can convert a passed first type to a passed second type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isconvertible.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits> // for true_type and false_type
+#include <utility> // for declval
+
+template<typename FROM, typename TO>
+struct IsConvertibleHelper {
+	private:
+	// test() trying to call the helper aux(TO) for a FROM passed as F:
+		static void aux(TO);
+	template<typename F, typename T,
+	typename = decltype(aux(std::declval<F>()))>
+		static std::true_type test(void*);
+	// test() fallback:
+	template<typename, typename>
+		static std::false_type test(...);
+	public:
+	using Type = decltype(test<FROM>(nullptr));
+};
+
+template<typename FROM, typename TO>
+struct IsConvertibleT : IsConvertibleHelper<FROM, TO>::Type {
+};
+
+template<typename FROM, typename TO>
+using IsConvertible = typename IsConvertibleT<FROM, TO>::Type;
+
+template<typename FROM, typename TO>
+constexpr bool isConvertible = IsConvertibleT<FROM, TO>::value;
+\end{lstlisting}
+
+Here, we use the approach with function overloading, as introduced in Section 19.4.1 on page 416. That is, inside a helper class we declare two overloaded function templates named test() with different return types and declare a Type member for the base class of the resulting trait:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static std::true_type test(void*);
+template<...> static std::false_type test(...);
+...
+using Type = decltype(test<FROM>(nullptr));
+...
+template<typename FROM, typename TO>
+struct IsConvertibleT : IsConvertibleHelper<FROM, TO>::Type {
+};
+\end{lstlisting}
+
+As usual, the first test() overload is designed to match only if the requested check succeeds, while the second overload is the fallback. Thus, the goal is to make the first test() overload valid if and only if type FROM converts to type TO. To achieve this, again we give our first declaration of test a dummy (unnamed) template argument initialized with a construct that is valid if and only if the conversion is valid. This template parameter cannot be deduced, and we will not provide an explicit template argument for it. Therefore, it will be substituted, and if the substitution fails, that declaration of test() will be discarded.
+
+Again, note that the following doesn’t work:
+
+\begin{lstlisting}[style=styleCXX]
+static void aux(TO);
+template<typename = decltype(aux(std::declval<FROM>()))>
+	static char test(void*);
+\end{lstlisting}
+
+Here, FROM and TO are completely determined when this member function template is parsed, and therefore a pair of types for which the conversion is not valid (e.g., double* and int*) will trigger an error right away, before any call to test() (and therefore outside any SFINAE context).
+
+For that reason, we introduce F as a specific member function template parameter
+
+\begin{lstlisting}[style=styleCXX]
+static void aux(TO);
+template<typename F, typename = decltype(aux(std::declval<F>()))>
+	static char test(void*);
+\end{lstlisting}
+
+and provide the FROM type as an explicit template argument in the call to test() that appears in the initialization of value:
+
+\begin{lstlisting}[style=styleCXX]
+static constexpr bool value
+	= isSame<decltype(test<FROM>(nullptr)), char>;
+\end{lstlisting}
+
+Note how std::declval, introduced in Section 19.3.4 on page 415, is used to produce a value without calling any constructor. If that value is convertible to TO, the call to aux() is valid, and this declaration of test() matches. Otherwise, a SFINAE failure occurs and only the fallback declaration will match.
+
+As a result, we can use the trait as follows:
+
+\begin{lstlisting}[style=styleCXX]
+IsConvertibleT<int, int>::value // yields true
+IsConvertibleT<int, std::string>::value // yields false
+IsConvertibleT<char const*, std::string>::value // yields true
+IsConvertibleT<std::string, char const*>::value // yields false
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Handling Special Cases}
+
+Three cases are not yet handled correctly by IsConvertibleT:
+
+\begin{enumerate}
+\item
+Conversions to array types should always yield false, but in our code, the parameter of type TO in the declaration of aux() will just decay to a pointer type and therefore enable a “true” result for some FROM types.
+
+\item
+Conversions to function types should always yield false, but just as with the array case, our implementation just treats them as the decayed type.
+
+\item
+Conversion to (const/volatile-qualified) void types should yield true. Unfortunately, our implementation above doesn’t even successfully instantiate the case where TO is a void type because parameter types cannot have type void (and aux() is declared with such a parameter).
+\end{enumerate}
+
+For all these cases, we’ll need additional partial specializations. However, adding such specializations for every possible combination of const and volatile qualifiers quickly becomes unwieldy. Instead, we can add an additional template parameter to our helper class template as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename FROM, typename TO, bool = IsVoidT<TO>::value
+								|| IsArrayT<TO>::value
+								|| IsFunctionT<TO>::value>
+struct IsConvertibleHelper {
+	using Type = std::integral_constant<bool,
+	IsVoidT<TO>::value
+	&& IsVoidT<FROM>::value>;
+};
+
+template<typename FROM, typename TO>
+struct IsConvertibleHelper<FROM,TO,false> {
+	... // previous implementation of IsConvertibleHelper here
+};
+\end{lstlisting}
+
+The extra Boolean template parameter ensures that for all these special cases the implementation of the primary helper trait is used. It yields false\_type if we convert to arrays or functions (because then IsVoidT<TO> is false) or if FROM is void and TO is not, but for two void types it will produce false\_type. All other cases produce a false argument for the third parameter and therefore pick up the partial specialization, which corresponds to the implementation we already discussed.
+
+See Section 19.8.2 on page 453 for a discussion of how to implement IsArrayT and Section 19.8.3 on page 454 for a discussion of how to implement IsFunctionT.
+
+The C++ standard library provides a corresponding type trait std::is\_convertible<>, which is described in Section D.3.3 on page 727.
+
+
+

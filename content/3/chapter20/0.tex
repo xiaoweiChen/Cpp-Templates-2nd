@@ -1,0 +1,55 @@
+
+Function overloading allows the same function name to be used for multiple functions, so long as those functions are distinguished by their parameter types. For example:
+
+\begin{lstlisting}[style=styleCXX]
+void f(int);
+void f(char const*);
+\end{lstlisting}
+
+With function templates, one overloads on type patterns such as pointer-to-T or Array<T>:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> void f(T*);
+template<typename T> void f(Array<T>);
+\end{lstlisting}
+
+Given the prevalence of type traits (discussed in Chapter 19), it is natural to want to overload function templates based on the properties of the template arguments. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Number> void f(Number); // only for numbers
+template<typename Container> void f(Container); // only for containers
+\end{lstlisting}
+
+However, C++ does not currently provide any direct way to express overloads based on type properties. In fact, the two f function templates immediately above are actually declarations of the same function template, rather than distinct overloads, because the names of template parameters are ignored when comparing two function templates.
+
+Fortunately, there are a number of techniques that can be used to emulate overloading of function templates based on type properties. These techniques, as well as the common motivations for such overloading, are discussed in this chapter.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

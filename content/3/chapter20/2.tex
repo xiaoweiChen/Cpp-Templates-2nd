@@ -1,0 +1,85 @@
+One approach to algorithm specialization is to “tag” different implementation variants of an algorithm with a unique type that identifies that variant. For example, to deal with the advanceIter() problem, just introduced, we can use the standard library’s iterator category tag types (defined below) to identify the two implementation variants of the advanceIter() algorithm:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator, typename Distance>
+void advanceIterImpl(Iterator& x, Distance n, std::input_iterator_tag)
+{
+	while (n > 0) { // linear time
+		++x;
+		--n;
+	}
+}
+
+template<typename Iterator, typename Distance>
+void advanceIterImpl(Iterator& x, Distance n,
+					std::random_access_iterator_tag) {
+	x += n; // constant time
+}
+\end{lstlisting}
+
+Then, the advanceIter() function template itself simply forwards its arguments along with the appropriate tag:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator, typename Distance>
+void advanceIter(Iterator& x, Distance n)
+{
+	advanceIterImpl(x, n,
+				typename
+						std::iterator_traits<Iterator>::iterator_category());
+}
+\end{lstlisting}
+
+The trait class std::iterator\_traits provides a category for the iterator via its member type iterator\_category. The iterator category is one of the \_tag types mentioned earlier, which specifies what kind of iterator the type is. Inside the C++ standard library, the available tags are defined as follows, using inheritance to reflect when one tag describes a category that is derived from another:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The categories in this case reflect concepts, and inheritance of concepts is referred to as refinement. Concepts and refinement are detailed in Appendix E.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	struct input_iterator_tag { };
+	struct output_iterator_tag { };
+	struct forward_iterator_tag : public input_iterator_tag { };
+	struct bidirectional_iterator_tag : public forward_iterator_tag { };
+	struct random_access_iterator_tag : public bidirectional_iterator_tag { };
+}
+\end{lstlisting}
+
+The key to effective use of tag dispatching is in the relationship among the tags. Our two variants of advanceIterImpl() are tagged with std::input\_iterator\_tag and with std::random\_access\_iterator\_tag, and because std::random\_access\_iterator\_tag inherits from std::input\_iterator\_tag, normal function overloading will prefer the more specialized algorithm variant (which uses std::random\_access\_iterator\_tag) whenever advanceIterImpl() is called with a random access iterator. Therefore, tag dispatching relies on delegation from the single, primary function template to a set of \_impl variants, which are tagged such that normal function overloading will select the most specialized algorithm that is applicable to the given template arguments.
+
+Tag dispatching works well when there is a natural hierarchical structure to the properties used by the algorithm and an existing set of traits that provide those tag values. It is not as convenient when algorithm specialization depends on ad hoc type properties, such as whether the type T has a trivial copy assignment operator. For that, we need a more powerful technique.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

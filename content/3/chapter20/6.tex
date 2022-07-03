@@ -1,0 +1,39 @@
+The C++ standard library provides iterator tags for input, output, forward, bidirectional, and randomaccess iterator tags, which we have used in our presentation. These iterator tags are part of the standard iterator traits (std::iterator\_traits) and the requirements placed on iterators, so they can be safely used for tag dispatching purposes.
+
+The C++11 standard library std::enable\_if class template provides the same behavior as the EnableIfT class template presented here. The only difference is that the standard uses a lowercase member type named type rather than our uppercase Type.
+
+Algorithm specialization is used in a number of places in the C++ standard library. For example, both the std::advance() and std::distance() have several variants based on the iterator category of their iterator arguments. Most standard library implementations tend to use tag dispatching, although, more recently, some have adopted std::enable\_if to implement this algorithm specialization. Moreover, a number of C++ standard library implementations also use these techniques internally to implement algorithm specialization for various standard algorithms. For example, std::copy() can be specialized to call std::memcpy() or std::memmove() when the iterators refer to contiguous memory and their value types have trivial copy-assignment operators. Similarly, std::fill() can be optimized to call std::memset(), and various algorithms can avoid calling destructors when a type is known to have a trivial destructor. These algorithm specializations are not mandated by the C++ standard in the same way that they are for std::advance() or std::distance(), but implementers have chosen to provide them for efficiency reasons.
+
+As introduced in Section 8.4 on page 131, the C++ standard library also hints strongly at the required use of std::enable\_if<> or similar SFINAE-based techniques in its requirements. For example, std::vector has a constructor template to allow a vector to be built from an iterator sequence:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename InputIterator>
+vector(InputIterator first, InputIterator second,
+		allocator_type const& alloc = allocator_type());
+\end{lstlisting}
+
+with the requirement that “if the constructor is called with a type InputIterator that does not qualify as an input iterator, then the constructor shall not participate in overload resolution” (see 23.2.3 paragraph 14 of [C++11]). This phrasing is vague enough to allow the most efficient techniques of the day to be used for the implementation, but at the time it was added to the standard, the use of std::enable\_if<> was envisioned.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

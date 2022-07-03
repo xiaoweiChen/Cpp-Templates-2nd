@@ -1,9 +1,486 @@
 
+Another foray into SFINAE-based traits involves creating a trait (or, rather, a set of traits) that can
+determine whether a given type T has a member of a given name X (a type or a nontype member).
 
 \subsubsubsection{19.6.1\hspace{0.2cm}Detecting Member Types}
 
+Let’s first define a trait that can determine whether a given type T has a member type size\_type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hassizetype.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits> // defines true_type and false_type
+
+// helper to ignore any number of template parameters:
+template<typename...> using VoidT = void;
+
+// primary template:
+template<typename, typename = VoidT<>>
+struct HasSizeTypeT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T>
+struct HasSizeTypeT<T, VoidT<typename T::size_type>> : std::true_type
+{
+};
+\end{lstlisting}
+
+Here, we use the approach to SFINAE out partial specializations introduced in Section 19.4.2 on page 420.
+
+As usual for predicate traits, we define the general case to be derived from std::false\_type, because by default a type doesn’t have the member size\_type.
+
+In this case, we only need one construct:
+
+\begin{lstlisting}[style=styleCXX]
+typename T::size_type
+\end{lstlisting}
+
+This construct is valid if and only if type T has a member type size\_type, which is exactly what we are trying to determine. If, for a specific T, the construct is invalid (i.e., type T has no member type size\_type), SFINAE causes the partial specialization to be discarded, and we fall back to the primary template. Otherwise, the partial specialization is valid and preferred.
+
+We can use the trait as follows:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << HasSizeTypeT<int>::value; // false
+struct CX {
+	using size_type = std::size_t;
+};
+std::cout << HasSizeType<CX>::value; // true
+\end{lstlisting}
+
+Note that if the member type size\_type is private, HasSizeTypeT yields false because our traits templates have no special access to their argument type, and therefore typename T::size\_type is invalid (i.e., triggers SFINAE). In other words, the trait tests whether we have an accessible member type size\_type.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Dealing with Reference Types}
+
+As programmers, we are familiar with the surprises that can arise “on the edges” of the domains we consider. With a traits template like HasSizeTypeT, interesting issues can arise with reference types. For example, while the following works fine:
+
+\begin{lstlisting}[style=styleCXX]
+struct CXR {
+	using size_type = char&; // Note: type size_type is a reference type
+};
+std::cout << HasSizeTypeT<CXR>::value; // OK: prints true
+\end{lstlisting}
+
+the following fails:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << HasSizeTypeT<CX&>::value; // OOPS: prints false
+std::cout << HasSizeTypeT<CXR&>::value; // OOPS: prints false
+\end{lstlisting}
+
+and that is potentially surprising. It is true that a reference type has not members per se, but whenever we use references, the resulting expressions have the underlying type, and so perhaps it would be preferable to consider the underlying type in that case. Here, that could be achieved by using our earlier RemoveReference trait in the partial specialization of HasSizeTypeT:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct HasSizeTypeT<T, VoidT<RemoveReference<T>::size_type>>
+: std::true_type {
+};
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Injected Class Names}
+
+It’s also worth noting that our traits technique to detect member types will also produce a true value for injected class names (see Section 13.2.3 on page 221). For example:
+
+\begin{lstlisting}[style=styleCXX]
+struct size_type {
+};
+
+struct Sizeable : size_type {
+};
+
+static_assert(HasSizeTypeT<Sizeable>::value,
+			"Compiler bug: Injected class name missing");
+\end{lstlisting}
+
+The latter static assertion succeeds because size\_type introduces its own name as a member type, and that name is inherited. If it didn’t succeed, we would have found a defect in the compiler.
+
 \subsubsubsection{19.6.2\hspace{0.2cm}Detecting Arbitrary Member Types}
+
+Defining a trait such as HasSizeTypeT raises the question of how to parameterize the trait to be able to check for any member type name.
+
+Unfortunately, this can currently be achieved only via macros, because there is no language mechanism to describe a “potential” name.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}At the time of this writing, the C++ standardization committee is exploring ways to “reflect” various program entities (like class types and their members) in ways that the program can explore. See Section 17.9 on page 363.
+\end{tcolorbox}
+
+The closest we can get for the moment without using macros is to use generic lambdas, as illustrated in Section 19.6.4 on page 438. 
+
+The following macro would work:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hastype.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits> // for true_type, false_type, and void_t
+#define DEFINE_HAS_TYPE(MemType) \
+template<typename, typename = std::void_t<>> \
+struct HasTypeT_##MemType \
+: std::false_type { }; \
+template<typename T> \
+struct HasTypeT_##MemType<T, std::void_t<typename T::MemType>> \
+: std::true_type { } // ; intentionally skipped
+✝ 
+\end{lstlisting}
+
+Each use of DEFINE\_HAS\_TYPE(MemberType) defines a new HasTypeT\_MemberType trait. For example, we can use it to detect whether a type has a value\_type or a char\_type member type as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hastype.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "hastype.hpp"
+#include <iostream>
+#include <vector>
+
+DEFINE_HAS_TYPE(value_type);
+DEFINE_HAS_TYPE(char_type);
+
+int main()
+{
+	std::cout << "int::value_type: "
+	<< HasTypeT_value_type<int>::value << ’\n’;
+	std::cout << "std::vector<int>::value_type: "
+	<< HasTypeT_value_type<std::vector<int>>::value << ’\n’;
+	std::cout << "std::iostream::value_type: "
+	<< HasTypeT_value_type<std::iostream>::value << ’\n’;
+	std::cout << "std::iostream::char_type: "
+	<< HasTypeT_char_type<std::iostream>::value << ’\n’;
+}
+\end{lstlisting}
 
 \subsubsubsection{19.6.3\hspace{0.2cm}Detecting Nontype Members}
 
+We can modify the trait to also check for data members and (single) member functions:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasmember.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits> // for true_type, false_type, and void_t
+
+#define DEFINE_HAS_MEMBER(Member) \
+template<typename, typename = std::void_t<>> \
+struct HasMemberT_##Member \
+: std::false_type { }; \
+template<typename T> \
+struct HasMemberT_##Member<T, std::void_t<decltype(&T::Member)>> \
+: std::true_type { } // ; intentionally skipped
+\end{lstlisting}
+
+Here, we use SFINAE to disable the partial specialization when \&T::Member is not valid. For that construct to be valid, the following must be true:
+
+\begin{itemize}
+\item
+Member must unambiguously identify a member of T (e.g., it cannot be an overloaded member function name, or the name of multiple inherited members of the same name),
+
+\item
+The member must be accessible,
+
+\item
+The member must be a nontype, nonenumerator member (otherwise the prefix \& would be invalid), and
+
+\item
+If T::Member is a static data member, its type must not provide an operator\& that makes \&T::Member invalid (e.g., by making that operator inaccessible).
+\end{itemize}
+
+We can use the template as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasmember.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "hasmember.hpp"
+
+#include <iostream>
+#include <vector>
+#include <utility>
+
+DEFINE_HAS_MEMBER(size);
+DEFINE_HAS_MEMBER(first);
+
+int main()
+{
+	std::cout << "int::size: "
+				<< HasMemberT_size<int>::value << ’\n’;
+	std::cout << "std::vector<int>::size: "
+				<< HasMemberT_size<std::vector<int>>::value << ’\n’;
+	std::cout << "std::pair<int,int>::first: "
+				<< HasMemberT_first<std::pair<int,int>>::value << ’\n’;
+}
+\end{lstlisting}
+
+It would not be difficult to modify the partial specialization to exclude cases where \&T::Member is not a pointer-to-member type (which amounts to excluding static data members). Similarly, a pointerto-member function could be excluded or required to limit the trait to data members or member functions.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Detecting Member Functions}
+
+Note that the HasMember trait only checks whether a single member with the corresponding name exists. The trait also will fail if two members exists, which might happen if we check for overloaded member functions. For example:
+
+\begin{lstlisting}[style=styleCXX]
+DEFINE_HAS_MEMBER(begin);
+std::cout << HasMemberT_begin<std::vector<int>>::value; // false
+\end{lstlisting}
+
+However, as explained in Section 8.4.1 on page 133, the SFINAE principle protects against attempts to create both invalid types and expressions in a function template declaration, allowing the overloading technique above to extend to testing whether arbitrary expressions are well-formed.
+
+That is, we can simply check whether we can call a function of interest in a specific way and that can succeed even if the function is overloaded. As with the IsConvertibleT trait in Section 19.5 on page 428, the trick is to formulate the expression that checks whether we can call begin() inside a decltype expression for the default value of an additional function template parameter:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasbegin.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval
+#include <type_traits> // for true_type, false_type, and void_t
+
+// primary template:
+template<typename, typename = std::void_t<>>
+struct HasBeginT : std::false_type {
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T>
+struct HasBeginT<T, std::void_t<decltype(std::declval<T>().begin())>>
+: std::true_type {
+};
+\end{lstlisting}
+
+Here, we use
+
+\begin{lstlisting}[style=styleCXX]
+decltype(std::declval<T>().begin())
+\end{lstlisting}
+
+to test whether, given a value/object of type T (using std::declval to avoid any constructor being required), calling a member begin() is valid.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Except that decltype(call-expression) does not require a nonreference, non-void return type to be complete, unlike call expressions in other contexts. Using decltype(std::declval<T>().begin(), 0) instead does add the requirement that the return type of the call is complete, because the returned value is no longer the result of the decltype operand.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Detecting Other Expressions}
+
+We can use the technique above for other kinds of expressions and even combine multiple expressions. For example, we can test whether, given types T1 and T2, there is a suitable < operator defined for values of these types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasless.hpp}
+\begin{lstlisting}[style=styleCXX]
+include <utility> // for declval
+#include <type_traits> // for true_type, false_type, and void_t
+
+// primary template:
+template<typename, typename, typename = std::void_t<>>
+struct HasLessT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T1, typename T2>
+struct HasLessT<T1, T2, std::void_t<decltype(std::declval<T1>()
+					< std::declval<T2>())>>
+: std::true_type
+{
+};
+\end{lstlisting}
+
+As always, the challenge is to define a valid expression for the condition to check and use decltype to place it in a SFINAE context, where it will cause a fallback to the primary template if the expression isn’t valid:
+
+\begin{lstlisting}[style=styleCXX]
+decltype(std::declval<T1>() < std::declval<T2>())
+\end{lstlisting}
+
+Traits that detect valid expressions in this manner are fairly robust: They will evaluate true only when the expression is well-formed and will correctly return false when the < operator is ambiguous, deleted, or inaccessible.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Prior to C++11’s expansion of SFINAE to cover arbitrary invalid expressions, the techniques for detecting the validity of specific expressions centered on introducing a new overload for the function being tested (e.g., <) that had an overly permissive signature and a strangely sized return type to behave as a fallback case. However, such approaches were prone to ambiguities and caused errors due to access control violations.
+\end{tcolorbox}
+
+We can use the trait as follows:
+
+\begin{lstlisting}[style=styleCXX]
+HasLessT<int, char>::value // yields true
+HasLessT<std::string, std::string>::value // yields true
+HasLessT<std::string, int>::value // yields false
+HasLessT<std::string, char*>::value // yields true
+HasLessT<std::complex<double>, std::complex<double>>::value // yields false
+\end{lstlisting}
+
+As introduced in Section 2.3.1 on page 30, we can use this trait to require that a template parameter T supports operator <:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C
+{
+	static_assert(HasLessT<T>::value,
+				  "Class C requires comparable elements");
+	...
+};
+\end{lstlisting}
+
+Note that, due to the nature of std::void\_t, we can combine multiple constraints in a trait:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasvarious.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval
+#include <type_traits> // for true_type, false_type, and void_t
+
+// primary template:
+template<typename, typename = std::void_t<>>
+struct HasVariousT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T>
+struct HasVariousT<T, std::void_t<decltype(std::declval<T>().begin()),
+					typename T::difference_type,
+					typename T::iterator>>
+: std::true_type
+{
+};
+\end{lstlisting}
+
+Traits that detect the validity of a specific syntax are quite powerful, allowing a template to customize its behavior based on the presence or absence of a particular operation. These traits will be used again both as part of the definition of SFINAE-friendly traits (Section 19.4.4 on page 424) and to aid in overloading based on type properties (Chapter 20).
+
 \subsubsubsection{19.6.4\hspace{0.2cm}Using Generic Lambdas to Detect Members}
+
+The isValid lambda, introduced in Section 19.4.3 on page 421, provides a more compact technique to define traits that check for members, helping is to avoid the use of macros to handle members if arbitrary names.
+
+The following example illustrates how to define traits checking whether a data or type member such as first or size\_type exists or whether operator< is defined for two objects of different types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isvalid1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "isvalid.hpp"
+#include<iostream>
+#include<string>
+#include<utility>
+
+int main()
+{
+	using namespace std;
+	cout << boolalpha;
+	
+	// define to check for data member first:
+	constexpr auto hasFirst
+		= isValid([](auto x) -> decltype((void)valueT(x).first) {
+				});
+
+	cout << "hasFirst: " << hasFirst(type<pair<int,int>>) << ’\n’; // true
+	
+	// define to check for member type size_type:
+	constexpr auto hasSizeType
+		= isValid([](auto x) -> typename decltype(valueT(x))::size_type {
+				});
+			
+	struct CX {
+		using size_type = std::size_t;
+	};
+	cout << "hasSizeType: " << hasSizeType(type<CX>) << ’\n’; // true
+	
+	if constexpr(!hasSizeType(type<int>)) {
+		cout << "int has no size_type\n";
+		...
+	}
+
+	// define to check for <:
+	constexpr auto hasLess
+		= isValid([](auto x, auto y) -> decltype(valueT(x) < valueT(y)) {
+				});
+			
+	cout << hasLess(42, type<char>) << ’\n’; // yields true
+	cout << hasLess(type<string>, type<string>) << ’\n’; // yields true
+	cout << hasLess(type<string>, type<int>) << ’\n’; // yields false
+	cout << hasLess(type<string>, "hello") << ’\n’; // yields true
+}
+\end{lstlisting}
+
+Note again that hasSizeType uses std::decay to remove the references from the passed x because you can’t access a type member from a reference. If you skip that, the traits will always yield false because the second overload of isValidImpl<>() is used.
+
+To be able to use the common generic syntax, taking types as template parameters, we can again define additional helpers. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isvalid2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "isvalid.hpp"
+#include<iostream>
+#include<string>
+#include<utility>
+
+constexpr auto hasFirst
+	= isValid([](auto&& x) -> decltype((void)&x.first) {
+				});
+			
+template<typename T>
+using HasFirstT = decltype(hasFirst(std::declval<T>()));
+constexpr auto hasSizeType
+	= isValid([](auto&& x)
+			-> typename std::decay_t<decltype(x)>::size_type {
+			});
+
+template<typename T>
+using HasSizeTypeT = decltype(hasSizeType(std::declval<T>()));
+constexpr auto hasLess
+	= isValid([](auto&& x, auto&& y) -> decltype(x < y) {
+				});
+
+template<typename T1, typename T2>
+using HasLessT = decltype(hasLess(std::declval<T1>(), std::declval<T2>()));
+
+int main()
+{
+	using namespace std;
+	
+	cout << "first: " << HasFirstT<pair<int,int>>::value << ’\n’; // true
+	
+	struct CX {
+		using size_type = std::size_t;
+	};
+
+	cout << "size_type: " << HasSizeTypeT<CX>::value << ’\n’; // true
+	cout << "size_type: " << HasSizeTypeT<int>::value << ’\n’; // false
+	
+	cout << HasLessT<int, char>::value << ’\n’; // true
+	cout << HasLessT<string, string>::value << ’\n’; // true
+	cout << HasLessT<string, int>::value << ’\n’; // false
+	cout << HasLessT<string, char*>::value << ’\n’; // true
+}
+\end{lstlisting}
+
+Now
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using HasFirstT = decltype(hasFirst(std::declval<T>()));
+\end{lstlisting}
+
+allows us to call
+
+\begin{lstlisting}[style=styleCXX]
+HasFirstT<std::pair<int,int>>::value
+\end{lstlisting}
+
+which results in the call of hasFirst for a pair of two ints, which is evaluated as described above.
+
+
+
+
+
+
+
+
+
+

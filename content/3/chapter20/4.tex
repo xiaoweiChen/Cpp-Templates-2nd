@@ -1,5 +1,220 @@
 
+Class template partial specializations can be used to provide alternate, specialized implementations of a class template for specific template arguments, much like we used overloading for function templates. And, like overloaded function templates, it can make sense to differentiate those partial specializations based on properties of the template arguments. Consider a generic Dictionary class template with key and value types as its template parameters. A simple (but inefficient) Dictionary can be implemented so long as the key type provides just an equality operator:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Key, typename Value>
+class Dictionary
+{
+	private:
+	vector<pair<Key const, Value>> data;
+	public:
+	// subscripted access to the data:
+	value& operator[](Key const& key)
+	{
+		// search for the element with this key:
+		for (auto& element : data) {
+			if (element.first == key) {
+				return element.second;
+			}
+		}
+		// there is no element with this key; add one
+		data.push_back(pair<Key const, Value>(key, Value()));
+		return data.back().second;
+	}
+	...
+};
+\end{lstlisting}
+
+If the key type supports a < operator, we can provide a more efficient implementation based on the standard library’s map container. Similarly, if the key type supports hashing operations, we can provide an even more efficient implementation based on the standard library’s unordered\_map.
 
 \subsubsubsection{20.4.1\hspace{0.2cm}Enabling/Disabling Class Templates}
 
+The way to enable/disable different implementations of class templates is to use enabled/disabled partial specializations of class templates. To use EnableIf with class template partial specializations, we first introduce an unnamed, defaulted template parameter to Dictionary:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Key, typename Value, typename = void>
+class Dictionary
+{
+	... // vector implementation as above
+};
+\end{lstlisting}
+
+This new template parameter serves as an anchor for EnableIf, which now can be embedded in the template argument list of the partial specialization for the map version of the Dictionary:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Key, typename Value>
+class Dictionary<Key, Value,
+				EnableIf<HasLess<Key>>>
+{
+	private:
+	map<Key, Value> data;
+	public:
+	value& operator[](Key const& key) {
+		return data[key];
+	}
+	...
+};
+\end{lstlisting}
+
+Unlike with overloaded function templates, we don’t need to disable any condition on the primary template, because any partial specialization takes precedence over the primary template. However, when we add another implementation for keys with a hashing operation, we need to ensure that the conditions on the partial specializations are mutually exclusive:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Key, typename Value, typename = void>
+class Dictionary
+{
+	... // vector implementation as above
+};
+
+template<typename Key, typename Value>
+class Dictionary<Key, Value,
+				EnableIf<HasLess<Key> && !HasHash<Key>>> 
+{
+	... // map implementation as above
+};
+
+template<typename Key, typename Value>
+class Dictionary<Key, Value,
+EnableIf<HasHash<Key>>>
+{
+	private:
+	unordered_map<Key, Value> data;
+	public:
+	value& operator[](Key const& key) {
+		return data[key];
+	}
+	...
+};
+\end{lstlisting}
+
 \subsubsubsection{20.4.2\hspace{0.2cm}Tag Dispatching for Class Templates}
+
+Tag dispatching, too, can be used to select among class template partial specializations. To illustrate, we define a function object type Advance<Iterator> akin to the advanceIter() algorithm used in earlier sections, which advances an iterator by some number of steps. We provide both the general implementation (for input iterators) as well as specialized implementations for bidirectional and random access iterators, relying on an auxiliary trait BestMatchInSet (described below) to pick the best match for the iterator’s category tag:
+
+\begin{lstlisting}[style=styleCXX]
+// primary template (intentionally undefined):
+template<typename Iterator,
+		typename Tag =
+			BestMatchInSet<
+				typename std::iterator_traits<Iterator>
+							::iterator_category,
+				std::input_iterator_tag,
+				std::bidirectional_iterator_tag,
+				std::random_access_iterator_tag>>
+class Advance;
+
+// general, linear-time implementation for input iterators:
+template<typename Iterator>
+class Advance<Iterator, std::input_iterator_tag>
+{
+	public:
+	using DifferenceType =
+	typename std::iterator_traits<Iterator>::difference_type;
+	void operator() (Iterator& x, DifferenceType n) const
+	{
+		while (n > 0) {
+			++x;
+			--n;
+		}
+	}
+};
+
+// bidirectional, linear-time algorithm for bidirectional iterators:
+template<typename Iterator>
+class Advance<Iterator, std::bidirectional_iterator_tag>
+{
+	public:
+	using DifferenceType =
+		typename std::iterator_traits<Iterator>::difference_type;
+		
+	void operator() (Iterator& x, DifferenceType n) const
+	{
+		if (n > 0) {
+			while (n > 0) {
+				++x;
+				--n;
+			}
+		} else {
+			while (n < 0) {
+				--x;
+				++n;
+			}
+		}
+	}
+};
+
+// bidirectional, constant-time algorithm for random access iterators:
+template<typename Iterator>
+class Advance<Iterator, std::random_access_iterator_tag>
+{
+	public:
+	using DifferenceType =
+		typename std::iterator_traits<Iterator>::difference_type;
+		
+	void operator() (Iterator& x, DifferenceType n) const
+	{
+		x += n;
+	}
+}
+\end{lstlisting}
+
+This formulation is quite similar to that of tag dispatching for function templates. However, the challenge is in writing the trait BestMatchInSet, which intends to determine which is the most closely matching tag (of the input, bidirectional, and random access iterator tags) for the given iterator. In essence, this trait is intended to tell us which of the following overloads would be picked given a value of the iterator’s category tag and to report its parameter type:
+
+\begin{lstlisting}[style=styleCXX]
+void f(std::input_iterator_tag);
+void f(std::bidirectional_iterator_tag);
+void f(std::random_access_iterator_tag);
+\end{lstlisting}
+
+The easiest way to emulate overload resolution is to actually use overload resolution, as follows:
+
+\begin{lstlisting}[style=styleCXX]
+// construct a set of match() overloads for the types in Types...:
+template<typename... Types>
+struct MatchOverloads;
+
+// basis case: nothing matched:
+template<>
+struct MatchOverloads<> {
+	static void match(...);
+};
+
+// recursive case: introduce a new match() overload:
+template<typename T1, typename... Rest>
+struct MatchOverloads<T1, Rest...> : public MatchOverloads<Rest...> {
+	static T1 match(T1); // introduce overload for T1
+	using MatchOverloads<Rest...>::match; // collect overloads from bases
+};
+
+// find the best match for T in Types...:
+template<typename T, typename... Types>
+struct BestMatchInSetT {
+	using Type = decltype(MatchOverloads<Types...>::match(declval<T>()));
+};
+
+template<typename T, typename... Types>
+using BestMatchInSet = typename BestMatchInSetT<T, Types...>::Type;
+\end{lstlisting}
+
+The MatchOverloads template uses recursive inheritance to declare a match() function with each type in the input set of Types. Each instantiation of the recursive MatchOverloads partial specialization introduces a new match() function for the next type in the list. It then employs a using declaration to pull in the match() function(s) defined in its base class, which handles the remaining types in the list. When applied recursively, the result is a complete set of match() overloads corresponding to the given types, each of which returns its parameter type. The BestMatchInSetT template then passes a T object to this set of overloaded match() functions and produces the return type of the selected (best) match() function.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}In C++17, one can eliminate the recursion with pack expansions in the base class list and in a using declaration (Section 4.4.5 on page 65). We demonstrate this technique in Section 26.4 on page 611.
+\end{tcolorbox}
+
+If none of the functions matches, the voidreturning basis case (which uses an ellipsis to capture any argument) indicates failure.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}It would be slightly better to provide no result in the case of failure, to make this a SFINAE-friendly trait (see Section 19.4.4 on page 424). Moreover, a robust implementation would wrap the return type in something like Identity, because there are some types—such as array and function types—that can be parameter types but not return types. We omit these improvements for the sake of brevity and readability.
+\end{tcolorbox}
+
+To summarize, BestMatchInSetT translates a function-overloading result into a trait and makes it relatively easy to use tag dispatching to select among class template partial specializations.
+
+
+
+
+
+
+
+
+
+

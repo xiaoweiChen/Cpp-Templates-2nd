@@ -1,11 +1,468 @@
 
+It is sometimes useful to be able to know whether a template parameter is a built-in type, a pointer type, a class type, and so on. In the following sections, we develop a suite of type traits that allow us to determine various properties of a given type. As a result, we will be able to write code specific for some types:
+
+\begin{lstlisting}[style=styleCXX]
+if (IsClassT<T>::value) {
+	...
+}
+\end{lstlisting}
+
+or, using the compile-time if available since C++17 (see Section 8.5 on page 134) and the features for traits convenience (see Section 19.7.3 on page 446):
+
+\begin{lstlisting}[style=styleCXX]
+if constexpr (IsClass<T>) {
+	...
+}
+\end{lstlisting}
+
+or, by using partial specializations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, bool = IsClass<T>>
+class C { // primary template for the general case
+	...
+};
+
+template<typename T>
+class C<T, true> { // partial specialization for class types
+	...
+};
+\end{lstlisting}
+
+Furthermore, expressions such as IsPointerT<T>::value will be Boolean constants that are valid nontype template arguments. In turn, this allows the construction of more sophisticated and more powerful templates that specialize their behavior on the properties of their type arguments.
+
+The C++ standard library defines several similar traits to determine the primary and composite type categories of a type.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The use of “primary” vs. “composite” type categories should not be confused with the distinction between “fundamental” vs. “compound” types. The standard describes fundamental types (like int or std::nullptr\_t) and compound types (like pointer types and class types). This is different from composite type categories (like arithmetic), which are categories that are the union of primary type categories (like floating-point).
+\end{tcolorbox}
+
+See Section D.2.1 on page 702 and Section D.2.2 on page 706 for details.
 
 \subsubsubsection{19.8.1\hspace{0.2cm}Determining Fundamental Types}
 
+To start, let’s develop a template to determine whether a type is a fundamental type. By default, we assume a type is not fundamental, and we specialize the template for the fundamental cases:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isfunda.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstddef> // for nullptr_t
+#include <type_traits> // for true_type, false_type, and
+ bool_constant<>
+// primary template: in general T is not a fundamental type
+template<typename T>
+struct IsFundaT : std::false_type {
+};
+
+// macro to specialize for fundamental types
+#define MK_FUNDA_TYPE(T) \
+template<> struct IsFundaT<T> : std::true_type { \
+};
+
+MK_FUNDA_TYPE(void)
+MK_FUNDA_TYPE(bool)
+MK_FUNDA_TYPE(char)
+MK_FUNDA_TYPE(signed char)
+MK_FUNDA_TYPE(unsigned char)
+MK_FUNDA_TYPE(wchar_t)
+MK_FUNDA_TYPE(char16_t)
+MK_FUNDA_TYPE(char32_t)
+
+MK_FUNDA_TYPE(signed short)
+MK_FUNDA_TYPE(unsigned short)
+MK_FUNDA_TYPE(signed int)
+MK_FUNDA_TYPE(unsigned int)
+MK_FUNDA_TYPE(signed long)
+MK_FUNDA_TYPE(unsigned long)
+MK_FUNDA_TYPE(signed long long)
+MK_FUNDA_TYPE(unsigned long long)
+
+MK_FUNDA_TYPE(float)
+MK_FUNDA_TYPE(double)
+MK_FUNDA_TYPE(long double)
+
+MK_FUNDA_TYPE(std::nullptr_t)
+
+#undef MK_FUNDA_TYPE
+\end{lstlisting}
+
+
+
+The primary template defines the general case. That is, in general, IsFundaT<T>::value will evaluate to false:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsFundaT : std::false_type {
+	static constexpr bool value = false;
+};
+\end{lstlisting}
+
+For each fundamental type, a specialization is defined so that IsFundaT<T>::value is true. We define a macro that expands to the necessary code for convenience. For example:
+
+\begin{lstlisting}[style=styleCXX]
+MK_FUNDA_TYPE(bool)
+\end{lstlisting}
+
+expands to the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<> struct IsFundaT<bool> : std::true_type {
+	static constexpr bool value = true;
+};
+\end{lstlisting}
+
+The following program demonstrates a possible use of this template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isfundatest.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "isfunda.hpp"
+#include <iostream>
+
+template<typename T>
+void test (T const&)
+{
+	if (IsFundaT<T>::value) {
+		std::cout << "T is a fundamental type" << ’\n’;
+	}
+	else {
+		std::cout << "T is not a fundamental type" << ’\n’;
+	}
+}
+
+int main()
+{
+	test(7);
+	test("hello");
+}
+\end{lstlisting}
+
+It has the following output:
+
+\begin{tcblisting}{commandshell={}}
+T is a fundamental type
+T is not a fundamental type
+\end{tcblisting}
+
+In the same way, we can define type functions IsIntegralT and IsFloatingT to identify which of these types are integral scalar types and which are floating-point scalar types.
+
+The C++ standard library uses a more fine-grained approach than only to check whether a type is a fundamental type. It first defines primary type categories, where each type matches exactly one type category (see Section D.2.1 on page 702), and then composite type categories such as std::is\_integral or std::is\_fundamental (see Section D.2.2 on page 706).
+
 \subsubsubsection{19.8.2\hspace{0.2cm}Determining Compound Types}
+
+Compound types are types constructed from other types. Simple compound types include pointer types, lvalue and rvalue reference types, pointer-to-member types, and array types. They are constructed from one or two underlying types. Class types and function types are also compound types, but their composition can involve an arbitrary number of types (for parameters or members). Enumeration types are also considered nonsimple compound types in this classification even though they are not compound from multiple underlying types. Simple compound types can be classified using partial specialization.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Pointers}
+
+We start with one such simple classification, for pointer types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/ispointer.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsPointerT : std::false_type { // primary template: by default not a pointer
+};
+
+template<typename T>
+struct IsPointerT<T*> : std::true_type { // partial specialization for pointers
+	using BaseT = T; // type pointing to
+};
+\end{lstlisting}
+
+The primary template is a catch-all case for nonpointer types and, as usual, provides its value constant false through is base class std::false\_type, indicating that the type is not a pointer. The partial specialization catches any kind of pointer (T*) and provides the value true to indicate that the provided type is a pointer. Additionally, it provides a type member BaseT that describes the type that the pointer points to. Note that this type member is only available when the original type was a pointer, making this a SFINAE-friendly type trait (see Section 19.4.4 on page 424).
+
+The C++ standard library provides a corresponding trait std::is\_pointer<>, which, however, does not provide a member for the type the pointer points to. It is described in Section D.2.1 on page 704.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{References}
+
+Similarly, we can identify lvalue reference types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/islvaluereference.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsLValueReferenceT : std::false_type { // by default no lvalue reference
+};
+
+template<typename T>
+struct IsLValueReferenceT<T&> : std::true_type { // unless T is lvalue references
+	using BaseT = T; // type referring to
+};
+\end{lstlisting}
+
+and rvalue reference types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isrvaluereference.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsRValueReferenceT : std::false_type { // by default no rvalue reference
+};
+
+template<typename T>
+struct IsRValueReferenceT<T&&> : std::true_type { // unless T is rvalue reference
+	using BaseT = T; // type referring to
+};
+\end{lstlisting}
+
+which can be combined into an IsReferenceT<> trait:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isreference.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "islvaluereference.hpp"
+#include "isrvaluereference.hpp"
+#include "ifthenelse.hpp"
+
+template<typename T>
+class IsReferenceT
+	: public IfThenElseT<IsLValueReferenceT<T>::value,
+						IsLValueReferenceT<T>,
+						IsRValueReferenceT<T>
+	>::Type {
+};
+\end{lstlisting}
+
+In this implementation, we use IfThenElseT (from Section 19.7.1 on page 440) to select between either IsLValueReference<T> or IsRValueReference<T> as our base class, using metafunction forwarding (discussed in Section 19.3.2 on page 404). If T is an lvalue reference, we inherit from IsLValueReference<T> to get the appropriate value and BaseT members. Otherwise, we inherit from IsRValueReference<T>, which determines whether the type is an rvalue reference or not (and provides the appropriate member(s) in either case).
+
+The C++ standard library provides the corresponding traits std::is\_lvalue\_reference<> and std::is\_rvalue\_reference<>, which are described in Section D.2.1 on page 705, and std::is\_reference<>, which is described in Section D.2.2 on page 706. Again, these traits do not provide a member for the type the reference refers to.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Arrays}
+
+When defining traits to determine arrays, it may come as a surprise that the partial specializations involve more template parameters than the primary template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isarray.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstddef>
+
+template<typename T>
+struct IsArrayT : std::false_type { // primary template: not an array
+};
+
+template<typename T, std::size_t N>
+struct IsArrayT<T[N]> : std::true_type { // partial specialization for arrays
+	using BaseT = T;
+	static constexpr std::size_t size = N;
+};
+
+template<typename T>
+struct IsArrayT<T[]> : std::true_type { // partial specialization for unbound arrays
+	using BaseT = T;
+	static constexpr std::size_t size = 0;
+};
+\end{lstlisting}
+
+Here, multiple additional members provide information about the arrays being classified: their base type and their size (with 0 used to denote an unknown size).
+
+The C++ standard library provides the corresponding trait std::is\_array<> to check whether a type is an array, which is described in Section D.2.1 on page 704. In addition, traits such as std::rank<> and std::extent<> allow us to query their number of dimensions and the size of a specific dimension (see Section D.3.1 on page 715).
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Pointers to Members}
+
+Pointers to members can be treated using the same technique:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/ispointertomember.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsPointerToMemberT : std::false_type { // by default no pointer-to-member
+};
+
+template<typename T, typename C>
+struct IsPointerToMemberT<T C::*> : std::true_type { // partial specialization
+	using MemberT = T;
+	using ClassT = C;
+};
+\end{lstlisting}
+
+Here, the additional members provide both the type of the member and the type of the class in which that member occurs.
+
+The C++ standard library provides more specific traits, std::is\_member\_object\_pointer<> and std::is\_member\_function\_pointer<>, which are described in Section D.2.1 on page 705, as well as std::is\_member\_pointer<>, which is described in Section D.2.2 on page 706.
 
 \subsubsubsection{19.8.3\hspace{0.2cm}Identifying Function Types}
 
+Function types are interesting because they have an arbitrary number of parameters in addition to the result type. Therefore, within the partial specialization matching a function type, we employ a parameter pack to capture all of the parameter types, as we did for the DecayT trait in Section 19.3.2 on page 404:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isfunction.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "../typelist/typelist.hpp"
+
+template<typename T>
+struct IsFunctionT : std::false_type { // primary template: no function
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params...)> : std::true_type { // functions
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = false;
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params..., ...)> : std::true_type { // variadic functions
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = true;
+};
+\end{lstlisting}
+
+Note that each part of the function type is exposed: Type provides the result type, while all of the parameters are captured in a single typelist as ParamsT (typelists are covered in Chapter 24), and variadic indicates whether the function type uses C-style varargs.
+
+Unfortunately, this formulation of IsFunctionT does not handle all function types, because function types can have const and volatile qualifiers as well as lvalue (\&) and rvalue (\&\&) reference qualifiers (described in Section C.2.1 on page 684) and, since C++17, noexcept qualifiers. For example:
+
+\begin{lstlisting}[style=styleCXX]
+using MyFuncType = void (int&) const;
+\end{lstlisting}
+
+Such function types can only be meaningfully used for nonstatic member functions but are function types nonetheless. Moreover, a function type marked const is not actually a const type,
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Specifically, when a function type is marked const, it refers to a qualifier on the object pointed to by the implicit parameter this, whereas the const on a const type refers to the object of that actual type.
+\end{tcolorbox}
+
+so RemoveConst is not able to strip the const from the function type. Therefore, to recognize function types that have qualifiers, we need to introduce a large number of additional partial specializations, covering every combination of qualifiers (both with and without C-style varargs). Here, we illustrate only five of the many
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The latest count is 48.
+\end{tcolorbox}
+
+required partial specializations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params...) const> : std::true_type {
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = false;
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params..., ...) volatile> : std::true_type {
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = true;
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params..., ...) const volatile> : std::true_type {
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = true;
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params..., ...) &> : std::true_type {
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = true;
+};
+
+template<typename R, typename... Params>
+struct IsFunctionT<R (Params..., ...) const&> : std::true_type {
+	using Type = R;
+	using ParamsT = Typelist<Params...>;
+	static constexpr bool variadic = true;
+};
+...
+\end{lstlisting}
+
+With all this in place, we can now classify all types except class types and enumeration types. We tackle these cases in the following sections.
+
+The C++ standard library provides the trait std::is\_function<>, which is described in Section D.2.1 on page 706.
+
 \subsubsubsection{19.8.4\hspace{0.2cm}Determining Class Types}
 
+Unlike the other compound types we have handled so far, we have no partial specialization patterns that match class types specifically. Nor is it feasible to enumerate all class types, as it is for fundamental types. Instead, we need to use an indirect method to identify class types, by coming up with some kind of type or expression that is valid for all class types (and not other type). With that type or expression, we can apply the SFINAE trait techniques discussed in Section 19.4 on page 416.
+
+The most convenient property of class types to utilize in this case is that only class types can be used as the basis of pointer-to-member types. That is, in a type construct of the form X Y::*, Y can only be a class type. The following formulation of IsClassT<> exploits this property (and picks int arbitrarily for type X):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isclass.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+template<typename T, typename = std::void_t<>>
+struct IsClassT : std::false_type { // primary template: by default no class
+};
+
+template<typename T>
+struct IsClassT<T, std::void_t<int T::*>> // classes can have pointer-to-member
+: std::true_type {
+};
+\end{lstlisting}
+
+The C++ language specifies that the type of a lambda expression is a “unique, unnamed non-union class type.” For this reason, lambda expressions yield true when examining whether they are class type objects:
+
+\begin{lstlisting}[style=styleCXX]
+auto l = []{};
+static_assert<IsClassT<decltype(l)>::value, "">; // succeeds
+\end{lstlisting}
+
+Note also that the expression int T::* is also valid for union types (they are also class types according to the C++ standard).
+
+The C++ standard library provides the traits std::is\_class<> and std::is\_union<>, which are described in Section D.2.1 on page 705. However, these traits require special compiler support because distinguishing class and struct types from union types cannot currently be done using any standard core language techniques.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm} Most compilers support intrinsic operators like \_\_is\_union to help standard libraries implement various traits templates. This is true even for some traits that could technically be implemented using the techniques from this chapter, because the intrinsics can improve compilation performance.
+\end{tcolorbox}
+
 \subsubsubsection{19.8.5\hspace{0.2cm}Determining Enumeration Types}
+
+The only types not yet classified by any of our traits are enumeration types. Testing for enumeration types can be performed directly by writing a SFINAE-based trait that checks for an explicit conversion to an integral type (say, int) and explicitly excluding fundamental types, class types, reference types, pointer types, and pointer-to-member types, all of which can be converted to an integral type but are not enumeration types.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The first edition of this book described enumeration type detection in this way. However, it checked for an implicit conversion to an integral type, which sufficed for the C++98 standard. The introduction of scoped enumeration types into the language, which do not have such an implicit conversion, complicates the detection of enumeration types.
+\end{tcolorbox}
+
+Instead, we simply note that any type that does not fall into any of the other categories must be an enumeration type, which we can implement as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isenum.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsEnumT {
+	static constexpr bool value = !IsFundaT<T>::value &&
+									!IsPointerT<T>::value &&
+									!IsReferenceT<T>::value &&
+									!IsArrayT<T>::value &&
+									!IsPointerToMemberT<T>::value &&
+									!IsFunctionT<T>::value &&
+									!IsClassT<T>::value;
+};
+\end{lstlisting}
+
+The C++ standard library provides the trait std::is\_enum<>, which is described in Section D.2.1 on page 705. Usually, to improve compilation performance, compilers will directly provide support for such a trait instead of implementing it as “anything else.”
+
+
+
+
+
+
+
+
+
+
+
+
+
+

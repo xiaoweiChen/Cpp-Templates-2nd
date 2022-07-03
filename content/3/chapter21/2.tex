@@ -1,8 +1,597 @@
 
+Another pattern is the Curiously Recurring Template Pattern (CRTP). This oddly named pattern refers to a general class of techniques that consists of passing a derived class as a template argument to one of its own base classes. In its simplest form, C++ code for such a pattern looks as follows:
 
+\begin{lstlisting}[style=styleCXX]
+template<typename Derived>
+class CuriousBase {
+	...
+};
+
+class Curious : public CuriousBase<Curious> {
+	...
+};
+\end{lstlisting}
+
+Our first outline of CRTP shows a nondependent base class: The class Curious is not a template and is therefore immune to some of the name visibility issues of dependent base classes. However, this is not an intrinsic characteristic of CRTP. Indeed, we could just as well have used the following alternative outline:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Derived>
+class CuriousBase {
+	...
+};
+
+template<typename T>
+class CuriousTemplate : public CuriousBase<CuriousTemplate<T>> {
+	...
+};
+\end{lstlisting}
+
+By passing the derived class down to its base class via a template parameter, the base class can customize its own behavior to the derived class without requiring the use of virtual functions. This makes CRTP useful to factor out implementations that can only be member functions (e.g., constructor, destructors, and subscript operators) or are dependent on the derived class’s identity.
+
+A simple application of CRTP consists of keeping track of how many objects of a certain class type were created. This is easily achieved by incrementing an integral static data member in every constructor and decrementing it in the destructor. However, having to provide such code in every class is tedious, and implementing this functionality via a single (non-CRTP) base class would confuse the object counts for different derived classes. Instead, we can write the following template:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/objectcounter.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstddef>
+template<typename CountedType>
+class ObjectCounter {
+	private:
+	inline static std::size_t count = 0; // number of existing objects
+	protected:
+	
+	// default constructor
+	ObjectCounter() {
+		++count;
+	}
+
+	// copy constructor
+	ObjectCounter (ObjectCounter<CountedType> const&) {
+		++count;
+	}
+
+	// move constructor
+	ObjectCounter (ObjectCounter<CountedType> &&) {
+		++count;
+	}
+
+	// destructor
+	~ObjectCounter() {
+		--count;
+	}
+
+	public:
+	// return number of existing objects:
+	static std::size_t live() {
+		return count;
+	}
+};
+\end{lstlisting}
+
+Note that we use inline to be able to define and initialize the count member inside the class structure. Before C++17, we had to define it outside the class template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename CountedType>
+class ObjectCounter {
+	private:
+	static std::size_t count; // number of existing objects
+	...
+};
+
+// initialize counter with zero:
+template<typename CountedType>
+std::size_t ObjectCounter<CountedType>::count = 0;
+\end{lstlisting}
+
+If we want to count the number of live (i.e., not yet destroyed) objects for a certain class type, it suffices to derive the class from the ObjectCounter template. For example, we can define and use a counted string class along the following lines:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/countertest.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "objectcounter.hpp"
+#include <iostream>
+
+template<typename CharT>
+class MyString : public ObjectCounter<MyString<CharT>> {
+	...
+};
+
+int main()
+{
+	MyString<char> s1, s2;
+	MyString<wchar_t> ws;
+	std::cout << "num of MyString<char>: "
+				<< MyString<char>::live() << ’\n’;
+	std::cout << "num of MyString<wchar_t>: "
+				<< ws.live() << ’\n’;
+}
+\end{lstlisting}
 
 \subsubsubsection{21.2.1\hspace{0.2cm}The Barton-Nackman Trick}
 
+In 1994, John J. Barton and Lee R. Nackman presented a template technique that they called restricted 
+template expansion (see [BartonNackman]). The technique was motivated in part by the fact that—at the time—function template overloading was severely limited
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}It may be worthwhile to read Section 16.2 on page 326 to understand how function template overloading works in modern C++.
+\end{tcolorbox}
+
+and namespaces were not available in most compilers.
+
+To illustrate this, suppose we have a class template Array for which we want to define the equality operator ==. One possibility is to declare the operator as a member of the class template, but this is not good practice because the first argument (binding to the this pointer) is subject to conversion rules that differ from the second argument. Because operator == is meant to be symmetrical with respect to its arguments, it is preferable to declare it as a namespace scope function. An outline of a natural approach to its implementation may look like the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Array {
+	public:
+	...
+};
+
+template<typename T>
+bool operator== (Array<T> const& a, Array<T> const& b)
+{
+	...
+}
+\end{lstlisting}
+
+However, if function templates cannot be overloaded, this presents a problem: No other operator == template can be declared in that scope, and yet it is likely that such a template would be needed for other class templates. Barton and Nackman resolved this problem by defining the operator in the class as a normal friend function:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Array {
+	static bool areEqual(Array<T> const& a, Array<T> const& b);
+	
+	public:
+	...
+	friend bool operator== (Array<T> const& a, Array<T> const& b) {
+		return areEqual(a, b);
+	}
+};
+\end{lstlisting}
+
+Suppose this version of Array is instantiated for type float. The friend operator function is then declared as a result of that instantiation, but note that this function itself is not an instantiation of a function template. It is a normal nontemplate function that gets injected in the global scope as a side effect of the instantiation process. Because it is a nontemplate function, it could be overloaded with other declarations of operator == even before overloading of function templates was added to the language. Barton and Nackman called this restricted template expansion because it avoided the use of a template operator==(T, T) that applied to all types T (in other words, unrestricted expansion).
+
+Because
+
+\begin{lstlisting}[style=styleCXX]
+operator== (Array<T> const&, Array<T> const&)
+\end{lstlisting}
+
+is defined inside a class definition, it is implicitly considered to be an inline function, and we therefore decided to delegate the implementation to a static member function areEqual, which doesn’t need to be inline.
+
+Name lookup for friend function definitions has changed since 1994, so the Barton-Nackman trick is not as useful in standard C++. At the time of its invention, friend declarations would be visible in the enclosing scope of a class template when that template was instantiated via a process called friend name injection. Standard C++ instead finds friend function declarations via argumentdependent lookup (see Section 13.2.2 on page 220 for the specific details). This means that at least one of the arguments of the function call must already have the class containing the friend function as an associated class. The friend function would not be found if the arguments were of an unrelated class type that could be converted to the class containing the friend. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/wrapper.cpp}
+\begin{lstlisting}[style=styleCXX]
+class S {
+};
+
+template<typename T>
+class Wrapper {
+	private:
+	T object;
+	public:
+	Wrapper(T obj) : object(obj) { // implicit conversion from T to Wrapper<T>
+	}
+	friend void foo(Wrapper<T> const&) {
+	}
+};
+
+int main()
+{
+	S s;
+	Wrapper<S> w(s);
+	foo(w); // OK: Wrapper<S> is a class associated with w
+	foo(s); // ERROR: Wrapper<S> is not associated with s
+}
+\end{lstlisting}
+
+Here, the call foo(w) is valid because the function foo() is a friend declared in Wrapper<S> which is a class associated with the argument w.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note that S is also a class associated with w because it is a template argument for the type of w. The specific rules for ADL are discussed in Section 13.2.1 on page 219.
+\end{tcolorbox}
+
+However, in the call foo(s), the friend declaration of function foo(Wrapper<S> const\&) is not visible because the class Wrapper<S> in which it is defined is not associated with the argument s of type S. Hence, even though there is a valid implicit conversion from type S to type Wrapper<S> (through the constructor of Wrapper<S>), this conversion is never considered because the candidate function foo() is not found in the first place. At the time Barton and Nackman invented their trick, friend name injection would have made the friend foo() visible and the call foo(s) would succeed.
+
+In modern C++, the only advantages to defining a friend function in a class template over simply defining an ordinary function template are syntactic: friend function definitions have access to the private and protected members of their enclosing class and don’t need to restate all of the template parameters of enclosing class templates. However, friend function definitions can be useful when combined with the Curiously Recurring Template Pattern (CRTP), as illustrated in the operator implementations described in the following section.
+
 \subsubsubsection{21.2.2\hspace{0.2cm}Operator Implementations}
 
+When implementing a class that provides overloaded operators, it is common to provide overloads for a number of different (but related) operators. For example, a class that implements the equality operator (==) will likely also implement the inequality operator (!=), and a class that implements the less-than operator (<) will likely implement the other relational operators as well (>, <=, >=). In many cases, the definition of only one of these operators is actually interesting, while the others can simply be defined in terms of that one operator. For example, the inequality operator for a class X is likely to be defined in terms of the equality operator:
+
+\begin{lstlisting}[style=styleCXX]
+bool operator!= (X const& x1, X const& x2) {
+	return !(x1 == x2);
+}
+\end{lstlisting}
+
+Given the large number of types with similar definitions of !=, it is tempting to generalize this into a template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+bool operator!= (T const& x1, T const& x2) {
+	return !(x1 == x2);
+}
+\end{lstlisting}
+
+In fact, the C++ standard library contains similar such definitions as part of the <utility> header. However, these definitions (for !=, >, <=, and >=) were relegated to the namespace std::rel\_ops during standardization, when it was determined that they caused problems when made available in namespace std. Indeed, having these definitions visible makes it appear that any type has an != operator (which may fail to instantiate), and that operator will always be an exact match for both of its arguments. While the first problem can be overcome through the use of SFINAE techniques (see Section 19.4 on page 416), such that this != definition will only be instantiated for types with a suitable == operator, the second problem remains: The general !=  definition above will be preferred over user-provided definitions that require, for example, a derived-to-base conversion, which may come as a surprise.
+
+An alternative formulation of these operator templates based on CRTP allows classes to opt in to the general operator definitions, providing the benefits of increased code reuse without the side effects of an overly general operator:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/equalitycomparable.cpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Derived>
+class EqualityComparable
+{
+	public:
+	friend bool operator!= (Derived const& x1, Derived const& x2) {
+		return !(x1 == x2);
+	}
+};
+
+class X : public EqualityComparable<X>
+{
+	public:
+	friend bool operator== (X const& x1, X const& x2) {
+		// implement logic for comparing two objects of type X
+	}
+};
+
+int main()
+{
+	X x1, x2;
+	if (x1 != x2) { }
+}
+\end{lstlisting}
+
+Here, we have combined CRTP with the Barton-Nackman trick. EqualityComparable<> uses CRTP to provide an operator!= for its derived class based on the derived class’s definition of operator==. It actually provides that definition via a friend function definition (the Barton-Nackman trick), which gives the two parameters to operator!= equal behavior for conversions.
+
+CRTP can be useful when factoring behavior into a base class while retaining the identity of the eventual derived class. Along with the Barton-Nackman trick, CRTP can provide general definitions for a number of operators based on a few canonical operators. These properties have made CRTP with the Barton-Nackman trick a favorite technique for authors of C++ template libraries.
+
 \subsubsubsection{21.2.3\hspace{0.2cm}Facades}
+
+The use of CRTP and the Barton-Nackman trick to define some operators is a convenient shortcut. We can take this idea further, such that the CRTP base class defines most or all of the public interface of a class in terms of a much smaller (but easier to implement) interface exposed by the CRTP derived class. This pattern, called the facade pattern, is particularly useful when defining new types that need to meet the requirements of some existing interface—numeric types, iterators, containers, and so on.
+
+To illustrate the facade pattern, we will implement a facade for iterators, which drastically simplifies the process of writing an iterator that conforms to the requirements of the standard library. The required interface for an iterator type (particularly a random access iterator) is quite large. The following skeleton for class template IteratorFacade demonstrates the requirements for an iterator interface:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/iteratorfacadeskel.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Derived, typename Value, typename Category,
+		typename Reference = Value&, typename Distance = std::ptrdiff_t>
+class IteratorFacade
+{
+	public:
+	using value_type = typename std::remove_const<Value>::type;
+	using reference = Reference;
+	using pointer = Value*;
+	using difference_type = Distance;
+	using iterator_category = Category;
+	
+	// input iterator interface:
+	reference operator *() const { ... }
+	pointer operator ->() const { ... }
+	Derived& operator ++() { ... }
+	Derived operator ++(int) { ... }
+	friend bool operator== (IteratorFacade const& lhs,
+						    IteratorFacade const& rhs) { ... }
+	...
+	
+	// bidirectional iterator interface:
+	Derived& operator --() { ... }
+	Derived operator --(int) { ... }
+	
+	// random access iterator interface:
+	reference operator [](difference_type n) const { ... }
+	Derived& operator +=(difference_type n) { ... }
+	...
+	friend difference_type operator -(IteratorFacade const& lhs,
+									  IteratorFacade const& rhs) { ... }
+	friend bool operator <(IteratorFacade const& lhs,
+						   IteratorFacade const& rhs) { ... }
+	...
+};
+\end{lstlisting}
+
+We’ve omitted some declarations for brevity, but even implementing every one of those listed for every new iterator is quite a chore. Fortunately, that interface can be distilled into a few core operations:
+
+\begin{itemize}
+\item 
+For all iterators:
+\begin{itemize}
+\item [-]
+dereference(): Access the value to which the iterator refers (typically used via operators * and ->).
+
+\item [-]
+increment(): Move the iterator to refer to the next item in the sequence.
+
+\item [-]
+equals(): Determine whether two iterators refer to the same item in a sequence.
+\end{itemize}
+
+\item 
+For bidirectional iterators:
+\begin{itemize}
+\item [-]
+decrement(): Move the iterator to refer to the previous item in the list.
+\end{itemize}
+
+\item 
+For random-access iterators:
+\begin{itemize}
+\item [-]
+advance(): Move the iterator n steps forward (or backward).
+
+\item [-]
+measureDistance(): Determine the number of steps to get from one iterator to another in the sequence.
+\end{itemize}
+\end{itemize}
+
+The role of the facade is to adapt a type that implements only those core operations to provide the full iterator interface. The implementation IteratorFacade mostly involves mapping the iterator syntax to the minimal interface. In the following examples, we use the member functions asDerived() to access the CRTP derived class:
+
+\begin{lstlisting}[style=styleCXX]
+Derived& asDerived() { return *static_cast<Derived*>(this); }
+Derived const& asDerived() const {
+	return *static_cast<Derived const*>(this);
+}
+\end{lstlisting}
+
+Given that definition, the implementation of much of the facade is straightforward.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}To simplify the presentation, we ignore the presence of proxy iterators, whose dereference operation does not return a true reference. A complete implementation of an iterator facade, such as the one in [BoostIterator], would adjust the result types of operator -> and operator[] to account for proxies.
+\end{tcolorbox}
+
+We only illustrate the definitions for some of the input iterator requirements; the others follow similarly.
+
+\begin{lstlisting}[style=styleCXX]
+reference operator*() const {
+	return asDerived().dereference();
+}
+Derived& operator++() {
+	asDerived().increment();
+	return asDerived();
+}
+Derived operator++(int) {
+	Derived result(asDerived());
+	asDerived().increment();
+	return result;
+}
+friend bool operator== (IteratorFacade const& lhs,
+IteratorFacade const& rhs) {
+	return lhs.asDerived().equals(rhs.asDerived());
+}
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Defining a Linked-List Iterator}
+
+With our definition of IteratorFacade, we can now easily define an iterator into a simple linked-list class. For example, imagine that we define a node in the linked list as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/listnode.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class ListNode
+{
+	public:
+	T value;
+	ListNode<T>* next = nullptr;
+	~ListNode() { delete next; }
+};
+\end{lstlisting}
+
+Using IteratorFacade, an iterator into such a list can be defined in a straightforward manner:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/listnodeiterator0.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class ListNodeIterator
+: public IteratorFacade<ListNodeIterator<T>, T,
+std::forward_iterator_tag>
+{
+	ListNode<T>* current = nullptr;
+	public:
+	T& dereference() const {
+		return current->value;
+	}
+	void increment() {
+		current = current->next;
+	}
+	bool equals(ListNodeIterator const& other) const {
+		return current == other.current;
+	}
+	ListNodeIterator(ListNode<T>* current = nullptr) : current(current) { }
+};
+\end{lstlisting}
+
+ListNodeIterator provides all of the correct operators and nested types needed to act as a forward iterator, and requires very little code to implement. As we will see later, defining more complicated iterators (e.g., random access iterators) requires only a small amount of extra work.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Hiding the interface}
+
+ne downside to our implementation of ListNodeIterator is that we were required to expose, as a public interface, the operations dereference(), advance(), and equals(). To eliminate this requirement, we can rework IteratorFacade to perform all of its operations on the derived CRTP class through a separate access class, which we call IteratorFacadeAccess:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/iteratorfacadeaccessskel.hpp}
+\begin{lstlisting}[style=styleCXX]
+// ‘friend’ this class to allow IteratorFacade access to core iterator operations:
+class IteratorFacadeAccess
+{
+	// only IteratorFacade can use these definitions
+	template<typename Derived, typename Value, typename Category,
+			typename Reference, typename Distance>
+	friend class IteratorFacade;
+	
+	// required of all iterators:
+	template<typename Reference, typename Iterator>
+	static Reference dereference(Iterator const& i) {
+		return i.dereference();
+	}
+	...
+	// required of bidirectional iterators:
+	template<typename Iterator>
+	static void decrement(Iterator& i) {
+		return i.decrement();
+	}
+
+	// required of random-access iterators:
+	template<typename Iterator, typename Distance>
+	static void advance(Iterator& i, Distance n) {
+		return i.advance(n);
+	}
+	...
+};
+\end{lstlisting}
+
+This class provides static member functions for each of the core iterator operations, calling the corresponding (nonstatic) member function of the provided iterator. All of the static member functions are private, with the access only granted to IteratorFacade itself. Therefore, our ListNodeIterator can make IteratorFacadeAccess a friend and keep private the interface needed by the facade:
+
+\begin{lstlisting}[style=styleCXX]
+friend class IteratorFacadeAccess;
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Iterator Adapters}
+
+Our IteratorFacade makes it easy to build an iterator adapter that takes an existing iterator and exposes a new iterator that provides some transformed view of the underlying sequence. For example, we might have a container of Person values:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/person.hpp}
+\begin{lstlisting}[style=styleCXX]
+struct Person {
+	std::string firstName;
+	std::string lastName;
+	
+	friend std::ostream& operator<<(std::ostream& strm, Person const& p) {
+		return strm << p.lastName << ", " << p.firstName;
+	}
+};
+\end{lstlisting}
+
+However, rather than iterating over all of the Person values in the container, we only want to see the first names. In this section, we develop an iterator adapter called ProjectionIterator that allows us “project” the values of an underlying (base) iterator to some pointer-to-data member, for example, Person::firstName.
+
+A ProjectionIterator is an iterator defined in terms of the base iterator (Iterator) and the type of value that will be exposed by the iterator (T):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/projectioniteratorskel.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator, typename T>
+class ProjectionIterator
+	: public IteratorFacade<
+			ProjectionIterator<Iterator, T>,
+			T,
+			typename std::iterator_traits<Iterator>::iterator_category,
+			T&,
+			typename std::iterator_traits<Iterator>::difference_type>
+{
+	using Base = typename std::iterator_traits<Iterator>::value_type;
+	using Distance =
+		typename std::iterator_traits<Iterator>::difference_type;
+	
+	Iterator iter;
+	T Base::* member;
+	
+	friend class IteratorFacadeAccess;
+	... // implement core iterator operations for IteratorFacade
+	public:
+	ProjectionIterator(Iterator iter, T Base::* member)
+		: iter(iter), member(member) { }
+};
+
+template<typename Iterator, typename Base, typename T>
+auto project(Iterator iter, T Base::* member) {
+	return ProjectionIterator<Iterator, T>(iter, member);
+}
+\end{lstlisting}
+
+Each projection iterator stores two values: iter, which is the iterator into the underlying sequence (of Base values), and member, a pointer-to-data member describing which member to project through. With that in mind, we consider the template arguments provided to the IteratorFacade base class. The first is the ProjectionIterator itself (to enable CRTP). The second (T) and fourth (T\&) arguments are the value and reference types of our projection iterator, defining this as a sequence of T values.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Again, we assume that the underlying iterator returns a reference, rather than a proxy, to simplify the presentation.
+\end{tcolorbox}
+
+The third and fifth arguments merely pass through the category and difference types of the underlying iterator. Therefore, our projection iterator will be an input iterator when Iterator is an input iterator, a bidirectional iterator when Iterator is a bidirectional iterator, and so on. A project() function makes it easy to build projection iterators.
+
+The only missing pieces are the implementations of the core requirements for IteratorFacade. The most interesting is dereference(), which dereferences the underlying iterator and then projects through the pointer-to-data member:
+
+\begin{lstlisting}[style=styleCXX]
+T& dereference() const {
+	return (*iter).*member;
+}
+\end{lstlisting}
+
+The remaining operations are implemented in terms of the underlying iterator:
+
+\begin{lstlisting}[style=styleCXX]
+void increment() {
+	++iter;
+}
+bool equals(ProjectionIterator const& other) const {
+	return iter == other.iter;
+}
+void decrement() {
+	--iter;
+}
+\end{lstlisting}
+
+For brevity, we’ve omitted the definitions for random access iterators, which follow analogously.
+
+That’s it! With our projection iterator, we can print out the first names of a vector containing Person values:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{inherit/projectioniterator.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <algorithm>
+#include <iterator>
+
+int main()
+{
+	std::vector<Person> authors = { {"David", "Vandevoorde"},
+		{"Nicolai", "Josuttis"},
+		{"Douglas", "Gregor"} };
+	std::copy(project(authors.begin(), &Person::firstName),
+	project(authors.end(), &Person::firstName),
+	std::ostream_iterator<std::string>(std::cout, "\n"));
+}
+\end{lstlisting}
+
+This program produces:
+
+\begin{tcblisting}{commandshell={}}
+David
+Nicolai
+Douglas
+\end{tcblisting}
+
+The facade pattern is particularly useful for creating new types that conform to some specific interface. New types need only expose some small number of core operations (between three and six for our iterator facade) to the facade, and the facade takes care of providing a complete and correct public interface using a combination of CRTP and the Barton-Nackman trick.
+
+
+
+
+
+
+
+
+
+
+
+

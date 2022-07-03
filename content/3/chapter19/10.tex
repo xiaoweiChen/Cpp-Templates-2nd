@@ -1,0 +1,57 @@
+With C++11, type traits became an intrinsic part of the C++ standard library. They comprise more or less all type functions and type traits discussed in this chapter. However, for some of them, such as the trivial operation detection traits and as discussed std::is\_union, there are no known inlanguage solutions. Rather, the compiler provides intrinsic support for those traits. Also, compilers start to support traits even if there are in-language solutions to shorten compile time. 
+
+For this reason, if you need type traits, we recommend that you use the ones from the C++ standard library whenever available. They are all described in detail in Appendix D.
+
+Note that (as discussed) some traits have potentially surprising behavior (at least for the naive programmer). In addition to the general hints we give in Section 11.2.1 on page 164 and Section D.1.2 on page 700, also consider the specific descriptions we provide in Appendix D.
+
+The C++ standard library also defines some policy and property traits:
+
+\begin{itemize}
+\item 
+The class template std::char\_traits is used as a policy traits parameter by the string and I/O stream classes.
+
+\item 
+To adapt algorithms easily to the kind of standard iterators for which they are used, a very simple std::iterator\_traits property traits template is provided (and used in standard library
+interfaces).
+
+\item 
+The template std::numeric\_limits can also be useful as a property traits template.
+
+\item 
+Lastly, memory allocation for the standard container types is handled using policy traits classes. Since C++98, the template std::allocator is provided as the standard component for this purpose. With C++11, the template std::allocator\_traits was added to be able to change the policy/behavior of allocators (switching between the classical behavior and scoped allocators; the latter could not be accommodated within the pre-C++11 framework).
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

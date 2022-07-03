@@ -1,4 +1,70 @@
 
+One of the common motivations behind overloading of function templates is to provide more specialized versions of an algorithm based on knowledge of the types involved. Consider a simple swap() operation to exchange two values:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void swap(T& x, T& y)
+{
+	T tmp(x);
+	x = y;
+	y = tmp;
+}
+\end{lstlisting}
+
+This implementation involves three copy operations. For some types, however, we can provide a more efficient swap() operation, such as for an Array<T> that stores its data as a pointer to the array contents and a length:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void swap(Array<T>& x, Array<T>& y)
+{
+	swap(x.ptr, y.ptr);
+	swap(x.len, y.len);
+}
+\end{lstlisting}
+
+Both implementations of swap() will correctly exchange the contents of two Array<T> objects. However, the latter implementation is more efficient, because it makes use of additional properties of an Array<T> (specifically, knowledge of ptr and len and their respective roles) that are not available for an arbitrary type.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}An better option for swap(), specifically, is to use std::move() to avoid copies in the primary template. However, the alternative presented here is more broadly applicable.
+\end{tcolorbox}
+
+The latter function template is therefore (conceptually) more specialized than the former, because it performs the same operation for a subset of the types accepted by the former function template. Fortunately, the second function template is also more specialized based on the partial ordering rules for function templates (see Section 16.2.2 on page 330), so the compiler will pick the more specialized (and, therefore, more efficient) function template when it is applicable (i.e., for Array<T> arguments) and fall back to the more general (potentially less efficient) algorithm when the more specialized version is not applicable.
+
+The design and optimization approach of introducing more specialized variants of a generic algorithm is called algorithm specialization. The more specialized variants apply to a subset of the valid inputs for the generic algorithm, identifying this subset based on the specific types or properties of the types, and are typically more efficient than the most general implementation of that generic algorithm.
+
+Crucial to the implementation of algorithm specialization is the property that the more specialized variants are automatically selected when they are applicable, without the caller having to be aware that those variants even exist. In our swap() example, this was accomplished by overloading the (conceptually) more specialized function template (the second swap()) with the most general function template (the first swap()), and ensuring that the more specialized function template was also more specialized based on C++’s partial ordering rules.
+
+Not all conceptually more specialized algorithm variants can be directly translated into function templates that provide the right partial ordering behavior. For our next example, consider the advanceIter() function (similar to std::advance() from the C++ standard library), which moves an iterator x forward by n steps. This general algorithm can operate on any input iterator:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename InputIterator, typename Distance>
+void advanceIter(InputIterator& x, Distance n)
+{
+	while (n > 0) { // linear time
+		++x;
+		--n;
+	}
+}
+\end{lstlisting}
+
+For a certain class of iterators—those that provide random access operations—we can provide a more efficient implementation:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename RandomAccessIterator, typename Distance>
+void advanceIter(RandomAccessIterator& x, Distance n) {
+	x += n; // constant time
+}
+\end{lstlisting}
+
+Unfortunately, defining both of these function templates will result in a compiler error, because—as noted in the introduction—function templates that differ only based on their template parameter names are not overloadable. The remainder of this chapter will discuss techniques that emulate the desired effect of overloading these function templates.
+
+
+
+
+
+
+
+
 
 
 

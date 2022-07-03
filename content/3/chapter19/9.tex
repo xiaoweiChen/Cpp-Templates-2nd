@@ -1,3 +1,168 @@
 
+So far, our examples of traits templates have been used to determine properties of template parameters: what sort of type they represent, the result type of an operator applied to values of that type, and so forth. Such traits are called property traits.
+
+In contrast, some traits define how some types should be treated. We call them policy traits. This is reminiscent of the previously discussed concept of policy classes (and we already pointed out that the distinction between traits and policies is not entirely clear), but policy traits tend to be unique properties associated with a template parameter (whereas policy classes are usually independent of other template parameters).
+
+Although property traits can often be implemented as type functions, policy traits usually encapsulate the policy in member functions. To illustrate this notion, let’s look at a type function that defines a policy for passing read-only parameters.
 
 \subsubsubsection{19.9.1\hspace{0.2cm}Read-Only Parameter Types}
+
+In C and C++, function call arguments are passed by value by default. This means that the values of the arguments computed by the caller are copied to locations controlled by the callee. Most programmers know that this can be costly for large structures and that for such structures it is appropriate to pass the arguments by reference-to-const (or by pointer-to-const in C). For smaller structures, the picture is not always clear, and the best mechanism from a performance point of view depends on the exact architecture for which the code is being written. This is not so critical in most cases, but sometimes even the small structures must be handled with care.
+
+With templates, of course, things get a little more delicate: We don’t know a priori how large the type substituted for the template parameter will be. Furthermore, the decision doesn’t depend just on size: A small structure may come with an expensive copy constructor that would still justify passing read-only parameters by reference-to-const.
+
+As hinted at earlier, this problem is conveniently handled using a policy traits template that is a type function: The function maps an intended argument type T onto the optimal parameter type T or T const\&. As a first approximation, the primary template can use by-value passing for types no larger than two pointers and by reference-to-const for everything else:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct RParam {
+	using Type = typename IfThenElseT<sizeof(T)<=2*sizeof(void*),
+									T,
+									T const&>::Type;
+};
+\end{lstlisting}
+
+On the other hand, container types for which sizeof returns a small value may involve expensive copy constructors, so we may need many specializations and partial specializations, such as the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct RParam<Array<T>> {
+	using Type = Array<T> const&;
+};
+\end{lstlisting}
+
+Because such types are common in C++, it may be safer to mark only small types with trivial copy and move constructors as by value types
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}A copy or move constructor is called trivial if, in effect, a call to it can be replaced by a simple copy of the underlying bytes.
+\end{tcolorbox}
+
+and then selectively add other class types when performance considerations dictate it (the std::is\_trivially\_copy\_constructible and std::is\_trivially\_move\_constructible type traits are part of the C++ standard library).
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/rparam.hpp}
+\begin{lstlisting}[style=styleCXX]
+#ifndef RPARAM_HPP
+#define RPARAM_HPP
+
+#include "ifthenelse.hpp"
+#include <type_traits>
+
+template<typename T>
+struct RParam {
+	using Type
+	= IfThenElse<(sizeof(T) <= 2*sizeof(void*)
+					&& std::is_trivially_copy_constructible<T>::value
+					&& std::is_trivially_move_constructible<T>::value),
+				T,
+				T const&>;
+};
+
+#endif // RPARAM_HPP
+\end{lstlisting}
+
+Either way, the policy can now be centralized in the traits template definition, and clients can exploit it to good effect. For example, let’s suppose we have two classes, with one class specifying that calling by value is better for read-only arguments:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/rparamcls.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "rparam.hpp"
+#include <iostream>
+
+class MyClass1 {
+	public:
+	MyClass1 () {
+	}
+	MyClass1 (MyClass1 const&) {
+		std::cout << "MyClass1 copy constructor called\n";
+	}
+};
+
+class MyClass2 {
+	public:
+	MyClass2 () {
+	}
+	MyClass2 (MyClass2 const&) {
+		std::cout << "MyClass2 copy constructor called\n";
+	}
+};
+
+// pass MyClass2 objects with RParam<> by value
+template<>
+class RParam<MyClass2> {
+	public:
+	using Type = MyClass2;
+};
+\end{lstlisting}
+
+Now, we can declare functions that use RParam<> for read-only arguments and call these functions:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/rparam1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "rparam.hpp"
+#include "rparamcls.hpp"
+
+// function that allows parameter passing by value or by reference
+template<typename T1, typename T2>
+void foo (typename RParam<T1>::Type p1,
+typename RParam<T2>::Type p2)
+{
+	...
+}
+
+int main()
+{
+	MyClass1 mc1;
+	MyClass2 mc2;
+	foo<MyClass1,MyClass2>(mc1,mc2);
+}
+\end{lstlisting}
+
+Unfortunately, there are some significant downsides to using RParam. First, the function declaration is significantly messier. Second, and perhaps more objectionable, is the fact that a function like foo() cannot be called with argument deduction because the template parameter appears only in the qualifiers of the function parameters. Call sites must therefore specify explicit template arguments.
+
+An unwieldy workaround for this option is the use of an inline wrapper function template that provides perfect forwarding (Section 15.6.3 on page 280), but it assumes the inline function will be elided by the compiler. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/rparam2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "rparam.hpp"
+#include "rparamcls.hpp"
+
+// function that allows parameter passing by value or by reference
+template<typename T1, typename T2>
+void foo_core (typename RParam<T1>::Type p1,
+				typename RParam<T2>::Type p2)
+{
+	...
+}
+
+// wrapper to avoid explicit template parameter passing
+template<typename T1, typename T2>
+void foo (T1 && p1, T2 && p2)
+{
+	foo_core<T1,T2>(std::forward<T1>(p1),std::forward<T2>(p2));
+}
+
+int main()
+{
+	MyClass1 mc1;
+	MyClass2 mc2;
+	foo(mc1,mc2); // same as foo_core<MyClass1,MyClass2>(mc1,mc2)
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+

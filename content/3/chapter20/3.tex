@@ -1,11 +1,331 @@
 
+Algorithm specialization involves providing different function templates that are selected on the basis of the properties of the template arguments. Unfortunately, neither partial ordering of function templates (Section 16.2.2 on page 330) nor overload resolution (Appendix C) is powerful enough to express more advanced forms of algorithm specialization.
 
+One helper the C++ standard library provides for this is std::enable\_if, which is introduced in Section 6.3 on page 98. This section discusses how this helper can be implemented by introducing a corresponding alias template, which we’ll call EnableIf to avoid name clashes.
 
+Just like std::enable\_if, the EnableIf alias template can be used to enable (or disable) a specific function template under specific conditions. For example, the random-access version of the advanceIter() algorithm can be implemented as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator>
+constexpr bool IsRandomAccessIterator =
+	IsConvertible<
+		typename std::iterator_traits<Iterator>::iterator_category,
+		std::random_access_iterator_tag>;
+		
+template<typename Iterator, typename Distance>
+EnableIf<IsRandomAccessIterator<Iterator>>
+advanceIter(Iterator& x, Distance n) {
+	x += n; // constant time
+}
+\end{lstlisting}
+
+The EnableIf specialization here is used to enable this variant of advanceIter() only when the iterator is in fact a random access iterator. The two arguments to EnableIf are a Boolean condition indicating whether this template should be enabled and the type produced by the EnableIf expansion when the condition is true. In our example above, we used the type trait IsConvertible, introduced in Section 19.5 on page 428 and Section 19.7.3 on page 447, as our condition, to define a type trait IsRandomAccessIterator. Thus, this specific version of our advanceIter() implementation is only considered if the concrete type substituted for Iterator is usable as a random-access iterator (i.e., it is associated with a tag convertible to std::random\_access\_iterator\_tag.
+
+EnableIf has a fairly simple implementation:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/enableif.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<bool, typename T = void>
+struct EnableIfT {
+};
+
+template<typename T>
+struct EnableIfT<true, T> {
+	using Type = T;
+};
+
+template<bool Cond, typename T = void>
+using EnableIf = typename EnableIfT<Cond, T>::Type;
+\end{lstlisting}
+
+EnableIf expands to a type and is therefore implemented as an alias template. We want to use partial specialization (see Chapter 16) for its implementation, but alias templates cannot be partially specialized. Fortunately, we can introduce a helper class template EnableIfT, which does the actual work we need, and have the alias template EnableIf simply select the result type from the helper template. When the condition is true, EnableIfT<...>::Type (and therefore EnableIf<...>) simply evaluates to the second template argument, T. When the condition is false, EnableIf does not produce a valid type, because the primary class template for EnableIfT has no member named Type. Normally, this would be an error, but in a SFINAE (substitution failure is not an error, described in Section 15.7 on page 284) context—such as the return type of a function template—it has the effect of causing template argument deduction to fail, removing the function template from consideration.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}EnableIf can also be placed in a defaulted template parameter, which has some advantages over placement in the result type. See Section 20.3.2 on page 472 for a discussion of EnableIf placement.
+\end{tcolorbox}
+
+For advanceIter(), the use of EnableIf means that the function template will be available (and have a return type of void) when the Iterator argument is a random access iterator, and will be removed from consideration when the Iterator argument is not a random access iterator. We can think of EnableIf as a way to “guard” templates against instantiation with template arguments that don’t meet the requirements of the template implementation, because this advanceIter() can only be instantiated with a random access iterator as it requires operations only available on a random access iterator. While using EnableIf in this manner is not bulletproof—the user could assert that a type is a random access iterator without providing the necessary operations—it can help diagnose common mistakes earlier.
+
+We now have established how to explicitly “activate” the more specialized template for the types to which is applies. However, that is not sufficient: We also have to “de-activate” the less specialized template, because a compiler has no way to “order” the two and  will report an ambiguity error if both versions apply. Fortunately, achieving that is not hard: We just use the same EnableIf pattern on the less specialized template, except that we negate the condition expression. Doing so ensures that exactly one of the two templates will be activated for any concrete Iterator type. Thus, our version of advanceIter() for an iterator that is not a random access iterator becomes the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator, typename Distance>
+EnableIf<!IsRandomAccessIterator<Iterator>>
+advanceIter(Iterator& x, Distance n)
+{
+	while (n > 0) { // linear time
+		++x;
+		--n;
+	}
+}
+\end{lstlisting}
 
 \subsubsubsection{20.3.1\hspace{0.2cm}Providing Multiple Specializations}
 
+The previous pattern generalizes to cases where more than two   alternative implementations are needed: We equip each alternative with EnableIf constructs whose conditions are mutually exclusive for a specific set of concrete template arguments. Those conditions will typically make use of various properties that can be expressed via traits.
+
+Consider, for example, the introduction of a third variant of the advanceIter() algorithm: This time we want to permit moving “backward” by specifying a negative distance.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Usually, algorithm specialization is used only to provide efficiency gains, either in computation time or resource usage. However, some specializations of algorithms also provide more functionality, such as (in this case) the ability to move backward in a sequence.
+\end{tcolorbox}
+
+That is clearly invalid for an input iterator, and clearly valid for a random access iterator. However, the standard library also includes the notion of a bidirectional iterator, which allows backward movement without requiring random access. Implementing this case requires slightly more sophisticated logic: Each function template must use EnableIf with a condition that is mutually exclusive with the conditions of all of the other function templates that represent different variants of the algorithm. This results in the following set of conditions:
+
+\begin{itemize}
+\item 
+Random access iterator: Random access case (constant time, forward or backward)
+
+\item
+Bidirectional iterator and not random access: Bidirectional case (linear time, forward or backward)
+
+\item
+Input iterator and not bidirectional: General case (linear time, forward)
+\end{itemize}
+
+The following set of function templates implements this:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/advance2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iterator>
+
+// implementation for random access iterators:
+template<typename Iterator, typename Distance>
+EnableIf<IsRandomAccessIterator<Iterator>>
+advanceIter(Iterator& x, Distance n) {
+	x += n; // constant time
+}
+
+template<typename Iterator>
+constexpr bool IsBidirectionalIterator =
+	IsConvertible<
+		typename std::iterator_traits<Iterator>::iterator_category,
+		std::bidirectional_iterator_tag>;
+
+// implementation for bidirectional iterators:
+template<typename Iterator, typename Distance>
+EnableIf<IsBidirectionalIterator<Iterator> &&
+		!IsRandomAccessIterator<Iterator>>
+advanceIter(Iterator& x, Distance n) {
+	if (n > 0) {
+		for ( ; n > 0; ++x, --n) { // linear time
+		}
+	} else {
+		for ( ; n < 0; --x, ++n) { // linear time
+		}
+	}
+}
+
+// implementation for all other iterators:
+template<typename Iterator, typename Distance>
+EnableIf<!IsBidirectionalIterator<Iterator>>
+advanceIter(Iterator& x, Distance n) {
+	if (n < 0) {
+		throw "advanceIter(): invalid iterator category for negative n";
+	}
+	while (n > 0) { // linear time
+		++x;
+		--n;
+	}
+}
+\end{lstlisting}
+
+By making the EnableIf condition of each function template mutually exclusive with the EnableIf conditions of every other function template, we ensure that, at most, one of the function templates will succeed template argument deduction for a given set of arguments.
+
+Our example illustrates one of the disadvantages of using EnableIf for algorithm specialization: Each time a new variant of the algorithm is introduced, the conditions of all of the algorithm variants need to be revisited to ensure that all are mutually exclusive. In contrast, introducing the bidirectional-iterator variant using tag dispatching (Section 20.2 on page 467) requires just the addition of a new advanceIterImpl() overload using the tag std::bidirectional\_iterator\_tag.
+
+Both techniques—tag dispatching and EnableIf—are useful in different contexts: Generally speaking, tag dispatching supports simple dispatching based on hierarchical tags, while EnableIf supports more advanced dispatching based on arbitrary sets of properties determined by type traits.
+
 \subsubsubsection{20.3.2\hspace{0.2cm}Where Does the EnableIfGo?}
+
+EnableIf is typically used in the return type of the function template. However, this approach does not work for constructor templates or conversion function templates, because neither has a specified return type.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}While a conversion function template does have a return type—the type it is converting to—the template parameters in that type need to be deducible (see Chapter 15) for the conversion function template to behave properly.
+\end{tcolorbox}
+
+Moreover, the use of EnableIf can make the return type very hard to read. In such cases, we can instead embed the EnableIf in a defaulted template argument, as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/container1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iterator>
+#include "enableif.hpp"
+#include "isconvertible.hpp"
+
+template<typename Iterator>
+constexpr bool IsInputIterator =
+	IsConvertible<
+		typename std::iterator_traits<Iterator>::iterator_category,
+		std::input_iterator_tag>;
+
+template<typename T>
+class Container {
+	public:
+	// construct from an input iterator sequence:
+	template<typename Iterator,
+			typename = EnableIf<IsInputIterator<Iterator>>>
+	Container(Iterator first, Iterator last);
+	
+	// convert to a container so long as the value types are convertible:
+	template<typename U, typename = EnableIf<IsConvertible<T, U>>>
+	operator Container<U>() const;
+};
+\end{lstlisting}
+
+However, there is a problem here. If we attempt to add yet another overload (e.g., a more efficient version of the Container constructor for random access iterators), it will result in an error:
+
+\begin{lstlisting}[style=styleCXX]
+// construct from an input iterator sequence:
+template<typename Iterator,
+		typename = EnableIf<IsInputIterator<Iterator> &&
+							!IsRandomAccessIterator<Iterator>>>
+Container(Iterator first, Iterator last);
+
+template<typename Iterator,
+		typename = EnableIf<IsRandomAccessIterator<Iterator>>>
+Container(Iterator first, Iterator last); // ERROR: redeclaration
+										  // of constructor template
+\end{lstlisting}
+
+The problem is that the two constructor templates are identical except for the default template argument, but default template arguments are not considered when determining whether two templates are equivalent.
+
+We can alleviate this problem by adding yet another defaulted template parameter, so the two constructor templates have a different number of template parameters:
+
+\begin{lstlisting}[style=styleCXX]
+// construct from an input iterator sequence:
+template<typename Iterator,
+		typename = EnableIf<IsInputIterator<Iterator> &&
+							!IsRandomAccessIterator<Iterator>>>
+Container(Iterator first, Iterator last);
+
+template<typename Iterator,
+		typename = EnableIf<IsRandomAccessIterator<Iterator>>,
+		typename = int> // extra dummy parameter to enable both constructors
+Container(Iterator first, Iterator last); // OK now
+\end{lstlisting}
 
 \subsubsubsection{20.3.3\hspace{0.2cm}Compile-Time if}
 
+It’s worth noting here that C++17’s constexpr if feature (see Section 8.5 on page 134) avoids the need for EnableIf in many cases. For example, in C++17 we can rewrite our advanceIter() example as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/advance3.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Iterator, typename Distance>
+void advanceIter(Iterator& x, Distance n) {
+	if constexpr(IsRandomAccessIterator<Iterator>) {
+		// implementation for random access iterators:
+		x += n; // constant time
+	}
+	else if constexpr(IsBidirectionalIterator<Iterator>) {
+		// implementation for bidirectional iterators:
+		if (n > 0) {
+			for ( ; n > 0; ++x, --n) { // linear time for positive n
+			}
+		} else {
+			for ( ; n < 0; --x, ++n) { // linear time for negative n
+			}
+		}
+	}
+	else {
+		// implementation for all other iterators that are at least input iterators:
+		if (n < 0) {
+			throw "advanceIter(): invalid iterator category for negative n";
+		}
+		while (n > 0) { // linear time for positive n only
+			++x;
+			--n;
+		}
+	}
+}
+\end{lstlisting}
+
+This is much clearer. The more-specialized code paths (e.g., for random access iterators) will only be instantiated for types that can support them. Therefore, it is safe for code to involve operations not present on all iterators (such as +=) so long as it is within the body of an appropriately-guarded if constexpr.
+
+However, there are downsides. Using constexpr if in this way is only possible when the difference in the generic component can be expressed entirely within the body of the function template. We still need EnableIf in the following situations:
+
+\begin{itemize}
+\item
+Different “interfaces” are involved
+
+\item
+Different class definitions are needed
+
+\item
+No valid instantiation should exist for certain template argument lists.
+\end{itemize}
+
+It is tempting to handle that last situation with the following pattern:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void f(T p) {
+	if constexpr (condition<T>::value) {
+		// do something here...
+	}
+	else {
+		// not a T for which f() makes sense:
+		static_assert(condition<T>::value, "can’t call f() for such a T");
+	}
+}
+\end{lstlisting}
+
+Doing so is not advisable because it doesn’t work well with SFINAE: The function f<T>() is not removed from the candidates list and therefore may inhibit another overload resolution outcome. In the alternative, using EnableIf f<T>() would be removed altogether when substituting EnableIf<...> fails substitution.
+
 \subsubsubsection{20.3.4\hspace{0.2cm}Concepts}
+
+The techniques presented so far work well, but they are often somewhat clumsy, may use a fair amount of compiler resources, and, in error cases, may lead to unwieldy diagnostics. Many generic library authors are therefore looking forward to a language feature that achieves the same effect more directly. A feature called concepts will likely be added to the language for that reason; see Section 6.5 on page 103, Section 18.4 on page 377, and Appendix E.
+
+For example, we expect our overloaded container constructors would simply look as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typeoverload/container4.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Container {
+	public:
+	// construct from an input iterator sequence:
+	template<typename Iterator>
+	requires IsInputIterator<Iterator>
+	Container(Iterator first, Iterator last);
+	
+	// construct from a random access iterator sequence:
+	template<typename Iterator>
+	requires IsRandomAccessIterator<Iterator>
+	Container(Iterator first, Iterator last);
+	
+	// convert to a container so long as the value types are convertible:
+	template<typename U>
+	requires IsConvertible<T, U>
+	operator Container<U>() const;
+};
+\end{lstlisting}
+
+The requires clause (discussed in Section E.1 on page 740) describes the requirements of the template. If any of the requirements are not satisfied, the template is not considered a candidate. It is therefore a more direct expression of the idea expressed by EnableIf, supported by the language itself.
+
+The requires clause has additional benefits over EnableIf. Constraint subsumption (described in Section E.3.1 on page 744) provides an ordering among templates that differ only in their requires clauses, eliminating the need for tag dispatching. Additionally, a requires clause can be attached to a nontemplate. For example, to provide a sort() member function only when the type T is comparable with <:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Container {
+	public:
+	...
+	requires HasLess<T>
+	void sort() {
+		...
+	}
+};
+\end{lstlisting}
+
+
+
+
+

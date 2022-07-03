@@ -1,9 +1,558 @@
 
+The SFINAE principle (substitution failure is not an error; see Section 8.4 on page 129 and Section 15.7 on page 284) turns potential errors during the formation of invalid types and expressions during template argument deduction (which would cause the program to be ill-formed) into simple deduction failures, allowing overload resolution to select a different candidate. While originally intended to avoid spurious failures with function template overloading, SFINAE also enables remarkable compile-time techniques that can determine if a particular type or expression is valid. This allows us to write traits that determine, for example, whether a type has a specific member, supports a specific operation, or is a class. 
+
+The two main approaches for SFINAE-based traits are to SFINAE out functions overloads and to SFINAE out partial specializations.
 
 \subsubsubsection{19.4.1\hspace{0.2cm}SFINAE Out Function Overloads}
 
+Our first foray into SFINAE-based traits illustrates the basic technology using SFINAE with function overloading to find out whether a type is default constructible, so that you can create objects without any value for initialization. That is, for a given type T, an expression such as T() has to be valid.
+
+A basic implementation can look as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isdefaultconstructible1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "issame.hpp"
+
+template<typename T>
+struct IsDefaultConstructibleT {
+	private:
+	// test() trying substitute call of a default constructor for T passed as U:
+	template<typename U, typename = decltype(U())>
+		static char test(void*);
+	// test() fallback:
+	template<typename>
+		static long test(...);
+	public:
+	static constexpr bool value
+		= IsSameT<decltype(test<T>(nullptr)), char>::value;
+};
+\end{lstlisting}
+
+The usual approach to implement a SFINAE-base trait with function overloading is to declare two overloaded function templates named test() with different return types:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static char test(void*);
+template<...> static long test(...);
+\end{lstlisting}
+
+The first overload is designed to match only if the requested check succeeds (we will discuss below how that is achieved). The second overload is the fallback:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The fallback declaration can sometimes be a plain member function declaration instead of a member function template.
+\end{tcolorbox}
+
+It always matches the call, but because it matches “with ellipsis” (i.e., a vararg parameter), any other match would be preferred (see Section C.2 on page 682).
+
+Our “return value” value depends on which overloaded test member is selected:
+
+\begin{lstlisting}[style=styleCXX]
+static constexpr bool value
+	= IsSameT<decltype(test<...>(nullptr)), char>::value;
+\end{lstlisting}
+
+If the first test() member—whose return type is char—is selected, value will be initialized to isSame<char,char>, which is true. Otherwise, it will be initialized to isSame<long,char>, which is false.
+
+Now, we have to deal with the specific properties we want to test. The goal is to make the first test() overload valid if and only if the condition we want to check applies. In this case, we want to find out whether we can default construct an object of the passed type T. To achieve this, we pass T as U and give our first declaration of test() a second unnamed (dummy) template argument initialized with an construct that is valid if and only if the conversion is valid. In this case, we use the expression that can only be valid if an implicit or explicit default constructor exists: U(). The expression is surrounded by decltype to make this a valid expression to initialize a type parameter. The second template parameter cannot be deduced, as no corresponding argument is passed. And we will not provide an explicit template argument for it. Therefore, it will be substituted, and if the substitution fails, according to SFINAE, that declaration of test() will be discarded so that only the fallback declaration will match.
+
+Thus, we can use the trait as follows:
+
+\begin{lstlisting}[style=styleCXX]
+IsDefaultConstructibleT<int>::value // yields true
+
+struct S {
+	S() = delete;
+};
+IsDefaultConstructibleT<S>::value // yields false
+\end{lstlisting}
+
+Note that we can’t use the template parameter T in the first test() directly:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct IsDefaultConstructibleT {
+	private:
+	// ERROR: test() uses T directly:
+	template<typename, typename = decltype(T())>
+		static char test(void*);
+	// test() fallback:
+	template<typename>
+		static long test(...);
+	public:
+	static constexpr bool value
+		= IsSameT<decltype(test<T>(nullptr)), char>::value;
+};
+\end{lstlisting}
+
+his doesn’t work, however, because for any T, always, all member functions are substituted, so that for a type that isn’t default constructible, the code fails to compile instead of ignoring the first test() overload. By passing the class template parameter T to a function template parameter U, we create a specific SFINAE context only for the second test() overload.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Alternative Implementation Strategies for SFINAE-based Traits}
+
+SFINAE-based traits have been possible to implement since before the first C++ standard was published in 1998.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}However, the SFINAE rules were more limited back then: When substitution of template arguments resulted in a malformed type construct (e.g., T::X where T is int), SFINAE worked as expected, but if it resulted in an invalid expression (e.g., sizeof(f()) where f() returns void), SFINAE did not kick in and an error was issued right away.
+\end{tcolorbox}
+
+The key to the approach always consisted in declaring two overloaded function templates returning different return types:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static char test(void*);
+template<...> static long test(...);
+\end{lstlisting}
+
+However, the original published technique
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The first edition of this book was perhaps the first source for this technique.
+\end{tcolorbox}
+
+used the size of the return type to determine which overload was selected (also using 0 and enum, because nullptr and constexpr were not available):
+
+\begin{lstlisting}[style=styleCXX]
+enum { value = sizeof(test<...>(0)) == 1 };
+\end{lstlisting}
+
+On some platforms, it might happen that sizeof(char)==sizeof(long). For example, on digital signal processors (DSP) or old Cray machines, all integral fundamental types could have the same size. As by definition sizeof(char) equals 1, on those machines sizeof(long) and even sizeof(long long) also equal 1.
+
+Given that observation, we want to ensure that the return types of the test() functions have different sizes on all platforms. For example, after defining
+
+\begin{lstlisting}[style=styleCXX]
+using Size1T = char;
+using Size2T = struct { char a[2]; };
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=styleCXX]
+using Size1T = char(&)[1];
+using Size2T = char(&)[2];
+\end{lstlisting}
+
+we could define test test() overloads as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static Size1T test(void*); // checking test()
+template<...> static Size2T test(...); // fallback
+\end{lstlisting}
+
+Here, we either return a Size1T, which is a single char of size 1, or we return (a structure of) an array of two chars, which has a size of at least 2 on all platforms.
+
+Code using one of these approaches is still commonly found.
+
+Note also that the type of the call argument passed to func() doesn’t matter. All that matters is that the passed argument matches the expected type. For example, you could also define to pass the integer 42:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static Size1T test(int); // checking test()
+template<...> static Size2T test(...); // fallback
+...
+enum { value = sizeof(test<...>(42)) == 1 };
+\end{lstlisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Making SFINAE-based Traits Predicate Traits}
+
+As introduced in Section 19.3.3 on page 410, a predicate trait, which returns a Boolean value, should return a value derived from std::true\_type or std::false\_type. This way, we can also solve the problem that on some platforms sizeof(char)==sizeof(long).
+
+For this, we need an indirect definition of IsDefaultConstructibleT. The trait itself should derive from the Type of a helper class, which yields the necessary base class. Fortunately, we can simply provide the corresponding base classes as return types of the test() overloads:
+
+\begin{lstlisting}[style=styleCXX]
+template<...> static std::true_type test(void*); // checking test()
+template<...> static std::false_type test(...); // fallback
+\end{lstlisting}
+
+That way, the Type member for the base class simply can be declared as follows:
+
+\begin{lstlisting}[style=styleCXX]
+using Type = decltype(test<FROM>(nullptr));
+\end{lstlisting}
+
+and we no longer need the IsSameT trait.
+
+The complete improved implementation of IsDefaultConstructibleT therefore becomes as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isdefaultconstructible2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+template<typename T>
+struct IsDefaultConstructibleHelper {
+	private:
+	// test() trying substitute call of a default constructor for T passed as U:
+	template<typename U, typename = decltype(U())>
+		static std::true_type test(void*);
+	// test() fallback:
+	template<typename>
+		static std::false_type test(...);
+	public:
+	using Type = decltype(test<T>(nullptr));
+};
+
+template<typename T>
+struct IsDefaultConstructibleT : IsDefaultConstructibleHelper<T>::Type {
+};
+\end{lstlisting}
+
+Now, if the first test() function template is valid, it is the preferred overload, so that the member IsDefaultConstructibleHelper::Type is initialized by its return type std::true\_type. As a consequence, IsConvertibleT<...> derives from std::true\_type.
+
+If the first test() function template is not valid, it becomes disabled due to SFINAE, and IsDefaultConstructibleHelper::Type is initialized by the return type of the test() fallback, that is, std::false\_type. The effect is that IsConvertibleT<...> then derives from std::false\_type.
+
 \subsubsubsection{19.4.2\hspace{0.2cm}SFINAE Out Partial Specializations}
+
+The second approach to implement SFINAE-based traits uses partial specialization. Again, we can use the example to find out whether a type T is default constructible:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isdefaultconstructible3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "issame.hpp"
+#include <type_traits> // defines true_type and false_type
+
+// helper to ignore any number of template parameters:
+template<typename...> using VoidT = void;
+
+// primary template:
+template<typename, typename = VoidT<>>
+struct IsDefaultConstructibleT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T>
+struct IsDefaultConstructibleT<T, VoidT<decltype(T())>> : std::true_type
+{
+};
+\end{lstlisting}
+
+As with the improved version of IsDefaultConstructibleT for predicate traits above, we define the general case to be derived from std::false\_type, because by default a type doesn’t have the member size\_type.
+
+The interesting feature here is the second template argument that defaults to the type of a helper VoidT. It enables us to provide partial specializations that use an arbitrary number of compile-time type constructs. 
+
+In this case, we need only one construct:
+
+\begin{lstlisting}[style=styleCXX]
+decltype(T())
+\end{lstlisting}
+
+to check again whether the default constructor for T is valid. If, for a specific T, the construct is invalid, SFINAE this time causes the whole partial specialization to be discarded, and we fall back to the primary template. Otherwise, the partial specialization is valid and preferred.
+
+In C++17, the C++ standard library introduced a type trait std::void\_t<> that corresponds to the type VoidT introduced here. Before C++17, it might be helpful to define it ourselves as above or even in namespace std as follows:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Defining void\_t inside namespace std is formally invalid: User code is not permitted to add declarations to namespace std. In practice, no current compiler enforces that restriction, nor do they behave unexpectedly (the standard indicates that doing this leads to “undefined behavior,” which allows anything to happen).
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+#ifndef __cpp_lib_void_t
+namespace std {
+	template<typename...> using void_t = void;
+}
+#endif
+\end{lstlisting}
+
+Starting with C++14, the C++ standardization committee has recommended that compilers and standard libraries indicate which parts of the standard they have implemented by defining agreed-upon feature macros. This is not a requirement for standard conformance, but implementers typically follow the recommendation to be helpful to their users.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}At the time of this writing, Microsoft Visual C++ is the unfortunate exception.
+\end{tcolorbox}
+
+The macro \_\_cpp\_lib\_void\_t is the macro recommended to indicate that a library implements std::void\_t, and thus our code above is made conditional on it.
+
+Obviously, this way to define a type trait looks more condensed that the first approach to overload function templates. But it requires the ability to formulate the condition inside the declaration of a template parameter. Using a class template with function overloads enables us to use additional helper functions or helper types.
 
 \subsubsubsection{19.4.3\hspace{0.2cm}Using Generic Lambdas for SFINAE}
 
+Whichever technique we use, some boilerplate code is always needed to define traits: overloading and calling two test() member functions or implementing multiple partial specializations. Next, we will show how in C++17, we can minimize this boilerplate by specifying the condition to be checked in a generic lambda.
+
+To start with, we introduce a tool constructed from two nested generic lambda expressions:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/isvalid.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+
+// helper: checking validity of f(args...) for F f and Args... args:
+template<typename F, typename... Args,
+		typename = decltype(std::declval<F>()(std::declval<Args&&>()...))>
+std::true_type isValidImpl(void*);
+
+// fallback if helper SFINAE’d out:
+template<typename F, typename... Args>
+std::false_type isValidImpl(...);
+
+// define a lambda that takes a lambda f and returns whether calling f with args is valid
+inline constexpr
+auto isValid = [](auto f) {
+	return [](auto&&... args) {
+		return decltype(isValidImpl<decltype(f),
+		decltype(args)&&...
+		>(nullptr)){};
+	};
+};
+
+// helper template to represent a type as a value
+template<typename T>
+struct TypeT {
+	using Type = T;
+};
+
+// helper to wrap a type as a value
+template<typename T>
+constexpr auto type = TypeT<T>{};
+
+// helper to unwrap a wrapped type in unevaluated contexts
+template<typename T>
+T valueT(TypeT<T>); // no definition needed
+\end{lstlisting}
+
+Let’s start with the definition of isValid: It is a constexpr variable whose type is a lambda’s closure type. The declaration must necessarily use a placeholder type (auto in our code) because C++ has no way to express closure types directly. Prior to C++17, lambda expressions could not appear in constant-expressions, which is why this code is only valid in C++17. Since isValid has a closure type, it can be invoked (i.e., called), but the item that it returns is itself an object of a lambda closure type, produced by the inner lambda expression.
+
+Before delving into the details of that inner lambda expression, let’s examine a typical use of isValid:
+
+\begin{lstlisting}[style=styleCXX]
+constexpr auto isDefaultConstructible
+	= isValid([](auto x) -> decltype((void)decltype(valueT(x))()) {
+		});
+\end{lstlisting}
+
+We already know that isDefaultConstructible has a lambda closure type and, as the name suggests, it is a function object that checks the trait of a type being default-constructible (we’ll see why in what follows). In other words, isValid is a traits factory: A component that generates traits checking objects from its argument.
+
+The type helper variable template allows us to represent a type as a value. A value x obtained that way can be turned back into the original type with decltype(valueT(x)),
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This very simple pair of helper templates is a fundamental technique that lies at the heart of advanced libraries such as Boost.Hana!
+\end{tcolorbox}
+
+and that’s exactly what is done in the lambda passed to isValid above. If that extracted type cannot be defaultconstructed, decltype(valueT(x))() is invalid, and we will either get a compiler error, or an associated declaration will be “SFINAE’d out” (and the latter effect is what we’ll achieve thanks to the details of the definition of isValid).
+
+\begin{lstlisting}[style=styleCXX]
+isDefaultConstructible can be used as follows:
+isDefaultConstructible(type<int>) // true (int is default-constructible)
+isDefaultConstructible(type<int&>) // false (references are not default-constructible)
+\end{lstlisting}
+
+To see how all the pieces work together, consider what the inner lambda expression in isValid becomes with isValid’s parameter f bound to the generic lambda argument specified in the definition of isDefaultConstructible. By performing the substitution in isValid’s definition, we get the equivalent of:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This code is not valid C++ because a lambda expression cannot appear directly in a decltype operand for compiler-technical reasons, but the meaning is clear.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+constexpr auto isDefaultConstructible
+= [](auto&&... args) {
+	return decltype(
+	isValidImpl<
+	decltype([](auto x)
+	-> decltype((void)decltype(valueT(x))())),
+	decltype(args)&&...
+	>(nullptr)){};
+};
+\end{lstlisting}
+
+If we look back at the first declaration of isValidImpl() above, we note that it includes a default template argument of the form
+
+\begin{lstlisting}[style=styleCXX]
+decltype(std::declval<F>()(std::declval<Args&&>()...))>
+\end{lstlisting}
+
+which attempts to invoke a value of the type of its first template argument, which is the closure type of the lambda in the definition of isDefaultConstructible, with values of the types of the arguments (decltype(args)\&\&...) passed to isDefaultConstructible. As there is only one parameter x in the lambda, args must expand to only one argument; in our static\_assert examples above, that argument has type TypeT<int> or TypeT<int\&>. In the TypeT<int\&> case, decltype(valueT(x)) is int\& which makes decltype(valueT(x))() invalid, and thus the substitution of the default template argument in the first declaration of isValidImpl() fails and is SFINAE’d out. That leaves just the second declaration (which would otherwise be a lesser match), which produces a false\_type value. Overall, isDefaultConstructible produces false\_type when type<int\&> is passed. If instead type<int> is passed, the substitution does not fail, and the first declaration of isValidImpl() is selected, producing a true\_type value. Recall that for SFINAE to work, substitutions have to happen in the immediate context of the substituted templates. In this case, the substituted templates are the first declaration of isValidImpl and the call operator of the generic lambda passed to isValid. Therefore, the construct to be tested has to appear in the return type of that lambda, not in its body!
+
+Our isDefaultConstructible trait is a little different from previous traits implementations in that it requires function-style invocation instead of specifying template arguments. That is arguably a more readable notation, but the prior style can be obtained also:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+using IsDefaultConstructibleT
+	= decltype(isDefaultConstructible(std::declval<T>()));
+\end{lstlisting}
+
+Since this is a traditional template declaration, however, it can only appear in namespace scope, whereas the definition of isDefaultConstructible could conceivably have been introduced in block scope.
+
+So far, this technique might not seem compelling because both the expressions involved in the implementation and the style of use are more complex than the previous techniques. However, once isValid is in place and understood, many traits can be implement with just one declaration. For example, testing for access to a member named first, is rather clean (see Section 19.6.4 on page 438 for the complete example):
+
+\begin{lstlisting}[style=styleCXX]
+constexpr auto hasFirst
+	= isValid([](auto x) -> decltype((void)valueT(x).first) {
+	});
+\end{lstlisting}
+
 \subsubsubsection{19.4.4\hspace{0.2cm}SFINAE-Friendly Traits}
+
+In general, a type trait should be able to answer a particular query without causing the program to become ill-formed. SFINAE-based traits address this problem by carefully trapping potential problems within a SFINAE context, turning those would-be errors into negative results.
+
+However, some traits presented thus far (such as the PlusResultT trait described in Section 19.3.4 on page 413) do not behave well in the presence of errors. Recall the definition of PlusResultT from that section:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/plus2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility>
+
+template<typename T1, typename T2>
+struct PlusResultT {
+	using Type = decltype(std::declval<T1>() + std::declval<T2>());
+};
+
+template<typename T1, typename T2>
+using PlusResult = typename PlusResultT<T1, T2>::Type;
+\end{lstlisting}
+
+In this definition, the + is used in a context that is not protected by SFINAE. Therefore, if a program attempts to evaluate PlusResultT for types that do not have a suitable + operator, the evaluation of PlusResultT itself will cause the program to become ill-formed, as in the following attempt to declare the return type of adding arrays of unrelated types A and B:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}For simplicity, the return value just uses PlusResultT<T1,T2>::Type. In practice, the return type should also be computed using RemoveReferenceT<> and RemoveCVT<> to avoid that references are returned.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Array {
+	...
+};
+
+// declare + for arrays of different element types:
+template<typename T1, typename T2>
+Array<typename PlusResultT<T1, T2>::Type>
+operator+ (Array<T1> const&, Array<T2> const&);
+\end{lstlisting}
+
+Clearly, using PlusResultT<> here will lead to an error if no corresponding operator + is defined for the array element.
+
+\begin{lstlisting}[style=styleCXX]
+class A {
+};
+class B {
+};
+void addAB(Array<A> arrayA, Array<B> arrayB) {
+	auto sum = arrayA + arrayB; // ERROR: fails in instantiation of PlusResultT<A, B>
+	...
+}
+\end{lstlisting}
+
+The practical problem is not that this failure occurs with code that is clearly ill-formed like this (there is no way to add an array of A to an array of B) but that it occurs during template argument deduction for operator+, deep in the instantiation of  PlusResultT<A,B>.
+
+This has a remarkable consequence: It means that the program may fail to compile even if we add a specific overload to adding A and B arrays, because C++ does not specify whether the types in a function template are actually instantiated if another overload would be better:
+
+\begin{lstlisting}[style=styleCXX]
+// declare generic + for arrays of different element types:
+template<typename T1, typename T2>
+Array<typename PlusResultT<T1, T2>::Type>
+operator+ (Array<T1> const&, Array<T2> const&);
+
+// overload + for concrete types:
+Array<A> operator+(Array<A> const& arrayA, Array<B> const& arrayB);
+
+void addAB(Array<A> const& arrayA, Array<B> const& arrayB) {
+	auto sum = arrayA + arrayB; // ERROR?: depends on whether the compiler
+	... // instantiates PlusResultT<A,B>
+}
+\end{lstlisting}
+
+If the compiler can determine that the second declaration of operator+ is a better match without performing deduction and substitution on the first (template) declaration of operator+, it will accept
+this code.
+
+However, while deducing and substituting a function template candidate, anything that happens during the instantiation of the definition of a class template is not part of the immediate context of that function template substitution, and SFINAE does not protect us from attempts to form invalid types or expressions there. Instead of just discarding the function template candidate, an error is issued right away because we try to call operator+ for two elements of types A and B inside PlusResultT<>:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+struct PlusResultT {
+	using Type = decltype(std::declval<T1>() + std::declval<T2>());
+};
+\end{lstlisting}
+
+To solve this problem, we have to make the PlusResultT SFINAE-friendly, which means to make it more resilient by giving it a suitable definition even when its decltype expression is ill-formed.
+
+Following the example of HasLessT described in the previous section, we define a HasPlusT trait that allows us to detect whether there is a suitable + operation for the given types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/hasplus.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval
+#include <type_traits> // for true_type, false_type, and void_t
+
+// primary template:
+template<typename, typename, typename = std::void_t<>>
+struct HasPlusT : std::false_type
+{
+};
+
+// partial specialization (may be SFINAE’d away):
+template<typename T1, typename T2>
+struct HasPlusT<T1, T2, std::void_t<decltype(std::declval<T1>()
+						+ std::declval<T2>())>>
+: std::true_type
+{
+};
+\end{lstlisting}
+
+If it yields a true result, PlusResultT can use the existing implementation. Otherwise, PlusResultT needs a safe default. The best default for a trait that has no meaningful result for a set of template arguments is to not provide any member Type at all. That way, if the trait is used within a SFINAE context—such as the return type of the array operator+ template above—the missing member Type will make template argument deduction fail, which is precisely the behavior desired for the array operator+ template.
+
+The following implementation of PlusResultT provides this behavior:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{traits/plus3.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "hasplus.hpp"
+
+template<typename T1, typename T2, bool = HasPlusT<T1, T2>::value>
+struct PlusResultT { // primary template, used when HasPlusT yields true
+	using Type = decltype(std::declval<T1>() + std::declval<T2>());
+};
+
+template<typename T1, typename T2>
+struct PlusResultT<T1, T2, false> { // partial specialization, used otherwise
+};
+\end{lstlisting}
+
+In this version of PlusResultT, we add a template parameter with a default argument that determines if the first two parameters support addition as determined by our HasPlusT trait above. We then partially specialize PlusResultT for false values of that extra parameter, and our partial specialization definition has no members at all, avoiding the problems we described. For cases where addition is supported, the default argument evaluates to true and the primary template is selected, with our existing definition of the Type member. Thus, we fulfill the contract that PlusResultT provide the result type only if in fact the + operation is well-formed. (Note that the added template parameter should never have an explicit template argument.)
+
+Consider again the addition of Array<A> and Array<B>: With our latest implementation of the PlusResultT template, the instantiation of  PlusResultT<A,B> will not have a Type member, because A and B values are not addable. Therefore, the result type of the array operator+ template is invalid, and SFINAE will eliminate the function template from consideration. The overloaded operator+ that is specific to Array<A> and Array<B> will therefore be chosen.
+
+As a general design principle, a trait template should never fail at instantiation time if given reasonable template arguments as inputs. And the general approach is often to perform the corresponding check twice:
+
+\begin{itemize}
+\item
+Once to find out whether the operation is valid
+
+\item
+Once to to compute its result
+\end{itemize}
+
+We saw that already with PlusResultT, where we call HasPlusT<> to find out whether the call of operator+ in PlusResultImpl<> is valid.
+
+Let’s apply this principle to ElementT as introduced in Section 19.3.1 on page 401: It produces an element type from a container type. Again, since the answer relies on a (container) type having a member type value\_type, the primary template should attempt to define the member Type only when the container type has such a value\_type member:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename C, bool = HasMemberT_value_type<C>::value>
+struct ElementT {
+	using Type = typename C::value_type;
+};
+
+template<typename C>
+struct ElementT<C, false> {
+};
+\end{lstlisting}
+
+A third example of making traits SFINAE-friendly is shown Section 19.7.2 on page 444, where IsNothrowMoveConstructibleT first has to check whether a move constructor exists before checking whether it is declared with noexcept.
+
+
+
+
+
+
+
+
+
+
+
+
+

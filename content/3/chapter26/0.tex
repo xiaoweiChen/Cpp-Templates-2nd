@@ -1,0 +1,78 @@
+The tuples developed in the previous chapter aggregate values of some list of types into a single value, giving them roughly the same functionality as a simple struct. Given this analogy, it is natural 
+to wonder what the corresponding type would be for a union: It would contain a single value, but that value would have a type selected from some set of possible types. For example, a database field might contain an integer, floating-point value, string, or binary blob, but it can only contain a value of one of those types at any given time.
+
+In this chapter, we develop a class template Variant that dynamically stores a value of one of a given set of possible value types, similar to the C++17 standard library’s std::variant<>. Variant is a discriminated union, meaning that a variant knows which of its possible value types is currently active, providing better type safety than the equivalent C++ union. Variant itself is a variadic template, which accepts the list of types the active value may have. For example, the variable
+
+\begin{lstlisting}[style=styleCXX]
+Variant<int, double, string> field;
+\end{lstlisting}
+
+can store an int, double, or string, but only one of these values at a time.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note that the list of potential types is fixed at the time the Variant is declared, which means that Variant is a closed discriminated union. An open discriminated union would allow values of additional types, not known at the time the discriminated union was created, to be stored within the union. The FunctionPtr class discussed in Chapter 22 can be viewed as a form of an open discriminated union.
+\end{tcolorbox}
+
+The following program illustrates the behavior of Variant:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variant.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "variant.hpp"
+#include <iostream>
+#include <string>
+ 
+int main()
+{
+	Variant<int, double, std::string> field(17);
+	if (field.is<int>()) {
+		std::cout << "Field stores the integer "
+				<< field.get<int>() << ’\n’;
+	}
+	field = 42; // assign value of same type
+	field = "hello"; // assign value of different type
+	std::cout << "Field now stores the string ’"
+			<< field.get<std::string>() << "’\n";
+}
+\end{lstlisting}
+
+It produces the following output:
+
+\begin{tcblisting}{commandshell={}}
+Field stores the integer 17
+Field now stores the string "hello"
+\end{tcblisting}
+
+The variant can be assigned to a value of any of its types. We can test whether the variant currently contains a value of type T using the member function is<T>(), then extract that stored value with the member function get<T>().
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,143 @@
+In principle, it is also possible to define an operator[] to access the elements of a tuple, similarly to the way std::vector defines operator[]. However, unlike std::vector, a tuple’s elements can each have a different type, so a tuple’s operator[] must be a template where the result type differs depending on the index of the element. That, in turn, requires each index to have a different type, so the index’s type can be used to determine the element type.
+
+The class template CTValue, introduced in Section 24.3 on page 566, allows us to encode the numeric index within a type. We can use this to define a subscript operator as a member of Tuple:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T Index>
+auto& operator[](CTValue<T, Index>) {
+	return get<Index>(*this);
+}
+\end{lstlisting}
+
+Here, we use the value of the passed index within the type of the CTValue argument to make a corresponding get<>() call.
+
+Now we can use this class as follows:
+
+\begin{lstlisting}[style=styleCXX]
+auto t = makeTuple(0, ’1’, 2.2f, std::string{"hello"});
+auto a = t[CTValue<unsigned, 2>{}];
+auto b = t[CTValue<unsigned, 3>{}];
+\end{lstlisting}
+
+a and b will be initialized by the type and value of the third and fourth values in the Tuple t.
+
+To make the usage of constant indices more convenient, we can implement the literal operator with constexpr to compute the numeric compile-time literals directly from ordinary literals with the suffix \_c:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/literals.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "ctvalue.hpp"
+#include <cassert>
+#include <cstddef>
+// convert single char to corresponding int value at compile time:
+constexpr int toInt(char c) {
+	// hexadecimal letters:
+	if (c >= ’A’ && c <= ’F’) {
+		return static_cast<int>(c) - static_cast<int>(’A’) + 10;
+	}
+	if (c >= ’a’ && c <= ’f’) {
+		return static_cast<int>(c) - static_cast<int>(’a’) + 10;
+	}
+	// other (disable ’.’ for floating-point literals):
+	assert(c >= ’0’ && c <= ’9’);
+	return static_cast<int>(c) - static_cast<int>(’0’);
+}
+
+// parse array of chars to corresponding int value at compile time:
+template<std::size_t N>
+constexpr int parseInt(char const (&arr)[N]) {
+	int base = 10; // to handle base (default: decimal)
+	int offset = 0; // to skip prefixes like 0x
+	if (N > 2 && arr[0] == ’0’) {
+		switch (arr[1]) {
+			case ’x’: // prefix 0x or 0X, so hexadecimal
+			case ’X’:
+				base = 16;
+				offset = 2;
+				break;
+			case ’b’: // prefix 0b or 0B (since C++14), so binary
+			case ’B’:
+				base = 2;
+				offset = 2;
+				break;
+			default: // prefix 0, so octal
+				base = 8;
+				offset = 1;
+				break;
+		}
+	}
+	// iterate over all digits and compute resulting value:
+	int value = 0;
+	int multiplier = 1;
+	for (std::size_t i = 0; i < N - offset; ++i) {
+		if (arr[N-1-i] != ’\’’) { // ignore separating single quotes (e.g. in 1’000)
+			value += toInt(arr[N-1-i]) * multiplier;
+			multiplier *= base;
+		}
+	}
+	return value;
+}
+
+// literal operator: parse integral literals with suffix _c as sequence of chars:
+template<char... cs>
+constexpr auto operator"" _c() {
+	return CTValue<int, parseInt<sizeof...(cs)>({cs...})>{};
+}
+\end{lstlisting}
+
+Here we take the advantage of the fact that, for numeric literals, we can use the literal operator to deduce each character of the literal as its own template parameter (see Section 15.5.1 on page 277 for details). We pass the characters to a constexpr helper function parseInt() that computes the value of the character sequence at compile time and yields it as CTValue. For example:
+
+\begin{itemize}
+\item 
+42\_c yields CTValue<int,42>
+
+\item 
+0x815\_c yields CTValue<int,2069>
+
+\item 
+0b1111’1111\_c yields CTValue<int,255>
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The prefix 0b for binary literals and the single quote character to separate digits are supported since C++14.
+\end{tcolorbox}
+\end{itemize}
+
+Note that the parser does not handle floating-point literals. For them, the assertion results in a compile-time error because it is a run-time feature that can’t be used in compile-time contexts.
+
+With this, we can use tuples as follows:
+
+\begin{lstlisting}[style=styleCXX]
+auto t = makeTuple(0, ’1’, 2.2f, std::string{"hello"});
+auto c = t[2_c];
+auto d = t[3_c];
+\end{lstlisting}
+
+This approach is used by Boost.Hana (see [BoostHana]), a metaprogramming library suited for computations on both types and values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

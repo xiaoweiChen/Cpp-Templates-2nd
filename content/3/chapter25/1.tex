@@ -3,5 +3,181 @@
 
 \subsubsubsection{25.1.1\hspace{0.2cm}Storage}
 
+Tuples contain storage for each of the types in the template argument list. That storage can be accessed through a function template get, used as get<I>(t) for a tuple t. For example, get<0>(t) on the t in the previous example would return a reference to the int 17, while get<1>(t) returns a reference to the double 3.14.
+
+The recursive formulation of tuple storage is based on the idea that a tuple containing N > 0 elements can be stored as both a single element (the first element, or header of the list) and a tuple containing N − 1 elements (the tail), with a separate special case for a zero-element tuple. Thus, a three-element tuple Tuple<int, double, std::string> can be stored as an int and a Tuple<double, std::string>. That two-element tuple can then be stored as a double and a Tuple<std::string>, which itself can be stored as a std::string and a Tuple<>. In fact, this is the same kind of recursive decomposition used in the generic versions of typelist algorithms, and the actual implementation of recursive tuple storage unfolds similarly:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/tuple0.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Tuple;
+
+// recursive case:
+template<typename Head, typename... Tail>
+class Tuple<Head, Tail...>
+{
+	private:
+	Head head;
+	Tuple<Tail...> tail;
+	public:
+	// constructors:
+	Tuple() {
+	}
+	Tuple(Head const& head, Tuple<Tail...> const& tail)
+	: head(head), tail(tail) {
+	}
+	...
+	
+	Head& getHead() { return head; }
+	Head const& getHead() const { return head; }
+	Tuple<Tail...>& getTail() { return tail; }
+	Tuple<Tail...> const& getTail() const { return tail; }
+};
+
+// basis case:
+template<>
+class Tuple<> {
+	// no storage required
+};
+\end{lstlisting}
+
+In the recursive case, each Tuple instance contains a data member head that stores the first element in the list, along with a data member tail that stores the remaining elements in the list. The basis case is simply the empty tuple, which has no associated storage.
+
+The get function template walks this recursive structure to extract the requested element:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}A complete implementation of get() should also handle non-const and rvalue-reference tuples appropriately.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/tupleget.hpp}
+\begin{lstlisting}[style=styleCXX]
+// recursive case:
+template<unsigned N>
+struct TupleGet {
+	template<typename Head, typename... Tail>
+	static auto apply(Tuple<Head, Tail...> const& t) {
+		return TupleGet<N-1>::apply(t.getTail());
+	}
+};
+
+// basis case:
+template<>
+struct TupleGet<0> {
+	template<typename Head, typename... Tail>
+	static Head const& apply(Tuple<Head, Tail...> const& t) {
+		return t.getHead();
+	}
+};
+
+template<unsigned N, typename... Types>
+auto get(Tuple<Types...> const& t) {
+	return TupleGet<N>::apply(t);
+}
+\end{lstlisting}
+
+Note that the function template get is simply a thin wrapper over a call to a static member function of TupleGet. This technique is effectively a workaround for the lack of partial specialization of function templates (discussed in Section 17.3 on page 356), which we use to specialize on the value of N. In the recursive case (N > 0), the static member function apply() extracts the tail of the current tuple and decrements N to keep looking for the requested element later in the tuple. The basis case (N = 0) returns the head of the current tuple, completing the implementation.
+
 \subsubsubsection{25.1.2\hspace{0.2cm}Construction}
+
+Besides the constructors defined so far:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple() {
+}
+
+Tuple(Head const& head, Tuple<Tail...> const& tail)
+: head(head), tail(tail) {
+}
+\end{lstlisting}
+
+for a tuple to be useful, we need to be able to construct it both from a set of independent values (one for each element) and from another tuple. Copy-constructing from a set of independent values passes the first of those values to initialize the head element (via its base class), then passes the remaining values to the base class representing the tail:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple(Head const& head, Tail const&... tail)
+: head(head), tail(tail...) {
+}
+\end{lstlisting}
+
+This enables our initial Tuple example:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple<int, double, std::string> t(17, 3.14, "Hello, World!");
+\end{lstlisting}
+
+However, this isn’t the most general interface: Users may wish to move-construct to initialize some (but perhaps not all) of the elements or to have an element constructed from a value of a different type. Therefore, we should use perfect forwarding (Section 15.6.3 on page 280) to initialize the tuple:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename VHead, typename... VTail>
+Tuple(VHead&& vhead, VTail&&... vtail)
+	: head(std::forward<VHead>(vhead)),
+		tail(std::forward<VTail>(vtail)...) {
+}
+\end{lstlisting}
+
+Next, we implement support for constructing a tuple from another tuple:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename VHead, typename... VTail>
+Tuple(Tuple<VHead, VTail...> const& other)
+: head(other.getHead()), tail(other.getTail()) { }
+\end{lstlisting}
+
+However, the introduction of this constructor does not suffice to allow tuple conversions: Given the tuple t above, an attempt to create another tuple with compatible types will fail:
+
+\begin{lstlisting}[style=styleCXX]
+// ERROR: no conversion from Tuple<int, double, string> to long
+Tuple<long int, long double, std::string> t2(t);
+\end{lstlisting}
+
+The problem here is that the constructor template meant to initialize from a set of independent values is a better match than the constructor template that accepts a tuple. To address this problem, we have to use std::enable\_if<> (see Section 6.3 on page 98 and Section 20.3 on page 469) to disable both member function templates when the tail does not have the expected length:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename VHead, typename... VTail,
+		typename = std::enable_if_t<sizeof...(VTail)==sizeof...(Tail)>>
+Tuple(VHead&& vhead, VTail&&... vtail)
+: head(std::forward<VHead>(vhead)),
+tail(std::forward<VTail>(vtail)...) { }
+
+template<typename VHead, typename... VTail,
+		typename = std::enable_if_t<sizeof...(VTail)==sizeof...(Tail)>>
+Tuple(Tuple<VHead, VTail...> const& other)
+: head(other.getHead()), tail(other.getTail()) { }
+\end{lstlisting}
+
+You can find all constructor declarations in tuples/tuple.hpp.
+
+A makeTuple() function template uses deduction to determine the element types of the Tuple it returns, making it far easier to create a tuple from a given set of elements:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/maketuple.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+auto makeTuple(Types&&... elems)
+{
+	return Tuple<std::decay_t<Types>...>(std::forward<Types>(elems)...);
+}
+\end{lstlisting}
+
+Again, we use perfect forwarding combined with the std::decay<> trait to convert string literals and other raw arrays into pointers and remove const and references. For example:
+
+\begin{lstlisting}[style=styleCXX]
+makeTuple(17, 3.14, "Hello, World!")
+\end{lstlisting}
+
+initializes a
+
+\begin{lstlisting}[style=styleCXX]
+Tuple<int, double, char const*>
+\end{lstlisting}
+
+
+
+
+
+
 

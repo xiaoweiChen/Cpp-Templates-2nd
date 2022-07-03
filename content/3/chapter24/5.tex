@@ -1,0 +1,136 @@
+Prior to the introduction of variadic templates, typelists were generally formulated with a recursive data structure modeled after LISP’s cons cell. Each cons cell contains a value (the head of the list) and a nested list, the latter of which could either be another cons cell or the empty list, nil. This notion can be directly expressed in C++:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/cons.hpp}
+\begin{lstlisting}[style=styleCXX]
+class Nil { };
+
+template<typename HeadT, typename TailT = Nil>
+class Cons {
+	public:
+	using Head = HeadT;
+	using Tail = TailT;
+};
+\end{lstlisting}
+
+An empty typelist is written Nil, while a single-element list containing int is written as Cons<int, Nil> or, more succinctly, Cons<int>. Longer lists require nesting:
+
+\begin{lstlisting}[style=styleCXX]
+using TwoShort = Cons<short, Cons<unsigned short>>;
+\end{lstlisting}
+
+Arbitrarily long typelists can be constructed by deep recursive nesting, although writing such long lists by hand can become rather unwieldy:
+
+\begin{lstlisting}[style=styleCXX]
+using SignedIntegralTypes = Cons<signed char, Cons<short, Cons<int,
+							Cons<long, Cons<long long, Nil>>>>>;
+\end{lstlisting}
+
+Extracting the first element in a cons-style list refers directly to the head of the list:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/consfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class FrontT {
+	public:
+	using Type = typename List::Head;
+};
+
+template<typename List>
+using Front = typename FrontT<List>::Type;
+\end{lstlisting}
+
+Adding an element to the front wraps another Cons around the existing list:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/conspushfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename Element>
+class PushFrontT {
+	public:
+	using Type = Cons<Element, List>;
+};
+
+template<typename List, typename Element>
+using PushFront = typename PushFrontT<List, Element>::Type;
+\end{lstlisting}
+
+Finally, removing the first element from a recursive typelist extracts the tail of the list:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/conspopfront.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class PopFrontT {
+	public:
+	using Type = typename List::Tail;
+};
+
+template<typename List>
+using PopFront = typename PopFrontT<List>::Type;
+\end{lstlisting}
+
+An IsEmpty specialization for Nil completes the set of core typelist operations:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/consisempty.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+struct IsEmpty {
+	static constexpr bool value = false;
+};
+
+template<>
+struct IsEmpty<Nil> {
+	static constexpr bool value = true;
+};
+\end{lstlisting}
+
+With these typelist operations, we can now use the InsertionSort algorithm defined in Section 24.2.7 on page 563, this time with cons-style lists:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/conslisttest.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+struct SmallerThanT {
+	static constexpr bool value = sizeof(T) < sizeof(U);
+};
+
+void conslisttest()
+{
+	using ConsList = Cons<int, Cons<char, Cons<short, Cons<double>>>>;
+	using SortedTypes = InsertionSort<ConsList, SmallerThanT>;
+	using Expected = Cons<char, Cons<short, Cons<int, Cons<double>>>>;
+	std::cout << std::is_same<SortedTypes, Expected>::value << ’\n’;
+}
+\end{lstlisting}
+
+As we’ve seen with the insertion sort, cons-style typelists can express all of the same algorithms as the variadic typelists described throughout this chapter. Indeed, many of the algorithms described are written in precisely the same style used to manipulate cons-style typelists. However, they have a few downsides that lead us to prefer the variadic versions: First, the nesting makes long consstyle typelists very hard to both write and read, in source code and in compiler diagnostics. Second, several algorithms (including PushBack and Transform) can be specialized for variadic typelists to provide more efficient implementations (as measured by the number of instantiations). Finally, the use of variadic templates for typelists fits well with the use of variadic templates for heterogeneous containers, discussed in Chapter 25 and Chapter 26.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

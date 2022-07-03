@@ -10,15 +10,652 @@ Going further, we can implement algorithms—searches, transformations, reversal
 
 \subsubsubsection{24.2.1\hspace{0.2cm}Indexing}
 
+One of the most fundamental operations on a typelist is to extract a specific element from the list. Section 24.1 illustrated how to implement an operation that extracts the first element. Here, we generalize this operation to extract the Nth element. For example, to extract the type at index 2 of the given typelist we can write:
+
+\begin{lstlisting}[style=styleCXX]
+using TL = NthElement<Typelist<short, int, long>, 2>;
+\end{lstlisting}
+
+which makes TL an alias for long. The NthElement operation is implemented with a recursive metaprogram that walks through the typelist until it finds the requested element:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/nthelement.hpp}
+\begin{lstlisting}[style=styleCXX]
+// recursive case:
+template<typename List, unsigned N>
+class NthElementT : public NthElementT<PopFront<List>, N-1>
+{
+};
+
+// basis case:
+template<typename List>
+class NthElementT<List, 0> : public FrontT<List>
+{
+};
+
+template<typename List, unsigned N>
+using NthElement = typename NthElementT<List, N>::Type;
+\end{lstlisting}
+
+First, consider the basis case, covered by the partial specialization where N is 0. This specialization terminates our recursion by providing the element at the front of the list. It does so by inheriting publicly from FrontT<List>, which (indirectly) provides the Type type alias that is both the front of this list and, therefore, the result of the NthElement metafunction, using metafunction forwarding (discussed in Section 19.3.2 on page 404).
+
+The recursive case, which is also the primary definition of the template, walks through the typelist. Because the partial specialization guarantees that N > 0, the recursive case removes the front element from the list and requests the $ (N − 1)^{st} $ element from the remaining list. In our example,
+
+\begin{lstlisting}[style=styleCXX]
+NthElementT<Typelist<short, int, long>, 2>
+\end{lstlisting}
+
+inherits from
+
+\begin{lstlisting}[style=styleCXX]
+NthElementT<Typelist<int, long>, 1>
+\end{lstlisting}
+
+which then inherits from
+
+\begin{lstlisting}[style=styleCXX]
+NthElementT<Typelist<long>, 0>
+\end{lstlisting}
+
+Here, we hit the basis case, and inheritance from FrontT<Typelist<long>> provides the result via the nested type Type.
+
 \subsubsubsection{24.2.2\hspace{0.2cm}Finding the Best Match}
+
+Many typelist algorithms search for data within the typelist. For example, one may want to find the largest type within the typelist (e.g., to allocate enough storage for any of the types in the list). This too can be accomplished with a recursive template metaprogram:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/largesttype.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class LargestTypeT;
+
+// recursive case:
+template<typename List>
+class LargestTypeT
+{
+	private:
+	using First = Front<List>;
+	using Rest = typename LargestTypeT<PopFront<List>>::Type;
+	public:
+	using Type = IfThenElse<(sizeof(First) >= sizeof(Rest)), First, Rest>;
+};
+
+// basis case:
+template<>
+class LargestTypeT<Typelist<>>
+{
+	public:
+	using Type = char;
+};
+
+template<typename List>
+using LargestType = typename LargestTypeT<List>::Type;
+\end{lstlisting}
+
+The LargestType algorithm will return the first, largest type within the typelist. For example, if given the typelist Typelist<bool, int, long, short>, this algorithm will return the first type that is the same size as long, which is likely to be either int or long, depending on your platform.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}There are even some platforms where bool is as large as a long!
+\end{tcolorbox}
+
+The primary template for LargestTypeT doubles as the recursive case for the algorithm. It employs the common first/rest idiom, which has three steps. In the first step, it computes a partial result based on just the first element, which in this case is the front element of the list, and places it in First. Next, it recurses to compute the result for the rest of the elements in the list, and places that result in Rest. For example, in the first step of recursion for the typelist Typelist<bool, int, long, short>, First is bool, while Rest is the result of applying the algorithm to Typelist<int, long, short>. Finally, the third step combines the First and Rest results to produce the solution. Here, the IfThenElse picks the larger of either the first element in the list (First) or the best candidate so far (Rest), and returns the winner.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Note that the typelist could contain types to which sizeof does not apply, such as void. In this case, the compiler will produce an error, when attempting to compute the largest type of the typelist.
+\end{tcolorbox}
+
+The >= breaks ties in favor of the element that comes earlier in the list.
+
+The recursion terminates when the list is empty. By default, we use char as a sentinel type to initialize the algorithm, because every type is as large as char.
+
+Note that the basis case explicitly mentions the empty typelist Typelist<>. This is somewhat unfortunate, because it precludes the use of other forms of typelists, which we’ll return to in later sections (including Section 24.3 on page 566, Section 24.5 on page 571, and Chapter 25). To address this problem, we introduce an IsEmpty metafunction that determines whether the given typelist has no elements:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistisempty.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class IsEmpty
+{
+	public:
+	static constexpr bool value = false;
+};
+
+template<>
+class IsEmpty<Typelist<>> {
+	public:
+	static constexpr bool value = true;
+};
+\end{lstlisting}
+
+Using IsEmpty, we can implement LargestType so that it works equally well for any typelist that implements Front, PopFront, and IsEmpty, as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/genericlargesttype.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, bool Empty = IsEmpty<List>::value>
+class LargestTypeT;
+
+// recursive case:
+template<typename List>
+class LargestTypeT<List, false>
+{
+	private:
+	using Contender = Front<List>;
+	using Best = typename LargestTypeT<PopFront<List>>::Type;
+	public:
+	using Type = IfThenElse<(sizeof(Contender) >= sizeof(Best)),
+	Contender, Best>;
+};
+
+// basis case:
+template<typename List>
+class LargestTypeT<List, true>
+{
+	public:
+	using Type = char;
+};
+
+template<typename List>
+using LargestType = typename LargestTypeT<List>::Type;
+\end{lstlisting}
+
+The defaulted second template parameter to LargestTypeT, Empty, checks whether the list is empty. If not, the recursive case (which fixes this argument to false) continues exploring the list. Otherwise, the basis case (which fixes this argument to true) terminates the recursion and provides the initial result (char).
 
 \subsubsubsection{24.2.3\hspace{0.2cm}Appending to a Typelist}
 
+The PushFront primitive operation allows us to add a new element to the front of a typelist, producing a new typelist. Suppose that, instead, we want to add a new element at the end of the list, as we often do with run-time containers such as std::list and std::vector. For our Typelist template, this operation requires only a small modification to the PushFront implementation from Section 24.1 on page 549 to produce PushBack:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistpushback.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename NewElement>
+class PushBackT;
+
+template<typename... Elements, typename NewElement>
+class PushBackT<Typelist<Elements...>, NewElement>
+{
+	public:
+	using Type = Typelist<Elements..., NewElement>;
+};
+
+template<typename List, typename NewElement>
+using PushBack = typename PushBackT<List, NewElement>::Type;
+\end{lstlisting}
+
+However, as with the LargestType algorithm, we can implement a general algorithm for PushBack that uses only the primitive operations Front, PushFront, PopFront, and IsEmpty:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}To experiment with this version of the algorithm, note that you will need to remove the partial specialization of PushBack for Typelist, or it will be used in lieu of the generic version.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/genericpushback.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename NewElement, bool = IsEmpty<List>::value>
+class PushBackRecT;
+
+// recursive case:
+template<typename List, typename NewElement>
+class PushBackRecT<List, NewElement, false>
+{
+	using Head = Front<List>;
+	using Tail = PopFront<List>;
+	using NewTail = typename PushBackRecT<Tail, NewElement>::Type;
+	
+	public:
+	using Type = PushFront<Head, NewTail>;
+};
+
+// basis case:
+template<typename List, typename NewElement>
+class PushBackRecT<List, NewElement, true>
+{
+	public:
+	using Type = PushFront<List, NewElement>;
+};
+
+// generic push-back operation:
+template<typename List, typename NewElement>
+class PushBackT : public PushBackRecT<List, NewElement> { };
+
+template<typename List, typename NewElement>
+using PushBack = typename PushBackT<List, NewElement>::Type;
+\end{lstlisting}
+
+The PushBackRecT template manages the recursion. In the basis case, we use PushFront to add NewElement to the empty list, because PushFront is equivalent to PushBack on an empty list. The recursive case is far more interesting: It splits the list into its first element (Head) and a typelist containing the remaining elements (Tail). The new element is then appended to the Tail, recursively, to produce NewTail. We then use PushFront again to add Head to the front of list NewTail to form the final list.
+
+Let’s unwrap the recursion for a simple example:
+
+\begin{lstlisting}[style=styleCXX]
+PushBackRecT<Typelist<short, int>, long>
+\end{lstlisting}
+
+In our outermost step, Head is short and Tail is Typelist<int>. We recurse to
+
+\begin{lstlisting}[style=styleCXX]
+PushBackRecT<Typelist<int>, long>
+\end{lstlisting}
+
+where Head is int and Tail is Typelist<>.
+
+We recurse again to compute
+
+\begin{lstlisting}[style=styleCXX]
+PushBackRecT<Typelist<>, long>
+\end{lstlisting}
+
+which triggers the basis case and returns PushFront<Typelist<>, long>, which itself evaluates to Typelist<long>. The recursion then unwinds, pushing the previous Head on the front of the list:
+
+\begin{lstlisting}[style=styleCXX]
+PushFront<int, Typelist<long>>
+\end{lstlisting}
+
+This produces Typelist<int, long>. The recursion unwraps again, pushing the outermost Head (short) onto this list:
+
+\begin{lstlisting}[style=styleCXX]
+PushFront<short, Typelist<int, long>>
+\end{lstlisting}
+
+This produces the final result:
+
+\begin{lstlisting}[style=styleCXX]
+Typelist<short, int, long>
+\end{lstlisting}
+
+The general PushBackRecT implementation works on any kind of typelist. Like the previous algorithms developed in this section, it requires a linear number of template instantiations to evaluate, because for a typelist of length N, there will be N + 1 instantiations of PushBackRecT and PushFrontT, as well as N instantiations of FrontT and PopFrontT. Counting the number of template instantiations can provide rough estimates of the time it will take to compile a particular metaprogram, because template instantiation itself is a fairly involved process for the compiler.
+
+Compile time can be a problem for large template metaprograms, so it is reasonable to try to reduce the number of template instantiations performed by these algorithms.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Abrahams and Gurtovoy ([AbrahamsGurtovoyMeta]) provide a much more in-depth discussion of compilation time for template metaprograms, including a number of techniques for reducing compile time. We only scratch the surface here.
+\end{tcolorbox}
+
+In fact, our first implementation of PushBack—which employed a partial specialization on Typelist—requires only a constant number of template instantiations, making it far more efficient (at compile time) than the generic version. Moreover, because it is described as a partial specialization of PushBackT, this efficient implementation will automatically be selected when performing PushBack on a Typelist instance, bringing the notion of algorithm specialization (as discussed in Section 20.1 on page 465) to template metaprograms. Many of the techniques discussed in that section can be applied to template metaprograms to reduce the number of template instantiations the algorithm performs.
+
 \subsubsubsection{24.2.4\hspace{0.2cm}Reversing a Typelist}
+
+When typelists have some ordering among their elements, it is convenient to be able to reverse the ordering of the elements in the typelist when applying some algorithms. For example, the SignedIntegralTypes typelist introduced in Section 24.1 on page 549 is ordered in terms of increasing integer rank. However, it may be more useful to reverse this list to produce the typelist Typelist<long long, long, int, short, signed char> ordered by decreasing rank. The Reverse algorithm implements this metafunction:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistreverse.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, bool Empty = IsEmpty<List>::value>
+class ReverseT;
+
+template<typename List>
+using Reverse = typename ReverseT<List>::Type;
+
+// recursive case:
+template<typename List>
+class ReverseT<List, false>
+: public PushBackT<Reverse<PopFront<List>>, Front<List>> { };
+
+// basis case:
+template<typename List>
+class ReverseT<List, true>
+{
+	public:
+	using Type = List;
+};
+\end{lstlisting}
+
+The basis case for the recursion of this metafunction is the identity function on an empty typelist. The recursive case splits the list into its first element and the remaining elements in the list. For example, if given the typelist Typelist<short, int, long>, the recursive step separates the first element (short) from the remaining elements (Typelist<int, long>). It then recursively reverses the list of remaining elements (producing Typelist<long, int>) and, finally, appends the first element to that reversed list with PushBackT (producing Typelist<long, int, short>).
+
+The Reverse algorithm makes it possible to implement a PopBackT operation for typelists to remove the last element from a typelist:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/typelistpopback.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List>
+class PopBackT {
+	public:
+	using Type = Reverse<PopFront<Reverse<List>>>;
+};
+
+template<typename List>
+using PopBack = typename PopBackT<List>::Type;
+\end{lstlisting}
+
+The algorithm reverses the list, removes the first element from the reversed list (using PopFront), and then reverses the resulting list again.
 
 \subsubsubsection{24.2.5\hspace{0.2cm}Transforming a Typelist}
 
+Our previous typelist algorithms have allowed us to extract arbitrary elements from a typelist, search within the list, construct new lists, and reverse lists. However, we have yet to perform any operations on the elements within the typelist. For example, we may want to “transform” all of the types in the typelist in some way, 
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Within the functional language community, this operation is typically known as map. However, we use the term transform to better align with the C++ standard library’s own algorithm names.
+\end{tcolorbox}
+
+such as by turning each type into its const-qualified variant using the AddConst metafunction:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/addconst.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct AddConstT
+{
+	using Type = T const;
+};
+
+template<typename T>
+using AddConst = typename AddConstT<T>::Type;
+\end{lstlisting}
+
+To that end, we will implement a Transform algorithm that takes a typelist and a metafunction and produces another typelist containing the result of applying   the metafunction to each type. For example, the type
+
+\begin{lstlisting}[style=styleCXX]
+Transform<SignedIntegralTypes, AddConstT>
+\end{lstlisting}
+
+will be a typelist containing signed char const, short const, int const, long const, and long long const. The metafunction is provided through a template template parameter, which maps an input type to an output type. The Transform algorithm itself is, as we might expect, a recursive algorithm:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/transform.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, template<typename T> class MetaFun,
+bool Empty = IsEmpty<List>::value>
+class TransformT;
+
+// recursive case:
+template<typename List, template<typename T> class MetaFun>
+class TransformT<List, MetaFun, false>
+: public PushFrontT<typename TransformT<PopFront<List>, MetaFun>::Type,
+typename MetaFun<Front<List>>::Type>
+{
+};
+
+// basis case:
+template<typename List, template<typename T> class MetaFun>
+class TransformT<List, MetaFun, true>
+{
+	public:
+	using Type = List;
+};
+
+template<typename List, template<typename T> class MetaFun>
+using Transform = typename TransformT<List, MetaFun>::Type;
+\end{lstlisting}
+
+The recursive case here, while syntactically heavy, is straightforward. The result of a transform is the result of transforming the first element in the typelist (second argument to PushFront) and adding it to the beginning of the sequence produced by recursively transforming the rest of the elements in the typelist (first argument to PushFront).
+
+See also Section 24.4 on page 569 which shows how a more efficient implementation of Transform can be developed.
+
 \subsubsubsection{24.2.6\hspace{0.2cm}Accumulating Typelists}
 
+Transform is a useful algorithm for transforming each of the elements of the sequence. It is often used in conjunction with Accumulate, which combines all of the elements of a sequence into a single resulting value.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Within the functional language community, this operation is typically known as reduce. However, we use the term accumulate to better align with the C++ standard library’s own algorithm names
+\end{tcolorbox}
+
+The Accumulate algorithm takes a typelist T with elements T1, T2, ..., TN , an initial type I, and a metafunction F , which accepts two types and returns a type. It returns F (F (F (:::F (I; T1); T2); :::; TN−1); TN), where at the ith step in the accumulation F is applied to the result of the previous i − 1 steps and Ti.
+
+Depending on the typelist, choice of F , and initial type, we can use Accumulate to produce a number of different outcomes. For example, if F selects the largest of two types, Accumulate will behave like the LargestType algorithm. On the other hand, if F accepts a typelist and a type and pushes the type on the back of the typelist, Accumulate will behave like the Reverse algorithm.
+
+The implementation of Accumulate follows our standard recursive-metaprogram breakdown:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/accumulate.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List,
+		template<typename X, typename Y> class F,
+		typename I,
+		bool = IsEmpty<List>::value>
+class AccumulateT;
+
+// recursive case:
+template<typename List,
+		template<typename X, typename Y> class F,
+		typename I>
+class AccumulateT<List, F, I, false>
+: public AccumulateT<PopFront<List>, F,
+					typename F<I, Front<List>>::Type>
+{
+};
+
+// basis case:
+template<typename List,
+		template<typename X, typename Y> class F,
+		typename I>
+class AccumulateT<List, F, I, true>
+{
+	public:
+	using Type = I;
+};
+
+template<typename List,
+		template<typename X, typename Y> class F,
+		typename I>
+using Accumulate = typename AccumulateT<List, F, I>::Type;
+\end{lstlisting}
+
+Here, the initial type I is also used as the accumulator, capturing the current result. Therefore, the basis case returns this result when it reaches the end of the typelist.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}This also ensures that the result of accumulating an empty list will be the initial value.
+\end{tcolorbox}
+
+In the recursive case, the algorithm applies F to the previous result (I) and the front of the list, passing the result of applying F on as the initial type for the accumulation of the remainder of the list.
+
+With Accumulate in hand, we can reverse a typelist using PushFrontT as the metafunction F and an empty typelist (TypeList<T>) as the initial type I:
+
+\begin{lstlisting}[style=styleCXX]
+using Result = Accumulate<SignedIntegralTypes, PushFrontT, Typelist<>>;
+				// produces TypeList<long long, long, int, short, signed char>
+\end{lstlisting}
+
+Implementing an Accumulator-based version of LargestType, LargestTypeAcc requires slightly more effort, because we need to produce a metafunction that returns the larger of two types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/largesttypeacc0.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+class LargerTypeT
+: public IfThenElseT<sizeof(T) >= sizeof(U), T, U>
+{
+};
+
+template<typename Typelist>
+class LargestTypeAccT
+: public AccumulateT<PopFront<Typelist>, LargerTypeT,
+Front<Typelist>>
+{
+};
+
+template<typename Typelist>
+using LargestTypeAcc = typename LargestTypeAccT<Typelist>::Type;
+\end{lstlisting}
+
+Note that this formulation of LargestType requires a nonempty typelist, because it provides the first element of the typelist as the initial type. We could handle the empty-list case explicitly, either by returning some sentinel type (char or void) or by making the algorithm itself SFINAE-friendly, as discussed in Section 19.4.4 on page 424:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/largesttypeacc.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+class LargerTypeT
+: public IfThenElseT<sizeof(T) >= sizeof(U), T, U>
+{
+};
+
+template<typename Typelist, bool = IsEmpty<Typelist>::value>
+class LargestTypeAccT;
+
+template<typename Typelist>
+class LargestTypeAccT<Typelist, false>
+: public AccumulateT<PopFront<Typelist>, LargerTypeT,
+					Front<Typelist>>
+{
+};
+
+template<typename Typelist>
+class LargestTypeAccT<Typelist, true>
+{
+};
+
+template<typename Typelist>
+using LargestTypeAcc = typename LargestTypeAccT<Typelist>::Type;
+\end{lstlisting}
+
+Accumulate is a powerful typelist algorithm because it allows us to express many different operations, and therefore can be considered one of the foundational algorithms for typelist manipulation.
+
 \subsubsubsection{24.2.7\hspace{0.2cm}Insertion Sort}
+
+For our final typelist algorithm, we will implement an insertion sort. As with other algorithms, the recursive step splits the list into its first element (the head) and the remaining elements (the tail). The tail is then sorted (recursively), and the head is inserted into the correct position within the sorted list. The shell of this algorithm is expressed as a typelist algorithm:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/insertionsort.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List,
+		template<typename T, typename U> class Compare,
+		bool = IsEmpty<List>::value>
+class InsertionSortT;
+
+template<typename List,
+		template<typename T, typename U> class Compare>
+using InsertionSort = typename InsertionSortT<List, Compare>::Type;
+
+// recursive case (insert first element into sorted list):
+template<typename List,
+		template<typename T, typename U> class Compare>
+class InsertionSortT<List, Compare, false>
+: public InsertSortedT<InsertionSort<PopFront<List>, Compare>,
+						Front<List>, Compare>
+{
+};
+
+// basis case (an empty list is sorted):
+template<typename List,
+		template<typename T, typename U> class Compare>
+class InsertionSortT<List, Compare, true>
+{
+	public:
+	using Type = List;
+};
+\end{lstlisting}
+
+The Compare parameter is the comparison used to order elements in the typelist. It accepts two types and evaluates to a Boolean via its value member. The basis case, an empty typelist, is trivial.
+
+The core of insertion sort is the InsertSortedT metafunction, which inserts a value into an already-sorted list at the first point that will keep the list sorted:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/insertsorted.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "identity.hpp"
+template<typename List, typename Element,
+		template<typename T, typename U> class Compare,
+		bool = IsEmpty<List>::value>
+class InsertSortedT;
+
+// recursive case:
+template<typename List, typename Element,
+		template<typename T, typename U> class Compare>
+class InsertSortedT<List, Element, Compare, false>
+{
+	// compute the tail of the resulting list:
+	using NewTail =
+		typename IfThenElse<Compare<Element, Front<List>>::value,
+							IdentityT<List>,
+							InsertSortedT<PopFront<List>, Element, Compare>
+				>::Type;
+				
+	// compute the head of the resulting list:
+	using NewHead = IfThenElse<Compare<Element, Front<List>>::value,
+								Element,
+								Front<List>>;
+	public:
+	using Type = PushFront<NewTail, NewHead>;
+};
+
+// basis case:
+template<typename List, typename Element,
+		template<typename T, typename U> class Compare>
+class InsertSortedT<List, Element, Compare, true>
+: public PushFrontT<List, Element>
+{
+};
+
+template<typename List, typename Element,
+		template<typename T, typename U> class Compare>
+using InsertSorted = typename InsertSortedT<List, Element, Compare>::Type;
+\end{lstlisting}
+
+The basis case is again trivial, because a single-element list is always sorted. The recursive case differs based on whether the element to be inserted should go at the beginning of the list or later in the list. If the element being inserted precedes the first element in the list (which is already sorted), the result is that element prepended to the list with PushFront. Otherwise, we split the list into its head and tail, recurse to insert that element into the tail, then prepend the head to the result of inserting the element into the tail.
+
+This implementation includes a compile-time optimization to avoid instantiating types that will not be used, a technique discussed in Section 19.7.1 on page 440. The following implementation would technically also be correct:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename Element,
+		template<typename T, typename U> class Compare>
+class InsertSortedT<List, Element, Compare, false>
+: public IfThenElseT<Compare<Element, Front<List>>::value,
+					PushFront<List, Element>,
+					PushFront<InsertSorted<PopFront<List>,
+											Element, Compare>,
+							Front<List>>>
+{
+};
+\end{lstlisting}
+
+However, such a formulation of the recursive case would be unnecessarily inefficient, because it evaluates the template arguments in both branches of the IfThenElseT even though only one branch will be used. In our case, the PushFront in the then branch is typically fairly cheap, but the recursive InsertSorted invocation in the else branch is not.
+
+In our optimized implementation, the first IfThenElse computes the tail of the resulting list, NewTail. The second and third arguments to IfThenElse are both metafunctions that will compute the result for that branch. The second argument (the “then” branch) uses IdentityT (shown in Section 19.7.1 on page 440) to produce the unmodified List. The third argument (the “else” branch) uses InsertSortedT to compute the result of inserting the element later in the sorted list. At the top level, only one of IdentityT or InsertSortedT will be instantiated, so very little extra work is performed (the PopFront, in the worse case). The second IfThenElse then computes the head of the resulting list; the branches are evaluated immediately because both are assumed to be cheap. The final list is constructed from the computed NewHead and NewTail. This formulation has the desirable property that the number of instantiations required to insert an element into a sorted list is proportionate to its position in the resulting list. This manifests as a much higher-level property of insertion sort in that the number of instantiations to sort an already-sorted list is linear in the length of the list. (Insertion sort remains quadratic in the number of instantiations for inputs sorted in reverse.)
+
+The following program demonstrates the use of insertion sort to order a list of types based on their size. The comparison operation uses the sizeof operator and compares the result:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/insertionsorttest.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+struct SmallerThanT {
+	static constexpr bool value = sizeof(T) < sizeof(U);
+};
+
+void testInsertionSort()
+{
+	using Types = Typelist<int, char, short, double>;
+	using ST = InsertionSort<Types, SmallerThanT>;
+	std::cout << std::is_same<ST,Typelist<char, short, int, double>>::value
+			<< ’\n’;
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

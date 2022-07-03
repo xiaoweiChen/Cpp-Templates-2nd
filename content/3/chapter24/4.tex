@@ -1,0 +1,92 @@
+Pack expansions (described in depth in Section 12.4.1 on page 201) can be a useful mechanism for offloading the work of typelist iteration to the compiler. The Transform algorithm developed in Section 24.2.5 on page 559 is one that naturally lends itself to the use of a pack expansion, because it is applying the same operation to each of the elements in the list. This enables an algorithm specialization (by way of a partial specialization) for a Transform of a Typelist:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/variadictransform.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Elements, template<typename T> class MetaFun>
+class TransformT<Typelist<Elements...>, MetaFun, false>
+{
+	public:
+	using Type = Typelist<typename MetaFun<Elements>::Type...>;
+};
+\end{lstlisting}
+
+This implementation captures the typelist elements into a parameter pack Elements. It then employs a pack expansion with the pattern typename MetaFun<Elements>::Type to apply the metafunc tion to each of the types in Elements and forms a typelist from the results. This implementation is arguably simpler, because it doesn’t require recursion and uses language features in a fairly straightforward way. Moreover, it requires fewer template instantiations, because only one instance of the Transform template needs to be instantiated. The algorithm still requires a linear number of instantiations of MetaFun, but those instantiations are fundamental to the algorithm.
+
+Other algorithms benefit indirectly from uses of pack expansions. For example, the Reverse algorithm described in Section 24.2.4 on page 557 requires a linear number of instantiations of PushBack. With the pack-expansion form of PushBack on Typelist described in Section 24.2.3 on page 555 (which requires a single instantiation), Reverse is linear. However, the more-general recursive implementation of Reverse also described in that section is itself linear in the number of instantiations, making Reverse quadratic!
+
+Pack expansions can also be useful to select the elements in a given list of indices to produce a new typelist. The Select metafunction takes in a typelist and a Valuelist containing indices into that typelist, then produces a new typelist containing the elements specified by the Valuelist:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/select.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename Types, typename Indices>
+class SelectT;
+
+template<typename Types, unsigned... Indices>
+class SelectT<Types, Valuelist<unsigned, Indices...>>
+{
+	public:
+	using Type = Typelist<NthElement<Types, Indices>...>;
+};
+
+template<typename Types, typename Indices>
+using Select = typename SelectT<Types, Indices>::Type;
+\end{lstlisting}
+
+The indices are captured in a parameter pack Indices, which is expanded to produce a sequence of NthElement types to index into the given typelist, capturing the result in a new Typelist. The following example illustrates how we can use Select to reverse a typelist:
+
+\begin{lstlisting}[style=styleCXX]
+using SignedIntegralTypes =
+	Typelist<signed char, short, int, long, long long>;
+
+using ReversedSignedIntegralTypes =
+	Select<SignedIntegralTypes, Valuelist<unsigned, 4, 3, 2, 1, 0>>;
+	// produces Typelist<long long, long, int, short, signed char>
+\end{lstlisting}
+
+A nontype typelist containing indices into another list is often called an index list (or index sequence), and can allow one to simplify or eliminate recursive computations. Index lists are described in detail in Section 25.3.4 on page 585.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,187 @@
 
+Typelists provide the ability to describe and manipulate a sequence of types using a rich set of algorithms and operations. In some cases, it is also useful to work with sequences of compile-time values, such as the bounds of a multidimensional array or indices into another typelist.
 
+There are several ways to produce a typelist of compile-time values. One simple approach involves defining a CTValue class template (named for a compile-time value) that represents a value of a specific type within a typelist:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The standard library defines the std::integral\_constant template, which is more featureful version of CTValue.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/ctvalue.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T Value>
+struct CTValue
+{
+	static constexpr T value = Value;
+};
+\end{lstlisting}
+
+Using the CTValue template, we can now express a typelist containing integer values for the first few prime numbers:
+
+\begin{lstlisting}[style=styleCXX]
+using Primes = Typelist<CTValue<int, 2>, CTValue<int, 3>,
+						CTValue<int, 5>, CTValue<int, 7>,
+						CTValue<int, 11>>;
+\end{lstlisting}
+
+With this representation, we can perform numeric computations on a typelist of values, such as computing the product of these primes.
+
+First, a MultiplyT template accepts two compile-time values with the same type and produces a new compile-time value of that same type, multiplying the input values:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/multiply.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+struct MultiplyT;
+
+template<typename T, T Value1, T Value2>
+struct MultiplyT<CTValue<T, Value1>, CTValue<T, Value2>> {
+	public:
+	using Type = CTValue<T, Value1 * Value2>;
+};
+
+template<typename T, typename U>
+using Multiply = typename MultiplyT<T, U>::Type;
+\end{lstlisting}
+
+Then, by using MultiplyT, the following expression yields the product of all prime numbers:
+
+\begin{lstlisting}[style=styleCXX]
+Accumulate<Primes, MultiplyT, CTValue<int, 1>>::value
+\end{lstlisting}
+
+Unfortunately, this usage of Typelist and CTValue is fairly verbose, especially for the case where all of the values are of the same type. We can optimize this particular case by introducing an alias template CTTypelist that provides a homogeneous list of values, described as a Typelist of CTValues:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/cttypelist.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T... Values>
+using CTTypelist = Typelist<CTValue<T, Values>...>;
+\end{lstlisting}
+
+We can now write an equivalent (but far more concise) definition of Primes using CTTypelist as follows:
+
+\begin{lstlisting}[style=styleCXX]
+using Primes = CTTypelist<int, 2, 3, 5, 7, 11>;
+\end{lstlisting}
+
+The only downside to this approach is that alias templates are just aliases, so error messages may end up printing the underlying Typelist of CTValueTypes, causing them to be more verbose than we would like. To address this issue, we can create an entirely new typelist class, Valuelist, that stores the values directly:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/valuelist.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, T... Values>
+struct Valuelist {
+};
+
+template<typename T, T... Values>
+struct IsEmpty<Valuelist<T, Values...>> {
+	static constexpr bool value = sizeof...(Values) == 0;
+};
+
+template<typename T, T Head, T... Tail>
+struct FrontT<Valuelist<T, Head, Tail...>> {
+	using Type = CTValue<T, Head>;
+	static constexpr T value = Head;
+};
+
+template<typename T, T Head, T... Tail>
+struct PopFrontT<Valuelist<T, Head, Tail...>> {
+	using Type = Valuelist<T, Tail...>;
+};
+
+template<typename T, T... Values, T New>
+struct PushFrontT<Valuelist<T, Values...>, CTValue<T, New>> {
+	using Type = Valuelist<T, New, Values...>;
+};
+
+template<typename T, T... Values, T New>
+struct PushBackT<Valuelist<T, Values...>, CTValue<T, New>> {
+	using Type = Valuelist<T, Values..., New>;
+};
+\end{lstlisting}
+
+By providing IsEmpty, FrontT, PopFrontT, and PushFrontT, we have made Valuelist a proper typelist that can be used with the algorithms defined in this chapter. PushBackT is provided as an algorithm specialization to reduce the cost of this operation at compile time. For example, Valuelist can be used with the InsertionSort algorithm defined previously:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/valuelisttest.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+struct GreaterThanT;
+
+template<typename T, T First, T Second>
+struct GreaterThanT<CTValue<T, First>, CTValue<T, Second>> {
+	static constexpr bool value = First > Second;
+};
+void valuelisttest()
+{
+	using Integers = Valuelist<int, 6, 2, 4, 9, 5, 2, 1, 7>;
+	
+	using SortedIntegers = InsertionSort<Integers, GreaterThanT>;
+	
+	static_assert(std::is_same_v<SortedIntegers,
+								Valuelist<int, 9, 7, 6, 5, 4, 2, 2, 1>>,
+				"insertion sort failed");
+}
+\end{lstlisting}
+
+Note that you can provide the ability to initialize CTValue by using the literal operator, e.g.,
+
+\begin{lstlisting}[style=styleCXX]
+auto a = 42_c; // initializes a as CTValue<int,42>
+\end{lstlisting}
+
+See Section 25.6 on page 599 for details.
 
 \subsubsubsection{24.3.1\hspace{0.2cm}Deducible Nontype Parameters}
+
+In C++17, CTValue can be improved by using a single, deducible nontype parameter (spelled with auto):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/ctvalue17.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<auto Value>
+struct CTValue
+{
+	static constexpr auto value = Value;
+};
+\end{lstlisting}
+
+This eliminates the need to specify the type for each use of CTValue, making it easier to use:
+
+\begin{lstlisting}[style=styleCXX]
+using Primes = Typelist<CTValue<2>, CTValue<3>, CTValue<5>,
+						CTValue<7>, CTValue<11>>;
+\end{lstlisting}
+
+The same can be done for a C++17 Valuelist, but the result isn’t necessarily better. As noted in Section 15.10.1 on page 296, a nontype parameter pack with deduced type allows the types of each argument to differ:
+
+\begin{lstlisting}[style=styleCXX]
+template<auto... Values>
+class Valuelist { };
+
+int x;
+using MyValueList = Valuelist<1, ’a’, true, &x>;
+\end{lstlisting}
+
+While such a heterogeneous value list may be useful, it is not the same as our previous Valuelist that required all of the elements to have the same type. Although one could require that all of the elements have the same type (which is also discussed in Section 15.10.1 on page 296), an empty Valuelist<> will necessarily have no known element types.
+
+
+
+
+
+
+
+
+
+
+
+
+

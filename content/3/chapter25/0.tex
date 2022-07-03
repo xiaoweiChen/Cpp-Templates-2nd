@@ -1,0 +1,47 @@
+Throughout this book we often use homogeneous containers and array-like types to illustrate the power of templates. Such homogeneous structures extend the concept of a C/C++ array and are pervasive in most applications. C++ (and C) also has a nonhomogeneous containment facility: the class (or struct). This chapter explores tuples, which aggregate data in a manner similar to classes and structs. For example, a tuple containing an int, a double, and a std::string is similar to a struct with int, double, and std::string members, except that the elements of the tuple are referenced positionally (as 0, 1, 2) rather than through names. The positional interface and the ability to easily construct a tuple from a typelist make tuples more suitable than structs for use with template metaprogramming techniques.
+
+An alternative view on tuples is as a manifestation of a typelist in the executable program. For example, while a typelist Typelist<int, double, std::string> describes the sequence of types
+containing int, double, and std::string that can be manipulated at compile time, a Tuple<int, double, std::string> describes storage for an int, a double, and a std::string that can be manipulated at run time. For example, the following program creates an instance of such a tuple:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Tuple {
+	... // implementation discussed below
+};
+
+Tuple<int, double, std::string> t(17, 3.14, "Hello, World!");
+\end{lstlisting}
+
+It is common to use template metaprogramming with typelists to generate tuples that can be used to store data. For example, even though we’ve arbitrarily selected int, double, and std::string as the element types in the example above, we could have created the set of types stored by the tuple with a metaprogram.
+
+In the remainder of this chapter, we will explore the implementation and manipulation of the Tuple class template, which is a simplified version of the class template std::tuple.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

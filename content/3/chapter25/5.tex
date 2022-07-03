@@ -1,5 +1,274 @@
 
+A tuple is a fundamental heterogeneous container with a large number of potential uses. As such, it is worthwhile to consider what can be done to optimize the use of tuples both at run time (storage, execution time) and at compile time (number of templates instantiations). This section discusses a few specific optimizations to our Tuple implementation.
 
 \subsubsubsection{25.5.1\hspace{0.2cm}Tuples and the EBCO}
 
+Our formulation for Tuple storage uses more storage than is strictly necessary. One problem is that the tail member will eventually be an empty tuple, because every nonempty tuple terminates with an empty tuple, and data members must always have at least one byte of storage.
+
+To improve Tuple’s storage efficiency, we can apply the empty base class optimization (EBCO) discussed in Section 21.1 on page 489 by inheriting from the tail tuple rather than making it a member. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/tuplestorage1.hpp}
+\begin{lstlisting}[style=styleCXX]
+// recursive case:
+template<typename Head, typename... Tail>
+class Tuple<Head, Tail...> : private Tuple<Tail...>
+{
+	private:
+	Head head;
+	public:
+	Head& getHead() { return head; }
+	Head const& getHead() const { return head; }
+	Tuple<Tail...>& getTail() { return *this; }
+	Tuple<Tail...> const& getTail() const { return *this; }
+};
+\end{lstlisting}
+
+This is the same approach we took with BaseMemberPair in Section 21.1.2 on page 494. Unfortunately, it has the practical side effect of reversing the order in which the tuple elements are initialized
+in constructors. Previously, because the head member preceded the tail member, the head would be initialized first. In this new formulation of Tuple storage, the tail is in a base class, so it will be initialized before the member head.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Another practical impact of this change is that the elements of the tuple will end up being stored in reverse order, because base classes are typically stored before members.
+\end{tcolorbox}
+
+This problem can be addressed by sinking the head member into its own base class that precedes the tail in the base class list. A direct implementation of this would introduce a TupleElt template that is used to wrap each element type so that Tuple can inherit from it:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/tuplestorage2.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Tuple;
+
+template<typename T>
+class TupleElt
+{
+	T value;
+	
+	public:
+	TupleElt() = default;
+	template<typename U>
+	TupleElt(U&& other) : value(std::forward<U>(other) { }
+	
+	T& get() { return value; }
+	T const& get() const { return value; }
+};
+
+// recursive case:
+template<typename Head, typename... Tail>
+class Tuple<Head, Tail...>
+: private TupleElt<Head>, private Tuple<Tail...>
+{
+	public:
+	Head& getHead() {
+		// potentially ambiguous
+		return static_cast<TupleElt<Head> *>(this)->get();
+	}
+	Head const& getHead() const {
+		// potentially ambiguous
+		return static_cast<TupleElt<Head> const*>(this)->get();
+	}
+	Tuple<Tail...>& getTail() { return *this; }
+	Tuple<Tail...> const& getTail() const { return *this; }
+};
+
+// basis case:
+template<>
+class Tuple<> {
+	// no storage required
+};
+\end{lstlisting}
+
+While this approach has solved the initialization-ordering problem, it has introduced a new (worse) problem: We can no longer extract elements from a tuple that has two elements of the same type, such as Tuple<int, int>, because the derived-to-base conversion from a tuple to TupleElt of that type (e.g., TupleElt<int>) will be ambiguous.
+
+To break the ambiguity, we need to ensure that each TupleElt base class is unique within a given Tuple. One approach is to encode the “height” of this value within its tuple, that is, the length of the tail tuple. The last element in the tuple will be stored with height 0, the next-to-last-element will be stored with height 1, and so on:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}It would be more intuitive to simply use the index of the tuple element rather than its height. However, that information is not readily available in Tuple, because a given tuple may appear both as a standalone tuple and as the tail of another tuple. A given Tuple does know, however, how many elements are in its own tail.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/tupleelt1.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<unsigned Height, typename T>
+class TupleElt {
+	T value;
+	public:
+	TupleElt() = default;
+	
+	template<typename U>
+	TupleElt(U&& other) : value(std::forward<U>(other)) { }
+	
+	T& get() { return value; }
+	T const& get() const { return value; }
+};
+\end{lstlisting}
+
+With this solution, we can produce a Tuple that applies the EBCO while maintaining initialization order and support for multiple elements of the same type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/tuplestorage3.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Tuple;
+
+// recursive case:
+template<typename Head, typename... Tail>
+class Tuple<Head, Tail...>
+: private TupleElt<sizeof...(Tail), Head>, private Tuple<Tail...>
+{
+	using HeadElt = TupleElt<sizeof...(Tail), Head>;
+	public:
+	Head& getHead() {
+		return static_cast<HeadElt *>(this)->get();
+	}
+	Head const& getHead() const {
+		return static_cast<HeadElt const*>(this)->get();
+	}
+	Tuple<Tail...>& getTail() { return *this; }
+	Tuple<Tail...> const& getTail() const { return *this; }
+};
+
+// basis case:
+template<>
+class Tuple<> {
+	// no storage required
+};
+\end{lstlisting}
+
+With this implementation, the following program:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/compressedtuple1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <algorithm>
+#include "tupleelt1.hpp"
+#include "tuplestorage3.hpp"
+#include <iostream>
+
+struct A {
+	A() {
+		std::cout << "A()" << ’\n’;
+	}
+};
+
+struct B {
+	B() {
+		std::cout << "B()" << ’\n’;
+	}
+};
+
+int main()
+{
+	Tuple<A, char, A, char, B> t1;
+	std::cout << sizeof(t1) << " bytes" << ’\n’;
+}
+\end{lstlisting}
+
+prints
+
+\begin{lstlisting}[style=styleCXX]
+A()
+A()
+B()
+5 bytes
+\end{lstlisting}
+
+The EBCO has eliminated one byte (for the empty tuple, Tuple<>). However, note that both A and B are empty classes, which hints at one more opportunity for applying the EBCO in Tuple. TupleElt can be extended slightly to inherit from the element type when it is safe to do so, without requiring changes to Tuple:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/tupleelt2.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+
+template<unsigned Height, typename T,
+		bool = std::is_class<T>::value && !std::is_final<T>::value>
+class TupleElt;
+
+template<unsigned Height, typename T>
+class TupleElt<Height, T, false>
+{
+	T value;
+	
+	public:
+	TupleElt() = default;
+	template<typename U>
+		TupleElt(U&& other) : value(std::forward<U>(other)) { }
+		
+	T& get() { return value; }
+	T const& get() const { return value; }
+};
+
+template<unsigned Height, typename T>
+class TupleElt<Height, T, true> : private T
+{
+	public:
+	TupleElt() = default;
+	template<typename U>
+		TupleElt(U&& other) : T(std::forward<U>(other)) { }
+		
+	T& get() { return *this; }
+	T const& get() const { return *this; }
+};
+\end{lstlisting}
+
+When TupleElt is provided with a non-final class, it inherits from the class privately to allow the EBCO to apply to the stored value, too. With this change, the previous program now prints
+
+\begin{lstlisting}[style=styleCXX]
+A()
+A()
+B()
+2 bytes
+\end{lstlisting}
+
 \subsubsubsection{25.5.2\hspace{0.2cm}Constant-time get()}
+
+The get() operation is extremely common when working with tuples, but it’s recursive implementation requires a linear number of template instantiations that can affect compile time. Fortunately, the EBCO optimizations introduced in the previous section have enabled a more efficient implementation of get that we will describe here.
+
+The key insight is that template argument deduction (Chapter 15) deduces template arguments for a base class when matching a parameter (of the base class type) to an argument (of the derived class type). Thus, if we can compute the height H of the element we wish to extract, we can rely on the conversion from the Tuple specialization to TupleElt<H, T> (where T is deduced) to extract that element without manually walking through all of the indices:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/constantget.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<unsigned H, typename T>
+T& getHeight(TupleElt<H,T>& te)
+{
+	return te.get();
+}
+
+template<typename... Types>
+class Tuple;
+
+template<unsigned I, typename... Elements>
+auto get(Tuple<Elements...>& t)
+	-> decltype(getHeight<sizeof...(Elements)-I-1>(t))
+{
+	return getHeight<sizeof...(Elements)-I-1>(t);
+}
+\end{lstlisting}
+
+Because get<I>(t) receives the index I of the desired element (which counts from the beginning of the tuple) while the tuple’s actual storage is in terms of height H (which counts from the end of the tuple), we compute H from I. Template argument deduction for the call to getHeight() performs the actual search: The height H is fixed because it is explicitly provided in the call, so only one TupleElt base class will match, from which the type T will be deduced. Note that getHeight() must be declared a friend of Tuple to allow the conversion to the private base class. For example:
+
+\begin{lstlisting}[style=styleCXX]
+// inside the recursive case for class template Tuple:
+template<unsigned I, typename... Elements>
+friend auto get(Tuple<Elements...>& t)
+	-> decltype(getHeight<sizeof...(Elements)-I-1>(t));
+\end{lstlisting}
+
+Note that this implementation requires only a constant number of template instantiations, because we have offloaded the hard work of matching up the index to the compiler’s template argument deduction engine.
+
+
+
+
+
+
+
+
+

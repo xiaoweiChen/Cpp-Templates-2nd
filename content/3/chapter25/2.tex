@@ -3,5 +3,90 @@
 
 \subsubsubsection{25.2.1\hspace{0.2cm}Comparison}
 
+Tuples are structural types that contain other values. To compare two tuples, it suffices to compare their elements. Therefore, we can write a definition of operator== to compare two definitions element-wise:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/tupleeq.hpp}
+\begin{lstlisting}[style=styleCXX]
+// basis case:
+bool operator==(Tuple<> const&, Tuple<> const&)
+{
+	// empty tuples are always equivalent
+	return true;
+}
+
+// basis case:
+bool operator==(Tuple<> const&, Tuple<> const&)
+{
+	// empty tuples are always equivalent
+	return true;
+}
+\end{lstlisting}
+
+Like many algorithms on typelists and tuples, the element-wise comparison visits the head element and then recurses to visit the tail, eventually hitting the basis case. The !=, <, >, <=, and >= operators follow analogously.
+
 \subsubsubsection{25.2.2\hspace{0.2cm}Output}
+
+Throughout this chapter, we will be creating new tuple types, so it is useful to be able to see those tuples in an executing program. The following operator<< prints any tuple whose element types can be printed:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{typelist/tupleio.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+void printTuple(std::ostream& strm, Tuple<> const&, bool isFirst = true)
+{
+	strm << ( isFirst ? ’(’ : ’)’ );
+}
+
+template<typename Head, typename... Tail>
+void printTuple(std::ostream& strm, Tuple<Head, Tail...> const& t,
+				bool isFirst = true)
+{
+	strm << ( isFirst ? "(" : ", " );
+	strm << t.getHead();
+	printTuple(strm, t.getTail(), false);
+}
+
+template<typename... Types>
+std::ostream& operator<<(std::ostream& strm, Tuple<Types...> const& t)
+{
+	printTuple(strm, t);
+	return strm;
+}
+\end{lstlisting}
+
+Now, it is easy to create and display tuples. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << makeTuple(1, 2.5, std::string("hello")) << ’\n’;
+\end{lstlisting}
+
+prints
+
+\begin{tcblisting}{commandshell={}}
+(1, 2.5, hello)
+\end{tcblisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

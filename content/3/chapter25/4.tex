@@ -1,0 +1,78 @@
+Tuples are useful for storing a set of related values together into a single value, regardless of what types or how many of those related values there are. At some point, it may be necessary to unpack such a tuple, for example, to pass its elements as separate arguments to a function. As a simple example, we may want to take a tuple and pass its elements to the variadic print() operation described in Section 12.4 on page 200:
+
+\begin{lstlisting}[style=styleCXX]
+Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
+3, ’\n’);
+print(t...); // ERROR: cannot expand a tuple; it isn’t a parameter pack
+\end{lstlisting}
+
+As noted in the example, the “obvious” attempt to unpack a tuple will not succeed, because it is not a parameter pack. We can achieve the same means using an index list. The following function template apply() accepts a function and a tuple, then calls the function with the unpacked tuple elements:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{tuples/apply.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename F, typename... Elements, unsigned... Indices>
+auto applyImpl(F f, Tuple<Elements...> const& t,
+					Valuelist<unsigned, Indices...>)
+	->decltype(f(get<Indices>(t)...))
+{
+	return f(get<Indices>(t)...);
+}
+
+template<typename F, typename... Elements,
+		unsigned N = sizeof...(Elements)>
+auto apply(F f, Tuple<Elements...> const& t)
+	->decltype(applyImpl(f, t, MakeIndexList<N>()))
+{
+	return applyImpl(f, t, MakeIndexList<N>());
+}
+\end{lstlisting}
+
+The applyImpl() function template takes a given index list and uses it to expand the elements of a tuple into the argument list for its function object argument f. The user-facing apply() is responsible only for constructing the initial index list. Together, they allow us to expand a tuple into the arguments of print():
+
+\begin{lstlisting}[style=styleCXX]
+Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
+												3, ’\n’);
+apply(print, t); // OK: prints Pi is roughly 3
+\end{lstlisting}
+
+C++17 provides a similar function that works for any tuple-like type.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

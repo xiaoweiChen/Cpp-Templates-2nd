@@ -1,0 +1,68 @@
+Overload resolution is just one part of the complete processing of a function call. In fact, it is not part of every function call. First, calls through function pointers and calls through pointers to member functions are not subject to overload resolution because the function to call is entirely determined (at run time) by the pointers. Second, function-like macros cannot be overloaded and are therefore not subject to overload resolution.
+
+At a very high level, a call to a named function can be processed in the following way:
+
+\begin{itemize}
+\item 
+The name is looked up to form an initial overload set.
+
+\item 
+If necessary, this set is adjusted in various ways (e.g., template argument deduction and substitution occurs, which can cause some function template candidates to be discarded).
+
+\item 
+Any candidate that doesn’t match the call at all (even after considering implicit conversions and default arguments) is eliminated from the overload set. This results in a set of viable function candidates.
+
+\item 
+Overload resolution is performed to find a best candidate. If there is one, it is selected; otherwise, the call is ambiguous.
+
+\item 
+The selected candidate is checked. For example, if it is a deleted function (i.e., one defined with = delete) or an inaccessible private member function, a diagnostic is issued.
+\end{itemize}
+
+Each of these steps has its own subtleties, but overload resolution is arguably the most complex. Fortunately, a few simple principles clarify the majority of situations. We examine these principles next.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

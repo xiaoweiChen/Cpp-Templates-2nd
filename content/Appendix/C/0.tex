@@ -1,0 +1,42 @@
+Overload resolution is the process that selects the function to call for a given call expression. Consider the following simple example:
+
+\begin{lstlisting}[style=styleCXX]
+void display_num(int); // #1
+void display_num(double); // #2
+
+int main()
+{
+	display_num(399); // #1 matches better than #2
+	display_num(3.99); // #2 matches better than #1
+}
+\end{lstlisting}
+
+In this example, the function name display\_num() is said to be overloaded. When this name is used in a call, a C++ compiler must therefore distinguish between the various candidates using additional information; mostly, this information is the types of the call arguments. In our example, it makes intuitive sense to call the int version when the function is called with an integer argument and the double version when a floating-point argument is provided. The formal process that attempts to model this intuitive choice is the overload resolution process.
+
+The general ideas behind the rules that guide overload resolution are simple enough, but the details have become quite complex during the C++ standardization process. This complexity was driven mostly by the desire to support various real-world examples that intuitively (to a human) seem to have an “obviously best match,” but when trying to formalize this intuition, various subtleties arose.
+
+In this appendix, we provide a reasonably detailed survey of the overload resolution rules. However, the complexity of this process is such that we do not claim to cover every part of the topic.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

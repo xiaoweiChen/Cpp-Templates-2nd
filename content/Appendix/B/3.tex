@@ -1,0 +1,37 @@
+With the keyword decltype (introduced in C++11), it is possible to check the value category of any C++ expression. For any expression x, decltype((x)) (note the double parentheses) yields:
+
+\begin{itemize}
+\item 
+type if x is a prvalue
+
+\item
+type\& if x is an lvalue
+
+\item
+type\&\& if x is an xvalue
+\end{itemize}
+
+The double parentheses in decltype((x)) are needed to avoid producing the declared type of a named entity in case where the expression x does indeed name an entity (in other cases, the parentheses have no effect). For example, if the expression x simply names a variable v, the construct without parentheses becomes decltype(v), which produces the type of the variable v rather than a type reflecting the value category of the expression x referring to that variable.
+
+Thus, using type traits for any expression e, we can check its value category as follows:
+
+\begin{lstlisting}[style=styleCXX]
+if constexpr (std::is_lvalue_reference<decltype((e))>::value) {
+	std::cout << "expression is lvalue\n";
+}
+else if constexpr (std::is_rvalue_reference<decltype((e))>::value) {
+	std::cout << "expression is xvalue\n";
+}
+else {
+	std::cout << "expression is prvalue\n";
+}
+\end{lstlisting}
+
+See Section 15.10.2 on page 298 for details.
+
+
+
+
+
+
+

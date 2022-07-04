@@ -1,0 +1,213 @@
+So far, we have discussed bugs that arise when compiling or linking programs that contain templates. However, the most challenging task of ensuring that a program behaves correctly at run time often follows a successful build. Templates can sometimes make this task a little more difficult because the behavior of generic code represented by a template depends uniquely on the client of that template (certainly much more so than ordinary classes and functions). A tracer is a software device that can alleviate that aspect of debugging by detecting problems in template definitions early in the development cycle.
+
+A tracer is a user-defined class that can be used as an argument for a template to be tested. Often, a tracer is also an archetype, written just to meet the requirements of the template. More important, however, a tracer should generate a trace of the operations that are invoked on it. This allows, for example, to verify experimentally the efficiency of algorithms as well as the sequence of operations.
+
+Here is an example of a tracer that might be used to test a sorting algorithm:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Before C++17, we had to initialize the static members outside the class declaration in one translation unit.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{debugging/tracer.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+class SortTracer {
+	private:
+	int value; // integer value to be sorted
+	int generation; // generation of this tracer
+	inline static long n_created = 0; // number of constructor calls
+	inline static long n_destroyed = 0; // number of destructor calls
+	inline static long n_assigned = 0; // number of assignments
+	inline static long n_compared = 0; // number of comparisons
+	inline static long n_max_live = 0; // maximum of existing objects
+	
+	// recompute maximum of existing objects
+	static void update_max_live() {
+		if (n_created-n_destroyed > n_max_live) {
+			n_max_live = n_created-n_destroyed;
+		}
+	}
+
+	public:
+	static long creations() {
+		return n_created;
+	}
+	static long destructions() {
+		return n_destroyed;
+	}
+	static long assignments() {
+		return n_assigned;
+	}
+	static long comparisons() {
+		return n_compared;
+	}
+	static long max_live() {
+		return n_max_live;
+	}
+
+	public:
+	// constructor
+	SortTracer (int v = 0) : value(v), generation(1) {
+		++n_created;
+		update_max_live();
+		std::cerr << "SortTracer #" << n_created
+				<< ", created generation " << generation
+				<< " (total: " << n_created - n_destroyed
+				<< ")\n";
+	}
+
+	// copy constructor
+	SortTracer (SortTracer const& b)
+	: value(b.value), generation(b.generation+1) {
+		++n_created;
+		update_max_live();
+		std::cerr << "SortTracer #" << n_created
+				<< ", copied as generation " << generation
+				<< " (total: " << n_created - n_destroyed
+				<< ")\n";
+	}
+
+	// destructor
+	~SortTracer() {
+		++n_destroyed;
+		update_max_live();
+		std::cerr << "SortTracer generation " << generation
+				<< " destroyed (total: "
+				<< n_created - n_destroyed << ")\n";
+	}
+
+	// assignment
+	SortTracer& operator= (SortTracer const& b) {
+		++n_assigned;
+		std::cerr << "SortTracer assignment #" << n_assigned
+				<< " (generation " << generation
+				<< " = " << b.generation
+				<< ")\n";
+		value = b.value;
+		return *this;
+	}
+
+	// comparison
+	friend bool operator < (SortTracer const& a,
+							SortTracer const& b) {
+		++n_compared;
+		std::cerr << "SortTracer comparison #" << n_compared
+				<< " (generation " << a.generation
+				<< " < " << b.generation
+				<< ")\n";
+		return a.value < b.value;
+	}
+
+	int val() const {
+		return value;
+	}
+};
+\end{lstlisting}
+
+In addition to the value to sort, value, the tracer provides several members to trace an actual sort: For each object, generation traces by how many copy operations it is removed from the original. That is, an original has generation == 1, a direct copy of an original has generation == 2, a copy of a copy has generation == 3, and so on. The other static members trace the number of creations (constructor calls), destructions, assignment comparisons, and the maximum number of objects that ever existed.
+
+This particular tracer allows us to track the pattern of entity creation and destruction as well as assignments and comparisons performed by a given template. The following test program illustrates this for the std::sort() algorithm of the C++ standard library:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{debugging/tracertest.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <algorithm>
+#include "tracer.hpp"
+
+int main()
+{
+	// prepare sample input:
+	SortTracer input[] = { 7, 3, 5, 6, 4, 2, 0, 1, 9, 8 };
+	
+	// print initial values:
+	for (int i=0; i<10; ++i) {
+		std::cerr << input[i].val() << ’ ’;
+	}
+	std::cerr << ’\n’;
+	
+	// remember initial conditions:
+	long created_at_start = SortTracer::creations();
+	long max_live_at_start = SortTracer::max_live();
+	long assigned_at_start = SortTracer::assignments();
+	long compared_at_start = SortTracer::comparisons();
+	
+	// execute algorithm:
+	std::cerr << "---[ Start std::sort() ]--------------------\n";
+	std::sort<>(&input[0], &input[9]+1);
+	std::cerr << "---[ End std::sort() ]----------------------\n";
+	
+	// verify result:
+	for (int i=0; i<10; ++i) {
+		std::cerr << input[i].val() << ’ ’;
+	}
+	std::cerr << "\n\n";
+	
+	// final report:
+	std::cerr << "std::sort() of 10 SortTracer’s"
+			<< " was performed by:\n "
+			<< SortTracer::creations() - created_at_start
+			<< " temporary tracers\n "
+			<< "up to "
+			<< SortTracer::max_live()
+			<< " tracers at the same time ("
+			<< max_live_at_start << " before)\n "
+			<< SortTracer::assignments() - assigned_at_start
+			<< " assignments\n "
+			<< SortTracer::comparisons() - compared_at_start
+			<< " comparisons\n\n";
+}
+\end{lstlisting}
+
+Running this program creates a considerable amount of output, but much can be concluded from the final report. For one implementation of the std::sort() function, we find the following:
+
+\begin{tcblisting}{commandshell={}}
+std::sort() of 10 SortTracer’s was performed by:
+ 9 temporary tracers
+ up to 11 tracers at the same time (10 before)
+ 33 assignments
+ 27 comparisons
+\end{tcblisting}
+
+For example, we see that although nine temporary tracers were created in our program while sorting, at most two additional tracers existed at any one time.
+
+Our tracer thus fulfills two roles: It proves that the standard sort() algorithm requires no more functionality than our tracer (e.g., operators == and > were not needed), and it gives us a sense of the cost of the algorithm. It does not, however, reveal much about the correctness of the sorting template.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

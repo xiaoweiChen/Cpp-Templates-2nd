@@ -1,10 +1,287 @@
 
 
-
+Each VariantChoice base class is responsible for handling the initialization, assignment, and destruction when the active value has type T. This section develops these core operations by filling in the details of the VariantChoice class template.
 
 
 \subsubsubsection{26.4.1\hspace{0.2cm}Initialization}
 
+We begin with initialization of a variant from a value of one of the types it stores. For example, initializing a Variant<int, double, string> from a double value. This is accomplished with VariantChoice constructors that accept a value of type T:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantchoiceinit.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for std::move()
+
+template<typename T, typename... Types>
+VariantChoice<T, Types...>::VariantChoice(T const& value) {
+	// place value in buffer and set type discriminator:
+	new(getDerived().getRawBuffer()) T(value);
+	getDerived().setDiscriminator(Discriminator);
+}
+
+template<typename T, typename... Types>
+VariantChoice<T, Types...>::VariantChoice(T&& value) {
+	// place moved value in buffer and set type discriminator:
+	new(getDerived().getRawBuffer()) T(std::move(value));
+	getDerived().setDiscriminator(Discriminator);
+}
+\end{lstlisting}
+
+In each case, the constructor uses the CRTP operation getDerived() to access the shared buffer, then performs a placement new to initialize the storage with a new value of type T. The first constructor copy-constructs the incoming value, while the second constructor move-constructs the incoming value.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The use of construction here prevents the use of reference types with our Variant design. This limitation could be addressed by wrapping references in a class such as std::reference\_wrapper.
+\end{tcolorbox}
+
+Afterward, the constructors set the discriminator value to indicate the (dynamic) type of the variant’s storage.
+
+Our eventual goal is to be able to initialize a variant from a value of any of its types, even accounting for implicit conversions. For example:
+
+\begin{lstlisting}[style=styleCXX]
+Variant<int, double, string> v("hello"); // implicitly converted to string
+\end{lstlisting}
+
+To accomplish this, we inherit the VariantChoice constructors into Variant itself by introducing the using declaration
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The use of a pack expansion in a using declaration (Section 4.4.5 on page 65) was introduced in C++17. Prior to C++17, inheriting these constructors would have required a recursive inheritance pattern similar to the formulation of Tuple shown in Chapter 25.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+using VariantChoice<Types, Types...>::VariantChoice...;
+\end{lstlisting}
+
+In effect, this using declaration produces Variant constructors that copy or move from each type T in Types. For a Variant<int, double, string>, the constructors are, effectively:
+
+\begin{lstlisting}[style=styleCXX]
+Variant(int const&);
+Variant(int&&);
+Variant(double const&);
+Variant(double&&);
+Variant(string const&);
+Variant(string&&);
+\end{lstlisting}
+
 \subsubsubsection{26.4.2\hspace{0.2cm}Destruction}
 
+When Variant is initialized, a value is constructed into its buffer. The destroy operation handles the destruction of that value:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantchoicedestroy.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+bool VariantChoice<T, Types...>::destroy() {
+	if (getDerived().getDiscriminator() == Discriminator) {
+		// if type matches, call placement delete:
+		getDerived().template getBufferAs<T>()->~T();
+		return true;
+	}
+	return false;
+}
+\end{lstlisting}
+
+When the discriminator matches, we explicitly destroy the contents of the buffer by calling the appropriate destructor using ->~T(). 
+
+The VariantChoice::destroy() operation is only useful when the discriminator matches. However, we generally want to destroy the value stored in the variant without regard to which type is currently active. Therefore, Variant::destroy() calls all of the VariantChoice::destroy() operations in its base classes:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantdestroy.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+void Variant<Types...>::destroy() {
+	// call destroy() on each VariantChoice base class; at most one will succeed:
+	bool results[] = {
+		VariantChoice<Types, Types...>::destroy()...
+	};
+	// indicate that the variant does not store a value
+	this->setDiscriminator(0);
+}
+\end{lstlisting}
+
+The pack expansion in the initializer of results ensures that destroy is called on each of the VariantChoice base classes. At most one of these calls will actually succeed (the one with the matching discriminator), leaving the variant empty. The empty state is indicated by setting the discriminator value to 0.
+
+The array results itself is there only to provide a context to use an initializer list; its actual values are ignored. In C++17, we can use a fold expression (discussed in Section 12.4.6 on page 207) to eliminate the need for this extraneous variable:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantdestroy17.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+void Variant<Types...>::destroy()
+{
+	// call destroy() on each VariantChoice base class; at most one will succeed:
+	(VariantChoice<Types, Types...>::destroy() , ...);
+	
+	// indicate that the variant does not store a value
+	this->setDiscriminator(0);
+}
+\end{lstlisting}
+
+
 \subsubsubsection{26.4.3\hspace{0.2cm}Assignment}
+
+Assignment builds on initialization and destruction, as illustrated by the assignment operators:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantchoiceassign.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename... Types>
+auto VariantChoice<T, Types...>::operator= (T const& value) -> Derived& {
+	if (getDerived().getDiscriminator() == Discriminator) {
+		// assign new value of same type:
+		*getDerived().template getBufferAs<T>() = value;
+	}
+	else {
+		// assign new value of different type:
+		getDerived().destroy(); // try destroy() for all types
+		new(getDerived().getRawBuffer()) T(value); // place new value
+		getDerived().setDiscriminator(Discriminator);
+	}
+	return getDerived();
+}
+
+template<typename T, typename... Types>
+auto VariantChoice<T, Types...>::operator= (T&& value) -> Derived& {
+	if (getDerived().getDiscriminator() == Discriminator) {
+		// assign new value of same type:
+		*getDerived().template getBufferAs<T>() = std::move(value);
+	}
+	else {
+		// assign new value of different type:
+		getDerived().destroy(); // try destroy() for all types
+		new(getDerived().getRawBuffer()) T(std::move(value)); // place new value
+		getDerived().setDiscriminator(Discriminator);
+	}
+	return getDerived();
+}
+\end{lstlisting}
+
+As with initialization from one of the stored value types, each VariantChoice provides an assignment operator that copies (or moves) from its stored value type into the variant’s storage. These assignment operators are inherited by Variant via the following using declaration;
+
+\begin{lstlisting}[style=styleCXX]
+using VariantChoice<Types, Types...>::operator=...;
+\end{lstlisting}
+
+The implementation of the assignment operator has two paths. If the variant already stores a value of the given type T (identified by a discriminator match), then the assignment operator will copyassign or move-assign the value of type T directly into the buffer, as appropriate. The discriminator is unchanged.
+
+If the variant does not store a value of type T, assignment requires a two-step process: Destroy the current value using Variant::destroy(), then initialize a new value of type T using placement new, setting the discriminator appropriately.
+
+There are three common problems with such a two-step assignment using placement new, which we have to take into account:
+
+\begin{itemize}
+\item
+Self-assignment
+
+\item
+Exceptions
+
+\item
+std::launder()
+\end{itemize}
+
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Self-Assignment}
+
+Self-assignment can occur for a variant v due to an expression like the following:
+
+\begin{lstlisting}[style=styleCXX]
+v = v.get<T>()
+\end{lstlisting}
+
+With the two-step process implemented above, the source value would be destroyed before it could be copied, potentially leading to memory corruption. Fortunately, self-assignment always implies that the discriminator matches, so such code will invoke the assignment operator for T rather than this two-step process.
+
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Exceptions}
+
+If the destruction of the existing value completes but the initialization of the new value throws an exception, what is the state of the variant? In our implementation, Variant::destroy() resets the discriminator value to 0. In nonexceptional cases, the discriminator will be set appropriately after initialization completes. When an exception occurs during initialization of the new value, the discriminator remains 0 to indicate that the variant does not store a value. In our design, this is the only way to produce a variant without a value.
+
+The following program illustrates how to trigger a variant with no storage by attempting to copy a value of a type whose copy constructor throws:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantexception.cpp}
+\begin{lstlisting}[style=styleCXX]
+include "variant.hpp"
+#include <exception>
+#include <iostream>
+#include <string>
+
+class CopiedNonCopyable : public std::exception
+{
+};
+
+class NonCopyable
+{
+	public:
+	NonCopyable() {
+	}
+
+	NonCopyable(NonCopyable const&) {
+		throw CopiedNonCopyable();
+	}
+	NonCopyable(NonCopyable&&) = default;
+	
+	NonCopyable& operator= (NonCopyable const&) {
+		throw CopiedNonCopyable();
+	}
+
+	NonCopyable& operator= (NonCopyable&&) = default;
+	};
+
+int main()
+{
+	Variant<int, NonCopyable> v(17);
+	try {
+		NonCopyable nc;
+		v = nc;
+	}
+		catch (CopiedNonCopyable) {
+		std::cout << "Copy assignment of NonCopyable failed." << ’\n’;
+		if (!v.is<int>() && !v.is<NonCopyable>()) {
+			std::cout << "Variant has no value." << ’\n’;
+		}
+	}
+}
+\end{lstlisting}
+
+The output of this program is:
+
+\begin{tcblisting}{commandshell={}}
+Copy assignment of NonCopyable failed.
+Variant has no value.
+\end{tcblisting}
+
+Accesses to a variant that has no value, whether they are through get() or through the visitor mechanism described in the following section, throw the EmptyVariant exception to allow programs to recover from this exceptional condition. The empty() member function checks whether the variant is in this empty state:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantempty.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+bool Variant<Types...>::empty() const {
+	return this->getDiscriminator() == 0;
+}
+\end{lstlisting}
+
+The third problem with our two-step assignment is a subtle one that the C++ standardization committee has only become aware of at the end of the C++17 standardization process. We briefly explain it next.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{std::launder()}
+
+C++ compilers generally aim at producing high-performance code, and perhaps the primary mechanism to improve the performance of generated code is to avoid repeatedly copying data from memory to registers. To do this well, a compiler has to make some assumptions and one of those assumptions is that certain kinds of data are immutable during their lifetime. That includes const data, references (which can be initialized, but not thereafter modified), and some bookkeeping data stored in polymorphic objects that is used to dispatch virtual functions, locate virtual bases classes, and handle typeid and dynamic\_cast operators.
+
+The problem with our two-step assignment procedure above is that it sneakily ends the lifetime of one object and starts the lifetime of another in the same place in a way that the compiler may not be able to recognize. Consequently, a compiler might assume that a value it acquired from the previous state of a Variant object is still valid, when, in fact, an initialization with placement new invalidated it. Without mitigation, the net result would be that a program using Variant of types with immutable data members may occasionally produce invalid results when compiled for good performance. Such bugs are usually very hard to track down (in part because they occur rarely and in part because they are not really visible in the source code).
+
+Since C++17, the solution for this issue is to access the address of the new object through std::launder(), which just returns its argument, but which causes the compiler to recognize that the resulting address points to an object that may differ from what the compiler assumes about the argument passed to std::launder(). However, note that std::launder() only fixes the address it returns, not the argument passed to std::launder(), because the compiler reasons in terms of expressions, not actual addresses (since they do not exist until run time). Therefore, after constructing a new value with placement new, we have to ensure that each following access uses the “laundered” data. That is why we always “launder” the pointer to our Variant buffer. There are ways to do a little better (such as adding an additional pointer member that refers to the buffer and gets the “laundered” address after each assignment of a new value with placement new), but they complicate the code in ways that are hard to maintain. Our approach is simple and correct, as long as we access the buffer exclusively through the getBufferAs() members.
+
+The situation with std::launder() is not wholly satisfying: It is very subtle, hard to perceive (e.g., we didn’t notice it until just before the book went to press), and hard to alleviate (i.e., std::launder() is not very easy to use). Several members of the committee have therefore asked that more work be done to find a more satisfactory solution. See [JosuttisLaunder] for a more detailed
+description of the issue.

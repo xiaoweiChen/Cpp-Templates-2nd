@@ -1,0 +1,118 @@
+The first major design aspect of our Variant type is how to manage the storage of the active value, that is, the value that is currently stored within the variant. The different types likely have different sizes and alignments to consider. Additionally, the variant will need to store a discriminator to indicate which of the possible types is the type of the active value. One simple (albeit inefficient) storage mechanism uses a tuple (see Chapter 25) directly:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantstorageastuple.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Variant {
+	public:
+	Tuple<Types...> storage;
+	unsigned char discriminator;
+};
+\end{lstlisting}
+
+Here, the discriminator acts as a dynamic index into the tuple. Only the tuple element whose static index is equal to the current discriminator value has a valid value, so when discriminator is 0, get<0>(storage) provides access to the active value; when the discriminator is 1, get<1>(storage) provides access to the active value, and so on.
+
+We could build the core variant operations is<T>() and get<T>() on top of the tuple. However, doing so is quite inefficient, because the variant itself now requires storage equal to the sum of the sizes of all of the possible value types, even though only one will be active at a time.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}There are many other problems with this approach as well, such as the implied requirement that all of the types in Types have a default constructor.
+\end{tcolorbox}
+
+A better approach overlaps the storage of each of the possible types. We could implement this by recursively unwrapping the variant into its head and tail, as we did with tuples in Section 25.1.1 on page 576, but with a union rather than a class:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantstorageasunion.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+union VariantStorage;
+
+template<typename Head, typename... Tail>
+union VariantStorage<Head, Tail...> {
+	Head head;
+	VariantStorage<Tail...> tail;
+};
+
+template<>
+union VariantStorage<> {
+};
+\end{lstlisting}
+
+Here, the union is guaranteed to have sufficient size and alignment to allow any one of the types in Types to be stored at any given time. Unfortunately, this union itself is fairly hard to work with, because most of the techniques we will use to implement Variant will use inheritance, which is not permitted for a union.
+
+Instead, we opt for a low-level representation of the variant storage: a character array large enough to hold any of the types and with suitable alignment for any of the types, which we use as a buffer to store the active value. The VariantStorage class template implements this buffer along with a discriminator:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantstorage.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <new> // for std::launder()
+
+template<typename... Types>
+class VariantStorage {
+	using LargestT = LargestType<Typelist<Types...>>;
+	alignas(Types...) unsigned char buffer[sizeof(LargestT)];
+	unsigned char discriminator = 0;
+	public:
+	unsigned char getDiscriminator() const { return discriminator; }
+	void setDiscriminator(unsigned char d) { discriminator = d; }
+	
+	void* getRawBuffer() { return buffer; }
+	const void* getRawBuffer() const { return buffer; }
+	
+	template<typename T>
+		T* getBufferAs() { return std::launder(reinterpret_cast<T*>(buffer)); }
+	template<typename T>
+		T const* getBufferAs() const {
+			return std::launder(reinterpret_cast<T const*>(buffer));
+		}
+};
+\end{lstlisting}
+
+Here, we use the LargestType metaprogram developed in Section 24.2.2 on page 552 to compute the size of the buffer, ensuring it is large enough for any of the value types. Similarly, the alignas pack expansion ensures that the buffer will have an alignment suitable for any of the value types.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Although we opted not to, we could have used a template metaprogram to compute the maximal alignment rather than using the pack expansion of alignas. The result is the same either way, but the formulation above moves the alignment computation work into the compiler.
+\end{tcolorbox}
+
+The buffer we have computed is essentially the machine representation of the union shown above. We can access a pointer to the buffer using getBuffer() and manipulate the storage through the use of explicit casts, placement new (to create new values), and explicit destruction (to destroy the values we created). If you are not familiar with std::launder() as used in getBufferAs(), it sufficient for now to know that it returns its argument unmodified; we will explain its role when we talk about assignment operators for our Variant template (see Section 26.4.3 on page 617).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

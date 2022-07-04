@@ -1,0 +1,266 @@
+To motivate expression templates, let’s start with a straightforward (or maybe naive) approach to implement templates that enable numeric array operations. A basic array template might look as follows (SArray stands for simple array):
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{exprtmpl/sarray1.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <cstddef>
+#include <cassert>
+
+template<typename T>
+class SArray {
+	public:
+	// create array with initial size
+	explicit SArray (std::size_t s)
+	: storage(new T[s]), storage_size(s) {
+		init();
+	}
+
+	// copy constructor
+	SArray (SArray<T> const& orig)
+	: storage(new T[orig.size()]), storage_size(orig.size()) {
+		copy(orig);
+	}
+
+	// destructor: free memory
+	~SArray() {
+		delete[] storage;
+	}
+
+	// assignment operator
+	SArray<T>& operator= (SArray<T> const& orig) {
+		if (&orig!=this) {
+			copy(orig);
+		}
+		return *this;
+	}
+
+	// return size
+	std::size_t size() const {
+		return storage_size;
+	}
+
+	// index operator for constants and variables
+	T const& operator[] (std::size_t idx) const {
+		return storage[idx];
+	}
+	T& operator[] (std::size_t idx) {
+		return storage[idx];
+	}
+
+	protected:
+	// init values with default constructor
+	void init() {
+		for (std::size_t idx = 0; idx<size(); ++idx) {
+			storage[idx] = T();
+		}
+	}
+
+	// copy values of another array
+	void copy (SArray<T> const& orig) {
+		assert(size()==orig.size());
+		for (std::size_t idx = 0; idx<size(); ++idx) {
+			storage[idx] = orig.storage[idx];
+		}
+	}
+
+	private:
+	T* storage; // storage of the elements
+	std::size_t storage_size; // number of elements
+};
+\end{lstlisting}
+
+The numeric operators can be coded as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{exprtmpl/sarrayops1.hpp}
+\begin{lstlisting}[style=styleCXX]
+// addition of two SArrays
+template<typename T>
+SArray<T> operator+ (SArray<T> const& a, SArray<T> const& b)
+{
+	assert(a.size()==b.size());
+	SArray<T> result(a.size());
+	for (std::size_t k = 0; k<a.size(); ++k) {
+		result[k] = a[k]+b[k];
+	}
+	return result;
+}
+
+// multiplication of two SArrays
+template<typename T>
+SArray<T> operator* (SArray<T> const& a, SArray<T> const& b)
+{
+	assert(a.size()==b.size());
+	SArray<T> result(a.size());
+	for (std::size_t k = 0; k<a.size(); ++k) {
+		result[k] = a[k]*b[k];
+	}
+	return result;
+}
+
+// multiplication of scalar and SArray
+template<typename T>
+SArray<T> operator* (T const& s, SArray<T> const& a)
+{
+	SArray<T> result(a.size());
+	for (std::size_t k = 0; k<a.size(); ++k) {
+		result[k] = s*a[k];
+	}
+	return result;
+}
+
+// multiplication of SArray and scalar
+// addition of scalar and SArray
+// addition of SArray and scalar
+...
+\end{lstlisting}
+
+Many other versions of these and other operators can be written, but these suffice to allow our example expression:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{exprtmpl/sarray1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "sarray1.hpp"
+#include "sarrayops1.hpp"
+
+int main()
+{
+	SArray<double> x(1000), y(1000);
+	...
+	x = 1.2*x + x*y;
+}
+\end{lstlisting}
+
+This implementation turns out to be very inefficient for two reasons:
+
+\begin{itemize}
+\item 
+Every application of an operator (except assignment) creates at least one temporary array (i.e., at least three temporary arrays of size 1,000 each in our example, assuming a compiler performs all the allowable temporary copy eliminations).
+
+\item 
+Every application of an operator requires additional traversals of the argument and result arrays (approximately 6,000 doubles are read, and approximately 4,000 doubles are written in our example, assuming only three temporary SArray objects are generated).
+\end{itemize}
+
+What happens concretely is a sequence of loops that operates with temporaries:
+
+\begin{lstlisting}[style=styleCXX]
+hat happens concretely is a sequence of loops that operates with temporaries:
+tmp1 = 1.2*x; // loop of 1,000 operations
+			  // plus creation and destruction of tmp1
+tmp2 = x*y; // loop of 1,000 operations
+		  // plus creation and destruction of tmp2
+tmp3 = tmp1+tmp2; // loop of 1,000 operations
+				  // plus creation and destruction of tmp3
+x = tmp3; // 1,000 read operations and 1,000 write operations
+\end{lstlisting}
+
+The creation of unneeded temporaries often dominates the time needed for operations on small arrays unless special fast allocators are used. For truly large arrays, temporaries are totally unacceptable because there is no storage to hold them. (Challenging numeric simulations often try to use all the available memory for more realistic results. If the memory is used to hold unneeded temporaries instead, the quality of the simulation will suffer.)
+
+Early implementations of numeric array libraries faced this problem and encouraged users to use computed assignments (such as +=, *=, and so forth) instead. The advantage of these assignments is that both the argument and the destination are provided by the caller, and hence no temporaries are needed. For example, we could add SArray members as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{exprtmpl/sarrayops2.hpp}
+\begin{lstlisting}[style=styleCXX]
+// additive assignment of SArray
+template<typename T>
+SArray<T>& SArray<T>::operator+= (SArray<T> const& b)
+{
+	assert(size()==orig.size());
+	for (std::size_t k = 0; k<size(); ++k) {
+		(*this)[k] += b[k];
+	}
+	return *this;
+}
+
+// multiplicative assignment of SArray
+template<typename T>
+SArray<T>& SArray<T>::operator*= (SArray<T> const& b)
+{
+	assert(size()==orig.size());
+	for (std::size_t k = 0; k<size(); ++k) {
+		(*this)[k] *= b[k];
+	}
+	return *this;
+}
+
+// multiplicative assignment of scalar
+template<typename T>
+SArray<T>& SArray<T>::operator*= (T const& s)
+{
+	for (std::size_t k = 0; k<size(); ++k) {
+		(*this)[k] *= s;
+	}
+	return *this;
+}
+\end{lstlisting}
+
+With operators such as these, our example computation could be rewritten as
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{exprtmpl/sarray2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "sarray2.hpp"
+#include "sarrayops1.hpp"
+#include "sarrayops2.hpp"
+
+int main()
+{
+	SArray<double> x(1000), y(1000);
+	...
+	// process x = 1.2*x + x*y
+	SArray<double> tmp(x);
+	tmp *= y;
+	x *= 1.2;
+	x += tmp;
+}
+\end{lstlisting}
+
+Clearly, the technique using computed assignments still falls short:
+
+\begin{itemize}
+\item 
+The notation has become clumsy.
+
+\item 
+We are still left with an unneeded temporary tmp.
+
+\item 
+The loop is split over multiple operations, requiring a total of approximately 6,000 double elements to be read from memory and 4,000 doubles to be written to memory.
+\end{itemize}
+
+What we really want is one “ideal loop” that processes the whole expression for each index:
+
+\begin{lstlisting}[style=styleCXX]
+int main()
+{
+	SArray<double> x(1000), y(1000);
+	...
+	for (int idx = 0; idx<x.size(); ++idx) {
+		x[idx] = 1.2*x[idx] + x[idx]*y[idx];
+	}
+}
+\end{lstlisting}
+
+Now we need no temporary array, and we have only two memory reads (x[idx] and y[idx]) and one memory write (x[k]) per iteration. As a result, the manual loop requires only approximately 2,000 memory reads and 1,000 memory writes.
+
+Given that on modern, high-performance computer architectures, memory bandwidth is the limiting factor for the speed of these sorts of array operations, it is not surprising that in practice the performance of the simple operator overloading approaches shown here is one or two orders of magnitude slower than the manually coded loop. However, we would like to get the performance of the manually coded loop without the cumbersome and error-prone effort of writing these loops by hand and without using a clumsy notation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

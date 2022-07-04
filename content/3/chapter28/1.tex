@@ -1,0 +1,117 @@
+When template errors occur, the problems are often found after a long chain of instantiations, leading to lengthy error messages like those discussed in Section 9.4 on page 143.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}And if you’ve made it this far in the book, no doubt you’ve encountered error messages that make that initial example look tame!
+\end{tcolorbox}
+
+To illustrate this, consider the following somewhat contrived code:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void clear (T& p)
+{
+	*p = 0; // assumes T is a pointer-like type
+}
+
+template<typename T>
+void core (T& p)
+{
+	clear(p);
+}
+
+template<typename T>
+void middle (typename T::Index p)
+{
+	core(p);
+}
+
+template<typename T>
+void shell (T const& env)
+{
+	typename T::Index i;
+	middle<T>(i);
+}
+\end{lstlisting}
+
+This example illustrates the typical layering of software development: High-level function templates like shell() rely on components like middle(), which themselves make use of basic facilities like core(). When we instantiate shell(), all the layers below it also need to be instantiated. In this example, a problem is revealed in the deepest layer: core() is instantiated with type int (from the use of Client::Index in middle()) and attempts to dereference a value of that type, which is an error.
+
+The error is only detectable at instantiation time. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class Client
+{
+	public:
+	using Index = int;
+};
+
+int main()
+{
+	Client mainClient;
+	shell(mainClient);
+}
+\end{lstlisting}
+
+A good generic diagnostic includes a trace of all the layers that led to the problems, but we observe that so much information can appear unwieldy.
+
+An excellent discussion of the core ideas surrounding this problem can be found in [StroustrupDnE], in which Bjarne Stroustrup identifies two classes of approaches to determine earlier whether template arguments satisfy a set of constraints: through a language extension or through earlier parameter use. We cover the former option in Section 17.8 on page 361 and Appendix E. The latter alternative consists of forcing any errors in shallow instantiations. This is achieved by inserting unused code with no other purpose than to trigger an error if that code is instantiated with template arguments that do not meet the requirements of deeper levels of templates.
+
+In our previous example, we could add code in shell() that attempts to dereference a value of type T::Index. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void ignore(T const&)
+{ }
+
+template<typename T>
+void shell (T const& env)
+{
+	class ShallowChecks
+	{
+		void deref(typename T::Index ptr) {
+			ignore(*ptr);
+		}
+	};
+	typename T::Index i;
+	middle(i);
+}
+\end{lstlisting}
+
+If T is a type such that T::Index cannot be dereferenced, an error is now diagnosed on the local class ShallowChecks. Note that because the local class is not actually used, the added code does not impact the running time of the shell() function. Unfortunately, many compilers will warn that ShallowChecks is not used (and neither are its members). Tricks such as the use of the ignore() template can be used to inhibit such warnings, but they add to the complexity of the code.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Concept Checking}
+
+Clearly, the development of the dummy code in our example can become as complex as the code that implements the actual functionality of the template. To control this complexity, it is natural to attempt to collect various snippets of dummy code in some sort of library. For example, such a library could contain macros that expand to code that triggers the appropriate error when a template parameter substitution violates the concept underlying that particular parameter. The most popular such library is the Concept Check Library, which is part of the Boost distribution (see [BCCL]). Unfortunately, the technique isn’t particularly portable (the way errors are diagnosed differs considerably from one compiler to another) and sometimes masks issues that cannot be captured at a higher level.
+
+Once we have concepts in C++ (see Appendix E), we have other ways to support the definition of requirements and expected behavior.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

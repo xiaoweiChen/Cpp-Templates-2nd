@@ -1,0 +1,78 @@
+In practice we write C++ programs by filling files with “code.” However, the boundary set by a file is not terribly important in the context of the ODR. Instead, what matters are translation units. Essentially, a translation unit is the result of applying the preprocessor to a file you feed to your compiler. The preprocessor drops sections of code not selected by conditional compilation directives (\#if, \#ifdef, and friends), drops comments, inserts \#included files (recursively), and expands macros.
+
+Hence, as far as the ODR is concerned, having the following two files
+
+\begin{lstlisting}[style=styleCXX]
+// header.hpp:
+#ifdef DO_DEBUG
+#define debug(x) std::cout << x << ’\n’
+#else
+#define debug(x)
+#endif
+
+void debugInit();
+
+// myprog.cpp:
+#include "header.hpp"
+int main()
+{
+	debugInit();
+	debug("main()");
+}
+\end{lstlisting}
+
+is equivalent to the following single file:
+
+\begin{lstlisting}[style=styleCXX]
+// myprog.cpp:
+void debugInit();
+int main()
+{
+	debugInit();
+}
+\end{lstlisting}
+
+Connections across translation unit boundaries are established by having corresponding declarations with external linkage in two translation units (e.g., two declarations of the global function debugInit()).
+
+Note that the concept of a translation unit is a little more abstract than just a “preprocessed file.” For example, if we were to feed a preprocessed file twice to a compiler to form a single program, it would bring into the program two distinct translation units (there is no point in doing so, however).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

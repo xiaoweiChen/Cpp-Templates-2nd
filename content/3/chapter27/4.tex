@@ -1,0 +1,111 @@
+Expression templates were developed independently by Todd Veldhuizen and David Vandevoorde (Todd coined the term) at a time when member templates were not yet part of the C++ programming language (and it seemed at the time that they would never be added to C++). This caused some problems in implementing the assignment operator: It could not be parameterized for the expression template. One technique to work around this consisted of introducing in the expression templates a conversion operator to a Copier class parameterized with the expression template but inheriting from a base class that was parameterized only in the element  type. This base class then provided a (virtual) copy\_to interface to which the assignment operator could refer.
+
+Here is a sketch of the mechanism (with the template names used in this chapter):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class CopierInterface {
+	public:
+	virtual void copy_to(Array<T, SArray<T>>&) const;
+};
+
+template<typename T, typename X>
+class Copier : public CopierInterface<T> {
+	public:
+	Copier(X const& x) : expr(x) {
+	}
+	virtual void copy_to(Array<T, SArray<T>>&) const {
+		// implementation of assignment loop
+		...
+	}
+	private:
+	X const& expr;
+};
+
+template<typename T, typename Rep = SArray<T>>
+class Array {
+	public:
+	// delegated assignment operator
+	Array<T, Rep>& operator=(CopierInterface<T> const& b) {
+		b.copy_to(rep);
+	};
+	...
+};
+
+template<typename T, typename A1, typename A2>
+class A_mult {
+	public:
+	operator Copier<T, A_Mult<T, A1, A2>>();
+	...
+};
+\end{lstlisting}
+
+This adds another level of complexity and some additional run-time cost to expression templates, but even so, the resulting performance benefits were impressive at the time.
+
+The C++ standard library contains a class template valarray that was meant to be used for applications that would justify the techniques used for the Array template developed in this chapter. A precursor of valarray had been designed with the intention that compilers aiming at the market for scientific computation would recognize the array type and use highly optimized internal code for their operations. Such compilers would have “understood” the types in some sense. However, this never happened (in part because the market in question is relatively small and in part because the problem grew in complexity as valarray became a template). Some time after the expression template technique was discovered, one of us (Vandevoorde) submitted to the C++ committee a proposal that turned valarray essentially into the Array template we developed (with many bells and whistles inspired by the existing valarray functionality). The proposal represents the first time that the concept of the Rep parameter was documented. Prior to this, the arrays with actual storage and the expression template pseudo-arrays were different templates. When client code introduced a function foo() accepting an array—for example,
+
+\begin{lstlisting}[style=styleCXX]
+double foo(Array<double> const&);
+\end{lstlisting}
+
+calling foo(1.2*x) forced the conversion for the expression template to an array with actual storage, even when the operations applied to that argument did not require a temporary. With expresssion templates embedded in the Rep argument, it is possible instead to declare
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Rep>
+double foo(Array<double, Rep> const&);
+\end{lstlisting}
+
+and no conversion happens unless one is actually needed.
+
+The valarray proposal came late in the C++ standardization process and practically rewrote all the text regarding valarray in the standard. It was rejected as a result, and instead, a few tweaks were added to the existing text to allow implementations based on expression templates. However, the exploitation of this allowance remains much more cumbersome than what was discussed here. At the time of this writing, no such implementation is known, and standard valarrays are, generally speaking, quite inefficient at performing the operations for which they were designed.
+
+Finally, it is worth observing here that many of the pioneering techniques presented in this chapter, as well as what later became known as the STL,
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The Standard Template Library (STL) revolutionized the world of C++ libraries and was later made part of the C++ standard library (see [JosuttisStdLib]).
+\end{tcolorbox}
+
+were all originally implemented on the same compiler: version
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Jaakko was also instrumental in developing the core language feature.
+\end{tcolorbox}
+
+of the Borland C++ compiler. This was perhaps the first compiler that made template programming broadly popular in the C++ programming community.
+
+Expression templates were first applied primarily for operations on array-like types. However, after a few years, new applications were found. Among the most ground-breaking were Jaakko Jarvi’s ¨ and Gary Powell’s Boost.Lambda library(see [LambdaLib]), which provided a usable lambda expression facility years before lambda expressions became a core language feature3, and Eric Niebler’s Boost.Proto library, which is a library to meta-program expression templates, with the goal of creating embedded domain-specific languages in C++. Other Boost libraries, like Boost.Fusion and Boost.Hana, also make advanced use of expression templates.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

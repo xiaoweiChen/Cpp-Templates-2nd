@@ -1,0 +1,52 @@
+The terms declaration and definition are often used interchangeably in common “programmer talk.” In the context of the ODR, however, the exact meaning of these words is important.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}We also think it’s a good habit to handle the terms carefully when exchanging ideas about C and C++. We do so throughout this book.
+\end{tcolorbox}
+
+A declaration is a C++ construct that (usually)
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Some constructs (such as static\_assert) do not introduce any names but are syntactically treated as declarations.
+\end{tcolorbox}
+
+introduces or reintroduces a name in your program. A declaration can also be a definition, depending on which entity it introduces and how it introduces it:
+
+\begin{itemize}
+\item 
+\textbf{Namespaces and namespace aliases: }
+The declarations of namespaces and their aliases are always also definitions, although the term definition is unusual in this context because the list of members of a namespace can be “extended” at a later time (unlike classes and enumeration types, for example).
+
+\item 
+\textbf{Classes, class templates, functions, function templates, member functions, and member function templates: }
+The declaration is a definition if and only if the declaration includes a brace-enclosed body associated with the name. This rule includes unions, operators, member operators, static member functions, constructors and destructors, and explicit specializations of template versions of such things (i.e., any class-like and function-like entity).
+
+\item 
+\textbf{Enumerations:}
+The declaration is a definition if and only if it includes the brace-enclosed list of enumerators.
+
+\item 
+\textbf{Local variables and nonstatic data members:}
+These entities can always be treated as definitions, although the distinction rarely matters. Note that the declaration of a function parameter in a function definition is itself a definition because it denotes a local variable, but a function parameter in a function declaration that is not a definition is not a  definition.
+
+\item 
+\textbf{Global variables:}
+If the declaration is not directly preceded by a keyword extern or if it has an initializer, the declaration of a global variable is also a definition of that variable. Otherwise, it is not a definition.
+
+\item 
+\textbf{Static data members: }
+The declaration is a definition if and only if it appears outside the class or class template of which it is a member or it is declared inline or constexpr in the class or class template.
+
+\item 
+\textbf{Explicit and partial specializations:}
+The declaration is a definition if the declaration following the template<> or template<...> is itself a definition, except that the explicit specialization of a static data member or static data member template is a definition only if it includes an initializer.
+
+\end{itemize}
+
+Other declarations are not definitions. That includes type aliases (with typedef or using), using declarations, using directives, template parameter declarations, explicit instantiation directive, static\_assert declarations, and so on.
+
+
+
+
+
+

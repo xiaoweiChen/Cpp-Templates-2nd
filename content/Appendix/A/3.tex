@@ -1,0 +1,273 @@
+
+As we implied in the introduction to this appendix, there are many details to the actual ODR. We organize the rule’s constraints by their scope.
+
+\subsubsubsection{A.3.1\hspace{0.2cm}One-per-Program Constraints}
+
+There can be at most one definition of the following items per program:
+
+\begin{itemize}
+\item 
+Noninline functions and noninline member functions (including full specializations of function templates)
+
+\item 
+Noninline variables (essentially, variables declared in a namespace scope or in the global scope, and without the static specifier)
+
+\item 
+Noninline static data members
+\end{itemize}
+
+For example, a C++ program consisting of the following two translation units is invalid:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+int counter;
+
+// translation unit 2:
+int counter; // ERROR: defined twice (ODR violation)
+\end{lstlisting}
+
+This rule does not apply to entities with internal linkage (essentially, entities declared with the static specifier in the global scope or in a namespace scope) because even when two such entities have the same name, they are considered distinct. In the same vein, entities declared in unnamed namespaces are considered distinct if they appear in distinct translation units; in C++11 and later, such entities also have internal linkage by default, but prior to C++11 they had external linkage by default. For example, the following two translation units can be combined into a valid C++ program:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+static int counter = 2; // unrelated to other translation units
+
+namespace {
+	void unique() // unrelated to other translation units
+	{ }
+}
+
+// translation unit 1:
+static int counter = 0; // unrelated to other translation units
+namespace {
+	void unique() // unrelated to other translation units
+	{
+		++counter;
+	}
+}
+
+int main()
+{
+	unique();
+}
+\end{lstlisting}
+
+Furthermore, there must be exactly one of the previously mentioned items in the program if they are used in a context other than the discarded branch of a constexpr if statement (a feature only available in C++17; see Section 14.6 on page 263). The term used in this context has a precise meaning. It indicates that there is some sort of reference to the entity somewhere in the program that causes the entity to be needed for straightforward code generation.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Various optimization techniques may cause this need to be removed, but the language doesn’t assume such optimizations.
+\end{tcolorbox}
+
+This reference can be an access to the value of a variable, a call to a function, or the address of such an entity. This reference can be explicit in the source, or it can be implicit. For example, a new expression may create an implicit call to the associated delete operator to handle situations when a constructor throws an exception requiring the unused (but allocated) memory to be cleaned up. Another example consists of copy constructors, which must be defined even if they end up being optimized away (unless the language requires them to be optimized away, which is frequently the case in C++17). Virtual functions are also implicitly used (by the internal structures that enable virtual function calls), unless they are pure virtual functions. Several other kinds of implicit uses exist, but we omit them for the sake of conciseness.
+
+Some references do not constitute a use in the previous sense: Those that appear in an unevaluated operand (e.g., the operand of a sizeof or decltype operator). The operand of a typeid operator (see Section 9.1.1 on page 138) is unevaluated only in some cases. Specifically, if a reference appears as part of a typeid operator, it is not a use in the previous sense, unless the argument of the typeid operator ends up designating a polymorphic object (an object with—possibly inherited—virtual functions). For example, consider the following single-file program:
+
+\begin{lstlisting}[style=styleCXX]
+#include <typeinfo>
+
+class Decider {
+	#if defined(DYNAMIC)
+	virtual ~Decider() {
+	}
+	#endif
+};
+
+extern Decider d;
+
+int main()
+{
+	char const* name = typeid(d).name();
+	return (int)sizeof(d);
+}
+\end{lstlisting}
+
+This is a valid program if and only if the preprocessor symbol DYNAMIC is not defined. Indeed, the variable d is not defined, but the reference to d in sizeof(d) does not constitute a use, and the reference in typeid(d) is a use only if d is an object of a polymorphic type (because, in general, it is not always possible to determine the result of a polymorphic typeid operation until run time).
+
+According to the C++ standard, the constraints described in this section do not require a diagnostic from a C++ implementation. In practice, they are usually reported by linkers as duplicate or missing definitions.
+
+\subsubsubsection{A.3.2\hspace{0.2cm}One-per-Translation Unit Constraints}
+
+No entity can be defined more than once in a translation unit. So the following example is invalid C++:
+
+\begin{lstlisting}[style=styleCXX]
+inline void f() {}
+inline void f() {} // ERROR: duplicate definition
+\end{lstlisting}
+
+This is one of the main reasons for surrounding the code in header files with guards:
+
+\begin{lstlisting}[style=styleCXX]
+// guarddemo.hpp:
+#ifndef GUARDDEMO_HPP
+#define GUARDDEMO_HPP
+...
+#endif // GUARDDEMO_HPP
+\end{lstlisting}
+
+Such guards ensure that the second time a header file is \#included, its contents are discarded, thereby avoiding the duplicate definition of a class, inline entity, template, and so on, that it may contain.
+
+The ODR also specifies that certain entities must be defined in certain circumstances. This can be the case for class types, inline functions, and inlines variables. In the following few paragraphs, we review the detailed rules.
+
+A class type X (including structs and unions) must be defined in a translation unit prior to any of the following kinds of uses in that translation unit:
+
+\begin{itemize}
+\item 
+The creation of an object of type X (e.g., as a variable declaration or through a new expression). The creation could be indirect, for example, when an object that itself contains an object of type X is being created.
+
+\item 
+The declaration of a data member of type X.
+
+\item 
+Applying the sizeof or typeid operator to an object of type X.
+
+\item 
+Explicitly or implicitly accessing members of type X.
+
+\item 
+Converting an expression to or from type X using any kind of conversion, or converting an expression to or from a pointer or reference to X (except void*) using an implicit cast, static\_cast, or dynamic\_cast.
+
+\item 
+Assigning a value to an object of type X.
+
+\item 
+Defining or calling a function with an argument or return type of type X. Just declaring such a function doesn’t need the type to be defined, however.
+\end{itemize}
+
+The rules for types also apply to types X generated from class templates, which means that the corresponding templates must be defined in those situations in which such a type X must be defined. These situations create points of instantiation or POIs (see Section 14.3.2 on page 250).
+
+Inline functions must be defined in every translation unit in which they are used (in which they are called or their address is taken). However, unlike class types, their definition can follow the point of use:
+
+\begin{lstlisting}[style=styleCXX]
+inline int notSoFast();
+
+int main()
+{
+	notSoFast();
+}
+
+inline int notSoFast()
+{ }
+\end{lstlisting}
+
+Although this is valid C++, some compilers based on older technology do not actually “inline” the call to a function with a body that has not been seen yet; hence the desired effect may not be achieved. 
+
+Just as with class templates, the use of a function generated from a parameterized function declaration (a function or member function template, or a member function of a class template) creates a point of instantiation. Unlike class templates, however, the corresponding definition can appear after the point of instantiation.
+
+The facets of the ODR explained in this subsection are generally easily verified by C++ compilers; hence the C++ standard requires that compilers issue some sort of diagnostic when one of these rules is violated. An exception is the lack of definition of a parameterized function. Such situations are typically not diagnosed.
+
+\subsubsubsection{A.3.3\hspace{0.2cm}Cross-Translation Unit Equivalence Constraints}
+
+The ability to define certain kinds of entities in more than one translation unit brings with it the potential for a new kind of error: multiple definitions that don’t match. Unfortunately, such errors are hard to detect by traditional compiler technology in which translation units are processed one at a time. Consequently, the C++ standard doesn’t mandate that differences in multiple definitions be detected or diagnosed (it does allow it, of course). If this cross-translation unit constraint is violated, however, the C++ standard qualifies this as leading to undefined behavior, which means that anything reasonable or unreasonable may happen. Typically, such undiagnosed errors may lead to program crashes or wrong results, but in principle they can also lead to other, more direct, kinds of damage (e.g., file corruption).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Version 1 of the gcc compiler actually jokingly did this by starting the game of Rogue in some situations like this.
+\end{tcolorbox}
+
+The cross-translation unit constraints specify that when an entity is defined in two different places, the two places must consist of exactly the same sequence of tokens (the keywords, operators, identifiers, and so forth, remaining after preprocessing). Furthermore, these tokens must mean the same thing in their respective context (e.g., the identifiers may need to refer to the same variable). 
+
+Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+static int counter = 0;
+inline void increaseCounter()
+{
+	++counter;
+}
+
+int main()
+{ }
+
+// translation unit 2:
+static int counter = 0;
+inline void increaseCounter()
+{
+	++counter;
+}
+\end{lstlisting}
+
+This example is in error because even though the token sequence for the inline function increaseCounter() looks identical in both translation units, they contain a token counter that refers to two different entities. Indeed, because the two variables named counter have internal linkage (static specifier), they are unrelated despite having the same name. Note that this is an error even though neither of the inline functions is actually used.
+
+Placing the definitions of entities that can be defined in multiple translation units in header files that are \#included whenever the definitions are needed ensures that token sequences are identical in almost all situations.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Occasionally, conditional compilation directives evaluate differently in different translation units. Use such directives with care. Other differences are possible too, but they are even less common.
+\end{tcolorbox}
+
+With this approach, situations in which two identical tokens refer to different things become fairly rare, but when it does happen, the resulting errors are often mysterious and hard to track.
+
+The cross-translation unit constraints apply not only to entities that can be defined in multiple places but also to default arguments in declarations. In other words, the following program has undefined behavior:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+void unused(int = 3);
+int main()
+{ }
+
+// translation unit 2:
+void unused(int = 4);
+\end{lstlisting}
+
+We should note here that the equivalence of token streams can sometimes involve subtle implicit effects. The following example is lifted (in a slightly modified form) from the C++ standard:
+
+\begin{lstlisting}[style=styleCXX]
+// translation unit 1:
+class X {
+	public:
+	X(int, int);
+	X(int, int, int);
+};
+
+X::X(int, int = 0)
+{ }
+
+class D {
+	X x = 0;
+};
+
+D d1; // X(int, int) called by D()
+
+// translation unit 2:
+class X {
+	public:
+	X(int, int);
+	X(int, int, int);
+};
+
+X::X(int, int = 0, int = 0)
+{ }
+
+class D : public X {
+	X x = 0;
+};
+
+D d2; // X(int, int, int) called by D()
+\end{lstlisting}
+
+In this example, the problem occurs because the implicitly generated default constructor of class D is different in the two translation units. One calls the X constructor taking two arguments, and the other calls the X constructor taking three arguments. If anything, this example is an additional incentive to limit default arguments to one location in the program (if possible, this location should be in a header file). Fortunately, placing default arguments on out-of-class definitions is a rare practice.
+
+There is also an exception to the rule that says that identical tokens must refer to identical entities. If identical tokens refer to unrelated constants that have the same value and the address of the resulting expressions is not used (not even implicitly by binding a reference to a variable producing the constant), then the tokens are considered equivalent. This exception allows for program structures like the following:
+
+\begin{lstlisting}[style=styleCXX]
+// header.hpp:
+#ifndef HEADER_HPP
+#define HEADER_HPP
+
+int const length = 10;
+
+class MiniBuffer {
+	char buf[length];
+	...
+};
+
+#endif // HEADER_HPP
+\end{lstlisting}
+
+In principle, when this header file is included in two different translation units, two distinct constant variables named length are created because const in this context implies static. However, such constant variables are often meant to define compile-time constant values, not a particular storage location at run time. Hence, if we don’t force such a storage  location to exist (by referring to theaddress of the variable), it is sufficient for the two constants to have the same value.
+
+Finally, a note about templates. The names in templates bind in two phases. Nondependent names bind at the point where the template is defined. For these, the equivalence rules are handled similarly to other nontemplate definitions. For names that bind at the point of instantiation, the equivalence rules must be applied at that point, and the bindings must be equivalent.
+
+
+
+
+

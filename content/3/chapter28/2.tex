@@ -1,0 +1,93 @@
+The assert() macro is often used in C++ code to check that some particular condition holds at a certain point within the program’s execution. If the assertion fails, the program is (noisily) halted so the programmer can fix the problem.
+
+The C++ static\_assert keyword, introduced with C++11, serves the same purpose but is evaluated at compile time: If the condition (which must be a constant expression) evaluates to false, the compiler will issue an error message. That error message will include a string (that is part of the static\_assert itself) indicating to the programmer what has gone wrong. For example, the following static assertion ensures that we are compiling on a platform with 64-bit pointers:
+
+\begin{lstlisting}[style=styleCXX]
+static_assert(sizeof(void*) * CHAR_BIT == 64, "Not a 64-bit platform");
+\end{lstlisting}
+
+Static assertions can be used to provide useful error messages when a template argument does not satisfy the constraints of a template. For example, using the techniques described in Section 19.4 on page 416, we can create a type trait to determine whether a given type is dereferenceable:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{debugging/hasderef.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <utility> // for declval()
+#include <type_traits> // for true_type and false_type
+
+template<typename T>
+class HasDereference {
+	private:
+	template<typename U> struct Identity;
+	template<typename U> static std::true_type
+		test(Identity<decltype(*std::declval<U>())>*);
+	template<typename U> static std::false_type
+		test(...);
+	public:
+	static constexpr bool value = decltype(test<T>(nullptr))::value;
+};
+\end{lstlisting}
+
+Now, we can introduce a static assertion into shell() that provides a better diagnostic if the shell() template from the previous section is instantiated with a type that is not dereferencable:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void shell (T const& env)
+{
+	static_assert(HasDereference<T>::value, "T is not dereferenceable");
+	typename T::Index i;
+	middle(i);
+}
+\end{lstlisting}
+
+With this change, the compiler produces a significantly more concise diagnostic indicating that the type T is not dereferenceable.
+
+Static assertions can drastically improve the user experience when working with template libraries, by making error messages both shorter and more direct.
+
+Note that you can also apply them to class templates and use all type traits discussed in Appendix D:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class C {
+	static_assert(HasDereference<T>::value, "T is not dereferenceable");
+	static_assert(std::is_default_constructible<T>::value,
+				  "T is not default constructible");
+	...
+};
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

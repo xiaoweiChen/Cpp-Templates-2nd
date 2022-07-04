@@ -1,0 +1,189 @@
+Variants can be initialized and assigned in a variety of ways, including default construction, copy- and move-construction, and copy- and move-assignment. This section details these Variant operations.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Default Initialization}
+
+Should variants provide a default constructor? If it does not, variants may be unnecessarily hard to use because one will always have to conjure an initial value (even when one does not make sense programmatically). If it does provide a default constructor, what should the semantics be?
+
+One possible semantics would be for default initialization to have no stored value, represented by the discriminator 0. However, such empty variants aren’t generally useful (e.g., one cannot visit them or find any value to extract), and making this the default initialization behavior would promote the exceptional state of an empty variant (described in Section 26.4.3 on page 613) to a common one.
+
+Alternatively, the default constructor could construct a value of some type. For our variant, we follow the semantics of C++17’s std::variant<> and default-construct a value of the first type in the list of types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantdefaultctor.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+Variant<Types...>::Variant() {
+	*this = Front<Typelist<Types...>>();
+}
+\end{lstlisting}
+
+This approach is simple and predictable and avoids the introduction of empty variants in most uses. The behavior can be seen in this program:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantdefaultctor.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include "variant.hpp"
+#include <iostream>
+
+int main()
+{
+	Variant<int, double> v;
+	if (v.is<int>()) {
+		std::cout << "Default-constructed v stores the int "
+		<< v.get<int>() << ’\n’;
+	}
+	Variant<double, int> v2;
+	if (v2.is<double>()) {
+		std::cout << "Default-constructed v2 stores the double "
+				<< v2.get<double>() << ’\n’;
+	}
+}
+\end{lstlisting}
+
+which produces the following output:
+
+\begin{tcblisting}{commandshell={}}
+Default-constructed v stores the int 0
+Default-constructed v2 stores the double 0
+\end{tcblisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Copy/Move Initialization}
+
+Copy and move initialization are more interesting. To copy a source variant, we need to determine which type it is currently storing, copy-construct that value into the buffer, and set that discriminator. Fortunately, visit() handles decoding the active value of the source variant, and the copyassignment operator inherited from VariantChoice will copy-construct a value into the buffer, leading to a compact implementation:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Despite the syntactic use of the assignment operator (=) within the lambda, the actual implementations of the assignment operator in VariantChoice will perform a copy-construction because the variant initially stores no value.
+\end{tcolorbox}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantcopyctor.hpp}
+\begin{lstlisting}[style=styleCXX]
+emplate<typename... Types>
+Variant<Types...>::Variant(Variant const& source) {
+	if (!source.empty()) {
+		source.visit([&](auto const& value) {
+						*this = value;
+					});
+	}
+}
+\end{lstlisting}
+
+The move constructor is similar, differing only in its use of std::move when visiting the source variant and move-assigning from the source value:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantcopyctor.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+Variant<Types...>::Variant(Variant&& source) {
+	if (!source.empty()) {
+		std::move(source).visit([&](auto&& value) {
+									*this = std::move(value);
+								});
+	}
+}
+\end{lstlisting}
+
+One particularly interesting aspect of the visitor-based implementation is that it also works for the templated forms of the copy and move operations. For example, the templated copy constructor can be defined as follows:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantcopyctortmpl.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+template<typename... SourceTypes>
+Variant<Types...>::Variant(Variant<SourceTypes...> const& source) {
+	if (!source.empty()) {
+		source.visit([&](auto const& value) {
+							*this = value;
+						});
+	}
+}
+\end{lstlisting}
+
+Because this code visits the source, the assignment to *this will occur for each of the types of the source variant. Overload resolution for this assignment will find the most appropriate destination type for each source type, performing implicit conversions as necessary. The following example illustrates construction and assignment from different variant types:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantpromote.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "variant.hpp"
+#include <iostream>
+#include <string>
+
+int main()
+{
+	Variant<short, float, char const*> v1((short)123);
+	
+	Variant<int, std::string, double> v2(v1);
+	
+	std::cout << "v2 contains the integer " << v2.get<int>() << ’\n’;
+	
+	v1 = 3.14f;
+	Variant<double, int, std::string> v3(std::move(v1));
+	std::cout << "v3 contains the double " << v3.get<double>() << ’\n’;
+	
+	v1 = "hello";
+	Variant<double, int, std::string> v4(std::move(v1));
+	std::cout << "v4 contains the string " << v4.get<std::string>() << ’\n’;
+}
+\end{lstlisting}
+
+Constructing or assigning from v1 to either v2 or v3 involves integral promotions (short to int), floating-point promotions (float to double), and user-defined conversions (char const* to std::string). The output of this program is as follows:
+
+\begin{tcblisting}{commandshell={}}
+v2 contains the integer 123
+v3 contains the double 3.14
+v4 contains the string hello
+\end{tcblisting}
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Assignment}
+
+The Variant assignment operators are similar to the copy and move constructors above. Here, we illustrate only the copy assignment operator:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantcopyassign.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+Variant<Types...>& Variant<Types...>::operator= (Variant const& source) {
+	if (!source.empty()) {
+		source.visit([&](auto const& value) {
+			*this = value;
+		});
+	}
+	else {
+		destroy();
+	}
+	return *this;
+}
+\end{lstlisting}
+
+The only interesting addition is in the else branch: When the source variant contains no value (indicated by a discriminator 0), we destroy the value of the destination, implicitly setting its discriminator to 0.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

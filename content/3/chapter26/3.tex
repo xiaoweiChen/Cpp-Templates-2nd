@@ -1,0 +1,88 @@
+The most basic queries for a Variant type are to ask it whether its active value is of a particular type T and to access the active value when its type is known. The is() member function, defined below, determines whether the variant currently stores a value of type T:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantis.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+template<typename T>
+bool Variant<Types...>::is() const
+{
+	return this->getDiscriminator() ==
+	VariantChoice<T, Types...>::Discriminator;
+}
+\end{lstlisting}
+
+Given a variant v, v.is<int>() will determine whether v’s active value is of type int. The check is straightforward, comparing the discriminator in the variant’s storage against the Discriminator value of the corresponding VariantChoice base class.
+
+If the type we’re looking for (T) is not found in the list, the VariantChoice base class will fail to instantiate because FindIndexOfT will not contain a value member, causing an (intentional) compilation failure in is<T>(). This prevents user errors where the user is asking for a type that cannot possibly be stored in the variant.
+
+The get() member function extracts a reference to the stored value. It must be provided with the type to extract (e.g., v.get<int>()), and is only valid when the variant’s active value is of that type:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantget.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include <exception>
+
+class EmptyVariant : public std::exception {
+};
+
+template<typename... Types>
+template<typename T>
+T& Variant<Types...>::get() & {
+	if (empty()) {
+		throw EmptyVariant();
+	}
+
+	assert(is<T>());
+	return *this->template getBufferAs<T>();
+}
+\end{lstlisting}
+
+When the variant does not store a value (its discriminator is 0), get() throws an EmptyVariant exception. The conditions under which the discriminator can be 0 are themselves due to exceptions, and are described in Section 26.4.3 on page 613. Other attempts to get a value from the variant with the wrong type are programmer errors detected by a failed assertion.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

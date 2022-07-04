@@ -1,0 +1,169 @@
+
+Now that we have a solution to the storage problem for variants, we design the Variant type itself. As with the Tuple type, we use inheritance to provide behavior for each type in the list of Types. Unlike with Tuple, however, these base classes do not have storage. Rather, each of the base classes uses the Curiously Recurring Template Pattern (CRTP) discussed in Section 21.2 on page 495 to access the shared variant storage through the most-derived type.
+
+The class template VariantChoice, defined below, provides the core operations needed to operate on the buffer when the variant’s active value is (or will be) of type T:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variantchoice.hpp}
+\begin{lstlisting}[style=styleCXX]
+#include "findindexof.hpp"
+template<typename T, typename... Types>
+class VariantChoice {
+	using Derived = Variant<Types...>;
+	Derived& getDerived() { return *static_cast<Derived*>(this); }
+	Derived const& getDerived() const {
+		return *static_cast<Derived const*>(this);
+	}
+	protected:
+	// compute the discriminator to be used for this type
+	constexpr static unsigned Discriminator =
+		FindIndexOfT<Typelist<Types...>, T>::value + 1;
+	public:
+	VariantChoice() { }
+	VariantChoice(T const& value); // see variantchoiceinit.hpp
+	VariantChoice(T&& value); // see variantchoiceinit.hpp
+	bool destroy(); // see variantchoicedestroy.hpp
+	Derived& operator= (T const& value); // see variantchoiceassign.hpp
+	Derived& operator= (T&& value); // see variantchoiceassign.hpp
+};
+\end{lstlisting}
+
+The template parameter pack Types will contain all of the types in the Variant. It allows us to form the Derived type (for CRTP) and therefore to provide the downcast operation getDerived(). The second interesting use of Types is to find the location of the particular type T in the list of Types, which we accomplish with the metafunction FindIndexOfT:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/findindexof.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename List, typename T, unsigned N = 0,
+		bool Empty = IsEmpty<List>::value>
+struct FindIndexOfT;
+
+// recursive case:
+template<typename List, typename T, unsigned N>
+struct FindIndexOfT<List, T, N, false>
+: public IfThenElse<std::is_same<Front<List>, T>::value,
+					std::integral_constant<unsigned, N>,
+					FindIndexOfT<PopFront<List>, T, N+1>>
+{
+};
+
+// basis case:
+template<typename List, typename T, unsigned N>
+struct FindIndexOfT<List, T, N, true>
+{
+};
+\end{lstlisting}
+
+This index value is used to compute the discriminator value corresponding to T; we will return to the specific discriminator values later.
+
+The skeleton of Variant follows, illustrating the relationship among Variant, VariantStorage, and VariantChoice:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variant-skel.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Variant
+	: private VariantStorage<Types...>,
+	private VariantChoice<Types, Types...>...
+{
+	template<typename T, typename... OtherTypes>
+		friend class VariantChoice; // enable CRTP
+	...
+};
+\end{lstlisting}
+
+As previously noted, each Variant has a single, shared VariantStorage base class.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The base classes are private because their presence is not part of the public interface. The friend template is required to allow the asDerived() functions in VariantChoice to perform the downcast to Variant.
+\end{tcolorbox}
+
+Additionally, it has some number of VariantChoice base classes, which are produced from the following nested pack expansion (see Section 12.4.4 on page 205):
+
+\begin{lstlisting}[style=styleCXX]
+VariantChoice<Types, Types...>...
+\end{lstlisting}
+
+In this instance we have two expansions: The outer expansion produces a VariantChoice base class for each type T in Types by expanding the first reference to Types. The inner expansion, which expands the second occurrence of Types, additionally passes all of the types in Types along to each VariantChoice base class. For a
+
+\begin{lstlisting}[style=styleCXX]
+Variant<int, double, std::string>
+\end{lstlisting}
+
+this produces the following set of VariantChoice base classes:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}One interesting effect of distinguishing the VariantChoice base classes of a given Variant only by the type T is that it prevents duplicate types. A Variant<double, int, double> will produce a compiler error indicating that a class cannot directly inherit from the same base class (in this case, VariantChoice<double, double, int, double>, twice).
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+VariantChoice<int, int, double, std::string>,
+VariantChoice<double, int, double, std::string>,
+VariantChoice<std::string, int, double, std::string>
+\end{lstlisting}
+
+The discriminator values for these three base classes will be 1, 2, and 3, respectively. When the discriminator member of the variant’s storage matches the discriminator of a particular VariantChoice base class, that base class is responsible for managing the active value.
+
+The discriminator value 0 is reserved for cases where the variant contains no value, which is an odd state that can only be observed when an exception is thrown during assignment. Throughout the discussion of Variant, we will be careful to cope with a discriminator value of 0 (and set it when appropriate), but we leave the discussion of this case to Section 26.4.3 on page 613.
+
+The complete definition of Variant is listed on the following page. The following sections will describe the implementation of each of the members of Variant.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{variant/variant.hpp}
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+class Variant
+: private VariantStorage<Types...>,
+  private VariantChoice<Types, Types...>...
+{
+	template<typename T, typename... OtherTypes>
+	friend class VariantChoice;
+	
+	public:
+	template<typename T> bool is() const; // see variantis.hpp
+	template<typename T> T& get() &; // see variantget.hpp
+	template<typename T> T const& get() const&; // see variantget.hpp
+	template<typename T> T&& get() &&; // see variantget.hpp
+	
+	// see variantvisit.hpp:
+	template<typename R = ComputedResultType, typename Visitor>
+		VisitResult<R, Visitor, Types&...> visit(Visitor&& vis) &;
+	template<typename R = ComputedResultType, typename Visitor>
+		VisitResult<R, Visitor, Types const&...> visit(Visitor&& vis) const&;
+	template<typename R = ComputedResultType, typename Visitor>
+		VisitResult<R, Visitor, Types&&...> visit(Visitor&& vis) &&;
+	
+	using VariantChoice<Types, Types...>::VariantChoice...;
+	Variant(); // see variantdefaultctor.hpp
+	Variant(Variant const& source); // see variantcopyctor.hpp
+	Variant(Variant&& source); // see variantmovector.hpp
+	template<typename... SourceTypes>
+		Variant(Variant<SourceTypes...> const& source); // variantcopyctortmpl.hpp
+	template<typename... SourceTypes>
+		Variant(Variant<SourceTypes...>&& source);
+	
+	using VariantChoice<Types, Types...>::operator=...;
+	Variant& operator= (Variant const& source); // see variantcopyassign.hpp
+	Variant& operator= (Variant&& source);
+	template<typename... SourceTypes>
+		Variant& operator= (Variant<SourceTypes...> const& source);
+	template<typename... SourceTypes>
+		Variant& operator= (Variant<SourceTypes...>&& source);
+	
+	bool empty() const;
+	
+	~Variant() { destroy(); }
+	void destroy(); // see variantdestroy.hpp
+};
+\end{lstlisting}
+
+
+
+
+
+
+
+

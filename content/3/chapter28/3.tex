@@ -1,0 +1,110 @@
+When writing a template, it is challenging to ensure that the template definition will compile for any template arguments that meet the specified constraints for that template. Consider a simple find() algorithm that looks for a value within an array, along with its documented constraints:
+
+\begin{lstlisting}[style=styleCXX]
+// T must be EqualityComparable, meaning:
+// two objects of type T can be compared with == and the result converted to bool
+template<typename T>
+int find(T const* array, int n, T const& value);
+\end{lstlisting}
+
+We could imagine the following straightforward implementation of this function template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+int find(T const* array, int n, T const& value) {
+	int i = 0;
+	while(i != n && array[i] != value)
+		++i;
+	return i;
+}
+\end{lstlisting}
+
+There are two problems with this template definition, both of which will manifest as compilation errors when given certain template arguments that technically meet the requirements of the template yet behave slightly differently than the template author expected. We will use the notion of archetypes to test our implementation’s use of its template parameters against the requirements specified by the find() template.
+
+Archetypes are user-defined classes that can be used as template arguments to test a template definition’s adherence to the constraints it imposes on its corresponding template parameter. An archetype is specifically crafted to satisfy the requirements of the template in the most minimal way possible, without providing any extraneous operations. If instantiation of a template definition with the archetype as its template argument succeeds, then we know that the template definition does not try to use any operations not explicitly required by the template.
+
+For example, here is an archetype intended to meet the requirements of the EqualityComparable concept described in the documentation of our find() algorithm:
+
+\begin{lstlisting}[style=styleCXX]
+class EqualityComparableArchetype
+{
+};
+
+class ConvertibleToBoolArchetype
+{
+	public:
+	operator bool() const;
+};
+
+ConvertibleToBoolArchetype
+operator==(EqualityComparableArchetype const&,
+			EqualityComparableArchetype const&);
+\end{lstlisting}
+
+The EqualityComparableArchetype has no member functions or data, and the only operation it provides is an overloaded operator== to satisfy the equality requirement for find(). That operator== is itself rather minimal, returning another archetype, ConvertibleToBoolArchetype, whose only defined operation is a user-defined conversion to bool.
+
+The EqualityComparableArchetype clearly meets the stated requirements of the find() template, so we can check whether the implementation of find() held up its end of the contract by attempting to instantiate find() with EqualityComparableArchetype:
+
+\begin{lstlisting}[style=styleCXX]
+template int find(EqualityComparableArchetype const*, int,
+EqualityComparableArchetype const&);
+\end{lstlisting}
+
+The instantiation of find<EqualityComparableArchetype> will fail, indicating that we have found our first problem: the EqualityComparable description requires only ==, but the implementation of find() relies on comparing T objects with !=. Our implementation would have worked with most user-defined types, which implement == and != as a pair, but it was actually incorrect. Archetypes are intended to find such problems early in the development of template libraries.
+
+Altering the implementation of find() to use equality rather than inequality solves this first problem, and the find() template will successfully compile with the archetype:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The program will compile but it will not link, because we never defined the overloaded operator==. That’s typical for archetypes, which are generally meant only as compile-time checking aids.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+int find(T const* array, int n, T const& value) {
+	int i = 0;
+	while(i != n && !(array[i] == value))
+		++i;
+	return i;
+}
+\end{lstlisting}
+
+Uncovering the second problem in find() using archetypes requires a bit more ingenuity. Note that the new definition of find() now applies the ! operator directly to the result of ==. In the case of our archetype, this relies on the user-defined conversion to bool and the built-in logical negation operator!. A more careful implementation of ConvertibleToBoolArchetype poisons operator! so that it cannot be used improperly:
+
+\begin{lstlisting}[style=styleCXX]
+class ConvertibleToBoolArchetype
+{
+	public:
+	operator bool() const;
+	bool operator!() = delete; // logical negation was not explicitly required
+};
+\end{lstlisting}
+
+We could extend this archetype further, using deleted functions
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Deleted functions are functions that participate in overload resolution as normal functions. If they are selected by overload resolution, however, the compiler produces an error.
+\end{tcolorbox}
+
+to also poison the operators \&\& and || to help find problems in other template definitions. Typically, a template implementer will want to develop an archetype for every concept identified in the template library and then use these archetypes to test each template definition against its stated requirements.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

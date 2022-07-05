@@ -1,14 +1,346 @@
+
+The previous section covers most of the overloading situations encountered in everyday C++ programming. There are, unfortunately, many more rules and exceptions to these rules—more than is reasonable to present in a book that is not really about function overloading in C++. Nonetheless, we discuss some of them here in part because they apply somewhat more often than other rules and in part to provide a sense for how deep the details go.
+
 \subsubsubsection{C.3.1\hspace{0.2cm}Prefer Nontemplates or More Specialized Temp}
 
+When all other aspects of overload resolution are equal, a nontemplate function is preferred over an instance of a template (it doesn’t matter whether that instance is generated from the generic template definition or whether it is provided as an explicit specialization). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> int f(T); // #1
+void f(int); // #2
+
+int main()
+{
+	return f(7); // ERROR: selects #2 , which doesn’t return a value
+}
+\end{lstlisting}
+
+This example also clearly illustrates that overload resolution normally does not involve the return type of the selected function. 
+
+However, when other aspects of overload resolution slightly differ (such as having different const and reference qualifiers), first the general rules of overload resolution apply. This effect can easily accidentally cause surprising behavior, when member functions are defined that accept the same arguments as copy or move constructors. See Section 16.2.4 on page 333 for details.
+
+If the choice is between two templates, then the most specialized of the templates is preferred (provided one is actually more specialized than the other). See Section 16.2.2 on page 330 for a thorough explanation of this concept. One special case of this distinction occurs when two templates only differ in that one adds a trailing parameter packs: The template without the pack is considered more specialized and is therefore preferred if it matches the call. Section 4.1.2 on page 57 discusses an example of this situation.
 
 \subsubsubsection{C.3.2\hspace{0.2cm}Conversion Sequences}
 
+An implicit conversion can, in general, be a sequence of elementary conversions. Consider the following code example:
+
+\begin{lstlisting}[style=styleCXX]
+class Base {
+	public:
+	operator short() const;
+};
+
+class Derived : public Base {
+};
+
+void count(int);
+
+void process(Derived const& object)
+{
+	count(object); // matches with user-defined conversion
+}
+\end{lstlisting}
+
+The call count(object) works because object can implicitly be converted to int. However, this conversion requires several steps:
+
+\begin{enumerate}
+\item 
+ A conversion of object from Derived const to Base const (this is a glvalue conversion; it preserves the identity of the object)
+
+\item 
+A user-defined conversion of the resulting Base const object to type short
+
+\item 
+A promotion of short to int
+\end{enumerate}
+
+This is the most general kind of conversion sequence: a standard conversion (a derived-to-base conversion, in this case), followed by a user-defined conversion, followed by another standard conversion. Although there can be at most one user-defined conversion in a conversion sequence, it is also possible to have only standard conversions
+.
+An important principle of overload resolution is that a conversion sequence that is a subsequence of another conversion sequence is preferable over the latter sequence. If there were an additional candidate function
+
+\begin{lstlisting}[style=styleCXX]
+void count(short);
+\end{lstlisting}
+
+in the example, it would be preferred for the call count(object) because it doesn’t require the third step (promotion) in the conversion sequence.
+
 \subsubsubsection{C.3.3\hspace{0.2cm}Pointer Conversions}
 
+Pointers and pointers to members undergo various special standard conversions, including
+
+\begin{itemize}
+\item 
+Conversions to type bool
+
+\item 
+Conversions from an arbitrary pointer type to void*
+
+\item 
+Derived-to-base conversions for pointers
+
+\item 
+Base-to-derived conversions for pointers to members
+\end{itemize}
+
+Although all of these can cause a “match with standard conversions only,” they are not ranked equally.
+
+First, conversions to type bool (both from a regular pointer and from a pointer to a member) are considered worse than any other kind of standard conversion. For example:
+
+\begin{lstlisting}[style=styleCXX]
+void check(void*); // #1
+void check(bool); // #2
+
+void rearrange (Matrix* m)
+{
+	check(m); // calls #1
+	...
+}
+\end{lstlisting}
+
+Within the category of regular pointer conversions, a conversion to type void* is considered worse than a conversion from a derived class pointer to a base class pointer. Furthermore, if conversions to different classes related by inheritance exist, a conversion to the most derived class is preferred. Here is another short example:
+
+\begin{lstlisting}[style=styleCXX]
+class Interface {
+	...
+};
+
+class CommonProcesses : public Interface {
+	...
+};
+
+class Machine : public CommonProcesses {
+	...
+};
+
+char* serialize(Interface*); // #1
+char* serialize(CommonProcesses*); // #2
+
+void dump (Machine* machine)
+{
+	char* buffer = serialize(machine); // calls #2
+	...
+}
+\end{lstlisting}
+
+The conversion from Machine* to CommonProcesses* is preferred over the conversion to Interface*, which is fairly intuitive.
+
+A very similar rule applies to pointers to members: Between two conversions of related pointerto-member types, the “closest base” in the inheritance graph (i.e., the least derived) is preferred.
 
 \subsubsubsection{C.3.4\hspace{0.2cm}Initializer Lists}
 
+Initializer list arguments (initializers passed with in curly braces) can be converted to several different kinds of parameters: initializer\_lists, class types with an initializer\_list constructor, class types for which the initializer list elements can be treated as (separate) parameters to a constructor, or aggregate class types whose members can be  initialized by the elements of the initializer list. The following program illustrates these cases:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{overload/initlist.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <initializer_list>
+#include <string>
+#include <vector>
+#include <complex>
+#include <iostream>
+
+void f(std::initializer_list<int>) {
+	std::cout << "#1\n";
+}
+
+void f(std::initializer_list<std::string>) {
+	std::cout << "#2\n";
+}
+
+void g(std::vector<int> const& vec) {
+	std::cout << "#3\n";
+}
+
+void h(std::complex<double> const& cmplx) {
+	std::cout << "#4\n";
+}
+
+struct Point {
+	int x, y;
+};
+void i(Point const& pt) {
+	std::cout << "#5\n";
+}
+
+int main()
+{
+	f({1, 2, 3}); // prints #1
+	f({"hello", "initializer", "list"}); // prints #2
+	g({1, 1, 2, 3, 5}); // prints #3
+	h({1.5, 2.5}); // prints #4
+	i({1, 2}); // prints #5
+}	
+\end{lstlisting}
+
+In the first two calls to f(), the initializer list arguments are converted to std::initializer\_list values, which involves converting each of the elements in the initializer list to the element type of the std::initializer\_list. In the first call, all of the elements are already of type int, so no additional conversion is needed. In the second call, each string literal in the initializer list is converted to a std::string by calling the string(char const*) constructor. The third call (to g()) performs a user-defined conversion using the std::vector(std::initializer\_list<int>) constructor. The next call invokes the std::complex(double, double) constructor, as if one had written std::complex<double>(1.5, 2.5). The final call performs aggregate initialization, which initializes the members of an instance of the Point class from the elements in the initializer list without calling a constructor of Point.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Aggregate initialization is only available for aggregate types in C++, which are either arrays or simple, Clike classes that have no user-provided constructors, no private or protected nonstatic data members, no base classes, and no virtual functions. Prior to C++14, they must also not have a default member initializer. Since C++17, public base classes are allowed.
+\end{tcolorbox}
+
+There are several interesting overloading cases for initializer lists. When converting an initializer list to an initializer\_list, as in the first two calls of the example above, the overall conversion is given the same ranking as the worst conversion from any given element in the initializer list to the element type of the initializer\_list (i.e., the T in initializer\_list<T>). This can lead to some surprises, as in the following example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{overload/initlist.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <initializer_list>
+#include <iostream>
+
+void ovl(std::initializer_list<char>) { // #1
+	std::cout << "#1\n";
+}
+
+void ovl(std::initializer_list<int>) { // #2
+	std::cout << "#2\n";
+}
+
+int main()
+{
+	ovl({’h’, ’e’, ’l’, ’l’, ’o’, ’\0’}); // prints #1
+	ovl({’h’, ’e’, ’l’, ’l’, ’o’, 0}); // prints #2
+}
+\end{lstlisting}
+
+In the first call to ovl(), each element of the initializer list is a char. For the first ovl() function, these elements require no conversion at all. For the second ovl() function, these elements require a promotion to int. Because the perfect match is better than a promotion, the first call to ovl() calls \#1.
+
+In the second call to ovl(), the first five elements are of type char, while the last is of type int. For the first ovl() function, the char elements are a perfect match, but the int requires a standard conversion, so the overall conversion is ranked as a standard conversion. For the second ovl() function, the char elements require a promotion to int, while the int element at the end is a perfect match. The overall conversion for the second ovl() function is ranked as a promotion, which makes it a better candidate than the first ovl(), even though only a single element’s conversion was better.
+
+When initializing an object of class type with an initializer list, as in the calls to g() and h() in our original example, overload resolution proceeds in two phases:
+
+\begin{enumerate}
+\item
+The first phase considers only initializer-list constructors, that is, constructors whose only nondefaulted parameter is of type  std::initializer\_list<T> for some type T (after removing the top-level reference and const/volatile qualifiers).
+
+\item
+If no such viable constructor is found, then the second phase considers all other constructors.
+\end{enumerate}
+
+There is one exception to this rule: If the initializer list is empty and the class has a default constructor, the first phase is skipped so that the default constructor will be called.
+
+The effect of this rule is that any initializer-list constructor is a better match than any noninitializer-list constructor, as illustrated in the following example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{overload/initlistctor.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <initializer_list>
+#include <string>
+#include <iostream>
+
+template<typename T>
+struct Array {
+	Array(std::initializer_list<T>) {
+		std::cout << "#1\n";
+	}
+	Array(unsigned n, T const&) {
+		std::cout << "#2\n";
+	}
+};
+
+void arr1(Array<int>) {
+}
+
+void arr2(Array<std::string>) {
+}
+
+int main()
+{
+	arr1({1, 2, 3, 4, 5}); // prints #1
+	arr1({1, 2}); // prints #1
+	arr1({10u, 5}); // prints #1
+	arr2({"hello", "initializer", "list"}); // prints #1
+	arr2({10, "hello"}); // prints #2
+}
+\end{lstlisting}
+
+Note that the second constructor, which takes an unsigned and a T const\&, won’t be called when initializing an Array<int> object from an initializer list, because its initializer-list constructor is always a better match than its non-initializer-list  constructors. With Array<string>, however, the non-initializer-list constructor will be called when the initializer-list constructor is not viable, as in the second call to arr2().
+
 \subsubsubsection{C.3.5\hspace{0.2cm}Functors and Surrogate Functions}
 
+We mentioned earlier that after the name of a function has been looked up to create an initial overload set, the set is tweaked in various ways. An interesting situation arises when a call expression refers to a class type object instead of a function. In this case, there are two potential additions to the overload set.
+
+The first addition is straightforward: Any member operator () (the function call operator) is added to the set. Objects with such operators are usually called functors or function objects (see Section 11.1 on page 157).
+
+A less obvious addition occurs when a class type object contains an implicit conversion operator to a pointer to a function type (or to a reference to a function type).
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The conversion operator must also be applicable in the sense that, for example, a non-const operator is not considered for const objects.
+\end{tcolorbox}
+
+In such situations, a dummy (or surrogate) function is added to the overload set. This surrogate function candidate is considered to have an implied parameter of the type designated by the conversion function, in addition to parameters with types corresponding to the parameter types in the destination type of that conversion function. An example makes this much clearer:
+
+\begin{lstlisting}[style=styleCXX]
+using FuncType = void (double, int);
+
+class IndirectFunctor {
+	public:
+	...
+	void operator()(double, double) const;
+	operator FuncType*() const;
+};
+
+void activate(IndirectFunctor const& funcObj)
+{
+	funcObj(3, 5); // ERROR: ambiguous
+}
+\end{lstlisting}
+
+The call funcObj(3, 5) is treated as a call with three arguments: funcObj, 3, and 5. The viable function candidates include the member operator() (which is treated as having parameter types IndirectFunctor const\&, double, and double) and a surrogate function with parameters of type FuncType*, double, and int. The surrogate function has a worse match for the implied parameter (because it requires a user-defined conversion), but it has a better match for the last parameter; hence the two candidates cannot be ordered. The call is therefore ambiguous.
+
+Surrogate functions are in the most obscure corners of C++ and rarely occur in practice (fortunately).
 
 \subsubsubsection{C.3.6\hspace{0.2cm}Other Overloading Contexts}
+
+So far we have discussed overloading in the context of determining which function should be called in a call expression. However, there are a few other contexts in which a similar selection must be made.
+
+The first context occurs when the address of a function is needed. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+int numElems(Matrix const&); // #1
+int numElems(Vector const&); // #2
+...
+int (*funcPtr)(Vector const&) = numElems; // selects #2
+\end{lstlisting}
+
+Here, the name numElems refers to an overload set, but only the address of one function in that set is desirable. Overload resolution then attempts to match the required function type (the type of funcPtr in this example) to the available candidates.
+
+The other context that requires overload resolution is initialization. Unfortunately, this is a topic fraught with subtleties that are beyond what can be covered in an appendix. However, a simple example at least illustrates this additional aspect of overload resolution:
+
+\begin{lstlisting}[style=styleCXX]
+#include <string>
+class BigNum {
+	public:
+	BigNum(long n); // #1
+	BigNum(double n); // #2
+	BigNum(std::string const&); // #3
+	...
+	operator double(); // #4
+	operator long(); // #5
+	...
+};
+
+void initDemo()
+{
+	BigNum bn1(100103); // selects #1
+	BigNum bn2("7057103224.095764"); // selects #3
+	int in = bn1; // selects #5
+}
+\end{lstlisting}
+
+In this example, overload resolution is needed to select the appropriate constructor or conversion operator. Specifically, the initialization of bn1 calls the first constructor, that of bn2 calls the third constructor, and that of in() calls operator long(). In  the vast majority of cases, the overloading rules produce the intuitive result. However, the  details of these rules are quite complex, and some applications rely on some of the more obscure corners in this area of the C++ language.
+
+
+
+
+
+
+
+
+
+
+
+
+

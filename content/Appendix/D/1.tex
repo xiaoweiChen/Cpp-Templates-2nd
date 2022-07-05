@@ -1,4 +1,195 @@
+
+When using type traits, in general you have to include the header file <type\_traits>:
+
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+\end{lstlisting}
+
+Then the usage depends on whether a trait yields a type or a value:
+
+\begin{itemize}
+\item 
+For traits yielding a type, you can access the type as follows:
+\begin{lstlisting}[style=styleCXX]
+typename std::trait<...>::type
+std::trait_t<...> // since C++14
+\end{lstlisting}
+
+\item 
+For traits yielding a value, you can access the value as follows:
+\begin{lstlisting}[style=styleCXX]
+std::trait<...>::value
+std::trait<...>() // implicit conversion to its type
+std::trait_v<...> // since C++17
+\end{lstlisting}
+\end{itemize}
+
+For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{utils/traits1.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+#include <iostream>
+
+int main()
+{
+	int i = 42;
+	std::add_const<int>::type c = i; // c is int const
+	std::add_const_t<int> c14 = i; // since C++14
+	static_assert(std::is_const<decltype(c)>::value, "c should be const");
+	
+	std::cout << std::boolalpha;
+	std::cout << std::is_same<decltype(c), int const>::value // true
+			<< ’\n’;
+	std::cout << std::is_same_v<decltype(c), int const> // since C++17
+			<< ’\n’;
+	if (std::is_same<decltype(c), int const>{}) { // implicit conversion to bool
+		std::cout << "same \n";
+	}
+}
+\end{lstlisting}
+
+See Section 2.8 on page 40 for the way the \_t version of the traits is defined. See Section 5.6 on page 83 for the way the \_v version of the traits is defined.
+
 \subsubsubsection{D.1.1\hspace{0.2cm}std::integral\_constant and std::bool\_constant}
 
+All standard type traits yielding a value are derived from an instance of the helper class template std::integral\_constant:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<typename T, T val>
+	struct integral_constant {
+		static constexpr T value = val; // value of the trait
+		using value_type = T; // type of the value
+		using type = integral_constant<T,val>;
+		constexpr operator value_type() const noexcept {
+			return value;
+		}
+		constexpr value_type operator() () const noexcept { // since C++14
+			return value;
+		}
+	};
+}
+\end{lstlisting}
+
+That is:
+
+\begin{itemize}
+\item 
+We can use the value\_type member to query the type of the result. Since many traits yielding a value are predicates, value\_type is often just bool.
+
+\item 
+Objects of traits types have an implicit type conversion to the type of the value produced by the type trait.
+
+\item 
+In C++14 (and later), objects of type traits are also function objects (functors), where a “function call” yields their value.
+
+\item 
+The type member just yields the underlying integral\_constant instance.
+\end{itemize}
+
+If traits yield Boolean values, they can also use
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Before C++17, the standard did not include the alias template bool\_constant<>. std::true\_type and std::false\_type did exist in C++11 and C++14, however, and were specified directly in terms of integral\_constant<bool,true> and integral\_constant<bool,false>, respectively.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	template<bool B>
+	using bool_constant = integral_constant<bool, B>; // since C++17
+	using true_type = bool_constant<true>;
+	using false_type = bool_constant<false>;
+}
+\end{lstlisting}
+
+so that these Boolean traits inherit from std::true\_type if a specific property applies and from std::false\_type if not. That also means that their corresponding value members equal true or false. Having distinct types for the resulting values true and false allows us to tag-dispatch based on the result of type traits (see Section 19.3.3 on page 411 and Section 20.2 on page 467).
+
+For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{utils/traits2.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <type_traits>
+#include <iostream>
+
+int main()
+{
+	using namespace std;
+	cout << boolalpha;
+	
+	using MyType = int;
+	cout << is_const<MyType>::value << ’\n’; // prints false
+	
+	using VT = is_const<MyType>::value_type; // bool
+	using T = is_const<MyType>::type; // integral_constant<bool, false>
+	cout << is_same<VT,bool>::value << ’\n’; // prints true
+	cout << is_same<T, integral_constant<bool, false>>::value
+		<< ’\n’; // prints true
+	cout << is_same<T, bool_constant<false>>::value
+		<< ’\n’; // prints true (not valid	
+				// prior to C++17)
+				
+	auto ic = is_const<MyType>(); // object of trait type
+	cout << is_same<decltype(ic), is_const<int>>::value << ’\n’; // true
+	cout << ic() << ’\n’; // function call (prints false)
+	
+	static constexpr auto mytypeIsConst = is_const<MyType>{};
+	if constexpr(mytypeIsConst) { // compile-time check since C++17 => false
+		... // discarded statement
+	}
+	static_assert(!std::is_const<MyType>{}, "MyType should not be const");
+}
+\end{lstlisting}
+
+Having distinct types for non-Boolean integral\_constant specializations is also useful in various metaprogramming contexts. See the discussion of the similar type CTValue in Section 24.3 on page 566 and its use for element access of tuples in Section 25.6 on page 599.
 
 \subsubsubsection{D.1.2\hspace{0.2cm}Things You Should Know When Using Traits}
+
+There are a few things to note when using traits:
+
+\begin{itemize}
+\item 
+Type traits apply directly to types, but decltype allows us to also test the properties of expressions, variables, and functions. Recall, however, that decltype produces the type of a variable or function only if the entity is named with no extraneous parentheses; for any other expression, it yields a type that also reflects the type category of the expression. For example:
+
+\begin{lstlisting}[style=styleCXX]
+void foo (std::string&& s)
+{
+	// check the type of s:
+	std::is_lvalue_reference<decltype(s)>::value // false
+	std::is_rvalue_reference<decltype(s)>::value // true, as declared
+	// check the value category of s used as expression:
+	std::is_lvalue_reference<decltype((s))>::value // true, s used as lvalue
+	std::is_rvalue_reference<decltype((s))>::value // false
+}
+\end{lstlisting}
+
+See Section 15.10.2 on page 298 for details.
+
+\item 
+Some traits may have nonintuitive behavior for the novice programmer. See Section 11.2.1 on page 164 for examples.
+
+\item 
+Some traits have requirements or preconditions. Violating these preconditions results in undefined behavior.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The C++ standardization committee considered a proposal for C++17 to require that violations of preconditions of type traits always result in a compile-time error. However, because some type traits currently have requirements that are stronger than strictly necessary (such as always requiring complete types) this change was postponed.
+\end{tcolorbox}
+
+See Section 11.2.1 on page 164 for some examples.
+
+\item 
+Many traits require complete types (see Section 10.3.1 on page 154). To be able to use them for incomplete types, we can sometimes introduce templates to defer their evaluation (see Section 11.5 on page 171 for details).
+
+\item 
+Sometimes the logical operators \&\&, ||, and ! cannot be used to define new type traits based on other type traits. In addition, dealing with traits that might fail can become a problem or at least cause some drawbacks. For this reason, special traits are provided that allow us to logically combine Boolean traits. See Section D.6 on page 734 for details.
+
+\item 
+Although the standard alias templates (ending with \_t or \_v) are often convenient, they also have downsides, making them unusable in some metaprogramming contexts. See Section 19.7.3 on page 446 for details.
+\end{itemize}
+
+
+

@@ -175,3 +175,81 @@ int main()
 
 
 \subsubsubsection{C.2.2\hspace{0.2cm}Refining the Perfect Match}
+
+For an argument of type X, there are four common parameter types that constitute a perfect match: X, X\&, X const\&, and X\&\& (X const\&\& is also an exact match, but it is rarely used). However, it is rather common to overload a function on two kinds of references. Prior to C++11, this meant cases like these:
+
+\begin{lstlisting}[style=styleCXX]
+void report(int&); // #1
+void report(int const&); // #2
+
+int main()
+{
+	for (int k = 0; k<10; ++k) {
+		report(k); // calls #1
+	}
+	report(42); // calls #2
+}
+\end{lstlisting}
+
+Here, the version without the extra const is preferred for lvalues, whereas only the version with const can match rvalues.
+
+With the addition of rvalue references in C++11, another common case of two perfect matches needing to be distinguished is illustrated by the following example:
+
+\begin{lstlisting}[style=styleCXX]
+struct Value {
+	...
+};
+void pass(Value const&); // #1
+void pass(Value&&); // #2
+
+void g(X&& x)
+{
+	pass(x); // calls #1 , because x is an lvalue
+	pass(X()); // calls #2 , because X() is an rvalue (in fact, prvalue)
+	pass(std::move(x)); // calls #2 , because std::move(x) is an rvalue (in fact, xvalue)
+}
+\end{lstlisting}
+
+This time, the version taking an rvalue reference is considered a better match for rvalues, but it cannot match lvalues.
+
+Note that this also applies to the implicit argument of a member function call:
+
+\begin{lstlisting}[style=styleCXX]
+class Wonder {
+	public:
+	void tick(); // #1
+	void tick() const; // #2
+	void tack() const; // #3
+};
+
+void run(Wonder& device)
+{
+	device.tick(); // calls #1
+	device.tack(); // calls #3 , because there is no non-const version
+				  // of Wonder::tack()
+}
+\end{lstlisting}
+
+Finally, the following modification of our earlier example illustrates that two perfect matches can also create an ambiguity if you overload with and without references:
+
+\begin{lstlisting}[style=styleCXX]
+void report(int); // #1
+void report(int&); // #2
+void report(int const&); // #3
+
+int main()
+{
+	for (int k = 0; k<10; ++k) {
+		report(k); // ambiguous: #1 and #2 match equally well
+	}
+report(42); // ambiguous: #1 and #3 match equally well
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+

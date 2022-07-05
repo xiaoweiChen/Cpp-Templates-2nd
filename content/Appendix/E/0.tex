@@ -1,0 +1,13 @@
+For many years now, C++ language designers have explored how to constrain the parameters of templates. For example, in our prototypical max() template, we’d like to state up front that it shouldn’t be called for types that aren’t comparable using the less-than operator. Other templates may want to require that they be instantiated with types that are valid “iterator” types (for some formal definition of that term) or valid “arithmetic” type (which could be a broader notion than the set of built-in arithmetic types).
+
+A concept is a named set of constraints on one or more template parameters. While C++11 was being a developed, a very rich concept system was designed for it, but integrating the feature into the language specification ended up requiring too many committee resources, and that version of concepts was eventually dropped from C++11. Some time later, a different design of the feature was proposed, and it appears that it will eventually make it into the language in some form. In fact, just before this book went to press, the standardization committee voted to integrate the new design into the draft for C++20. In this appendix, we describe the main elements of that newer design.
+
+We already motivated and showed some applications of concepts in the main chapter of this book:
+
+\begin{itemize}
+\item 
+Section 6.5 on page 103 illustrates how to use requirements and concepts to enable a constructor only if the template parameter is convertible to a string (to avoid accidentally using a constructor as a copy constructor).
+
+\item 
+Section 18.4 on page 377 shows how to use concepts to specify and require constraints on types used to represent geometric objects.
+\end{itemize}

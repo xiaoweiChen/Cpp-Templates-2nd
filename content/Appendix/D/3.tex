@@ -250,6 +250,797 @@ In contrast to is\_trivial<>, volatile members are allowed, references are not a
 Requires that the given type (for arrays, the basic type) is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
 \end{itemize}
 
+std::is\_pod < T >::value
+
+\begin{itemize}
+\item 
+Yields true if T is a plain old datatype (POD).
+
+\item 
+Objects of such types can be copied by copying the underlying storage (e.g., using memcpy()).
+
+\item
+Same as: 
+\begin{lstlisting}[style=styleCXX]
+is_trivial_t<T> && is_standard_layout_v<T>
+\end{lstlisting}
+
+\item
+Yields false for:
+
+\begin{itemize}
+\item [-]
+classes that don’t have a trivial default constructor, copy/move constructor, copy/move assignment, or destructor
+
+\item [-]
+classes that have virtual members or virtual base classes
+
+\item [-]
+classes that have volatile or reference members
+
+\item [-]
+classes that have members in different (base) classes or with different access
+
+\item [-]
+the types of lambda expressions (called closure types)
+
+\item [-]
+functions
+
+\item [-]
+void
+
+\item [-]
+types composed from these types
+\end{itemize}
+
+\item
+Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+\end{itemize}
+
+std::is\_literal\_type < T >::value
+
+\begin{itemize}
+\item 
+Yields true if the given type is a valid return type for a constexpr function (which notably excludes any type requiring nontrivial destruction).
+
+\item 
+Yields true if T is a literal type:
+
+\begin{itemize}
+\item [-]
+a scalar type (integral, float, enum, pointer; see is\_scalar() on page 707)
+
+\item [-]
+a reference
+
+\item [-]
+a class type with at least one constexpr constructor that is not a copy/move constructor in each (base) class, no user-defined or virtual destructor in any (base) class or member, and where every initialization for nonstatic data members is a constant expression
+
+\item [-]
+an array of such types
+\end{itemize}
+
+\item 
+Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+
+\item 
+Note that this trait is deprecated since C++17 because “it is too weak to be used meaningfully in generic code. What is really needed is the ability to know that a specific construction would produce constant initialization.”
+\end{itemize}
+
+std::is\_empty < T >::value
+
+\begin{itemize}
+\item 
+Yields true if T is a class type but not a union type, whose objects hold no data.
+
+\item 
+Yields true if T is defined as class or struct with
+
+\begin{itemize}
+\item [-]
+no nonstatic data members other than bit-fields of length 0
+
+\item [-]
+no virtual member functions
+
+\item [-]
+no virtual base classes
+
+\item [-]
+no nonempty base classes
+\end{itemize}
+
+\item 
+Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+\end{itemize}
+
+std::is\_polymorphic < T >::value
+
+\begin{itemize}
+\item 
+Yields true if T is polymorphic class type (a class that declares or inherits a virtual function).
+
+\item 
+Requires that the given type is either complete (see Section 10.3.1 on page 154) or neither a class nor a struct.
+\end{itemize}
+
+
+std::is\_abstract < T >::value
+
+\begin{itemize}
+\item 
+Yields true if T is an abstract class type (a class for which no objects can be created because it has at least one pure virtual member function).
+
+\item 
+Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+\end{itemize}
+
+std::is\_final < T >::value
+
+\begin{itemize}
+\item 
+Yields true if T is an final class type (a class or union that can’t serve as a base class because it is declared as being final).
+
+\item 
+For all non-class/union types such as int, it returns false (thus, this is not the same as something like is derivable).
+
+\item 
+Requires that the given type T is either complete (see Section 10.3.1 on page 154) or neither class/struct nor union.
+
+\item 
+Available since C++14.
+\end{itemize}
+
+std::has\_virtual\_destructor < T >::value
+
+\begin{itemize}
+\item 
+Yields true if type T has a virtual destructor.
+
+\item 
+Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+\end{itemize}
+
+std::has\_unique\_object\_representations < T >::value
+
+\begin{itemize}
+\item 
+Yields true if any two objects of type T have the same object representation in memory. That is, two identical values are always represented using the same sequence of byte values.
+
+\item 
+Objects with this property can produce a reliable hash value by hashing the associated byte sequence (there is no risk that some bits not participating in the object value might differ from one case to another).
+
+\item 
+Requires that the given type is trivially copyable (see Section D.3.1 on page 712) and either complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
+
+\item 
+Available since C++17.
+\end{itemize}
+
+std::alignment\_of < T >::value
+
+\begin{itemize}
+\item 
+Yields the alignment value of an object of type T as std::size\_t (for arrays, the element type; for references, the referenced type).
+
+\item 
+Same as: alignof(T)
+
+\item 
+This trait was introduced in C++11 before the alignof(...) construct. It is still useful, however, because the trait can be passed around as a class type, which is useful for certain metaprograms.
+
+\item 
+Requires that alignof(T) is a valid expression.
+
+\item 
+Use aligned\_union<> to get the common alignment of multiple types (see Section D.5 on page 733).
+\end{itemize}
+
+std::rank < T >::value
+
+\begin{itemize}
+\item 
+Yields the number of dimensions of an array of type T as std::size\_t.
+
+\item 
+Yields 0 for all other types.
+
+\item 
+Pointers do not have any associated dimensions. An unspecified bound in an array type does specify a dimension. (As usual, a function parameter declared with an array type does not have an actual array type, and std::array is not an array type either. See Section D.2.1 on page 704.)
+For example:
+\begin{lstlisting}[style=styleCXX]
+int a2[5][7];
+rank_v<decltype(a2)>; // yields 2
+rank_v<int*>; // yields 0 (no array)
+extern int p1[];
+rank_v<decltype(p1)>; // yields1
+\end{lstlisting}
+\end{itemize}
+
+std::extent < T >::value
+
+std::extent < T, IDX >::value
+
+\begin{itemize}
+\item 
+Yields the size of the first or IDX-th dimension of an array of type T as std::size\_t.
+
+\item 
+Yields 0, if T is not an array, the dimension doesn’t exist, or the size of the dimension is not known.
+
+\item 
+See Section 19.8.2 on page 453 for implementation details.
+\begin{lstlisting}[style=styleCXX]
+int a2[5][7];
+extent_v<decltype(a2)>; // yields 5
+extent_v<decltype(a2),0>; // yields 5
+extent_v<decltype(a2),1>; // yields 7
+extent_v<decltype(a2),2>; // yields 0
+extent_v<int*>; // yields 0
+extern int p1[];
+extent_v<decltype(p1)>; // yields 0
+\end{lstlisting}
+\end{itemize}
+
+std::underlying\_type < T >::type
+
+\begin{itemize}
+\item 
+Yields the underlying type of an enumeration type T.
+
+\item 
+Requires that the given type is a complete (see Section 10.3.1 on page 154) enumeration type. For all other types, it has undefined behavior.
+\end{itemize}
+
+std::is\_invocable < T, Args... >::value
+
+std::is\_nothrow\_invocable < T, Args... >::value
+
+\begin{itemize}
+\item 
+Yields true if T is usable as a callable for Args... (with the guarantee that no exception is thrown).
+
+\item 
+That is, we can use these traits to test whether we can call or std::invoke() the given callable T for Args.... (See Section 11.1 on page 157 for details about callables and std::invoke().)
+
+\item 
+Requires that all given types are complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
+
+\item 
+For example:
+\begin{lstlisting}[style=styleCXX]
+struct C {
+	bool operator() (int) const {
+		return true;
+	}
+};
+std::is_invocable<C>::value // false
+std::is_invocable<C,int>::value // true
+std::is_invocable<int*>::value // false
+std::is_invocable<int(*)()>::value // true
+\end{lstlisting}
+
+\item 
+Available since C++17.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Late in the standardization process of C++17, is\_invocable was renamed from is\_callable.
+\end{tcolorbox}
+\end{itemize}
+
+std::is\_invocable\_r < RET\_T, T, Args... >::value
+
+std::is\_nothrow\_invocable\_r < RET\_T, T, Args... >::value
+
+\begin{itemize}
+\item 
+Yields true if we can use T as a callable for Args... (with the guarantee that no exception is thrown), returning a value convertible to type RET\_T.
+
+\item 
+That is, we can use these traits to test whether we can call or std::invoke() the passed callable T for Args... and use the return value as RET\_T. (See Section 11.1 on page 157 for details about callables and std::invoke().)
+
+\item 
+Requires that all passed types are complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
+
+\item 
+For example:
+\begin{lstlisting}[style=styleCXX]
+struct C {
+	bool operator() (int) const {
+		return true;
+	}
+};
+std::is_invocable_r<bool,C,int>::value // true
+std::is_invocable_r<int,C,long>::value // true
+std::is_invocable_r<void,C,int>::value // true
+std::is_invocable_r<char*,C,int>::value // false
+std::is_invocable_r<long,int(*)(int)>::value // false
+std::is_invocable_r<long,int(*)(int),int>::value // true
+std::is_invocable_r<long,int(*)(int),double>::value // true
+\end{lstlisting}
+
+\item 
+Available since C++17.
+\end{itemize}
+
+std::invoke\_result < T, Args... >::value
+
+std::result\_of < T, Args... >::value
+
+\begin{itemize}
+\item 
+Yields the return type of the callable T called for Args....
+
+\item 
+Note that the syntax is slightly different:
+
+\begin{itemize}
+\item [-]
+To invoke\_result<> you have to pass both the type of the callable and the type of the arguments as parameters.
+
+\item [-]
+To result\_of<> you have to pass a “function declaration” using the corresponding types.
+\end{itemize}
+
+\item 
+If no call is possible, there is no type member defined, so that using it is an error (which might SFINAE out a function template using it in its declaration; see Section 8.4 on page 131).
+
+\item 
+That is, we can use these traits to get the return type obtained when we call or std::invoke() the given callable T for Args.... (See Section 11.1 on page 157 for details about callables and std::invoke().)
+
+\item 
+Requires that all given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array type of unknown bound.
+
+\item 
+invoke\_result<> is available since C++17 and replaces result\_of<>, which is deprecated since C++17, because invoke\_result<> provides some improvements such the easier syntax and permitting abstract types for T.
+
+\item 
+For example:
+\begin{lstlisting}[style=styleCXX]
+std::string foo(int);
+
+using R0 = typename std::result_of<decltype(&foo)(int)>::type; // C++11
+using R1 = std::result_of_t<decltype(&foo)(int)>; // C++14
+using R2 = std::invoke_result_t<decltype(foo), int>; // C++17
+
+struct ABC {
+	virtual ~ABC() = 0;
+	void operator() (int) const {
+	}
+};
+
+using T1 = typename std::result_of<ABC(int)>::type; // ERROR: ABC is abstract
+using T2 = typename std::invoke_result<ABC, int>::type; // OK since C++17
+\end{lstlisting}
+
+See Section 11.1.3 on page 163 for a full example.
+
+\end{itemize}
+
 \subsubsubsection{D.3.2\hspace{0.2cm}Test for Specific Operations}
 
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Trait}                                                   & \textbf{Effect}                                                                                                                                         \\ \hline
+		is\_constructible\textless{}T,Args... \textgreater{}             & Can initialize type T with types Args                                                                                                                   \\ \hline
+		is\_trivially\_constructible\textless{}T,Args... \textgreater{}  & Can trivially initialize type T with types Args                                                                                                         \\ \hline
+		is\_nothrow\_constructible\textless{}T,Args... \textgreater{}    & \begin{tabular}[c]{@{}l@{}}Can initialize type T with types Args and that operation\\ can’t throw\end{tabular}                                          \\ \hline
+		is\_default\_constructible\textless{}T \textgreater{}            & Can initialize T without arguments                                                                                                                      \\ \hline
+		is\_trivially\_default\_constructible\textless{}T \textgreater{} & Can trivially initialize T without arguments                                                                                                            \\ \hline
+		is\_nothrow\_default\_constructible\textless{}T \textgreater{}   & \begin{tabular}[c]{@{}l@{}}Can initialize T without arguments and that operation\\ can’t throw\end{tabular}                                             \\ \hline
+		is\_copy\_constructible\textless{}T \textgreater{}               & Can copy a T                                                                                                                                            \\ \hline
+		is\_trivially\_copy\_constructible\textless{}T \textgreater{}    & Can trivially copy a T                                                                                                                                  \\ \hline
+		is\_nothrow\_copy\_constructible\textless{}T \textgreater{}      & Can copy a T and that operation can’t throw                                                                                                             \\ \hline
+		is\_move\_constructible\textless{}T \textgreater{}               & Can move a T                                                                                                                                            \\ \hline
+		is\_trivially\_move\_constructible\textless{}T \textgreater{}    & Can trivially move a T                                                                                                                                  \\ \hline
+		is\_nothrow\_move\_constructible\textless{}T \textgreater{}      & Can move a T and that operation can’t throw                                                                                                             \\ \hline
+		is\_assignable\textless{}T,T2 \textgreater{}                     & Can assign type T2 to type T                                                                                                                            \\ \hline
+		is\_trivially\_assignable\textless{}T,T2 \textgreater{}          & Can trivially assign type T2 to type T                                                                                                                  \\ \hline
+		is\_nothrow\_assignable\textless{}T,T2 \textgreater{}            & \begin{tabular}[c]{@{}l@{}}Can assign type T2 to type T and that operation can’t\\ throw\end{tabular}                                                   \\ \hline
+		is\_copy\_assignable\textless{}T \textgreater{}                  & Can copy assign a T                                                                                                                                     \\ \hline
+		is\_trivially\_copy\_assignable\textless{}T \textgreater{}       & Can trivially copy assign a T                                                                                                                           \\ \hline
+		is\_nothrow\_copy\_assignable\textless{}T \textgreater{}         & Can copy assign a T and that operation can’t throw                                                                                                      \\ \hline
+		is\_move\_assignable\textless{}T \textgreater{}                  & Can move assign a T                                                                                                                                     \\ \hline
+		is\_trivially\_move\_assignable\textless{}T \textgreater{}       & Can trivially move assign a T                                                                                                                           \\ \hline
+		is\_nothrow\_move\_assignable\textless{}T \textgreater{}         & Can move assign a T and that operation can’t throw                                                                                                      \\ \hline
+		is\_destructible\textless{}T \textgreater{}                      & Can destroy a T                                                                                                                                         \\ \hline
+		is\_trivially\_destructible\textless{}T \textgreater{}           & Can trivially destroy a T                                                                                                                               \\ \hline
+		is\_nothrow\_destructible\textless{}T \textgreater{}             & Can trivially destroy a T and that operation can’t throw                                                                                                \\ \hline
+		is\_swappable\textless{}T \textgreater{}                         & Can call swap() for this type (since C++17)                                                                                                             \\ \hline
+		is\_nothrow\_swappable\textless{}T \textgreater{}                & \begin{tabular}[c]{@{}l@{}}Can call swap() for this type and that operation can’t\\ throw (since C++17)\end{tabular}                                    \\ \hline
+		is\_swappable\_with\textless{}T,T2 \textgreater{}                & \begin{tabular}[c]{@{}l@{}}Can call swap() for these two types with specific value\\ category (since C++17)\end{tabular}                                \\ \hline
+		is\_nothrow\_swappable\_with\textless{}T,T2 \textgreater{}       & \begin{tabular}[c]{@{}l@{}}Can call swap() for these two types with specific value\\ category and that operation can’t throw (since C++17)\end{tabular} \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{center}
+Table D.4. Traits to Check for Specific Operations
+\end{center}
+
+Table D.4 lists the type traits that allow us to check for some specific operations. The forms with is\_trivially\_... additionally check whether all (sub-)operations called for the object, members, or base classes are trivial (neither user-defined nor virtual). The forms with is\_nothrow\_... additionally check whether the called operation guarantees not to throw. Note that all is\_...\_constructible checks imply the corresponding is\_...\_destructible check. For example:
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textit{utils/isconstructible.cpp}
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+class C {
+	public:
+	C() { // default constructor has no noexcept
+	}
+	virtual ~C() = default; // makes C nontrivial
+};
+
+int main()
+{
+	using namespace std;
+	cout << is_default_constructible_v<C> << ’\n’; // true
+	cout << is_trivially_default_constructible_v<C> << ’\n’; // false
+	cout << is_nothrow_default_constructible_v<C> << ’\n’; // false
+	cout << is_copy_constructible_v<C> << ’\n’; // true
+	cout << is_trivially_copy_constructible_v<C> << ’\n’; // true
+	cout << is_nothrow_copy_constructible_v<C> << ’\n’; // true
+	cout << is_destructible_v<C> << ’\n’; // true
+	cout << is_trivially_destructible_v<C> << ’\n’; // false
+	cout << is_nothrow_destructible_v<C> << ’\n’; // true
+}
+\end{lstlisting}
+
+Due to the definition of a virtual constructor, all operations are no longer trivial. And because we define a default constructor without noexcept, it might throw. All other operations, by default, guarantee not to throw.
+
+std::is\_constructible < T, Args... >::value
+
+std::is\_trivially\_constructible < T, Args... >::value
+
+std::is\_nothrow\_constructible < T, Args... >::value
+
+\begin{itemize}
+\item 
+Yields true if an object of type T can be initialized with arguments of the types given by Args... (without using a nontrivial operation or with the guarantee that no exception is thrown). That is, the following must be valid:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}See Section 11.2.3 on page 166 for the effect of std::declval
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+T t(std::declval<Args>()...);
+\end{lstlisting}
+
+\item
+A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or  is\_nothrow\_destructible\_v<T> yields true).
+
+\item
+Requires that all given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_constructible_v<int> // true
+is_constructible_v<int,int> // true
+is_constructible_v<long,int> // true
+is_constructible_v<int,void*> // false
+is_constructible_v<void*,int> // false
+is_constructible_v<char const*,std::string> // false
+is_constructible_v<std::string,char const*> // true
+is_constructible_v<std::string,char const*,int,int> // true
+\end{lstlisting}
+
+\item
+Note that is\_convertible has a different order for the source and destination types.
+\end{itemize}
+
+std::is\_default\_constructible < T >::value
+
+std::is\_trivially\_default\_constructible < T >::value
+
+std::is\_nothrow\_default\_constructible < T >::value
+
+\begin{itemize}
+\item 
+Yields true if an object of type T can be initialized without any argument for initialization (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item 
+Same as is\_constructible\_v<T>, is\_trivially\_constructible\_v<T>, or is\_nothrow\_constructible\_v<T>, respectively.
+
+\item 
+A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+
+\item 
+Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+\end{itemize}
+
+std::is\_copy\_constructible < T >::value
+
+std::is\_trivially\_copy\_constructible < T >::value
+
+std::is\_nothrow\_copy\_constructible < T >::value
+
+\begin{itemize}
+\item 
+Yields true if an object of type T can be created by copying another value of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item 
+Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+
+\item 
+Provided T is a referenceable type, same as is\_constructible<T,T const\&>::value, is\_trivially\_constructible<T,T const\&>::value, or is\_nothrow\_constructible<T,T const\&>::value respectively.
+
+\item 
+To find out whether an object of T would be copy constructible from an rvalue of type T, use is\_constructible<T,T\&\&>, and so on.
+
+\item 
+A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+
+\item 
+Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+
+\item 
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_copy_constructible_v<int> // yields true
+is_copy_constructible_v<void> // yields false
+is_copy_constructible_v<std::unique_ptr<int>> // yields false
+is_copy_constructible_v<std::string> // yields true
+is_copy_constructible_v<std::string&> // yields true
+is_copy_constructible_v<std::string&&> // yields false
+// in contrast to:
+is_constructible_v<std::string,std::string> // yields true
+is_constructible_v<std::string&,std::string&> // yields true
+is_constructible_v<std::string&&,std::string&&> // yields true
+\end{lstlisting}
+
+\end{itemize}
+
+std::is\_move\_constructible < T >::value
+
+std::is\_trivially\_move\_constructible < T >::value
+
+std::is\_nothrow\_move\_constructible < T >::value
+
+\begin{itemize}
+\item 
+Yields true if an object of type T can be created from an rvalue of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item 
+Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+
+\item 
+Provided T is a referenceable type, same as is\_constructible<T,T\&\&>::value, is\_trivially\_constructible<T,T\&\&>::value, or is\_nothrow\_constructible<T,T\&\&>::value respectively.
+
+\item 
+A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+
+\item 
+Note that there is no way to check whether a move constructor throws without being able to call it directly for an object of type T. It is not enough for the constructor to be public and not deleted; it also requires that the corresponding type is not an abstract class (references or pointers to abstract classes work fine).
+
+\item 
+See Section 19.7.2 on page 443 for implementation details.
+
+\item 
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_move_constructible_v<int> // yields true
+is_move_constructible_v<void> // yields false
+is_move_constructible_v<std::unique_ptr<int>> // yields true
+is_move_constructible_v<std::string> // yields true
+is_move_constructible_v<std::string&> // yields true
+is_move_constructible_v<std::string&&> // yields true
+// in contrast to:
+is_constructible_v<std::string,std::string> // yields true
+is_constructible_v<std::string&,std::string&> // yields true
+is_constructible_v<std::string&&,std::string&&> // yields true
+\end{lstlisting}
+\end{itemize}
+
+std::is\_assignable < TO, FROM >::value
+
+std::is\_trivially\_assignable < TO, FROM >::value
+
+std::is\_nothrow\_assignable < TO, FROM >::value
+
+\begin{itemize}
+\item
+Yields true if an object of type FROM can be assigned to an object of type TO (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item
+Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+
+\item
+Note that is\_assignable\_v<> for a nonreference, nonclass type as first type always yields false, because such types produce prvalues. That is, the statement 42 = 77; is not valid. For class types, however, rvalues may be assigned to, given an appropriate assignment operator (due to an old rule that non-const member functions can be invoked on rvalues of class types).
+
+\item
+Note that is\_convertible has a different order for the source and destination types.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_assignable_v<int,int> // yields false
+is_assignable_v<int&,int> // yields true
+is_assignable_v<int&&,int> // yields false
+is_assignable_v<int&,int&> // yields true
+is_assignable_v<int&&,int&&> // yields false
+is_assignable_v<int&,long&> // yields true
+is_assignable_v<int&,void*> // yields false
+is_assignable_v<void*,int> // yields false
+is_assignable_v<void*,int&> // yields false
+is_assignable_v<std::string,std::string> // yields true
+is_assignable_v<std::string&,std::string&> // yields true
+is_assignable_v<std::string&&,std::string&&> // yields true
+\end{lstlisting}
+\end{itemize}
+
+std::is\_copy\_assignable < T >::value
+
+std::is\_trivially\_copy\_assignable < T >::value
+
+std::is\_nothrow\_copy\_assignable < T >::value
+
+\begin{itemize}
+\item
+Yields true if a value of type T can be (copy-)assigned to an object of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item
+Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+ 
+\item
+Provided T is a referenceable type, same as is\_assignable<T\&,T const\&>::value, is\_trivially\_assignable<T\&,T const\&>::value, or is\_nothrow\_assignable<T\&,T const\&>::value respectively.
+
+\item
+To find out whether an rvalue of type T can be copy assigned to another rvalue of type T, use is\_assignable<T\&\&,T\&\&>, and so on.
+
+
+\item
+Note that void, built-in array types, and classes with deleted copy-assignment operator cannot be copy-assigned.
+
+\item
+Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_copy_assignable_v<int> // yields true
+is_copy_assignable_v<int&> // yields true
+is_copy_assignable_v<int&&> // yields true
+is_copy_assignable_v<void> // yields false
+is_copy_assignable_v<void*> // yields true
+is_copy_assignable_v<char[]> // yields false
+is_copy_assignable_v<std::string> // yields true
+is_copy_assignable_v<std::unique_ptr<int>> // yields false
+\end{lstlisting}
+\end{itemize}
+
+std::is\_move\_assignable < T >::value
+
+std::is\_trivially\_move\_assignable < T >::value
+
+std::is\_nothrow\_move\_assignable < T >::value
+
+\begin{itemize}
+\item
+Yields true if an rvalue of type T can be move-assigned to an object of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+
+\item
+Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+
+\item
+Provided T is a referenceable type, same as is\_assignable<T\&,T\&\&>::value, is\_trivially\_assignable<T\&,T\&\&>::value, or is\_nothrow\_assignable<T\&,T\&\&>::value respectively.
+
+\item
+Note that void, built-in array types, and classes with deleted move-assignment operator cannot be move-assigned.
+
+\item
+Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bound.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_move_assignable_v<int> // yields true
+is_move_assignable_v<int&> // yields true
+is_move_assignable_v<int&&> // yields true
+is_move_assignable_v<void> // yields false
+is_move_assignable_v<void*> // yields true
+is_move_assignable_v<char[]> // yields false
+is_move_assignable_v<std::string> // yields true
+is_move_assignable_v<std::unique_ptr<int>> // yields true
+\end{lstlisting}
+\end{itemize}
+
+
+std::is\_swappable\_with < T1, T2 >::value
+
+std::is\_nothrow\_swappable\_with < T1, T2 >::value
+
+\begin{itemize}
+\item
+Yields true if an expression of type T1 can be swap()’ed with an expression of type T2 except that reference types only determine the value category of the expression (with the guarantee that no exception is thrown).
+
+\item
+Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+
+\item
+Note that is\_swappable\_with\_v<> for a nonreference, nonclass type as first or second type always yields false, because such types produce prvalues. That is, swap(42,77) is not valid.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_swappable_with_v<int,int> // yields false
+is_swappable_with_v<int&,int> // yields false
+is_swappable_with_v<int&&,int> // yields false
+is_swappable_with_v<int&,int&> // yields true
+is_swappable_with_v<int&&,int&&> // yields false
+is_swappable_with_v<int&,long&> // yields false
+is_swappable_with_v<int&,void*> // yields false
+is_swappable_with_v<void*,int> // yields false
+is_swappable_with_v<void*,int&> // yields false
+is_swappable_with_v<std::string,std::string> // yields false
+is_swappable_with_v<std::string&,std::string&> // yields true
+is_swappable_with_v<std::string&&,std::string&&> // yields false
+\end{lstlisting}
+
+• Available since C++17.
+\end{itemize}
+
+std::is\_swappable < T >::value
+std::is\_nothrow\_swappable < T >::value
+
+\begin{itemize}
+\item
+Yields true if lvalues of type T can be swapped (with the guarantee that no exception is thrown).
+
+\item
+Provided T is a referenceable type. same as is\_swappable\_with<T\&,T\&>::value or is\_nothrow\_swappable\_with<T\&,T\&>::value respectively.
+
+\item
+Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+
+\item
+To find out whether an rvalue of T would be swappable with another rvalue of T, use is\_swappable\_with<T\&\&,T\&\&>.
+
+\item
+Requires that the given type is a complete type (Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+is_swappable_v<int> // yields true
+is_swappable_v<int&> // yields true
+is_swappable_v<int&&> // yields true
+is_swappable_v<std::string&&> // yields true
+is_swappable_v<void> // yields false
+is_swappable_v<void*> // yields true
+is_swappable_v<char[]> // yields false
+is_swappable_v<std::unique_ptr<int>> // yields true
+\end{lstlisting}
+
+• Available since C++17.
+\end{itemize}
+
 \subsubsubsection{D.3.3\hspace{0.2cm}Relationships Between Types}
+
+Table D.5 lists the type traits that allow testing certain relationships between types. This includes checking which constructors and assignment operators are provided for class types.
+
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Trait}                                & \textbf{Effect}                                                    \\ \hline
+		is\_same\textless{}T1,T2 \textgreater{}       & T1 and T2 are the same types (including const/volatile qualifiers) \\ \hline
+		is\_base\_of\textless{}T,D \textgreater{}     & Type T is base class of type D                                     \\ \hline
+		is\_convertible\textless{}T,T2 \textgreater{} & Type T is convertible into type T2                                 \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{center}
+Table D.5. Traits to Test Type Relationships
+\end{center}
+
+
+
+
+
+
+
+
+

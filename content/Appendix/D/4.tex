@@ -1,0 +1,35 @@
+
+The traits listed in Table D.6 allow us to construct types from other types.
+
+\begin{table}[H]
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Trait}                                    & \textbf{Effect}                                                \\ \hline
+		remove\_const\textless{}T \textgreater{}          & Corresponding type without const                               \\ \hline
+		remove\_volatile\textless{}T \textgreater{}       & Corresponding type without volatile                            \\ \hline
+		remove\_cv\textless{}T \textgreater{}             & Corresponding type without const and volatile                  \\ \hline
+		add\_const\textless{}T \textgreater{}             & Corresponding const type                                       \\ \hline
+		add\_volatile\textless{}T \textgreater{}          & Corresponding volatile type                                    \\ \hline
+		add\_cv\textless{}T \textgreater{}                & Corresponding const volatile type                              \\ \hline
+		make\_signed\textless{}T \textgreater{}           & Corresponding signed nonreference type                         \\ \hline
+		make\_unsigned\textless{}T \textgreater{}         & Corresponding unsigned nonreference type                       \\ \hline
+		remove\_reference\textless{}T \textgreater{}      & Corresponding nonreference type                                \\ \hline
+		add\_lvalue\_reference\textless{}T \textgreater{} & Corresponding lvalue reference type (rvalues become lvalues)   \\ \hline
+		add\_rvalue\_reference\textless{}T \textgreater{} & Corresponding rvalue reference type (lvalues remain lvalues)   \\ \hline
+		remove\_pointer\textless{}T \textgreater{}        & Referred type for pointers (same type otherwise)               \\ \hline
+		add\_pointer\textless{}T \textgreater{}           & Type of pointer to corresponding nonreference type             \\ \hline
+		remove\_extent\textless{}T \textgreater{}         & Element types for arrays (same type otherwise)                 \\ \hline
+		remove\_all\_extents\textless{}T \textgreater{}   & Element type for multidimensional arrays (same type otherwise) \\ \hline
+		decay\textless{}T \textgreater{}                  & Transfers to corresponding “by-value” type                     \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{center}
+Table D.6. Traits for Type Construction
+\end{center}
+
+
+
+
+
+

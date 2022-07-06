@@ -980,7 +980,8 @@ is_swappable_with_v<std::string&,std::string&> // yields true
 is_swappable_with_v<std::string&&,std::string&&> // yields false
 \end{lstlisting}
 
-• Available since C++17.
+\item
+Available since C++17.
 \end{itemize}
 
 std::is\_swappable < T >::value
@@ -1015,7 +1016,8 @@ is_swappable_v<char[]> // yields false
 is_swappable_v<std::unique_ptr<int>> // yields true
 \end{lstlisting}
 
-• Available since C++17.
+\item
+Available since C++17.
 \end{itemize}
 
 \subsubsubsection{D.3.3\hspace{0.2cm}Relationships Between Types}
@@ -1036,11 +1038,118 @@ Table D.5 lists the type traits that allow testing certain relationships between
 Table D.5. Traits to Test Type Relationships
 \end{center}
 
+std::is\_same < T1, T2 >::value
 
+\begin{itemize}
+\item
+Yields true if T1 and T2 name the same type including cv-qualifiers (const and volatile).
 
+\item
+Yields true if a type is a type alias of another.
 
+\item
+Yields true if two objects were initialized by objects of the same type.
 
+\item
+Yields false for the (closure) types associated with two distinct lambda expressions even if they define the same behavior.
 
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+auto a = nullptr;
+auto b = nullptr;
+is_same_v<decltype(a),decltype(b)> // yields true
 
+using A = int;
+is_same_v<A,int> // yields true
 
+auto x = [] (int) {};
+auto y = x;
+auto z = [] (int) {};
+is_same_v<decltype(x),decltype(y)> // yields true
+is_same_v<decltype(x),decltype(z)> // yields false
+\end{lstlisting}
 
+\item
+See Section 19.3.3 on page 410 for implementation details.
+\end{itemize}
+
+std::is\_base\_of < B, D >::value
+
+\begin{itemize}
+\item
+Yields true if B is a base class of D or B is the same class as D.
+
+\item
+It doesn’t matter whether a type is cv-qualified, private or protected inheritance is used, D has multiple base classes of type B, or D has B as a base class via multiple inheritance paths (via virtual
+inheritance).
+
+\item
+Yields false if at least one of the types is a union.
+
+\item
+Requires that type D is either complete (see Section 10.3.1 on page 154), has the same type as B (ignoring any const/volatile qualification), or is neither a struct nor a class.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+class B {
+};
+class D1 : B {
+};
+class D2 : B {
+};
+class DD : private D1, private D2 {
+};
+is_base_of_v<B, D1> // yields true
+is_base_of_v<B, DD> // yields true
+is_base_of_v<B const, DD> // yields true
+is_base_of_v<B, DD const> // yields true
+is_base_of_v<B, B const> // yields true
+is_base_of_v<B&, DD&> // yields false (no class type)
+is_base_of_v<B[3], DD[3]> // yields false (no class type)
+is_base_of_v<int, int> // yields false (no class type)
+\end{lstlisting}
+\end{itemize}
+
+std::is\_convertible < FROM, TO >::value
+
+\begin{itemize}
+\item
+Yields true if expression of type FROM is convertible to type TO. Thus, the following must be valid:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}See Section 11.2.3 on page 166 for the effect of std::declval.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+TO test() {
+	return std::declval<FROM>();
+}
+\end{lstlisting}
+
+\item
+A reference on top of type FROM is only used to determine the value category of the expression being converted; the underlying type is then the type of the source expression.
+
+\item
+Note that is\_constructible does not always imply is\_convertible. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class C {
+	public:
+	explicit C(C const&); // no implicit copy constructor
+	...
+};
+is_constructible_v<C,C> // yields true
+is_convertible_v<C,C> // yields false
+\end{lstlisting}
+
+\item
+Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+
+\item
+Note that is\_constructible (see Section D.3.2 on page 719) and is\_assignable (see Section D.3.2 on page 721) have a different order for the source and destination types.
+
+\item
+See Section 19.5 on page 428 for implementation details.
+\end{itemize}

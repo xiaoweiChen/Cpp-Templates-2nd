@@ -2,7 +2,8 @@
 The traits listed in Table D.6 allow us to construct types from other types.
 
 \begin{table}[H]
-	\begin{tabular}{|l|l|}
+	\begin{center}
+	\begin{tabular}{l|l}
 		\hline
 		\textbf{Trait}                                    & \textbf{Effect}                                                \\ \hline
 		remove\_const\textless{}T \textgreater{}          & Corresponding type without const                               \\ \hline
@@ -22,11 +23,282 @@ The traits listed in Table D.6 allow us to construct types from other types.
 		remove\_all\_extents\textless{}T \textgreater{}   & Element type for multidimensional arrays (same type otherwise) \\ \hline
 		decay\textless{}T \textgreater{}                  & Transfers to corresponding “by-value” type                     \\ \hline
 	\end{tabular}
+	\end{center}
 \end{table}
 
 \begin{center}
 Table D.6. Traits for Type Construction
 \end{center}
+
+std::remove\_const < T >::type
+
+std::remove\_volatile < T >::type
+
+std::remove\_cv < T >::type
+
+\begin{itemize}
+\item
+Yields the type T without const or/and volatile at the top level.
+
+\item
+Note that a const pointer is a const-qualified type, whereas a non-const pointer or reference to a const type is not const-qualified. For example:
+
+\begin{lstlisting}[style=styleCXX]
+remove_cv_t<int> // yields int
+remove_const_t<int const> // yields int
+remove_cv_t<int const volatile> // yields int
+remove_const_t<int const&> // yields int const& (only refers to int const)
+\end{lstlisting}
+
+Clearly, the order in which type construction traits are applied matters:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The next standard after C++17 will probably provide a remove\_refcv trait for this reason.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+remove_const_t<remove_reference_t<int const&>> // yields int
+remove_reference_t<remove_const_t<int const&>> // yields int const
+\end{lstlisting}
+
+Instead, we may prefer to use std::decay<>, which, however, also converts array and function types to corresponding pointer types (see Section D.4 on page 731):
+
+\begin{lstlisting}[style=styleCXX]
+decay_t<int const&> // yields int
+\end{lstlisting}
+
+\item
+See Section 19.3.2 on page 406 for implementation details.
+\end{itemize}
+
+std::add\_const < T >::type
+
+std::add\_volatile < T >::type
+
+std::add\_cv < T >::type
+
+\begin{itemize}
+\item
+Yields the type of T with const or/and volatile qualifiers added at the top level.
+
+\item
+Applying one of these traits to a reference type or a function type has no effect. For example:
+\begin{lstlisting}[style=styleCXX]
+add_cv_t<int> // yields int const volatile
+add_cv_t<int const> // yields int const volatile
+add_cv_t<int const volatile> // yields int const volatile
+add_const_t<int> // yields int const
+add_const_t<int const> // yields int const
+add_const_t<int&> // yields int&
+\end{lstlisting}
+\end{itemize}
+
+std::make\_signed < T >::type
+
+std::make\_unsigned < T >::type
+
+\begin{itemize}
+\item
+Yields the corresponding signed/unsigned type of T.
+
+\item
+Requires that T is an enumeration type or a (cv-qualified) integral type other than bool. All other types lead to undefined behavior (see Section 19.7.1 on page 442 for a discussion about how to avoid this undefined behavior).
+
+\item
+Applying one of these traits to a reference type or a function type has no effect, whereas a nonconst pointer or reference to a const type is not const-qualified. For example:
+\begin{lstlisting}[style=styleCXX]
+make_unsigned_t<char> // yields unsigned char
+make_unsigned_t<int> // yields unsigned int
+make_unsigned_t<int const&> // undefined behavior
+\end{lstlisting}
+\end{itemize}
+
+std::remove\_reference < T >::type
+
+\begin{itemize}
+\item
+Yields the type the reference type T refers to (or T itself if it is not a reference type).
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+remove_reference_t<int> // yields int
+remove_reference_t<int const> // yields int const
+remove_reference_t<int const&> // yields int const
+remove_reference_t<int&&> // yields int
+\end{lstlisting}
+
+\item
+Note that a reference type itself is not a const type. For this reason, the order of applying type
+construction traits matters:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The next standard after C++17 will probably provide a remove\_refcv trait for this reason.
+\end{tcolorbox}
+
+\begin{lstlisting}[style=styleCXX]
+remove_const_t<remove_reference_t<int const&>> // yields int
+remove_reference_t<remove_const_t<int const&>> // yields int const
+\end{lstlisting}
+
+Instead, we may prefer to use std::decay<>, which, however, also converts array and function types to corresponding pointer types (see Section D.4 on page 731):
+
+\begin{lstlisting}[style=styleCXX]
+decay_t<int const&> // yields int
+\end{lstlisting}
+
+\item
+See Section 19.3.2 on page 404 for implementation details.
+\end{itemize}
+
+std::add\_lvalue\_reference < T >::type
+
+std::add\_rvalue\_reference < T >::type
+
+\begin{itemize}
+\item
+Yields an lvalue or rvalue reference to T if T is a referenceable type.
+
+\item
+Yields T if T is not referenceable (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+
+\item
+Note that if T already is a reference type, the traits use the reference collapsing rules (see Section 15.6.1 on page 277): The result is an rvalue reference only if add\_rvalue\_reference is used and T is an rvalue reference.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+add_lvalue_reference_t<int> // yields int&
+add_rvalue_reference_t<int> // yields int&&
+add_rvalue_reference_t<int const> // yields int const&&
+add_lvalue_reference_t<int const&> // yields int const&
+add_rvalue_reference_t<int const&> // yields int const& (reference collapsing rules)
+add_rvalue_reference_t<remove_reference_t<int const&>> // yields int&&
+add_lvalue_reference_t<void> // yields void
+add_rvalue_reference_t<void> // yields void
+\end{lstlisting}
+
+\item
+See Section 19.3.2 on page 405 for implementation details.
+\end{itemize}
+
+std::remove\_pointer < T >::type
+
+\begin{itemize}
+\item
+Yields the type the pointer type T points to (or T itself if it is not a pointer type).
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+remove_pointer_t<int> // yields int
+remove_pointer_t<int const*> // yields int const
+remove_pointer_t<int const* const* const> // yields int const* const
+\end{lstlisting}
+\end{itemize}
+
+std::add\_pointer < T >::type
+
+\begin{itemize}
+\item
+Yields the type of a pointer to T, or, in the case of a reference type T, the type of a pointer to underlying type of T.
+
+\item
+Yields T if there is no such type (applies to cv-qualified function types).
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+add_pointer_t<void> // yields void*
+add_pointer_t<int const* const> // yields int const* const*
+add_pointer_t<int&> // yields int*
+add_pointer_t<int[3]> // yields int(*)[3]
+add_pointer_t<void(&)(int)> // yields void(*)(int)
+add_pointer_t<void(int)> // yields void(*)(int)
+add_pointer_t<void(int) const> // yields void(int) const (no change)
+\end{lstlisting}
+\end{itemize}
+
+std::remove\_extent < T >::type
+
+std::remove\_all\_extents < T >::type
+
+\begin{itemize}
+\item
+Given an array type, remove\_extent produces its immediate element type (which could itself be an array type) and remove\_all\_extents strips all “array layers” to produce the underlying element type (which is therefore no longer an array type). If T is not an array type, T itself is produced.
+
+\item
+Pointers do not have any associated dimensions. An unspecified bound in an array type does specify a dimension. (As usual, a function parameter declared with an array type does not have an actual array type, and std::array is not an array type either. See Section D.2.1 on page 704.)
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+remove_extent_t<int> // yields int
+remove_extent_t<int[10]> // yields int
+remove_extent_t<int[5][10]> // yields int[10]
+remove_extent_t<int[][10]> // yields int[10]
+remove_extent_t<int*> // yields int*
+remove_all_extents_t<int> // yields int
+remove_all_extents_t<int[10]> // yields int
+remove_all_extents_t<int[5][10]> // yields int
+remove_all_extents_t<int[][10]> // yields int
+remove_all_extents_t<int(*)[5]> // yields int(*)[5]
+\end{lstlisting}
+
+\item
+See Section 23.1.2 on page 531 for implementation details.
+\end{itemize}
+
+std::decay < T >::type
+
+\begin{itemize}
+\item
+Yields the decayed type of T.
+
+\item
+In detail, for type T the following transformations are performed:
+
+\begin{itemize}
+\item[-]
+First, remove\_reference (see Section D.4 on page 729) is applied.
+
+\item[-]
+If the result is an array type, a pointer to the immediate element type is produced (see Section 7.1 on page 107).
+
+\item[-]
+Otherwise, if the result is a function type, the type yielded by add\_pointer for that function type is produced (see Section 11.1.1 on page 159).
+
+\item[-]
+Otherwise, that result is produced without any top-level const/volatile qualifiers.
+\end{itemize}
+
+\item
+decay<> models by-value passing of arguments or the type conversions when initializing an objects of type auto.
+
+\item
+decay<> is particularly useful to handle template parameters that may be substituted by reference types but used to determine a return type or a parameter type of another function. See Section 1.3.2 on page 12 and Section 7.6 on page 120 for examples discussing and using std::decay<>() (the latter with the history of implementing std::make\_pair<>()).
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+decay_t<int const&> // yields int
+decay_t<int const[4]> // yields int const*
+void foo();
+decay_t<decltype(foo)> // yields void(*)()
+\end{lstlisting}
+
+\item
+See Section 19.3.2 on page 407 for implementation details.
+\end{itemize}
+
+
+
+
+
+
+
+
+
 
 
 

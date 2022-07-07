@@ -1,0 +1,150 @@
+
+In most contexts, multiple type trait predicates can be combined by using logical operators. However, in some contexts of template metaprogramming, this is not enough:
+
+\begin{itemize}
+\item 
+If you have to deal with traits that might fail (e.g., due to incomplete types).
+
+\item 
+If you want to combine type trait definitions.
+\end{itemize}
+
+The type traits std::conjunction<>, std::disjunction<>, and std::negation<> are provided for this purpose. 
+
+One example is that these helpers short-circuit Boolean evaluations (abort the evaluation after the first false for \&\& or first true for ||, respectively). For example, if incomplete types are used:
+
+\begin{lstlisting}[style=styleCXX]
+struct X {
+	X(int); // converts from int
+};
+struct Y; // incomplete type
+\end{lstlisting}
+
+the following code might not compile because is\_constructible results in undefined behavior for incomplete types (some compilers accept this code, though):
+
+\begin{lstlisting}[style=styleCXX]
+// undefined behavior:
+static_assert(std::is_constructible<X,int>{}
+				|| std::is_constructible<Y,int>{},
+			"can’t init X or Y from int");
+\end{lstlisting}
+
+Instead, the following is guaranteed to compile, since the evaluation of is\_constructible<X,int> already yields true:
+
+\begin{lstlisting}[style=styleCXX]
+// OK:
+static_assert(std::disjunction<std::is_constructible<X, int>,
+								std::is_constructible<Y, int>>{},
+			"can’t init X or Y from int");
+\end{lstlisting}
+
+The other application is an easy way to define new type traits by logically combining existing type traits. For example, you can easily define a trait that checks whether a type is “not a pointer” (neither a pointer, nor a member pointer, nor a null pointer):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct isNoPtrT : std::negation<std::disjunction<std::is_null_pointer<T>,
+												std::is_member_pointer<T>,
+												std::is_pointer<T>>>
+{
+};
+\end{lstlisting}
+
+Here we can’t use the logical operators, because we combine the corresponding trait classes. With this definition, the following is possible:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << isNoPtrT<void*>::value << ’\n’; // false
+std::cout << isNoPtrT<std::string>::value << ’\n’; // true
+auto np = nullptr;
+std::cout << isNoPtrT<decltype(np)>::value << ’\n’; // false
+\end{lstlisting}
+
+And with a corresponding variable template:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+constexpr bool isNoPtr = isNoPtrT<T>::value;
+\end{lstlisting}
+
+we can write:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << isNoPtr<void*> << ’\n’; // false
+std::cout << isNoPtr<int> << ’\n’; // true
+\end{lstlisting}
+
+As a last example, the following function template is only enabled if all its template arguments are neither classes not unions:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename... Ts>
+std::enable_if_t<std::conjunction_v<std::negation<std::is_class<Ts>>...,
+									std::negation<std::is_union<Ts>>...
+									>>
+print(Ts...)
+{
+	...
+}
+\end{lstlisting}
+
+Note that the ellipsis is placed behind each negation so that it applies to each element of the parameter pack.
+
+\begin{table}[H]
+	\begin{center}
+	\begin{tabular}{l|l}
+		\hline
+		\textbf{Trait}                            & \textbf{Effect}                                   \\ \hline
+		conjunction\textless{}B... \textgreater{} & Logical and for Boolean traits B... (since C++17) \\ \hline
+		disjunction\textless{}B... \textgreater{} & Logical or for Boolean traits B... (since C++17)  \\ \hline
+		negation\textless{}B \textgreater{}       & Logical not for Boolean trait B (since C++17)     \\ \hline
+	\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{center}
+Table D.8. Type Traits to Combine Other Type Traits
+\end{center}
+
+std::conjunction < B... >::value
+
+std::disjunction < B... >::value
+
+\begin{itemize}
+\item 
+Yields whether all or one of the passed Boolean traits B... yield(s) true.
+
+\item 
+Logically applies operator \&\& or ||, respectively, to the passed traits.
+
+\item 
+Both traits short-circuit (abort the evaluation after the first false or true). See the motivating example above.
+
+\item 
+Available since C++17.
+\end{itemize}
+
+std::negation < B >::value
+
+\begin{itemize}
+\item 
+Yields whether the passed Boolean trait B yields false.
+
+\item 
+Logically applies operator ! to the passed trait.
+
+\item 
+See the motivating example above.
+
+\item 
+Available since C++17.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+

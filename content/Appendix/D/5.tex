@@ -1,0 +1,160 @@
+
+
+Table D.7 lists all remaining type traits. They query special properties or provide more complicated type transformations.
+
+\begin{table}[H]
+	\begin{center}
+	\begin{tabular}{l|l}
+		\hline
+		\textbf{Trait}                                       & \textbf{Effect}                                                   \\ \hline
+		enable\_if\textless{}B,T=void \textgreater{}         & Yields type T only if bool B is true                              \\ \hline
+		conditional\textless{}B,T,F \textgreater{}           & Yields type T if bool B is true and type F otherwise              \\ \hline
+		common\_type\textless{}T1,... \textgreater{}         & Common type of all passed types                                   \\ \hline
+		aligned\_storage\textless{}Len \textgreater{}        & Type of Len bytes with default alignment                          \\ \hline
+		aligned\_storage\textless{}Len,Align \textgreater{}  & Type of Len bytes aligned according to a divisor of size\_t Align \\ \hline
+		aligned\_union\textless{}Len,Types... \textgreater{} & Type of Len bytes aligned for a union of Types...                 \\ \hline
+	\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{center}
+Table D.7. Other Type Traits
+\end{center}
+
+std::enable\_if < cond >::type
+
+std::enable\_if < cond, T >::type
+
+\begin{itemize}
+\item
+Yields void or T in its member type if cond is true. Otherwise, it does not define a member type.
+
+\item
+Because the type member is not defined when the cond is false, this trait can and is usually used to disable or SFINAE out a function template based on the given condition.
+
+\item
+See Section 6.3 on page 98 for details and a first example. See Section D.6 on page 735 for another example using parameter packs.
+
+\item
+See Section 20.3 on page 469 for details about how std::enable\_if is implemented.
+\end{itemize}
+
+std::conditional < cond, T, F >::type
+
+\begin{itemize}
+\item
+Yields T if cond is true, and F otherwise.
+
+\item
+This is the standard version of the trait IfThenElseT introduced in Section 19.7.1 on page 440.
+
+\item
+Note that, unlike a normal C++ if-then-else statement, the template arguments for both the “then” and “else” branches are evaluated before the selection is made, so neither branch may contain ill-formed code or the program is likely to be ill-formed. As a consequence, you might have to add a level of indirection to avoid that expressions in the “then” and “else” branches are evaluated if the branch is not used. Section 19.7.1 on page 440 demonstrates this for the trait IfThenElseT, which has the same behavior.
+
+\item
+See Section 11.5 on page 171 for an example.
+
+\item
+See Section 19.7.1 on page 440 for details about how std::conditional is implemented.
+\end{itemize}
+
+std::common\_type < T... >::type
+
+\begin{itemize}
+\item
+Yields the “common type” of the given types T1, T2, ..., Tn.
+
+\item
+The computation of a common type is a little more complex than we want to cover in this appendix. Roughly speaking, the common type of two types U and V is the type produced by the conditional operator ?: when its second and third operands are of those types U and V (with reference types used only to determine the value category of the two operands); there is no common type if that is invalid. decay\_t (see page 731) is applied to this result. This default computation may be overridden by user specialization of std::common\_type<U, V> (in the C++ standard library, partial specialization exists for durations and time points).
+
+\item
+If no type is given or no common type exists, there is no type member defined, so that using it is an error (which might SFINAE out a function template using it).
+
+\item
+If a single type is given, the result is the application of decay\_t to that type.
+
+\item
+For more than two types, common\_type recursively replaces the first two types T1 and T2 by their common type. If at any time that process fails, there is no common type.
+
+\item
+While processing the common type, the passed types are decays, so that the trait always yields a decayed type (see Section D.4 on page 731).
+
+\item
+See Section 1.3.3 on page 12 for a discussion and example of the application of this trait.
+
+\item
+The core of the primary template of this trait is usually implemented by something like the following (here using only two parameters):
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+struct common_type<T1,T2> {
+	using type = std::decay_t<decltype(true ? std::declval<T1>()
+	: std::declval<T2>())>;
+};
+\end{lstlisting}
+\end{itemize}
+
+std::aligned\_union < MIN\_SZ, T... >::type
+
+\begin{itemize}
+\item
+Yields a plain old datatype (POD) usable as uninitialized storage that has a size of at least MIN\_SZ and is suitable to hold any of the given types T1, T2, ..., Tn.
+
+\item
+In addition, it yields a static member alignment\_value whose value is the strictest alignment of all the given types, which for the result type is equivalent to
+
+\begin{itemize}
+\item[-]
+std::alignment\_of\_v<type>::value (see Section D.3.1 on page 715)
+
+\item[-]
+alignof(type)
+\end{itemize}
+
+\item
+Requires that at least one type is provided.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+using POD_T = std::aligned_union_t<0, char,
+								std::pair<std::string,std::string>>;
+std::cout << sizeof(POD_T) << ’\n’;
+std::cout << std::aligned_union<0, char,
+								std::pair<std::string,std::string>
+								>::alignment_value;
+		<< ’\n’;
+\end{lstlisting}
+
+Note the use of aligned\_union instead of aligned\_union\_t to get the value for the alignment instead of the type.
+\end{itemize}
+
+std::aligned\_storage < MAX\_TYPE\_SZ >::type
+
+std::aligned\_storage < MAX\_TYPE\_SZ, DEF\_ALIGN >::type
+
+\begin{itemize}
+\item
+Yields a plain old data type (POD) usable as uninitialized storage that has a size to hold all possible types with a size up to MAX\_TYPE\_SZ, taking the default alignment or the alignment passed as DEF\_ALIGN into account.
+
+\item
+Requires that MAX\_TYPE\_SZ is greater than zero and the platform has at least one type with the alignment value DEF\_ALIGN.
+
+\item
+For example:
+\begin{lstlisting}[style=styleCXX]
+using POD_T = std::aligned_storage_t<5>;
+\end{lstlisting}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,6 +1,134 @@
-\subsubsubsection{E.3.1\hspace{0.2cm}Testing Concepts}
+
+Although C++ concepts have been worked on for many years now, and experimental implementations have been available in some form for over a decade, broad experience with them is just starting to emerge. We hope that a future edition of this book will be able to provide much more practical guidance about how to design constrained template libraries. Meanwhile, however, we offer three observations.
+
+\subsubsubsection{E.4.1\hspace{0.2cm}Testing Concepts}
+
+Concepts are Boolean predicates that are valid constant-expressions. Therefore, given a concept C and some types T1, T2, ... that model the concept, we can statically assert that observation:
+
+\begin{lstlisting}[style=styleCXX]
+static_assert(C<T1, T2, ...>, "Model failure");
+\end{lstlisting}
+
+When designing concepts, it is therefore recommended to also design simple types that test them in this way. That includes types that push the boundaries of what the concept entails, answering questions such as the following:
+
+\begin{itemize}
+\item 
+Do interfaces and/or algorithms need to copy and/or move objects of the types being modeled?
+
+\item 
+What conversions are acceptable? Which ones are needed?
+
+\item 
+Is the basic set of operations assumed by the template unique? For example, can it operate using either *= or * and =?
+\end{itemize}
+
+Here, too, the notion of archetypes (see Section 28.3 on page 655) can be useful.
+
+\subsubsubsection{E.4.2\hspace{0.2cm}Concept Granularity}
+
+With concepts becoming part of the C++ language, it is natural to want to build “libraries of concepts,” just as we built class libraries and template libraries as soon as those features were available. As with other libraries, it is also natural to want to layer our concepts in various ways. We briefly discussed the example of iterator categories, and it’s not a great leap to envision that we could build “range categories” alongside those and perhaps “sequence concepts” on top of those, and so on.
+
+On the other hand, we might be tempted to build all of those concepts on top of “elementary syntax” concepts. For example, we could imagine:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+concept Addable =
+requires (T x, U y) {
+	x + y;
+}
+\end{lstlisting}
+
+That is not recommended, however, because it is a concept that has no clear semantic connotation, and disparate types will satisfy it. For example, it is satisfied when T and U are both std::string or when one type is a pointer and the other an integral type, and of course with arithmetic types. Yet in those three cases, the notion of Addable means something fundamentally different (respectively, concatenation, iterator displacement, and variants of arithmetic addition). Introducing such a concept is therefore a recipe for libraries with fuzzy interfaces and likely to trigger odd ambiguities.
+
+Instead, it appears that concepts are best designed to model real semantic notions that arise in the problem domain. Doing so in a disciplined fashion is bound to improve the overall design of our libraries, as it will bring consistency and clarity to the interfaces presented to our clients. That was very much the case when the Standard Template Library (STL) was added to the C++ standard library. Although it had no language-based “concepts” to work with, it was very much designed with a notion of concepts in mind (such as iterators and the iterator hierarchy), and the rest is history.
+
+\subsubsubsection{E.4.3\hspace{0.2cm}Binary Compatibility}
+
+Experienced C++ programmers are aware that when certain entities (functions and member functions in particular) are compiled down to low-level machine code, a name is associated with them that combines the declared name with the type and scope of the entity. This name, commonly referred to as the mangled name of the entity, is what is used by the object code linker to resolve references to the entity (e.g., from other object files). For example, the mangled name of a function defined as
+
+\begin{lstlisting}[style=styleCXX]
+namespace X {
+	void f() {}
+}
+\end{lstlisting}
+
+is \_ZN1X1fEv in the Itanium C++ ABI [ItaniumABI] (the letters X and f in this encoding come from the namespace name and function name, respectively).
+
+Mangled names cannot “collide” within a program. Therefore, if two functions can potentially coexist in a program, they must have distinct mangled names. That, in turn, means that constraints must be encoded in the function name (because template specializations that are identical in every way except their constraints and their function body can appear in different translation units.) Consider the following two translation units:
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+concept HasPlus = requires (T x, T y) {
+	x+y;
+};
+
+template<typename T> int f(T p) requires HasPlus<T> {
+	std::cout << "TU1\n";
+}
+
+void g();
+
+int main() {
+	f(1);
+	g();
+}
+\end{lstlisting}
+
+and
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+
+template<typename T>
+concept HasMult = requires (T x, T y) {
+	x*y;
+};
+
+template<typename T> int f(T p) requires HasMult<T> {
+	std::cout << "TU2\n";
+}
+
+template int f(int);
+
+void g() {
+	f(2);
+}
+\end{lstlisting}
+
+This program must output
+
+\begin{tcblisting}{commandshell={}}
+TU1
+TU2
+\end{tcblisting}
+
+which means that the two definition of f() must be mangled differently.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The experimental implementation of concepts in GCC 7.1 is known to be deficient in this respect.
+\end{tcolorbox}
 
 
-\subsubsubsection{E.3.2\hspace{0.2cm}Concept Granularity}
 
-\subsubsubsection{E.3.3\hspace{0.2cm}Binary Compatibility}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

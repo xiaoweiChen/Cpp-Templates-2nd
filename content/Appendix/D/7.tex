@@ -1,0 +1,87 @@
+
+
+The C++ standard library provides a few other utilities that are broadly useful to write portable generic code.
+
+\begin{table}[H]
+	\begin{center}
+	\begin{tabular}{l|l}
+		\hline
+		\textbf{Trait}                       & \textbf{Effect}                                                         \\ \hline
+		declval\textless{}T \textgreater{}() & yields an “object” (rvalue reference) of a type without constructing it \\ \hline
+		addressof(r)                         & yields the address of an object or function                             \\ \hline
+	\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{center}
+able D.9. Other Utilities for Metaprogramming
+\end{center}
+
+std::declval <T> ()
+
+\begin{itemize}
+\item 
+Defined in header <utility>.
+
+\item 
+Yields an “object” or function of any type without calling any constructor or initialization.
+
+\item 
+If T is void, the return type is void.
+
+This can be used to deal with objects or functions of any type in unevaluated expressions.
+
+\item 
+It is simply defined as follows:
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+add_rvalue_reference_t<T> declval() noexcept;
+\end{lstlisting}
+Thus:
+
+\begin{itemize}
+\item[-]
+If T is a plain type or an rvalue reference, it yields a T\&\&.
+
+\item[-]
+If T is an lvalue reference, it yields a T\&.
+
+\item[-]
+If T is void, it yields void.
+\end{itemize}
+
+\item 
+See Section 19.3.4 on page 415 for details and Section 11.2.3 on page 166 and the common\_type<> type trait in Section D.5 on page 732 for examples using it.
+\end{itemize}
+
+std::addressof (r)
+
+\begin{itemize}
+\item
+Defined in header <memory>.
+
+\item
+Yields the address of object or function r even if operator\& is overloaded for its type.
+
+\item
+See Section 11.2.2 on page 166 for details.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

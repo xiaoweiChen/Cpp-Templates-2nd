@@ -1,0 +1,78 @@
+Concepts are much like constexpr variable templates of type bool, but the type is not explicitly specified:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> concept LessThanComparable = ... ;
+\end{lstlisting}
+
+Here the “. . . ” could perhaps be replaced by an expression that uses various traits to establish whether type T is indeed comparable using the < operator, but the concepts proposal provides a tool to simplify this task: the requires expression (which is distinct from the requires clause described above). Here is how the concept’s complete definition may look like:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept LessThanComparable = requires(T x, T y) {
+	{ x < y } -> bool;
+};
+\end{lstlisting}
+
+Note how the requires expression can include an optional parameter list: These parameters are never replaced by arguments but can instead be thought of as a set of “dummy variables” usable to express requirements in the body of the requires expression. In this case, there is just one such requirement expressed by the phrase
+
+\begin{lstlisting}[style=styleCXX]
+{ x < y } -> bool;
+\end{lstlisting}
+
+This syntax means that (a) the expression x < y must be valid in a SFINAE sense and (b) the result of that expression must be convertible to bool. In a phrase of this form, the keyword noexcept can be inserted before the -> token to express that the expression in the braces should be known not to throw an exception (i.e., noexcept(...) applied to that expression should be true. The implicit conversion part of the phrase (i.e., -> type) can be left out altogether if no such constraint is needed, and if only the validity of the expression must be checked, the braces can be dropped, so that the phrase reduces to just an expression. For example,
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept Swappable = requires(T x, T y) {
+	swap(x, y);
+};
+\end{lstlisting}
+
+Requires expressions can also express the need for associated types. Consider the Sequence concept we hypothesized earlier: In addition to requiring the validity of expressions like seq.begin(), it also requires corresponding sequence iterator types. That can be expressed as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Seq>
+concept Sequence = requires(Seq seq) {
+	typename Seq::iterator;
+	{ seq.begin() } -> Seq::iterator;
+	...
+};
+\end{lstlisting}
+
+So the phrase typename type; expresses the requirement that type exists (this is called a type requirement). In this example, the type that has to exist is a member of the concept template parameter, but that need not always be the case. We could, for example, require that there exist a type IteratorFor<Seq> instead, and that would be achieved with the requirement-phrase
+
+\begin{lstlisting}[style=styleCXX]
+...
+typename IteratorFor<Seq>;
+...
+\end{lstlisting}
+
+The Sequence concept definition above shows how phrases can be combined by just listing them one after another. There is a third class of  requirement-phrase, which consists in just invoking another concept. For example, let’s assume that we have a concept for the notion of an iterator. We’d want our Sequence concept to require not only that Seq::iterator be a type, but also that that type satisfies the constraints of the Iterator concept. That is expressed as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Seq>
+concept Sequence = requires(Seq seq) {
+	typename Seq::iterator;
+	requires Iterator<typename Seq::iterator>;
+	{ seq.begin() } -> Seq::iterator;
+	...
+};
+\end{lstlisting}
+
+That is, we can just add requires clauses in requires expressions (and this sort of phrase is called a nested requirement).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

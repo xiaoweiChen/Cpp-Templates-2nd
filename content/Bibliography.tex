@@ -7,11 +7,680 @@ Web sites are typically considerably more volatile than books and articles. The 
 
 Before listing the books, articles, and Web sites, we introduce the more interactive kind of resources that are provided by newsgroups.
 
-
 \subsubsection*{Forums}
 \addcontentsline{toc}{subsection}{Forums}
 
+In the first edition of this book, we referred to Usenet groups (a large collection of pre-world-wideweb on-line forums) as a source for discussions about the C++ programming language. Those groups have mostly faded since then but many other online programming communities have arisen, and several of these cater to C++ programmers. We list some of the most popular here:
 
+\begin{itemize}
+\item 
+Cppreference “wiki” (i.e., collectively editable) of reference information about C and C++ (in various languages).
+
+\url{http://www.cppreference.com}
+
+\item
+Stackoverflow is a broad developer community that also covers C++ and C++ templates in particular.
+
+\url{https://stackoverflow.com/questions/tagged/c%2b%2b}
+
+\url{https://stackoverflow.com/questions/tagged/c%2b%2b%20templates}
+
+\item
+Quora is similar to Stackoverflow, but not limited to technical discussions.
+
+\url{https://www.quora.com/topic/C++-programming-language}
+
+\item
+The Standard C++ Foundation is a nonprofit organization run by some prominent members of the C++ standardization committee (though the two groups are separate) to support the C++ programming community. It helps fund some aspects of the standardization committee’s meetings, as well as CppCon, a major yearly conference about C++ (highly recommended if you enjoyed the material in this book). It also includes a directory of on-line forums (hosted as “Google groups”) that cover various C++ topics.
+
+\url{https://isocpp.org/forums}
+
+\url{https://cppcon.org}
+
+\item
+The Association of C and C++ Users (ACCU) is an organization based in the United Kingdom for “anyone interested in developing and improving programming skills.” It hosts a yearly programming conference with a particularly strong track about C++.
+
+\url{https://www.accu.org}
+\end{itemize}
 
 \subsubsection*{Books and Web Sites}
 \addcontentsline{toc}{subsection}{Books and Web Sites}
+
+\hspace*{\fill} \\ %插入空行
+{[AbrahamsGurtovoyMeta]}
+
+David Abrahams and Aleksey Gurtovoy
+
+C++ Template Metaprogramming – Concepts, Tools, and Techniques from Boost and Beyond
+ 
+Addison-Wesley, Boston, MA, 2005
+
+\hspace*{\fill} \\ %插入空行
+{[AlexandrescuDesign]}
+
+Andrei Alexandrescu
+
+Modern C++ Design – Generic Programming and Design Patterns Applied
+
+Addison-Wesley, Boston, MA, 2001
+
+\hspace*{\fill} \\ %插入空行
+{[AlexandrescuDiscriminatedUnions]}
+
+Andrei Alexandrescu
+
+Discriminated Unions (parts I, II, III)
+
+C/C++ Users Journal, April/June/August, 2002
+
+\hspace*{\fill} \\ %插入空行
+{[AlexandrescuAdHocVisitor]}
+
+Andrei Alexandrescu
+
+Generic Programming:Typelists and Applications
+
+Dr. Dobb’s Journal, February, 2002
+
+\hspace*{\fill} \\ %插入空行
+{[AusternSTL]}
+
+Matthew H. Austern
+
+Generic Programming and the STL – Using and Extending the C++ Standard Template Library
+
+Addison-Wesley, Boston, MA, 1999
+
+\hspace*{\fill} \\ %插入空行
+{[BartonNackman]}
+
+John J. Barton and Lee R. Nackman
+
+Scientific and Engineering C++ – An Introduction with Advanced Techniques and Examples
+
+Addison-Wesley, Boston, MA, 1994
+
+\hspace*{\fill} \\ %插入空行
+{[BCCL]}
+
+Jeremy Siek
+
+The Boost Concept Check Library
+
+\url{http://www.boost.org/libs/concept_check/concept_check.htm}
+
+\hspace*{\fill} \\ %插入空行
+{[Blitz++]}
+
+Todd Veldhuizen
+
+Blitz++: Object-Oriented Scientific Computing
+
+\url{http://blitz.sourceforge.net/}
+
+\hspace*{\fill} \\ %插入空行
+{[Boost]}
+
+The Boost Repository for Free, Peer-Reviewed C++ Libraries
+
+\url{http://www.boost.org}
+
+\hspace*{\fill} \\ %插入空行
+{[BoostAny]}
+
+Kevlin Henney
+
+Boost Any Library
+
+\url{http://www.boost.org/libs/any}
+
+\hspace*{\fill} \\ %插入空行
+{[BoostFusion]}
+
+Joel de Guzman, Dan Marsden, and Tobias Schwinger
+
+The Boost Fusion Library
+
+\url{http://boost.org/libs/fusion}
+
+\hspace*{\fill} \\ %插入空行
+{[BoostHana]}
+
+Louis Dionne
+
+The Boost Hana Library for Metaprogramming
+
+\url{http://boostorg.github.io/hana}
+
+\hspace*{\fill} \\ %插入空行
+{[BoostIterator]}
+
+David Abrahams, Jeremy Siek, Thomas Witt
+
+Boost Iterator
+
+\url{http://www.boost.org/libs/iterator}
+
+\hspace*{\fill} \\ %插入空行
+{[BoostMPL]}
+
+Aleksey Gurtovoy and David Abrahams
+
+Boost MPL
+
+\url{http://www.boost.org/libs/mpl}
+
+\hspace*{\fill} \\ %插入空
+{[BoostOperators]}
+
+David Abrahams
+
+Boost Operators
+
+\url{http://www.boost.org/libs/utility/operators.htm}
+
+\hspace*{\fill} \\ %插入空
+{[BoostTuple]}
+
+Jaakko J$\ddot{a}$rvi
+
+The Boost Tuple Library
+
+\url{http://boost.org/libs/tuple}
+
+\hspace*{\fill} \\ %插入空
+{[BoostOptional]}
+
+Fernando Luis Cacciola Carballal
+
+Boost Optional Library
+
+\url{http://www.boost.org/libs/optional}
+
+\hspace*{\fill} \\ %插入空
+{[BoostSmartPtr]}
+
+Smart Pointer Library
+
+\url{http://www.boost.org/libs/smart_ptr}
+
+\hspace*{\fill} \\ %插入空
+{[BoostTypeTraits]}
+
+Type Traits Library
+
+\url{http://www.boost.org/libs/type_traits}
+
+\hspace*{\fill} \\ %插入空
+{[BoostVariant]}
+
+Eric Friedman and Itay Maman
+
+Boost Variant Library
+
+\url{http://www.boost.org/libs/variant}
+
+\hspace*{\fill} \\ %插入空
+{[BrownSIunits]}
+
+Walter E. Brown
+
+Introduction to the SI Library of Unit-Based Computation
+
+\url{http://lss.fnal.gov/archive/1998/conf/Conf-98-328.pdf}
+
+\hspace*{\fill} \\ %插入空
+{[C++98]}
+
+ISO
+
+Information Technology—Programming Languages—C++
+
+ISO/IEC, Document Number 14882-1998, 1998
+
+\hspace*{\fill} \\ %插入空
+{[C++03]}
+
+ISO
+
+Information Technology—Programming Languages—C++
+
+ISO/IEC, Document Number 14882-2003, 2003
+
+\hspace*{\fill} \\ %插入空
+{[C++11]}
+ISO
+Information Technology—Programming Languages—C++
+ISO/IEC, Document Number 14882-2011, 2011
+
+\hspace*{\fill} \\ %插入空
+{[C++14]}
+ISO
+Information Technology—Programming Languages—C++
+ISO/IEC, Document Number 14882-2014, 2014
+
+\hspace*{\fill} \\ %插入空
+{[C++17]}
+ISO
+Information Technology—Programming Languages—C++
+ISO/IEC, Document Number 14882-2017, 2017
+
+\hspace*{\fill} \\ %插入空
+{[CacciolaKrzemienski2013]}
+
+Fernando Luis Cacciola Carballal and Andrzej Krzemie$\acute{n}$ski
+
+A Proposal to Add a Utility Class to Represent Optional Objects
+
+\url{http://wg21.link/n3527}
+
+\hspace*{\fill} \\ %插入空
+{[CargillExceptionSafety]}
+
+Tom Cargill
+
+Exception Handling: A False Sense of Security
+
+C++ Report, November-December 1994
+
+\hspace*{\fill} \\ %插入空
+{[CoplienCRTP]}
+
+James O. Coplien
+
+Curiously Recurring Template Patterns
+
+C++ Report, February 1995
+
+\hspace*{\fill} \\ %插入空
+{[CoreIssue1395]}
+
+C++ Standard Core Issue 1395
+
+\url{http://wg21.link/cwg1395}
+
+\hspace*{\fill} \\ %插入空
+{[CzarneckiEiseneckerGenProg]}
+
+Krzysztof Czarnecki and Ulrich W. Eisenecker
+
+Generative Programming – Methods, Tools, and Applications
+
+Addison-Wesley, Boston, MA, 2000
+
+\hspace*{\fill} \\ %插入空
+{[DesignPatternsGoF]}
+
+Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides
+
+Design Patterns – Elements of Reusable Object-Oriented Software
+
+Addison-Wesley, Boston, MA, 1995
+
+\hspace*{\fill} \\ %插入空
+{[DosReisMarcusAliasTemplates]}
+
+Gabrial Dos Reis and Mat Marcus
+
+Proposal to Add Template Aliases to C++
+
+\url{http://wg21.link/n1449}
+
+\hspace*{\fill} \\ %插入空
+{[EDG]}
+
+Edison Design Group
+
+Compiler Front Ends for the OEM Market
+
+\url{http://www.edg.com}
+
+\hspace*{\fill} \\ %插入空
+{[EiseneckerBlinnCzarnecki]}
+
+Ulrich W. Eisenecker, Frank Blinn, and Krzysztof Czarnecki
+
+Mixin-Based Programming in C++
+
+Dr. Dobbs Journal, January, 2001
+
+\hspace*{\fill} \\ %插入空
+{[EllisStroustrupARM]}
+
+Margaret A. Ellis and Bjarne Stroustrup
+
+The Annotated C++ Reference Manual (ARM)
+
+Addison-Wesley, Boston, MA, 1990
+
+\hspace*{\fill} \\ %插入空
+{[GregorJarviPowellVariadicTemplates]}
+
+Douglas Gregor, Jaakko J$\ddot{a}$rvi, and Gary Powell 
+
+Variadic Templates
+
+\url{http://wg21.link/n2080}
+
+\hspace*{\fill} \\ %插入空
+{[HenneyValuedConversions]}
+
+Kevlin Henney
+
+Valued Conversions
+
+C++ Report 12(7), July-August 2000
+
+\hspace*{\fill} \\ %插入空
+{[OverloadingProperties]}
+
+Jaakko Jarvi, Jeremiah Willcock, Howard Hinnant, and Andrew Lumsdaine ¨
+
+Function Overloading Based on Arbitrary Properties of Types
+
+C/C++ Users Journal 12 (6), June, 2003
+
+\hspace*{\fill} \\ %插入空
+{[ItaniumABI]}
+
+Itanium C++ ABI
+
+\url{http://itanium-cxx-abi.github.io/cxx-abi/}
+
+\hspace*{\fill} \\ %插入空
+{[JosuttisLaunder]}
+Nicolai Josuttis
+
+On launder()
+
+\url{https://wg21.link/p0532r0}
+
+\hspace*{\fill} \\ %插入空
+{[JosuttisStdLib]}
+
+Nicolai M. Josuttis
+
+The C++ Standard Library – A Tutorial and Reference (2nd edition)
+
+Addison-Wesley, Boston, MA, 2012
+
+\hspace*{\fill} \\ %插入空
+{[KarlssonSafeBool]}
+
+Bjorn Karlsson
+
+The Safe Bool Idiom
+
+C++ Source, July, 2004
+
+\hspace*{\fill} \\ %插入空
+{[KoenigMooAcc]}
+
+Andrew Koenig and Barbara E. Moo
+
+Accelerated C++ – Practical Programming by Example
+
+Addison-Wesley, Boston, MA, 2000
+
+\hspace*{\fill} \\ %插入空
+{[LambdaLib]}
+
+Jaakko Jarvi and Gary Powell ¨
+
+LL, The Lambda Library
+
+\url{http://www.boost.org/libs/lambda}
+
+\hspace*{\fill} \\ %插入空
+{[LibIssue181]}
+
+C++ Library Issue 181
+
+\url{http://wg21.link/lwg181}
+
+\hspace*{\fill} \\ %插入空
+{[LippmanObjMod]}
+
+Stanley B. Lippman
+
+Inside the C++ Object Model
+
+Addison-Wesley, Boston, MA, 1996
+
+\hspace*{\fill} \\ %插入空
+{[MeyersCounting]}
+
+Scott Meyers
+
+Counting Objects In C++
+
+C/C++ Users Journal, April 1998
+
+\hspace*{\fill} \\ %插入空
+{[MeyersEffective]}
+
+Scott Meyers
+
+Effective C++ – 50 Specific Ways to Improve Your Programs and Design (2nd edition)
+
+Addison-Wesley, Boston, MA, 1998
+
+\hspace*{\fill} \\ %插入空
+{[MeyersMoreEffective]}
+
+Scott Meyers
+
+More Effective C++ – 35 New Ways to Improve Your Programs and Designs
+
+Addison-Wesley, Boston, MA, 1996
+
+
+\hspace*{\fill} \\ %插入空
+{[MoonFlavors]}
+
+David A. Moon
+
+Object-oriented programming with Flavors
+
+Conference proceedings on Object-oriented programming systems, languages and applications, 1986
+
+
+\hspace*{\fill} \\ %插入空
+{[MTL]}
+
+Andrew Lumsdaine and Jeremy Siek
+
+MTL, The Matrix Template Library
+
+\url{http://www.osl.iu.edu/research/mtl}
+
+
+\hspace*{\fill} \\ %插入空
+{[MusserWangDynaVeri]}
+
+D. R. Musser and C. Wang
+
+Dynamic Verification of C++ Generic Algorithms
+
+IEEE Transactions on Software Engineering, Vol. 23, No. 5, May 1997
+
+\hspace*{\fill} \\ %插入空
+{[MyersTraits]}
+
+Nathan C. Myers
+
+Traits: A New and Useful Template Technique
+
+\url{http://www.cantrip.org/traits.html}
+
+
+\hspace*{\fill} \\ %插入空
+{[NewMat]}
+
+Robert Davies
+
+NewMat10, A Matrix Library in C++
+
+\url{http://www.robertnz.net/nm_intro.htm}
+
+
+\hspace*{\fill} \\ %插入空
+{[NewShorterOED]}
+
+Leslie Brown (Ed.)
+
+The New Shorter Oxford English Dictionary (4th edition)
+
+Oxford University Press, Oxford, 1993
+
+
+\hspace*{\fill} \\ %插入空
+{[POOMA]}
+
+POOMA: A High-Performance C++ Toolkit for Parallel Scientific Computation
+
+\url{http://www.nongnu.org/freepooma/}
+
+
+\hspace*{\fill} \\ %插入空
+{[SmaragdakisBatoryMixins]}
+
+Yannis Smaragdakis and Don S. Batory
+
+Mixin-Based Programming in C++
+
+Proceedings of the Second International Symposium on Generative and Component-Based Software
+
+Engineering, October, 2000
+
+
+\hspace*{\fill} \\ %插入空
+{[SpicerSFINAE]}
+
+John Spicer
+
+Solving the SFINAE Problem for Expressions
+
+\url{http://wg21.link/n2634}
+
+\hspace*{\fill} \\ %插入空
+{[StepanovLeeSTL]}
+
+Alexander Stepanov and Meng Lee
+
+The Standard Template Library – HP Laboratories Technical Report 95-11(R.1)
+
+November 14, 1995
+
+\hspace*{\fill} \\ %插入空
+{[StepanovNotes]}
+
+Alexander Stepanov
+
+Notes on Programming
+
+\url{http://stepanovpapers.com/notes.pdf}
+
+\hspace*{\fill} \\ %插入空
+{[StroustrupC++PL]}
+
+Bjarne Stroustrup
+
+The C++ Programming Language (Special Edition)
+
+Addison-Wesley, Boston, MA, 2000
+
+\hspace*{\fill} \\ %插入空
+{[StroustrupDnE]}
+
+Bjarne Stroustrup
+
+The Design and Evolution of C++
+
+Addison-Wesley, Boston, MA, 1994
+
+\hspace*{\fill} \\ %插入空
+{[StroustrupGlossary]}
+
+Bjarne Stroustrup
+
+Bjarne Stroustrup’s C++ Glossary
+
+\url{http://www.stroustrup.com/glossary.html}
+
+\hspace*{\fill} \\ %插入空
+{[SutterExceptional]}
+
+Herb Sutter
+
+Exceptional C++ – 47 Engineering Puzzles, Programming Problems, and Solutions
+
+Addison-Wesley, Boston, MA, 2000
+
+\hspace*{\fill} \\ %插入空
+{[SutterMoreExceptional]}
+
+Herb Sutter
+
+More Exceptional C++ – 40 New Engineering Puzzles, Programming Problems, and Solutions
+
+Addison-Wesley, Boston, MA, 2001
+
+\hspace*{\fill} \\ %插入空
+{[UnruhPrimeOrig]}
+
+Erwin Unruh
+
+Original Metaprogram for Prime Number Computation
+
+\url{http://www.erwin-unruh.de/primorig.html}
+
+\hspace*{\fill} \\ %插入空
+{[VandevoordeJosuttisTemplates1st]}
+
+David Vandevoorde and Nicolai M. Josuttis
+
+C++ Templates: The Complete Guide
+
+Addison-Wesley, Boston, MA, 2003
+
+\hspace*{\fill} \\ %插入空
+{[VandevoordeSolutions]}
+
+David Vandevoorde
+
+C++ Solutions
+
+Addison-Wesley, Boston, MA, 1998
+
+\hspace*{\fill} \\ %插入空
+{[VeldhuizenMeta95]}
+
+Todd Veldhuizen
+
+Using C++ Template Metaprograms
+
+C++ Report, May 1995
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

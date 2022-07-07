@@ -1,0 +1,125 @@
+
+Let’s first examine how to use concepts in client code (i.e., the code that defines templates without necessarily defining the concepts that apply to the template parameters).
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Dealing with Requirements}
+
+Here is our habitual two-parameter max() template equipped with a constraint:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> requires LessThanComparable<T>
+T max(T a, T b) {
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+The only addition is the requires clause
+
+\begin{lstlisting}[style=styleCXX]
+requires LessThanComparable<T>
+\end{lstlisting}
+
+which assumes that we have previously declared—most likely through a header inclusion—the concept LessThanComparable.
+
+Such a concept is a Boolean predicate (i.e., an expression producing a value of type bool) that evaluates to a constant-expression. That is important because the constraints are evaluated at compile time and therefore produce no overhead in terms of the generated code: This constrained template will produce code that is just as fast as the unconstrained versions we have discussed elsewhere.
+
+When we attempt to use this template, it will not be instantiated until the requires clause has been evaluated and found to produce a true value. If it produces a false value, an error might be emitted explaining which part of the requirement failed (or, a matching overloaded template that doesn’t fail the requirements might be selected).
+
+Requires clauses do not have to be expressed in terms of concepts (although doing so is good practice and tends to produce better diagnostics): Any Boolean constant-expression can be used. For example, as discussed in Section 6.5 on page 103, the following code ensures that a template constructor can’t be used as copy constructor:
+
+\begin{lstlisting}[style=styleCXX]
+class Person
+{
+	private:
+	std::string name;
+	public:
+	template<typename STR>
+	requires std::is_convertible_v<STR,std::string>
+	explicit Person(STR&& n)
+	: name(std::forward<STR>(n)) {
+		std::cout << "TMPL-CONSTR for ’" << name << "’\n";
+	}
+	...
+};
+\end{lstlisting}
+
+Here, not using a named concept (see Section E.2 on page 742) can be appropriate, because the ad hoc Boolean expression (using a type trait in this case)
+
+\begin{lstlisting}[style=styleCXX]
+std::is_convertible_v<STR,std::string>
+\end{lstlisting}
+
+is used to fix the problem that a template constructor might be used instead of a copy constructor. Details of how to organize concepts and constraints are still an active field of exploration by the C++ community, and will likely evolve over time, but there seems to be general agreement that concepts should reflect what code means and not whether it compiles.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Dealing with Multiple Requirements}
+
+In the example above, there is only one requirement, but it’s not uncommon to have multiple requirements. For example, one might imagine a Sequence concept that describes a sequence of element values (matching the same notion in the standard) and a template find() that, given a sequence and a value, returns an iterator referring to the first occurrence of the value in that sequence (if any). That template might be defined as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Seq>
+	requires Sequence<Seq> &&
+			EqualityComparable<typename Seq::value_type>
+	typename Seq::iterator find(Seq const& seq,
+								typename Seq::value_type const& val)
+{
+	return std::find(seq.begin(), seq.end(), val);
+}
+\end{lstlisting}
+
+Here, any call to this template will first check each requirement in turn and only if all requirements produce true values can the template be selected for the call and be instantiated (provided, of course, overload resolution does not discard the template for other reasons, such as another template being a better match).
+
+It is also possible to express “alternative” requirements using ||. This is rarely needed and should not be done too casually because excessive use of the || operator in requires clauses may potentially tax compilation resources (i.e., make compilation noticeably slower). However, it can be quite convenient in some situations. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+	requires Integral<T> ||
+			FloatingPoint<T>
+T power(T b, T p);
+\end{lstlisting}
+
+A single requirement can also involve multiple template parameters, and a single concept can express a predicate over multiple template parameters. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+	requires SomeConcept<T, U>
+auto f(T x, U y) -> decltype(x+y)
+\end{lstlisting}
+
+Thus, concepts can impose a relationship between type parameters.
+
+\hspace*{\fill} \\ %插入空行
+\noindent
+\textbf{Shorthand Notation for Single Requirements}
+
+To lighten the notational overhead of requires clauses, a syntactic shortcut is available when a constraint only involves one parameter at a time. This is perhaps most easily illustrated by using the shorthand for the declaration of our constrained max() template above:
+
+\begin{lstlisting}[style=styleCXX]
+template<LessThanComparable T>
+T max(T a, T b) {
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+This is functionally equivalent to the prior definition of max(). When redeclaring a constrained template, however, the same form must be used as the original declaration (in that sense it is functionally equivalent, but not equivalent).
+
+We can use the same shorthand for one of the two requirements in the find() template:
+
+\begin{lstlisting}[style=styleCXX]
+template<Sequence Seq>
+	requires EqualityComparable<typename Seq::value_type>
+typename Seq::iterator find(Seq const& seq,
+							typename Seq::value_type const& val)
+{
+	return std::find(seq.begin(), seq.end(), val);
+}
+\end{lstlisting}
+
+Again, this is equivalent to the prior definition of the find() template for sequence types.
+
+
+
+
+

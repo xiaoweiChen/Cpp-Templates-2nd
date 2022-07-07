@@ -1,4 +1,119 @@
+
+Let’s assume for a moment that we have defined concepts IntegerLike<T> and StringLike<T>, and we decide to write templates to print out values of types of either concept. We could do that as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<IntegerLike T> void print(T val); // #1
+template<StringLike T> void print(T val); // #2
+\end{lstlisting}
+
+If it weren’t for the differing constraints, these two declarations would declare the same template. However, the constraints are part of the template signature and allow the templates to be distinguishable during overload resolution. In particular, if both templates are found to be viable candidates, but only template \#1 has its constraints satisfied, then overload selects the satisfied template. For example, assuming int satisfies IntegerLike and std::string satisfies StringLike, but not vice versa:
+
+\begin{lstlisting}[style=styleCXX]
+int main()
+{
+	printf(1); // selects template #1
+	printf("1"s); // selects template #2
+}
+\end{lstlisting}
+
+We could imagine a string-like type that supports integer-like computations. For example, if "6"\_NS and "7"\_NS are two literals for that type, multiplying those literals would produce the same value as "42"\_NS. Such a type might satisfy both IntegerLike and StringLike and, therefore, a call like print("42"\_NS) would be ambiguous.
+
 \subsubsubsection{E.3.1\hspace{0.2cm}Constraint Subsumption}
+
+Our first discussion of overloading function templates distinguished by constraints involved constraints that are expected to generally be mutually exclusive. For example, in our example with IntegerLike and StringLike, we could envision types that satisfy both concepts, but we expect that to be rare enough that our overloaded print templates remain useful.
+
+There are, however, sets of concepts that are never mutually exclusive but where one “subsumes” the other. The classical examples of this are the standard library iterator categories: input iterator, forward iterator, bidirectional iterator, random access iterator, and, in C++17, contiguous iterator.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Contiguous iterators are a refinement of random access iterators introduced in C++17. No std::contiguous\_iterator\_tag was added for them because existing algorithms that rely on std::random\_access\_iterator\_tag would no longer be selected if the tag were changed.
+\end{tcolorbox}
+
+Suppose we have a definition for ForwardIterator:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+	concept ForwardIterator = ...;
+\end{lstlisting}
+
+Then the “more refined” concept BidirectionalIterator might be defined as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+	concept BidirectionIterator =
+		ForwardIterator<T> &&
+		requires (T it) {
+			{ --it } -> T&
+		};
+\end{lstlisting}
+
+That is, we add the ability to apply prefix operator-- on top of the capabilities already provided by forward iterators.
+
+Consider now the std::advance() algorithm (which we’ll call advanceIter()), overloaded for forward and bidirectional iterators using constrained templates:
+
+\begin{lstlisting}[style=styleCXX]
+template<ForwardIterator T, typename D>
+void advanceIter(T& it, D n)
+{
+	assert(n >= 0);
+	for (; n != 0; --n) { ++it; }
+}
+
+template<BidirectionalIterator T, typename D>
+void advanceIter(T& it, D n)
+{
+	if (n > 0) {
+		for (; n != 0; --n) { ++it; }
+	} else if (n < 0) {
+		for (; n != 0; ++n) { --it; }
+	}
+}
+\end{lstlisting}
+
+When calling advanceIter() with a plain forward iterator (i.e., one that is not a bidirectional iterator), only the constraints of the first template will be satisfied, and overload resolution is straightforward: The first template is selected. However, a bidirectional iterator will satisfy the constraints of both templates. In cases like that, when overload resolution does not otherwise prefer one candidate over another, it will prefer the candidate whose constraints subsume the constraints of the other candidate, while the reverse is not true. The exact definition of subsumption is a little beyond this introductory appendix, but suffice it to know that if a constraint C2<Ts...> is defined by requiring a constraint C1<Ts...> and additional constraints (i.e., \&\&), then the former subsumes the latter.
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}The specification being proposed for standardization is a little more powerful than this. It breaks down constraints into sets of “atomic components” (including the parts of requires expressions) and analyzes those sets to see if one is clearly a strict subset of the other.
+\end{tcolorbox}
+
+Clearly, in our example, BidirectionalIterator<T> subsumes ForwardIterator<T>, and hence the second advanceIter() template is preferred when called with a bidirectional iterator.
+
 
 
 \subsubsubsection{E.3.2\hspace{0.2cm}Constraints and Tag Dispatching}
+
+
+Recall that in Section 20.2 on page 467, we addressed the issue of overloading the advanceIter() algorithm using tag dispatching. That method can be integrated in constrained templates in a fairly elegant way. For example, input iterators and forward iterators are not distinguishable through their syntactic interfaces. So instead, we can reach to tags to define one in terms of the other:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept ForwardIterator =
+InputIterator<T> &&
+requires {
+	typename std::iterator_traits<T>::iterator_category;
+	is_convertible_v<std::iterator_traits<T>::iterator_category,
+					std::forward_iterator_tag>;
+};
+\end{lstlisting}
+
+With that, ForwardIterator<T> subsumes InputIterator<T>, and we can now overload templates constrained for both iterator categories.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,10 +1,10 @@
 
 
-函数模板提供了适用于不同数据类型的函数行为，函数模板代表的是一组函数。除了某些信息未被明确指定之外，看起来很像普通函数。这些未指定的信息就是参数化的信息。
+函数模板提供了适用于不同数据类型的行为，代表的是一组函数。除了某些信息未明确指定外，看起来就和普通函数一样。这些未指定的信息就是参数化信息。
 
 \subsubsubsection{1.1.1\hspace{0.2cm}定义模板}
 
-以下就是一个函数模板，它返回两个数之中的最大值：
+下面就是一个函数模板，返回两个数的最大值：
 
 \noindent
 \textit{basics/max1.hpp}
@@ -20,24 +20,24 @@ T max (T a, T b)
 这个模板定义指定了一个函数组，它返回两个值的最大值，a和b作为函数的参数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}注意，根据[StepanovNotes]的\texttt{max()}模板有意地返回\texttt{b < a ? a: b}，而不是\texttt{a < b ? b: a}，是为了确保函数行为正确。
+\hspace*{0.75cm}根据[StepanovNotes]，\texttt{max()}模板有意地返回\texttt{b < a ? a: b}，而不是\texttt{a < b ? b: a}，是为了确保函数行为的正确性。
 \end{tcolorbox}
 
-形参的类型为模板形参T。本例中可以看到，模板形参必须使用以下形式的进行声明:
+形参的类型为\texttt{模板参数T}。本例中可以看到，模板参数必须使用以下形式的进行声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<逗号分割的模板参数>
 \end{lstlisting}
 
-我们的示例中，形参列表是\texttt{typename T}。注意\texttt{<}和\texttt{>}尖括号。关键字\texttt{typename}引入了一个类型参数。这是C++程序中最常见的模板形参类型，也可以使用其他形参，会在后面进行讨论(参见第3章)。
+示例中，参数列表是\texttt{typename T}。注意\texttt{<}和\texttt{>}尖括号。关键字\texttt{typename}引入了一个类型参数。这是C++程序中最常见的模板参数类型，也可以使用其他参数，会在后面进行讨论(参见第3章)。
 
-类型参数是\texttt{T}，也可以使用其他标识符作为参数名，不过使用T是惯例而已。类型参数表示在调用函数时才确定的类型，可以使用任何类型(基本类型、类等)，只要该类型提供模板使用的操作。这样，因为a和b使用这个操作符进行比较，所以类型\texttt{T}必须支持操作符\texttt{<}。\texttt{max()}的定义可能不太明显，类型T的值也必须是可复制的，以便返回。
+类型参数是\texttt{T}，也可以使用其他标识符作为参数名，不过T是惯例罢了。类型参数表示在调用函数时才确定的类型，可以使用任意支持模板使用操作的类型(基本类型、类等)。因为a和b使用小于操作符进行比较，所以类型\texttt{T}必须支持操作符\texttt{<}。\texttt{max()}的定义可能不太明显，类型T的值必须可复制，以便返回。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}在C++17之前，类型\texttt{T}也必须是可复制的才能传递参数。C++17以后，即使复制构造函数和移动构造函数都无效，也可以传递临时变量(右值，参见附录B)。
+\hspace*{0.75cm}C++17之前，类型\texttt{T}也必须可复制才能传递参数。C++17以后，即使复制构造函数和移动构造函数都无效，也可以传递临时变量(右值，参见附录B)。
 \end{tcolorbox}
 
-由于历史原因，还可以使用关键字\texttt{class}来定义类型参数。关键字\texttt{typename}在C++98标准中出现得相对较晚。在此之前，关键字\texttt{class}是引入类型参数的唯一方法，现在这种方法仍然有效。因此，模板\texttt{max()}可以等价地定义为:
+因为一些历史原因，还可以使用关键字\texttt{class}来定义类型参数。关键字\texttt{typename}在C++98标准中出现得相对较晚，所以在此之前，关键字\texttt{class}是引入类型参数的唯一方法，现在这种方法仍然有效。因此，模板\texttt{max()}可以等价地定义为:
 
 \begin{lstlisting}[style=styleCXX]
 template<class T>
@@ -47,11 +47,11 @@ T max (T a, T b)
 }
 \end{lstlisting}
 
-这里没有语义上的区别，即使在这里使用\texttt{class}，模板参数也可以使用任何类型。但因为这样使用\texttt{class}可能会引起误解(不仅是类可以替换为\texttt{T})，所以应该更倾向于中使用\texttt{typename}。但请注意，与类声明不同的是，在声明类型形参时，不能使用关键字\texttt{struct}来代替\texttt{typename}。
+这里没有语义上的区别，即使使用\texttt{class}，模板参数也可以使用任意类型。但因为这样使用\texttt{class}可能会引起误解(不仅是类可以替换为\texttt{T})，所以应该更倾向于中使用\texttt{typename}。但与类声明不同，在声明类型参数时，不能使用关键字\texttt{struct}来代替\texttt{typename}。
 
 \subsubsubsection{1.1.2\hspace{0.2cm}使用模板}
 
-The following program shows how to use the max() function template:
+下面的展示了如何使用函数模板\texttt{max()}:
 
 \noindent
 \textit{basics/max1.cpp}
@@ -75,7 +75,7 @@ int main()
 }
 \end{lstlisting}
 
-Inside the program, max() is called three times: once for two ints, once for two doubles, and once for two std::strings. Each time, the maximum is computed. As a result, the program has the following output:
+这里，\texttt{max()}调用了三次:整型，双精度浮点类型，\texttt{std::string}。输出如下:
 
 \begin{tcblisting}{commandshell={}}
 max(7,i): 42
@@ -83,26 +83,26 @@ max(f1,f2): 3.4
 max(s1,s2): mathematics
 \end{tcblisting}
 
-Note that each call of the max() template is qualified with ::. This is to ensure that our max() template is found in the global namespace. There is also a std::max() template in the standard library, which under some circumstances may be called or may lead to ambiguity.
+代码中，对\texttt{max()}的使用都用\texttt{::}限定。这是为了确保在全局命名空间中找到\texttt{max()}模板。在标准库中有一个\texttt{std::max()}，在某些情况下可以使用，但在这里可能会产生歧义。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}For example, if one argument type is defined in namespace std (such as std::string), according to the lookup rules of C++, both the global and the max() template in std are found (see Appendix C).
+\hspace*{0.75cm}在命名空间\texttt{std}中定义了一个参数类型(例如\texttt{std::string})，根据C++的查找规则，\texttt{std}中的\texttt{max()}模板函数和全局模板函数都会被找到(参见附录C)。
 \end{tcolorbox}
 
-Templates aren’t compiled into single entities that can handle any type. Instead, different entities are generated from the template for every type for which the template is used.4 
+模板不会编译成处理任意类型的实体。相反，对于模板所使用的每个类型，会根据模板中生成不同的实体。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}A “one-entity-fits-all” alternative is conceivable but not used in practice (it would be less efficient at run time). All language rules are based on the principle that different entities are generated for different template arguments.
+\hspace*{0.75cm}“一体多用”的方案想想是可以的，但不会在实践中使用(运行时效率较低)。所有语言规则都基于这样一个原则:对于不同的模板参数，会生成不同的实体。
 \end{tcolorbox}
 
-Thus, max() is compiled for each of these three types. For example, the first call of max()
+因此，\texttt{max()}对这三种类型进行了分别编译。例如，\texttt{max()}的第一次调用
 
 \begin{lstlisting}[style=styleCXX]
 int i = 42;
 ... max(7,i) ...
 \end{lstlisting}
 
-uses the function template with int as template parameter T. Thus, it has the semantics of calling the following code:
+使用int作为模板形参T的函数模板。因此，等同于调用的如下函数:
 
 \begin{lstlisting}[style=styleCXX]
 int max (int a, int b)
@@ -111,22 +111,22 @@ int max (int a, int b)
 }
 \end{lstlisting}
 
-The process of replacing template parameters by concrete types is called instantiation. It results in an instance of a template.
+用具体类型替换模板参数的过程称为实例化，会产生一个模板实例。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The terms instance and instantiate are used in a different context in object-oriented programming—namely, for a concrete object of a class. However, because this book is about templates, we use this term for the “use” of templates unless otherwise specified.
+\hspace*{0.75cm}面向对象编程中，术语\texttt{实例(instance)}和\texttt{实例化(instantiate)}用于不同的上下文——类的具体对象。然而，由于本书针对模板，仅用来这两个术语表示对模板的“使用”，除非另有说明。
 \end{tcolorbox}
 
-Note that the mere use of a function template can trigger such an instantiation process. There is no need for the programmer to request the instantiation separately.
+注意，使用函数模板就可以进行实例化，开发者无需单独实例化。
 
-Similarly, the other calls of max() instantiate the max template for double and std::string as if they were declared and implemented individually:
+类似地，\texttt{max()}的其他调用实例化了\texttt{double}和\texttt{std::string}的\texttt{max}模板:
 
 \begin{lstlisting}[style=styleCXX]
 double max (double, double);
 std::string max (std::string, std::string);
 \end{lstlisting}
 
-Note also that void is a valid template argument provided the resulting code is valid. For example:
+如果结果代码有效，\texttt{void}是有效的模板参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

@@ -1,21 +1,21 @@
 
-As we have seen so far, function templates have two distinct sets of parameters:
+正如之前所见，函数模板可以有两组不同的类型参数:
 
 \begin{enumerate}
 \item 
-Template parameters, which are declared in angle brackets before the function template name:
+模板参数，用尖括号声明在函数模板名之前:
 \begin{lstlisting}[style=styleCXX]
-template<typename T> // T is template parameter
+template<typename T> // T是模板参数
 \end{lstlisting}
 
 \item 
-Call parameters, which are declared in parentheses after the function template name:
+调用参数，在函数模板名称后面的圆括号中声明:
 \begin{lstlisting}[style=styleCXX]
-T max (T a, T b) // a and b are call parameters
+T max (T a, T b) // a和b调用参数
 \end{lstlisting}
 \end{enumerate}
 
-You may have as many template parameters as you like. For example, you could define the max() template for call parameters of two potentially different types:
+其实，这里可以有任意多种模板参数。例如，可以为两种可能不同类型的调用参数定义max()模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -24,27 +24,27 @@ T1 max (T1 a, T2 b)
 	return b < a ? a : b;
 }
 ...
-auto m = ::max(4, 7.2); // OK, but type of first argument defines return type
+auto m = ::max(4, 7.2); // OK, 不过返回类型与第一个参数类型一样
 \end{lstlisting}
 
-It may appear desirable to be able to pass parameters of different types to the max() template, but, as this example shows, it raises a problem. If you use one of the parameter types as return type, the argument for the other parameter might get converted to this type, regardless of the caller’s intention. Thus, the return type depends on the call argument order. The maximum of 66.66 and 42 will be the double 66.66, while the maximum of 42 and 66.66 will be the int 66.
+将不同类型的参数传递给max()模板似乎没什么问题，但这会引发一个问题。若使用其中一种形参类型作为返回类型，则其他参数的实参可能需要向这种类型进行转换。因此，返回类型取决于调用参数的顺序。66.66和42的最大值将是double类型的66.66，而42和66.66的最大值将是int类型的66。
 
-C++ provides different ways to deal with this problem:
+C++提供了不同的方法来处理这个问题:
 
 \begin{itemize}
 \item
-Introduce a third template parameter for the return type.
+为返回类型引入第三个模板参数。
 
 \item
-Let the compiler find out the return type.
+让编译器找出返回类型。
 
 \item
-Declare the return type to be the “common type” of the two parameter types.
+将返回类型声明为两个参数类型的“公共类型”。
 \end{itemize}
 
-All these options are discussed next.
+接下来来讨论这些方法。
 
-\subsubsubsection{1.3.1\hspace{0.2cm}Template Parameters for Return Types}
+\subsubsubsection{1.3.1\hspace{0.2cm}返回类型的模板参数}
 
 Our earlier discussion showed that template argument deduction allows us to call function templates with syntax identical to that of calling an ordinary function: We do not have to explicitly specify the types corresponding to the template parameters.
 

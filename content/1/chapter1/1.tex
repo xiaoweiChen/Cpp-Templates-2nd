@@ -140,7 +140,7 @@ foo(vp); // OK: deduces void foo(void*)
 
 \subsubsubsection{1.1.3\hspace{0.2cm}两阶段翻译}
 
-An attempt to instantiate a template for a type that doesn’t support all the operations used within it will result in a compile-time error. For example:
+若为为不支持使用操作的类型实例化模板，将导致编译时错误。例如:
 
 \begin{lstlisting}[style=styleCXX]
 std::complex<float> c1, c2; // doesn’t provide operator <
@@ -148,34 +148,34 @@ std::complex<float> c1, c2; // doesn’t provide operator <
 ::max(c1,c2); // ERROR at compile time
 \end{lstlisting}
 
-Thus, templates are “compiled” in two phases:
+因此，模板“编译”分为两个阶段:
 
 \begin{enumerate}
 \item 
-Without instantiation at definition time, the template code itself is checked for correctness ignoring the template parameters. This includes:
+若在定义时不进行实例化，则会检查模板代码的正确性，而忽略模板参数。这包括:
 \begin{itemize}
 \item[-] 
-Syntax errors are discovered, such as missing semicolons.
+现语法错误，比如:缺少分号。
 
 \item[-]
-Using unknown names (type names, function names, ...) that don’t depend on template parameters are discovered.
+使用未知名称的模板参数(类型名、函数名……)。
 
 \item[-]
-Static assertions that don’t depend on template parameters are checked.
+检查(不依赖于模板参数的)静态断言。
 \end{itemize}
 
 \item 
-At instantiation time, the template code is checked (again) to ensure that all code is valid. That is, now especially, all parts that depend on template parameters are double-checked.
+实例化时，再次检查模板代码，确保生成的代码皆有效。特别是所有依赖于模板参数的部分，都会进行重复检查。
 \end{enumerate}
 
-For example:
+例如：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 void foo(T t)
 {
-	undeclared(); // first-phase compile-time error if undeclared() unknown
-	undeclared(t); // second-phase compile-time error if undeclared(T) unknown
+	undeclared(); // 若undeclared()未知，则在第一阶段编译时报错
+	undeclared(t); // 若undeclared(T)未知，则在第二阶段编译时报错
 	static_assert(sizeof(int) > 10, // always fails if sizeof(int)<=10
 				  "int too small");
 	static_assert(sizeof(T) > 10, // fails if instantiated for T with size <=10
@@ -183,21 +183,21 @@ void foo(T t)
 }
 \end{lstlisting}
 
-The fact that names are checked twice is called two-phase lookup and discussed in detail in Section 14.3.1。
+检查两次名称的情况称为两阶段查找，在第14.3.1节会进行详细讨论。
 
-Note that some compilers don’t perform the full checks of the first phase.
+注意，有些编译器不在第一阶段编译时进行完全的检查。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}For example, The Visual C++ compiler in some versions (such as Visual Studio 20133 and 2015) allow undeclared names that don’t depend on template parameters and even some syntax flaws (such as a missing semicolon).
+\hspace*{0.75cm}例如，一些版本的Visual C++编译器(如Visual Studio 2013和2015)允许模板参数使用未声明名称，甚至允许一些语法缺陷(如缺少分号)。
 \end{tcolorbox}
 
-So you might not see general problems until the template code is instantiated at least once.
+因此，在模板代码第一次实例化前，可能不会看到存在的问题。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Compiling and Linking}
+\textbf{编译和连接}
 
-Two-phase translation leads to an important problem in the handling of templates in practice: When a function template is used in a way that triggers its instantiation, a compiler will (at some point) need to see that template’s definition. This breaks the usual compile and link distinction for ordinary functions, when the declaration of a function is sufficient to compile its use. Methods of handling this problem are discussed in Chapter 9. For the moment, let’s take the simplest approach: Implement each template inside a header file.
+两阶段翻译在实际处理模板时，会有一个问题:当以数模板实例化的方式使用函数模板时，编译器(在某些时候)需要查看该模板的定义。当一个函数的声明足以编译并连接通过时，就打破了普通函数的编译和链接方式。第9章讨论了处理这个问题的方法。现在，我们使用最简单的方法:仅在头文件中实现每个模板。
 
 
 

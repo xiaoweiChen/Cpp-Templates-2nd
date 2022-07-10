@@ -1,6 +1,6 @@
-When we call a function template such as max() for some arguments, the template parameters are determined by the arguments we pass. If we pass two ints to the parameter types T, the C++ compiler has to conclude that T must be int.
+当使用函数模板(如max())时，模板参数由传递的实参决定。如果类型T传递两个int型参数，那编译器就会推断T一定是int型。
 
-However, T might only be “part” of the type. For example, if we declare max() to use constant references:
+然而，T可能只是类型的“一部分”。例如，若声明max()使用常量引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -10,81 +10,81 @@ T max (T const& a, T const& b)
 }
 \end{lstlisting}
 
-and pass int, again T is deduced as int, because the function parameters match for int const\&.
+并传递int，同样T会推导为int，因为函数形参匹配的是int const\&。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Type Conversions During Type Deduction}
+\textbf{类型推导时的类型转换}
 
-Note that automatic type conversions are limited during type deduction:
+注意，自动类型转换在类型演绎时有一些限制:
 
 \begin{itemize}
 \item
-When declaring call parameters by reference, even trivial conversions do not apply to type deduction. Two arguments declared with the same template parameter T must match exactly.
+当通过引用声明参数时，简单的转换也不适用于类型推断。用同一个模板参数T声明的两个实参必须完全匹配。
 
 \item
-When declaring call parameters by value, only trivial conversions that decay are supported: Qualifications with const or volatile are ignored, references convert to the referenced type, and raw arrays or functions convert to the corresponding pointer type. For two arguments declared with the same template parameter T the decayed types must match.
+当按值声明参数时，只支持简单的转换:忽略带有const或volatile的限定，引用转换为引用的类型，原始数组或函数转换为相应的指针类型。对于使用相同模板参数T声明的两个实参，转换类型必须匹配。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 T max (T a, T b);
 ...
 int const c = 42;
-max(i, c); // OK: T is deduced as int
-max(c, c); // OK: T is deduced as int
+max(i, c); // OK: T推导为int
+max(c, c); // OK: T推导为int
 int& ir = i;
-max(i, ir); // OK: T is deduced as int
+max(i, ir); // OK: T推导为int
 int arr[4];
-foo(&i, arr); // OK: T is deduced as int*
+foo(&i, arr); // OK: T推导为int*
 \end{lstlisting}
 
-However, the following are errors:
+下面就是反面案例了：
 
 \begin{lstlisting}[style=styleCXX]
-max(4, 7.2); // ERROR: T can be deduced as int or double
+max(4, 7.2); // ERROR: T推导为int或double
 std::string s;
-foo("hello", s); // ERROR: T can be deduced as char const[6] or std::string
+foo("hello", s); // ERROR: T推导为char const[6]或std::string
 \end{lstlisting}
 
-There are three ways to handle such errors:
+有三种方法可以处理此类错误:
 
 \begin{enumerate}
 \item
-Cast the arguments so that they both match:
+强制转换:
 \begin{lstlisting}[style=styleCXX]
 max(static_cast<double>(4), 7.2); // OK
 \end{lstlisting}
 
 \item
-Specify (or qualify) explicitly the type of T to prevent the compiler from attempting type deduction:
+显式指定(或限定)T的类型:
 \begin{lstlisting}[style=styleCXX]
 max<double>(4, 7.2); // OK
 \end{lstlisting}
 
 \item
-Specify that the parameters may have different types.
+指定参数可以有不同的类型。
 \end{enumerate}
 
-Section 1.3 will elaborate on these options. Section 7.2 and Chapter 15 will discuss the rules for type conversions during type deduction in detail.
+第1.3节将进行详细的说明。第7.2节和第15章将详细讨论类型推断时的类型转换规则。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Type Deduction for Default Arguments}
+\textbf{默认参数的类型推断}
 
-Note also that type deduction does not work for default call arguments. For example:
+类型推断不适用于默认调用参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 void f(T = "");
 ...
-f(1); // OK: deduced T to be int, so that it calls f<int>(1)
-f(); // ERROR: cannot deduce T
+f(1); // OK: 推导出T为int，因此其可以调用f<int>(1)
+f(); // ERROR: 不能推断出T的类型
 \end{lstlisting}
 
-To support this case, you also have to declare a default argument for the template parameter, which will be discussed in Section 1.4:
+为了支持这种情况，必须为模板形参声明一个默认实参，这将在1.4节中进行详述:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T = std::string>

@@ -1,17 +1,16 @@
-You can also define default values for template parameters. These values are called default template arguments and can be used with any kind of template.
+还可以为模板参数定义默认值。这些值被称为默认模板参数，可以用于任何类型的模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Prior to C++11, default template arguments were only permitted in class templates, due to a historical glitch in the development of function templates.
+\hspace*{0.75cm}在C++11之前，因为历史原因，默认模板参数只允许在类模板中使用。
 \end{tcolorbox}
 
-They may even refer to previous template parameters.
+甚至可能引用前面的模板参数。
 
-For example, if you want to combine the approaches to define the return type with the ability to have multiple parameter types (as discussed in the section before), you can introduce a template parameter RT for the return type with the common type of the two arguments as default. Again, we have multiple options:
-
+例如，如果希望定义返回类型的方法与具有多个参数类型的能力结合起来(如前一节所述)，那么可以为返回类型引入一个模板参数RT，将两个参数的公共类型作为默认类型。同样，有多种选择:
 
 \begin{enumerate}
 \item 
-We can use operator?: directly. However, because we have to apply operator?: before the call parameters a and b are declared, we can only use their types:
+可以直接使用三元操作符。但在使用三元操作符之前，只能使用参数的类型:
 
 \noindent
 \textit{basics/maxdefault1.hpp}
@@ -26,16 +25,16 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-Note again the usage of std::decay\_t<> to ensure that no reference can be returned.
+注意\texttt{std::decay\_t<>}的用法以确保返回的不是引用类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Again, in C++11 you had to use typename std::decay<...>::type instead of std::decay\_t<...> (see Section 2.8).
+\hspace*{0.75cm}同样，在C++11中，必须使用typename \texttt{std::decay<…>::type}，而非\texttt{std::decay\_t<…>}(见第2.8节)。
 \end{tcolorbox}
 
-Note also that this implementation requires that we are able to call default constructors for the passed types. There is another solution, using std::declval, which, however, makes the declaration even more complicated. See Section 11.2.3 for an example.
+此实现要求能够为传递的类型调用默认构造函数。还有另一种解决方案，使用\texttt{std::declval}，但是这会使声明更加复杂。参见第11.2.3节中的示例。
 
 \item
-We can also use the std::common\_type<> type trait to specify the default value for the return type: 
+也可以使用\texttt{std::common\_type<>}来指定返回类型的默认值:
 
 \noindent
 \textit{basics/maxdefault3.hpp}
@@ -50,22 +49,22 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-Again, note that std::common\_type<> decays so that the return value can’t become a reference.
+注意\texttt{std::common\_type<>}的衰减，因此返回值不会是引用。
 \end{enumerate}
 
-In all cases, as a caller, you can now use the default value for the return type:
+可以使用返回类型的默认值:
 
 \begin{lstlisting}[style=styleCXX]
 auto a = ::max(4, 7.2);
 \end{lstlisting}
 
-or specify the return type after all other argument types explicitly:
+或者显式地在所有其他参数类型之后指定返回的类型:
 
 \begin{lstlisting}[style=styleCXX]
 auto b = ::max<double,int,long double>(7.2, 4);
 \end{lstlisting}
 
-However, again we have the problem that we have to specify three types to be able to specify the return type only. Instead, we would need the ability to have the return type as the first template parameter, while still being able to deduce it from the argument types. In principle, it is possible to have default arguments for leading function template parameters even if parameters without default arguments follow:
+不过，必须指定三种类型才能只指定返回类型。所以，我们需要将返回类型作为第一个模板参数，这样就可以对其类型进行推断。原则上，即使后面没有默认参数，导函数模板参数也可以有默认的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename RT = long, typename T1, typename T2>
@@ -75,16 +74,16 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-With this definition, for example, you can call:
+通过定义，你这样使用:
 
 \begin{lstlisting}[style=styleCXX]
 int i;
 long l;
 ...
-max(i, l); // returns long (default argument of template parameter for return type)
-max<int>(4, 42); // returns int as explicitly requested
+max(i, l); // 返回long(返回类型的模板默认类型)
+max<int>(4, 42); // 显式返回int
 \end{lstlisting}
 
-However, this approach only makes sense, if there is a “natural” default for a template parameter. Here, we need the default argument for the template parameter to depend from previous template parameters. In principle, this is possible as we discuss in Section 26.5.1 on page 621, but the technique depends on type traits and complicates the definition.
+但这种方法只有在模板参数有默认值的情况下才有意义。这里，需要模板参数的默认值依赖于之前的模板参数。原则上，这是可能的，在26.5.1节中会进行讨论，但是这种技术依赖于类型特征，并会使定义复杂化。
 
-For all these reasons, the best and easiest solution is to let the compiler deduce the return type as proposed in Section 1.3.2.
+由于所有这些原因，最好和最简单的解决方案是让编译器推导出第1.3.2节中提出的返回类型。

@@ -42,67 +42,65 @@ C++提供了不同的方法来处理这个问题:
 将返回类型声明为两个参数类型的“公共类型”。
 \end{itemize}
 
-接下来来讨论这些方法。
-
 \subsubsubsection{1.3.1\hspace{0.2cm}返回类型的模板参数}
 
-Our earlier discussion showed that template argument deduction allows us to call function templates with syntax identical to that of calling an ordinary function: We do not have to explicitly specify the types corresponding to the template parameters.
+我们已经了解了，模板实参演绎允许使用与调用普通函数相同的语法使用函数模板，所以可以不用显式地指定与模板形参对应的类型。
 
-We also mentioned, however, that we can specify the types to use for the template parameters explicitly:
+当然，也可以显式地指定模板参数使用的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 T max (T a, T b);
 ...
-::max<double>(4, 7.2); // instantiate T as double
+::max<double>(4, 7.2); // 示例中T是double
 \end{lstlisting}
 
-In cases when there is no connection between template and call parameters and when template parameters cannot be determined, you must specify the template argument explicitly with the call. For example, you can introduce a third template argument type to define the return type of a function template:
+如果模板和调用参数之间没有关系，并且无法确定模板参数，则必须显式指定模板实参。例如，可以引入第三个模板参数类型来指定函数模板的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename RT>
 RT max (T1 a, T2 b);
 \end{lstlisting}
 
-However, template argument deduction does not take return types into account,7 
+然而，模板参数不会去推断返回类型，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Deduction can be seen as part of overload resolution—a process that is not based on selection of return types either. The sole exception is the return type of conversion operator members.
+\hspace*{0.75cm}推演可以视为重载解析的一部分——这个过程不基于返回类型。唯一的例外是转换操作符的返回类型。
 \end{tcolorbox}
 
-and RT does not appear in the types of the function call parameters. Therefore, RT cannot be deduced.
+RT不会出现在函数调用参数的类型中。因此，不能推导出RT的类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++, the return type also cannot be deduced from the context in which the caller uses the call.
+\hspace*{0.75cm}C++中，也不可从调用的上下文推断返回类型。
 \end{tcolorbox}
 
-As a consequence, you have to specify the template argument list explicitly. For example:
+因此，必须显式地指定模板参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename RT>
 RT max (T1 a, T2 b);
 ...
-::max<int,double,double>(4, 7.2); // OK, but tedious
+::max<int,double,double>(4, 7.2); // OK, 但很无趣
 \end{lstlisting}
 
-So far, we have looked at cases in which either all or none of the function template arguments were mentioned explicitly. Another approach is to specify only the first arguments explicitly and to allow the deduction process to derive the rest. In general, you must specify all the argument types up to the last argument type that cannot be determined implicitly. Thus, if you change the order of the template parameters in our example, the caller needs to specify only the return type:
+目前为止，已经了解了显式地指定所有函数模板参数或没有函数模板参数的情况。另一种方法是只显式指定第一个参数，并允许演绎过程派生其他参数。通常，必须指定最后一个不能隐式确定的参数类型之前的所有参数类型。因此，若在例子中改变了模板参数的顺序，只需要指定返回类型即可:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename RT, typename T1, typename T2>
 RT max (T1 a, T2 b);
 ...
-::max<double>(4, 7.2) // OK: return type is double, T1 and T2 are deduced
+::max<double>(4, 7.2) // OK: 返回类型是double，T1和T2可以进行推演
 \end{lstlisting}
 
-In this example, the call to max<double> explicitly sets RT to double, but the parameters T1 and T2 are deduced to be int and double from the arguments. 
+例子中，对\texttt{max<double>}的调用显式地将RT设置为double，但是参数T1和T2根据实参推导为int和double。
 
-Note that these modified versions of max() don’t lead to significant advantages. For the oneparameter version you can already specify the parameter (and return) type if two arguments of a different type are passed. Thus, it’s a good idea to keep it simple and use the one-parameter version of max() (as we do in the following sections when discussing other template issues).
+注意，\texttt{max()}的这些版本不会带来显著的优势。对于单参数版本，如果传递了两个不同类型的参数，则可以指定形参(和返回)类型。因此，使用\texttt{max()}单参数版本就好。
 
-See Chapter 15 for details of the deduction process.
+关于推演过程的详细信息，请参见第15章。
 
-\subsubsubsection{1.3.2\hspace{0.2cm}Deducing the Return Type}
+\subsubsubsection{1.3.2\hspace{0.2cm}推演返回类型}
 
-If a return type depends on template parameters, the simplest and best approach to deduce the return type is to let the compiler find out. Since C++14, this is possible by simply not declaring any return type (you still have to declare the return type to be auto):
+若返回类型依赖于模板参数，推断返回类型的最好和简单的方法是让编译器判断返回类型。从C++14开始，可以不显式声明返回类型(需要声明返回类型为auto):
 
 \noindent
 \textit{basics/maxauto.hpp}
@@ -114,9 +112,9 @@ auto max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-In fact, the use of auto for the return type without a corresponding trailing return type (which would be introduced with a -> at the end) indicates that the actual return type must be deduced from the return statements in the function body. Of course, deducing the return type from the function body has to be possible. Therefore, the code must be available and multiple return statements have to match.
+返回类型中使用auto，而没有相应的尾部返回类型(在末尾将引入一个\texttt{->})表明需要从函数体中的return语句推导出实际的返回类型。当然，从函数体推断返回类型是可行的。因此，函数体代码必须有效，有多个返回语句时也必须匹配。
 
-Before C++14, it is only possible to let the compiler determine the return type by more or less making the implementation of the function part of its declaration. In C++11 we can benefit from the fact that the trailing return type syntax allows us to use the call parameters. That is, we can declare that the return type is derived from what operator?: yields:
+C++14之前，只能让编译器通过将函数的实现作为其声明的一部分来确定返回类型。C++11中，尾部的返回类型允许使用调用时的参数，声明的返回类型是从三元操作符某个分支派生出的：
 
 \noindent
 \textit{basics/maxdecltype.hpp}
@@ -128,23 +126,23 @@ auto max (T1 a, T2 b) -> decltype(b<a?a:b)
 }
 \end{lstlisting}
 
-Here, the resulting type is determined by the rules for operator ?:, which are fairly elaborate but generally produce an intuitively expected result (e.g., if a and b have different arithmetic types, a common arithmetic type is found for the result).
+返回类型由三元操作符决定，这显得有些复杂，但通常会产生直观的结果(例如，如果a和b是不同的类型，则会为返回值确定一个通用的类型)。
 
-Note that
+注意：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
 auto max (T1 a, T2 b) -> decltype(b<a?a:b);
 \end{lstlisting}
 
-is a declaration, so that the compiler uses the rules of operator?: called for parameters a and b to find out the return type of max() at compile time. The implementation does not necessarily have to match. In fact, using true as the condition for operator?: in the declaration is enough:
+是一个声明，使编译器使用三元操作符，可以在编译时找出max()的返回类型，实现也不一定要匹配。事实上，使用true作为操作符的条件就够了:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
 auto max (T1 a, T2 b) -> decltype(true?a:b);
 \end{lstlisting}
 
-However, in any case this definition has a significant drawback: It might happen that the return type is a reference type, because under some conditions T might be a reference. For this reason you should return the type decayed from T, which looks as follows:
+然而，这个定义有一个缺陷:返回类型可能是引用类型，在某些条件下T可能是引用。因为这个原因，应该返回T衰变的类型，如下所示:
 
 \noindent
 \textit{basics/maxdecltypedecay.hpp}
@@ -158,19 +156,19 @@ auto max (T1 a, T2 b) -> typename std::decay<decltype(true?a:b)>::type
 }
 \end{lstlisting}
 
-Here, the type trait std::decay<> is used, which returns the resulting type in a member type. It is defined by the standard library in <type\_trait> (see Section D.5 on page 732). Because the member type is a type, you have to qualify the expression with typename to access it (see Section 5.1).
+这里使用了\texttt{std::decay<>}，修饰了返回值的类型。其在标准库中的<type\_trait>头文件中定义(参见第732页的D.5节)。因为是类型，必须用typename进行限定才能访问(参见第5.1节)。
 
-Note that an initialization of type auto always decays. This also applies to return values when the return type is just auto. auto as a return type behaves just as in the following code, where a is declared by the decayed type of i, int:
+auto类型的初始化总是衰减的，这也适用于返回类型为auto的返回值。auto作为返回类型的行为就像下面的代码一样，其中a由i, int的衰变类型进行声明:
 
 \begin{lstlisting}[style=styleCXX]
 int i = 42;
-int const& ir = i; // ir refers to i
-auto a = ir; // a is declared as new object of type int
+int const& ir = i; // ir引用于i
+auto a = ir; // a的类型为int
 \end{lstlisting}
 
-\subsubsubsection{1.3.3\hspace{0.2cm}Return Type as Common Type}
+\subsubsubsection{1.3.3\hspace{0.2cm}返回类型为通用类型}
 
-Since C++11, the C++ standard library provides a means to specify choosing “the more general type.” std::common\_type<>::type yields the “common type” of two (or more) different types passed as template arguments. For example:
+C++11后，标准库提供了一种方法来指定选择“更通用的类型”。\texttt{std::common\_type<>::type}会产生由两个(或多个)不同类型作为模板类型的“公共类型”。例如:
 
 \noindent
 \textit{basics/maxcommon.hpp}
@@ -184,19 +182,19 @@ std::common_type_t<T1,T2> max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-Again, std::common\_type is a type trait, defined in <type\_traits>, which yields a structure having a type member for the resulting type. Thus, its core usage is as follows:
+\texttt{std::common\_type}在<type\_traits>头文件中定义，其生成一个具有返回类型的结构。因此，其核心用法如下:
 
 \begin{lstlisting}[style=styleCXX]
 typename std::common_type<T1,T2>::type // since C++11
 \end{lstlisting}
 
-However, since C++14 you can simplify the usage of traits like this by appending \_t to the trait name and skipping typename and ::type (see Section 2.8 for details), so that the return type definition simply becomes:
+C++14起，可以通过在trait名称后面添加\texttt{\_t}跳过typename和::type来简化trait的使用(详见第2.8节)，这样返回类型定义就变成了:
 
 \begin{lstlisting}[style=styleCXX]
-std::common_type_t<T1,T2> // equivalent since C++14
+std::common_type_t<T1,T2> // C++14起可用
 \end{lstlisting}
 
-The way std::common\_type<> is implemented uses some tricky template programming, which is discussed in Section 26.5.2. Internally, it chooses the resulting type according to the language rules of operator ?: or specializations for specific types. Thus, both ::max(4, 7.2) and ::max(7.2, 4) yield the same value 7.2 of type double. Note that std::common\_type<> also decays. See Section D.5 for details.
+\texttt{std::common\_type<>}使用了一些模板编程技巧，会在第26.5.2节中讨论。在内部根据特定类型的三元操作符或特化的语言规则选择结果类型。因此，\texttt{::max(4,7.2)}和\texttt{::max(7.2, 4)}都返回了相同的double类型值7.2。注意\texttt{std::common\_type<>}也会衰变。详见D.5节。
 
 
 

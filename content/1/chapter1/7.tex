@@ -1,26 +1,26 @@
 
 \begin{itemize}
 \item
-Function templates define a family of functions for different template arguments.
+函数模板为不同的模板参数定义了一个函数族。
 
 \item 
-When you pass arguments to function parameters depending on template parameters, function templates deduce the template parameters to be instantiated for the corresponding parameter types.
+当根据模板参数向函数传递参数时，函数模板会根据相应的参数类型推导出要实例化的模板参数。
 
 \item
-You can explicitly qualify the leading template parameters.
+可以显式给定模板参数。
 
 \item 
-You can define default arguments for template parameters. These may refer to previous template parameters and be followed by parameters not having default arguments.
+可以为模板参数定义默认参数。这些参数可以使用前面的模板参数，后面跟着没有默认参数的参数。
 
 \item
-You can overload function templates.
+函数模板可以重载。
 
 \item 
-When overloading function templates with other function templates, you should ensure that only one of them matches for any call.
+将函数模板与其他函数模板重载时，应确保只有一个函数模板与调用匹配。
 
 \item
-When you overload function templates, limit your changes to specifying template parameters explicitly.
+重载函数模板时，应将更改限制为显式地指定模板参数。
 
 \item 
-Ensure the compiler sees all overloaded versions of function templates before you call them.
+确保编译器在调用函数模板之前，看到函数模板所有的重载版本。
 \end{itemize}

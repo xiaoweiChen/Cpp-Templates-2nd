@@ -1,6 +1,6 @@
-Like ordinary functions, function templates can be overloaded. That is, you can have different function definitions with the same function name so that when that name is used in a function call, a C++ compiler must decide which one of the various candidates to call. The rules for this decision may become rather complicated, even without templates. In this section we discuss overloading when templates are involved. If you are not familiar with the basic rules of overloading without templates, please look at Appendix C, where we provide a reasonably detailed survey of the overload resolution rules.
+与普通函数一样，函数模板也可以重载。所以可以使用相同的函数名来声明不同的函数体，当使用该函数名称时，编译器会决定调用哪一个候选函数。即使没有模板，这个决策规则都可能会相当复杂。本节中，将讨论涉及模板的重载。如果不熟悉无模板重载的基本规则，请参阅附录C，其中提供了关于重载解析规则的相当详细的介绍。
 
-The following short program illustrates overloading a function template:
+下面的程序示例演示了如何重载函数模板:
 
 \noindent
 \textit{basics/max2.cpp}
@@ -29,43 +29,44 @@ int main()
 }
 \end{lstlisting}
 
-As this example shows, a nontemplate function can coexist with a function template that has the same name and can be instantiated with the same type. All other factors being equal, the overload resolution process prefers the nontemplate over one generated from the template. The first call falls under this rule:
+非模板函数可以与相同名称和相同类型的函数模板共存。在其他因素相同的情况下，重载解析过程将优先使用非模板方式，而非从模板生成的实例。第一个调用验证了这个规则:
 
 \begin{lstlisting}[style=styleCXX]
-::max(7, 42); // both int values match the nontemplate function perfectly
+::max(7, 42); // 两个int值完全匹配非模板函数
 \end{lstlisting}
 
-If the template can generate a function with a better match, however, then the template is selected. This is demonstrated by the second and third calls of max():
+若模板可以生成匹配更好的函数实例，则选择模板。这在\texttt{max()}的第二次和第三次调用中得到了验证:
 
 \begin{lstlisting}[style=styleCXX]
-::max(7.0, 42.0); // calls the max<double> (by argument deduction)
-::max('a', 'b'); // calls the max<char> (by argument deduction)
+::max(7.0, 42.0); // 调用max<double>(通过参数推导)
+::max('a', 'b'); // 调用max<char>(通过参数推推导)
 \end{lstlisting}
 
-Here, the template is a better match because no conversion from double or char to int is required (see Section C.2 on page 682 for the rules of overload resolution).
+这里，模板是一个更好的匹配，因为不需要将double或char转换成int(参见C.2节的重载解析规则)。
 
-It is also possible to specify explicitly an empty template argument list. This syntax indicates that only templates may resolve a call, but all the template parameters should be deduced from the call arguments:
+也可以显式指定一个空的模板参数列表。这种语法表明只有模板才能解析调用，但所有模板参数都应该根据调用参数进行推导:
 
 \begin{lstlisting}[style=styleCXX]
-::max<>(7, 42); // calls max<int> (by argument deduction)
+::max<>(7, 42); // 调用max<int>(通过参数推导)
 \end{lstlisting}
 
-Because automatic type conversion is not considered for deduced template parameters but is considered for ordinary function parameters, the last call uses the nontemplate function (while 'a' and 42.7 both are converted to int):
+对推导的模板参数不进行自动类型转换，从而会对普通函数形参进行自动类型转换，因此最后一次调用使用了非模板函数(而'a'和42.7都转换为int):
 
 \begin{lstlisting}[style=styleCXX]
-::max('a', 42.7); // only the nontemplate function allows nontrivial conversions
+::max('a', 42.7); // 只有非模板函数允许这种类型转换
 \end{lstlisting}
 
-An interesting example would be to overload the maximum template to be able to explicitly specify the return type only:
+一个有趣的例子是重载maximum模板，使其能够只显式指定返回类型:
 
 \noindent
-\textit{asics/maxdefault4.hpp}
+\textit{basics/maxdefault4.hpp}
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
 auto max (T1 a, T2 b)
 {
 	return b < a ? a : b;
 }
+
 template<typename RT, typename T1, typename T2>
 RT max (T1 a, T2 b)
 {
@@ -73,44 +74,44 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-Now, we can call max(), for example, as follows:
+现在，可以调用max()，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
-auto a = ::max(4, 7.2); // uses first template
-auto b = ::max<long double>(7.2, 4); // uses second template
+auto a = ::max(4, 7.2); // 使用第一个函数模板
+auto b = ::max<long double>(7.2, 4); // 使用第二个函数模板
 \end{lstlisting}
 
-However, when calling:
+然而，当这样使用时:
 
 \begin{lstlisting}[style=styleCXX]
-auto c = ::max<int>(4, 7.2); // ERROR: both function templates match
+auto c = ::max<int>(4, 7.2); // ERROR: 两个函数模板都可以匹配
 \end{lstlisting}
 
-both templates match, which causes the overload resolution process normally to prefer none and result in an ambiguity error. Thus, when overloading function templates, you should ensure that only one of them matches for any call.
+这两个模板都匹配，这导致重载解析过程不匹配，并导致二义性错误。因此，在重载函数模板时，应该确保只有一个函数模板与调用匹配。
 
-A useful example would be to overload the maximum template for pointers and ordinary C-strings:
+一个例子是重载指针和普通C字符串的最大值比较函数模板:
 
 \noindent
-\textit{asics/max3val.cpp}
+\textit{basics/max3val.cpp}
 \begin{lstlisting}[style=styleCXX]
 #include <cstring>
 #include <string>
 
-// maximum of two values of any type:
+// 任意类型的两个最大值:
 template<typename T>
 T max (T a, T b)
 {
 	return b < a ? a : b;
 }
 
-// maximum of two pointers:
+// 两个指针内容的最大值:
 template<typename T>
 T* max (T* a, T* b)
 {
 	return *b < *a ? a : b;
 }
 
-// maximum of two C-strings:
+// 两个C字符串的最大值:
 char const* max (char const* a, char const* b)
 {
 	return std::strcmp(b,a) < 0 ? a : b;
@@ -120,47 +121,47 @@ int main ()
 {
 	int a = 7;
 	int b = 42;
-	auto m1 = ::max(a,b); // max() for two values of type int
+	auto m1 = ::max(a,b); // max():两个int类型的值
 	
 	std::string s1 = "hey";
 	std::string s2 = "you";
-	auto m2 = ::max(s1,s2); // max() for two values of type std::string
+	auto m2 = ::max(s1,s2); // max():两个std::string类型的值
 	
 	int* p1 = &b;
 	int* p2 = &a;
-	auto m3 = ::max(p1,p2); // max() for two pointers
+	auto m3 = ::max(p1,p2); // max():两个指针类型的值
 	
 	char const* x = "hello";
 	char const* y = "world";
-	auto m4 = ::max(x,y); // max() for two C-strings
+	auto m4 = ::max(x,y); // max():两个C字符串类型的值
 }
 \end{lstlisting}
 
-Note that in all overloads of max() we pass the arguments by value. In general, it is a good idea not to change more than necessary when overloading function templates. You should limit your changes to the number of parameters or to specifying template parameters explicitly. Otherwise, unexpected effects may happen. For example, if you implement your max() template to pass the arguments by reference and overload it for two C-strings passed by value, you can’t use the three-argument version to compute the maximum of three C-strings:
+注意，在max()的所有重载中，参数都是通过值传递的。在重载函数模板时，最好不要进行不必要的更改。应该将更改限制在参数的数量或显式地指定模板参数。否则，可能会出现意想不到的后果。例如，如果实现了max()模板，通过引用传递参数，对两个通过值传递C字符串进行重载实现，从而就不能使用三个参数的版本来比较三个C字符串:
 
 \noindent
 \textit{basics/max3ref.cpp}
 \begin{lstlisting}[style=styleCXX]
 #include <cstring>
 
-// maximum of two values of any type (call-by-reference)
+// 任意类型的两个最大值(引用调用)
 template<typename T>
 T const& max (T const& a, T const& b)
 {
 	return b < a ? a : b;
 }
 
-// maximum of two C-strings (call-by-value)
+// 最多两个C字符串(值调用)
 char const* max (char const* a, char const* b)
 {
 	return std::strcmp(b,a) < 0 ? a : b;
 }
 
-// maximum of three values of any type (call-by-reference)
+// 任何类型的最多三个值(引用调用)
 template<typename T>
 T const& max (T const& a, T const& b, T const& c)
 {
-	return max (max(a,b), c); // error if max(a,b) uses call-by-value
+	return max (max(a,b), c); // 如果max(a,b)使用了按值调用就会出错
 }
 
 int main ()
@@ -170,32 +171,32 @@ int main ()
 	char const* s1 = "frederic";
 	char const* s2 = "anica";
 	char const* s3 = "lucas";
-	auto m2 = ::max(s1, s2, s3); // run-time ERROR
+	auto m2 = ::max(s1, s2, s3); // 运行时错误
 }
 \end{lstlisting}
 
-The problem is that if you call max() for three C-strings, the statement
+问题是，如果对三个C字符串调用max()，
 
 \begin{lstlisting}[style=styleCXX]
 return max (max(a,b), c);
 \end{lstlisting}
 
-becomes a run-time error because for C-strings, max(a,b) creates a new, temporary local value that is returned by reference, but that temporary value expires as soon as the return statement is complete, leaving main() with a dangling reference. Unfortunately, the error is quite subtle and may not manifest itself in all cases.
+就会导致运行时错误，因为对于C字符，\texttt{max(a,b)}创建了一个新的临时变量，并通过引用返回。但是这个临时值越过返回语句完成就会销毁，留给\texttt{main()}一个悬空引用。不幸的是，这个错误非常微妙，可能不是必现的。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In general, a conforming compiler isn’t even permitted to reject this code.
+\hspace*{0.75cm}一般来说，符合标准的编译器可以不抱怨的编译这段代码。
 \end{tcolorbox}
 
-Note, in contrast, that the first call to max() in main() doesn’t suffer from the same issue. There temporaries are created for the arguments (7, 42, and 68), but those temporaries are created in main() where they persist until the statement is done.
+与此相反，\texttt{main()}中对\texttt{max()}的第一次调用不会出现相同的问题。虽为参数(7、42和68)创建了临时变量，但这些临时变量在\texttt{main()}中创建，在\texttt{main()}中会一直存在，直到程序执行完毕。
 
-This is only one example of code that might behave differently than expected as a result of detailed overload resolution rules. In addition, ensure that all overloaded versions of a function are declared before the function is called. This is because the fact that not all overloaded functions are visible when a corresponding function call is made may matter. For example, defining a three-argument version of max() without having seen the declaration of a special two-argument version of max() for ints causes the two-argument template to be used by the three-argument version:
+这只是一个由于重载解析规则而导致行为与预期不同的代码示例。此外，确保在调用函数之前声明函数的所有重载版本。因为在进行相应的函数调用时，并非所有重载函数都可见，这很重要。例如，定义三个参数版本的\texttt{max()}，而没有声明用于int类型的两个参数版本，就会导致使用三个参数版本的函数时，使用到两个参数的模板:
 
 \noindent
-\textit{asics/max4.cpp}
+\textit{basics/max4.cpp}
 \begin{lstlisting}[style=styleCXX]
 #include <iostream>
 
-// maximum of two values of any type:
+// 两个任意类型的最大值:
 template<typename T>
 T max (T a, T b)
 {
@@ -203,14 +204,14 @@ T max (T a, T b)
 	return b < a ? a : b;
 }
 
-// maximum of three values of any type:
+// 三个任意类型的最大值:
 template<typename T>
 T max (T a, T b, T c)
 {
-	return max (max(a,b), c); // uses the template version even for ints
-}                             // because the following declaration comes
-                              // too late:
-// maximum of two int values:
+	return max (max(a,b), c); // 对整型也使用模板版本
+}                             // 因为下面的声明来了太晚了
+                              
+// 两个int值的最大值:
 int max (int a, int b)
 {
 	std::cout << "max(int,int) \n";
@@ -219,10 +220,10 @@ int max (int a, int b)
 
 int main()
 {
-	::max(47,11,33); // OOPS: uses max<T>() instead of max(int,int)
+	::max(47,11,33); // OOPS: 这里使用的是max<T>()，而非max(int,int)
 }
 \end{lstlisting}
 
-We discuss details in Section 13.2.
+我们将在第13.2节中讨论这其中的细节。
 
 

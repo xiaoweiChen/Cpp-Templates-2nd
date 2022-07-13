@@ -1,53 +1,53 @@
-Probably, even these simple function template examples might raise further questions. Three questions are probably so common that we should discuss them here briefly.
+即使是这些简单的函数模板示例也可能引发进一步的问题。有三个常见问题，在这里简单的讨论下。
 
-\subsubsubsection{1.6.1\hspace{0.2cm}Pass by Value or by Reference?}
+\subsubsubsection{1.6.1\hspace{0.2cm}使用值，还是引用传递参数?}
 
-You might wonder, why we in general declare the functions to pass the arguments by value instead of using references. In general, passing by reference is recommended for types other than cheap simple types (such as fundamental types or std::string\_view), because no unnecessary copies are created.
+为什么通常声明函数按值传递参数，而不是使用引用。一般来说，除了简单类型(比如基本类型或\texttt{std::string\_view})，推荐使用引用传递，因为不会创建副本。
 
-However, for a couple of reasons, passing by value in general is often better:
-
-\begin{itemize}
-\item
-The syntax is simple.
-
-\item 
-Compilers optimize better.
-
-\item
-Move semantics often makes copies cheap.
-
-\item 
-And sometimes there is no copy or move at all.
-\end{itemize}
-
-In addition, for templates, specific aspects come into play:
+然而，按值传递在下面的情况下会更好:
 
 \begin{itemize}
 \item
-A template might be used for both simple and complex types, so choosing the approach for complex types might be counter-productive for simple types.
+语法简单。
 
 \item 
-As a caller you can often still decide to pass arguments by reference, using std::ref() and std::cref() (see Section 7.3).
+编译器会进行很好的优化。
 
 \item
-Although passing string literals or raw arrays always can become a problem, passing them by reference often is considered to become the bigger problem.
+移动语义会使复制成本降低。
+
+\item 
+没有复制或移动。
 \end{itemize}
 
-All this will be discussed in detail in Chapter 7. For the moment inside the book we will usually pass arguments by value unless some functionality is only possible when using references.
+此外，对于模板来说:
 
-\subsubsubsection{1.6.2\hspace{0.2cm}Why Not inline?}
+\begin{itemize}
+\item
+模板可能同时用于简单类型和复杂类型，因此为复杂类型选择这种方法可能会对简单类型产生反效果。
+
+\item 
+作为调用者，可以通过引用来传递参数，可以使用\texttt{std::ref()}和\texttt{std::cref()}(参见7.3节)。
+
+\item
+虽然传递字符串字面值或原始数组可能会产生问题，但通过引用传递它们通常会有更大的问题。
+\end{itemize}
+
+所有这些将在第7章中详细讨论。目前在书中，我们使用值传递参数(除非某些功能只有在使用引用时才使用引用)。
+
+\subsubsubsection{1.6.2\hspace{0.2cm}为什么不用内联呢?}
  
-In general, function templates don’t have to be declared with inline. Unlike ordinary noninline functions, we can define noninline function templates in a header file and include this header file in multiple translation units.
+通常，函数模板不必使用内联声明。与普通的非内联函数不同，我们可以在头文件中定义非内联函数模板，并在多个转译单元中包含该头文件。
 
-The only exception to this rule are full specializations of templates for specific types, so that the resulting code is no longer generic (all template parameters are defined). See Section 9.2 for more details.
+该规则的唯一例外是对特定类型的模板进行完全特化，从而产生的代码不再是泛型(定义了所有模板参数)。参见9.2节了解更多细节。
  
-From a strict language definition perspective, inline only means that a definition of a function can appear multiple times in a program. However, it is also meant as a hint to the compiler that calls to that function should be “expanded inline”: Doing so can produce more efficient code for certain cases, but it can also make the code less efficient for many other cases. Nowadays, compilers usually are better at deciding this without the hint implied by the inline keyword. However, compilers still account for the presence of inline in that decision.
+从严格的语言定义角度来看，内联意味着函数的定义可以在程序中出现多次。也表示编译器对该函数的调用应该“内联展开”:这样做可以在某些情况下产生更有效的代码，但在许多其他情况下反而会降低代码的效率。现在，编译器通常能够更好地决定是否采纳使用inline关键字的提示。但是，编译器仍然要考虑在该决策中是否存在内联。
 
-\subsubsubsection{1.6.3\hspace{0.2cm}Why Not constexpr?}
+\subsubsubsection{1.6.3\hspace{0.2cm}为什么不用constexpr呢?}
 
-Since C++11, you can use constexpr to provide the ability to use code to compute some values at compile time. For a lot of templates this makes sense.
+C++11以来，可以使用constexpr提供在编译时计算某些值的能力。对于很多模板来说，这很有意义。
 
-For example, to be able to use the maximum function at compile time, you have to declare it as follows:
+例如，为了能够在编译时使用maximum函数，必须声明它:
 
 \noindent
 \textit{basics/maxconstexpr.hpp}
@@ -59,21 +59,21 @@ constexpr auto max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-With this, you can use the maximum function template in places with compile-time context, such as when declaring the size of a raw array:
+这样，就可以在有编译时上下文的地方使用maximum函数模板，比如在声明原始数组的大小时:
 
 \begin{lstlisting}[style=styleCXX]
 int a[::max(sizeof(char),1000u)];
 \end{lstlisting}
 
-or the size of a std::array<>:
+或者定义\texttt{std::array<>}的大小:
 
 \begin{lstlisting}[style=styleCXX]
 std::array<std::string, ::max(sizeof(char),1000u)> arr;
 \end{lstlisting}
 
-Note that we pass 1000 as unsigned int to avoid warnings about comparing a signed with an unsigned value inside the template.
+注意，将1000作为\texttt{unsigned int}传递是为了避免在模板中比较有符号值和无符号值时，编译器发出的警告。
 
-Section 8.2 will discuss other examples of using constexpr. However, to keep our focus on the fundamentals, we usually will skip constexpr when discussing other template features.
+第8.2节将讨论使用constexpr的例子。为了让我们的注意力集中在基本特性上，在讨论其他模板特性时，我们通常会跳过constexpr。
 
 
 

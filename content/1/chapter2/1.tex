@@ -1,5 +1,5 @@
 
-As we did with function templates, we declare and define class Stack<> in a header file as follows:
+与函数模板一样，我们在头文件中声明并定义\texttt{Stack<>}类，如下所示:
 
 \noindent
 \textit{basics/stack1.hpp}
@@ -44,7 +44,7 @@ T const& Stack<T>::top () const
 
 As you can see, the class template is implemented by using a class template of the C++ standard library: vector<>. As a result, we don’t have to implement memory management, copy constructor, and assignment operator, so we can concentrate on the interface of this class template.
 
-\subsubsubsection{2.1.1\hspace{0.2cm}Declaration of Class Templates}
+\subsubsubsection{2.1.1\hspace{0.2cm}声明类模板}
 
 Declaring class templates is similar to declaring function templates: Before the declaration, you have to declare one or multiple identifiers as a type parameter(s). Again, T is usually used as an identifier:
 
@@ -121,7 +121,7 @@ Note that in places where the name and not the type of the class is required, on
 
 Note also that, unlike nontemplate classes, you can’t declare or define class templates inside functions or block scope. In general, templates can only be defined in global/namespace scope or inside class declarations (see Section 12.1 for details).
 
-\subsubsubsection{2.1.2\hspace{0.2cm}Implementation of Member Functions}
+\subsubsubsection{2.1.2\hspace{0.2cm}实现成员函数}
 
 To define a member function of a class template, you have to specify that it is a template, and you have to use the full type qualification of the class template. Thus, the implementation of the member function push() for type Stack<T> looks like this:
 

@@ -42,11 +42,11 @@ T const& Stack<T>::top () const
 }
 \end{lstlisting}
 
-As you can see, the class template is implemented by using a class template of the C++ standard library: vector<>. As a result, we don’t have to implement memory management, copy constructor, and assignment operator, so we can concentrate on the interface of this class template.
+类模板使用C++标准库的类模板\texttt{vector<>}实现。因此，不必实现内存管理、复制构造函数和赋值操作符，可以专注于该类模板的接口。
 
 \subsubsubsection{2.1.1\hspace{0.2cm}声明类模板}
 
-Declaring class templates is similar to declaring function templates: Before the declaration, you have to declare one or multiple identifiers as a type parameter(s). Again, T is usually used as an identifier:
+声明类模板类似于声明函数模板:在声明之前，必须将一个或多个标识符声明为类型参数。同样，T通常作为标识符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -55,7 +55,7 @@ class Stack {
 };
 \end{lstlisting}
 
-Here again, the keyword class can be used instead of typename:
+这里，关键字\texttt{class}也可以用\texttt{typename}替换:
 
 \begin{lstlisting}[style=styleCXX]
 template<class T>
@@ -64,7 +64,7 @@ class Stack {
 };
 \end{lstlisting}
 
-Inside the class template, T can be used just like any other type to declare members and member functions. In this example, T is used to declare the type of the elements as vector of Ts, to declare push() as a member function that uses a T as an argument, and to declare top() as a function that returns a T:
+类模板内部，可以像使用其他类型一样使用T来声明成员和成员函数。这个例子中，T用来声明元素的类型为T的vector，将push()声明为使用T作参数的成员函数，并将top()声明为返回T的函数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -82,9 +82,9 @@ public:
 };
 \end{lstlisting}
 
-The type of this class is Stack<T>, with T being a template parameter. Thus, you have to use Stack<T> whenever you use the type of this class in a declaration except in cases where the template arguments can be deduced. However, inside a class template using the class name not followed by template arguments represents the class with its template parameters as its arguments (see Section 13.2.3 for details).
+这个类的类型是\texttt{Stack<T>}，T是模板参数。因此，只要在使用该类的类型，就必须使用\texttt{Stack<T>}声明，可以推导模板参数的情况除外。但在类模板中，使用类名后不带模板实参的类，表示将模板参数作为参数的类型(详见第13.2.3节)。
 
-If, for example, you have to declare your own copy constructor and assignment operator, it typically looks like this:
+例如，必须声明自定义的复制构造函数和赋值操作符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -96,7 +96,7 @@ class Stack {
 };
 \end{lstlisting}
 
-which is formally equivalent to:
+形式上等价于:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -108,22 +108,22 @@ class Stack {
 };
 \end{lstlisting}
 
-but usually the <T> signals special handling of special template parameters, so it’s usually better to use the first form.
+通常\texttt{<T>}表示特殊模板参数，所以最好使用第一种方式。
 
-However, outside the class structure you’d need:
+还需要:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 bool operator== (Stack<T> const& lhs, Stack<T> const& rhs);
 \end{lstlisting}
 
-Note that in places where the name and not the type of the class is required, only Stack may be used. This is especially the case when you specify the name of constructors (not their arguments) and the destructor.
+在需要类名而不是类类型的地方，只能使用Stack。当指定构造函数的名称(而不是参数)和析构函数时，这种情况尤其特别。
 
-Note also that, unlike nontemplate classes, you can’t declare or define class templates inside functions or block scope. In general, templates can only be defined in global/namespace scope or inside class declarations (see Section 12.1 for details).
+与非模板类不同，不能在函数或块作用域内声明或定义类模板。通常，模板只能在全局/命名空间作用域或类中声明内部定义(参见12.1节了解详细信息)。
 
 \subsubsubsection{2.1.2\hspace{0.2cm}实现成员函数}
 
-To define a member function of a class template, you have to specify that it is a template, and you have to use the full type qualification of the class template. Thus, the implementation of the member function push() for type Stack<T> looks like this:
+要定义类模板的成员函数，必须将其指定为模板，并且使用类模板对类型进行限定。因此，\texttt{Stack<T>}类型的成员函数push()的实现如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -133,9 +133,9 @@ void Stack<T>::push (T const& elem)
 }
 \end{lstlisting}
 
-In this case, push\_back() of the element vector is called, which appends the element at the end of the vector.
+使用vector的push\_back()，将元素添加到vector的末尾。
 
-Note that pop\_back() of a vector removes the last element but doesn’t return it. The reason for this behavior is exception safety. It is impossible to implement a completely exception-safe version of pop() that returns the removed element (this topic was first discussed by Tom Cargill in [CargillExceptionSafety] and is discussed as Item 10 in [SutterExceptional]). However, ignoring this danger, we could implement a pop() that returns the element just removed. To do this, we simply use T to declare a local variable of the element type:
+注意，vector的pop\_back()会删除最后一个元素，但不返回这个元素，这种行为的原因是异常安全的。pop()的完全异常安全版本来返回删除元素是不可能的(这个主题由Tom Cargill在[CargillExceptionSafety]中首次讨论，并在[sutterexception]中的第10项中讨论)。但这里忽略这个危险，我们可以实现一个pop()，返回刚刚删除的元素。为此，只需使用T声明元素类型的局部变量即可:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -148,7 +148,7 @@ T Stack<T>::pop ()
 }
 \end{lstlisting}
 
-Because back() (which returns the last element) and pop\_back() (which removes the last element) have undefined behavior when there is no element in the vector, we decided to check whether the stack is empty. If it is empty, we assert, because it is a usage error to call pop() on an empty stack. This is also done in top(), which returns but does not remove the top element, on attempts to remove a nonexistent top element:
+因为当vector中没有元素时，back()(返回最后一个元素)和pop\_back()(删除最后一个元素)会导致未定义行为，所以先检查堆栈是否为空。如果为空，则触发断言，因为在空堆栈上调用pop()是一个使用错误。top()也会这样做，当试图删除一个不存在的top元素时，top()会返回但不删除top元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -159,7 +159,7 @@ T const& Stack<T>::top () const
 }
 \end{lstlisting}
 
-Of course, as for any member function, you can also implement member functions of class templates as an inline function inside the class declaration. For example:
+当然，对于成员函数，也可以在类声明中以直接内联的形式实现类模板的成员函数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

@@ -1,7 +1,7 @@
 
-A class template usually applies multiple operations on the template arguments it is instantiated for (including construction and destruction). This might lead to the impression that these template arguments have to provide all operations necessary for all member functions of a class template. But this is not the case: Template arguments only have to provide all necessary operations that are needed (instead of that could be needed).
+类模板通常对其实例化的模板参数使用多个操作(包括构造和分解)。这可能会造成这样的情况:这些模板参数必须为类模板的所有成员函数，提供所有必要的操作。但事实并非如此:模板参数只需要提供所需的必要操作(而不是可能需要)。
 
-If, for example, class Stack<> would provide a member function printOn() to print the whole stack content, which calls operator<< for each element:
+例如，类\texttt{Stack<>}提供成员函数\texttt{printOn()}打印堆栈中的全部内容，并对每个元素使用操作符\texttt{<<}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -9,29 +9,29 @@ class Stack {
 	...
 	void printOn() (std::ostream& strm) const {
 		for (T const& elem : elems) {
-			strm << elem << ' '; // call << for each element
+			strm << elem << ' '; // 对每个元素使用<<
 		}
 	}
 };
 \end{lstlisting}
 
-You can still use this class for elements that don’t have operator<< defined:
+对于没有定义操作符\texttt{<<}的类型，仍然可以使用这个类:
 
 \begin{lstlisting}[style=styleCXX]
-Stack<std::pair<int,int>> ps; // note: std::pair<> has no operator<< defined
+Stack<std::pair<int,int>> ps; // 注意: std::pair<>不支持<<
 ps.push({4, 5}); // OK
 ps.push({6, 7}); // OK
 std::cout << ps.top().first << '\n'; // OK
 std::cout << ps.top().second << '\n'; // OK
 \end{lstlisting}
 
-Only if you call printOn() for such a stack, the code will produce an error, because it can’t instantiate the call of operator<< for this specific element type:
+只在使用\texttt{printOn()}时代码才会出错，因为它不能实例化对特定元素类型的操作符\texttt{<<}:
 
 \begin{lstlisting}[style=styleCXX]
-ps.printOn(std::cout); // ERROR: operator<< not supported for element type
+ps.printOn(std::cout); // ERROR: 元素类型不支持操作符<<
 \end{lstlisting}
 
-\subsubsubsection{2.3.1\hspace{0.2cm}Concepts}
+\subsubsubsection{2.3.1\hspace{0.2cm}概念}
 
 This raises the question: How do we know which operations are required for a template to be able to get instantiated? The term concept is often used to denote a set of constraints that is repeatedly required in a template library. For example, the C++ standard library relies on such concepts as random access iterator and default constructible.
 

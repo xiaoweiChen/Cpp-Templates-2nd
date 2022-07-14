@@ -1,11 +1,10 @@
-To use an object of a class template, until C++17 you must always specify the template arguments explicitly.
+在C++17之前，要使用类模板的对象，必须显式指定模板参数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++17 introduced class argument template deduction, which allows skipping template arguments if they can
-be derived from the constructor. This will be discussed in Section 2.9.
+\hspace*{0.75cm}C++17引入了类参数模板推演，如果模板参数可以从构造函数派生，则可以跳过这些参数。这会在第2.9节中进行讨论。
 \end{tcolorbox}
 
-The following example shows how to use the class template Stack<>:
+下面的例子展示了如何使用类模板\texttt{Stack<>}:
 
 \noindent
 \textit{basics/stack1test.cpp}
@@ -13,6 +12,7 @@ The following example shows how to use the class template Stack<>:
 #include "stack1.hpp"
 #include <iostream>
 #include <string>
+
 int main()
 {
 	Stack<int> intStack; // stack of ints
@@ -29,13 +29,13 @@ int main()
 }
 \end{lstlisting}
 
-By declaring type Stack<int>, int is used as type T inside the class template. Thus, intStack is created as an object that uses a vector of ints as elements and, for all member functions that are called, code for this type is instantiated. Similarly, by declaring and using Stack<std::string>, an object that uses a vector of strings as elements is created, and for all member functions that are called, code for this type is instantiated.
+通过声明类型\texttt{Stack<int>}，int在类模板中作为类型T。因此，intStack是一个对象，使用的是\texttt{vector<int>}类型，并且调用相应的成员函数。类似地，通过声明和使用\texttt{Stack<std::string>}，将创建使用\texttt{vector<std::string>}的对象，使用相应的成员函数。
 
-Note that code is instantiated only for template (member) functions that are called. For class templates, member functions are instantiated only if they are used. This, of course, saves time and space and allows use of class templates only partially, which we will discuss in Section 2.3.
+注意，代码只对调用的模板(成员)函数实例化。对于类模板，只有在使用成员函数时才实例化。当然，这节省了时间和空间，并且只允许部分地使用类模板，这会在2.3节中详细讨论。
 
-In this example, the default constructor, push(), and top() are instantiated for both int and strings. However, pop() is instantiated only for strings. If a class template has static members, these are also instantiated once for each type for which the class template is used.
+这个例子中，默认构造函数push()和top()为\texttt{int}和\texttt{string}实例化，但pop()只对字符串实例化。如果类模板具有静态成员，则对于使用类模板的每个类型实例，这些成员也会实例化一次。
 
-An instantiated class template’s type can be used just like any other type. You can qualify it with const or volatile or derive array and reference types from it. You can also use it as part of a type definition with typedef or using (see Section 2.8 for details about type definitions) or use it as a type parameter when building another template type. For example:
+可以像使用其他类型一样使用实例化的类模板的类型。可以使用\texttt{const}、\texttt{volatile}或从中派生数组和引用类型对其进行限定。也可以将其作为类型定义的一部分，使用\texttt{typedef}或\texttt{using}(请参阅第2.8节了解关于类型定义的详细信息)，或者在构建另一个模板类型时将其用作类型参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 void foo(Stack<int> const& s) // parameter s is int stack
@@ -47,28 +47,28 @@ void foo(Stack<int> const& s) // parameter s is int stack
 }
 \end{lstlisting}
 
-Template arguments may be any type, such as pointers to floats or even stacks of ints:
+模板实参可以是任何类型，例如浮点数指针，甚至使用整型的栈:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<float*> floatPtrStack; // stack of float pointers
 Stack<Stack<int>> intStackStack; // stack of stack of ints
 \end{lstlisting}
 
-The only requirement is that any operation that is called is possible according to this type.
+这里的要求是，需要这种类型支持所使用的操作。
 
-Note that before C++11 you had to put whitespace between the two closing template brackets:
-
-\begin{lstlisting}[style=styleCXX]
-Stack<Stack<int> > intStackStack; // OK with all C++ versions
-\end{lstlisting}
-
-If you didn’t do this, you were using operator >>, which resulted in a syntax error:
+注意，在C++11之前，必须在两个模板右括号之间放空格:
 
 \begin{lstlisting}[style=styleCXX]
-Stack<Stack<int>> intStackStack; // ERROR before C++11
+Stack<Stack<int> > intStackStack; // 所有C++版本都可以用
 \end{lstlisting}
 
-The reason for the old behavior was that it helped the first pass of a C++ compiler to tokenize the source code independent of the semantics of the code. However, because the missing space was a typical bug, which required corresponding error messages, the semantics of the code more and more had to get taken into account anyway. So, with C++11 the rule to put a space between two closing template brackets was removed with the “angle bracket hack” (see Section 13.3.1 for details).
+如果你没有这样做，使用了\texttt{>>}，就会导致语法错误:
+
+\begin{lstlisting}[style=styleCXX]
+Stack<Stack<int>> intStackStack; // C++11之前会报错
+\end{lstlisting}
+
+旧行为可以帮助C++编译器对独立于代码语义源码进行标记。然而，由于缺少空格是一个典型的错误，这需要相应的错误消息，因此无论如何都必须考虑代码的语义。因此，在C++11中，在两个模板右括号之间放一个空格的规则被“尖括号破壁者”删除了(详见13.3.1节)。
 
 
 

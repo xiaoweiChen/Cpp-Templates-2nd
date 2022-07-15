@@ -1,4 +1,4 @@
-As for function templates, you can define default values for class template parameters. For example, in class Stack<> you can define the container that is used to manage the elements as a second template parameter, using std::vector<> as the default value:
+对于函数模板，可以为类模板形参定义默认值。例如，在\texttt{Stack<>}类中，可以将用于管理元素的容器定义为第二个模板参数，并使用\texttt{std::vector<>}作为默认值:
 
 \noindent
 \textit{basics/stack3.hpp}
@@ -41,7 +41,7 @@ T const& Stack<T,Cont>::top () const
 }
 \end{lstlisting}
 
-Note that we now have two template parameters, so each definition of a member function must be defined with these two parameters:
+注意，现在有了两个模板参数，因此成员函数的每个定义都必须用这两个参数定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Cont>
@@ -51,7 +51,7 @@ void Stack<T,Cont>::push (T const& elem)
 }
 \end{lstlisting}
 
-You can use this stack the same way it was used before. Thus, if you pass a first and only argument as an element type, a vector is used to manage the elements of this type:
+可以像以前那样使用这个堆栈。因此，如果将第一个也是唯一的参数作为元素类型传递，这样会使用\texttt{vector}来管理该类型的元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Cont = std::vector<T>>
@@ -62,7 +62,7 @@ private:
 };
 \end{lstlisting}
 
-In addition, you could specify the container for the elements when you declare a Stack object in your program:
+另外，当在程序中声明\texttt{Stack}对象时，可以指定元素的容器类型:
 
 \noindent
 \textit{basics/stack3test.cpp}
@@ -91,13 +91,11 @@ int main()
 }
 \end{lstlisting}
 
-With
-
 \begin{lstlisting}[style=styleCXX]
 Stack<double,std::deque<double>>
 \end{lstlisting}
 
-you declare a stack for doubles that uses a std::deque<> to manage the elements internally.
+上面的代码声明一个双精度浮点数栈，使用\texttt{std::deque<>}在内部管理元素。
 
 
 

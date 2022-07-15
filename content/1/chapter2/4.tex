@@ -1,5 +1,5 @@
 
-Instead of printing the stack contents with printOn() it is better to implement operator<< for the stack. However, as usual operator<< has to be implemented as nonmember function, which then could call printOn() inline:
+使用\texttt{printOn()}打印堆栈内容，不如为堆栈实现\texttt{<<}操作符。然而，通常\texttt{<<}操作符会实现为非成员函数，然后内联调用\texttt{printOn()}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -16,17 +16,17 @@ class Stack {
 };
 \end{lstlisting}
 
-Note that this means that operator<< for class Stack<> is not a function template, but an “ordinary” function instantiated with the class template if needed.
+注意，这意味着用于类\texttt{Stack<>}的\texttt{<<}操作符不是一个函数模板，而是在需要时用类模板实例化的“普通”函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}It is a templated entity, see Section 12.1.
+\hspace*{0.75cm}其是一个模板实体，参见12.1节。
 \end{tcolorbox}
 
-However, when trying to declare the friend function and define it afterwards, things become more complicated. In fact, we have two options:
+但是，当试图声明友元函数并实现时，事情会变得更加复杂。事实上，这里有两种选择:
 
 \begin{enumerate}
 \item 
-We can implicitly declare a new function template, which must use a different template parameter, such as U:
+可以隐式声明一个新的函数模板，但要使用不同的模板参数，比如U:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -37,10 +37,10 @@ class Stack {
 };
 \end{lstlisting}
 
-Neither using T again nor skipping the template parameter declaration would work (either the inner T hides the outer T or we declare a nontemplate function in namespace scope).
+再次使用T或跳过模板参数都不起作用(要么内部的T隐藏外部的T，要么在命名空间作用域中声明一个非模板函数)。
 
 \item 
-We can forward declare the output operator for a Stack<T> to be a template, which, however, means that we first have to forward declare Stack<T>:
+可以将\texttt{Stack<T>}的输出操作符转发声明为模板，这样就需要转发声明\texttt{Stack<T>}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -49,7 +49,7 @@ template<typename T>
 std::ostream& operator<< (std::ostream&, Stack<T> const&);
 \end{lstlisting}
 
-Then, we can declare this function as friend:
+然后，将该函数声明为友元:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -60,10 +60,10 @@ class Stack {
 };
 \end{lstlisting}
 
-Note the <T> behind the “function name” operator<<. Thus, we declare a specialization of the nonmember function template as friend. Without <T> we would declare a new nontemplate function. See Section 12.5.2 for details.
+注意“函数名”操作符\texttt{<<}后面的\texttt{<T>}。因此，需要将非成员函数模板的特化声明为友元。如果没有\texttt{<T>}，需要声明一个新的非模板函数。详细信息请参见12.5.2。
 \end{enumerate}
 
-In any case, you can still use this class for elements that don’t have operator<< defined. Only calling operator<< for this stack results in an error:
+其他情况下，仍可以对没有定义\texttt{<<}操作符的元素使用这个类。只有对这个堆栈调用操作符\texttt{<<}时才会出现错误:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::pair<int,int>> ps; // std::pair<> has no operator<< defined

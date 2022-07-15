@@ -1,4 +1,4 @@
-Class templates can be partially specialized. You can provide special implementations for particular circumstances, but some template parameters must still be defined by the user. For example, we can define a special implementation of class Stack<> for pointers:
+类模板可偏特化。可以为特定的情况提供特殊的实现，但是一些模板参数仍需要由用户定义。例如，可以为指针定义\texttt{Stack<>}类的特殊实现:
 
 \noindent
 \textit{basics/stackpartspec.hpp}
@@ -43,17 +43,15 @@ T* Stack<T*>::top () const
 }
 \end{lstlisting}
 
-With
-
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 class Stack<T*> {
 };
 \end{lstlisting}
 
-we define a class template, still parameterized for T but specialized for a pointer (Stack<T*>).
+之类定义了一个类模板，仍然参数化了T，但特化了指针(\texttt{Stack<T*>})。
 
-Note again that the specialization might provide a (slightly) different interface. Here, for example, pop() returns the stored pointer, so that a user of the class template can call delete for the removed value, when it was created with new
+特可能提供(略微)不同的接口。例如，这里的pop()返回存储的指针，当用new创建值时，用户就可以使用delete删除：
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int*> ptrStack; // stack of pointers (special implementation)
@@ -65,9 +63,9 @@ delete ptrStack.pop();
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Partial Specialization with Multiple Parameters}
+\textbf{多个参数的偏特化}
 
-Class templates might also specialize the relationship between multiple template parameters. For example, for the following class template:
+类模板也可以特化多个模板参数之间的关系。例如，对于以下类模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -76,7 +74,7 @@ class MyClass {
 };
 \end{lstlisting}
 
-the following partial specializations are possible:
+以下是可能的偏特化:
 
 \begin{lstlisting}[style=styleCXX]
 // partial specialization: both template parameters have same type
@@ -98,7 +96,7 @@ class MyClass<T1*,T2*> {
 };
 \end{lstlisting}
 
-The following examples show which template is used by which declaration:
+下面的例子显示了哪个声明使用了哪个模板:
 
 \begin{lstlisting}[style=styleCXX]
 MyClass<int,float> mif; // uses MyClass<T1,T2>
@@ -107,7 +105,7 @@ MyClass<float,int> mfi; // uses MyClass<T,int>
 MyClass<int*,float*> mp; // uses MyClass<T1*,T2*>
 \end{lstlisting}
 
-If more than one partial specialization matches equally well, the declaration is ambiguous:
+如果多个偏特化都匹配，则声明有二义性:
 
 \begin{lstlisting}[style=styleCXX]
 MyClass<int,int> m; // ERROR: matches MyClass<T,T>
@@ -116,7 +114,7 @@ MyClass<int*,int*> m; // ERROR: matches MyClass<T,T>
 					  // and MyClass<T1*,T2*>
 \end{lstlisting}
 
-To resolve the second ambiguity, you could provide an additional partial specialization for pointers of the same type:
+要解决二义性，可以为相同类型的指针提供偏特化实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -125,7 +123,7 @@ class MyClass<T*,T*> {
 };
 \end{lstlisting}
 
-For details of partial specialization, see Section 16.4 on page 347.
+有关偏特化的详细信息，请参见第16.4节。
 
 
 

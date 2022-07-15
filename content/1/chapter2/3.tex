@@ -33,13 +33,13 @@ ps.printOn(std::cout); // ERROR: 元素类型不支持操作符<<
 
 \subsubsubsection{2.3.1\hspace{0.2cm}概念}
 
-This raises the question: How do we know which operations are required for a template to be able to get instantiated? The term concept is often used to denote a set of constraints that is repeatedly required in a template library. For example, the C++ standard library relies on such concepts as random access iterator and default constructible.
+先看一个问题:如何知道模板需要哪些操作才能实例化?“概念”通常用来表示模板库中需要的约束。例如，C++标准库依赖于随机访问迭代器和默认可构造函数等概念。
 
-Currently (i.e., as of C++17), concepts can more or less only be expressed in the documentation (e.g., code comments). This can become a significant problem because failures to follow constraints can lead to terrible error messages (see Section 9.4).
+目前(如C++17)，概念只能在文档中表达(如代码注释)。这可能会成为一个严重的问题，因为不遵守约束可能会导致可怕的错误消息(参见9.4)。
 
-For years, there have also been approaches and trials to support the definition and validation of concepts as a language feature. However, up to C++17 no such approach was standardized yet.
+多年来，也有一些方法和试验支持将概念定义和验证为一种语言特性。然而，到C++17为止，还这样的方法还没标准化。
 
-Since C++11, you can at least check for some basic constraints by using the static\_assert keyword and some predefined type traits. For example:
+从C++11开始，可以通过使用\texttt{static\_assert}和预定义类型特征来检查约束。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -51,11 +51,11 @@ class C
 };
 \end{lstlisting}
 
-Without this assertion the compilation will still fail, if the default constructor is required. However, the error message then might contain the entire template instantiation history from the initial cause of the instantiation down to the actual template definition in which the error was detected (see Section 9.4).
+如果需要使用默认构造函数，若没有这个断言，编译会失败。然而，错误消息描述的是整个模板实例化的过程，从最初的实例化原因到检测到错误的实际模板的定义(参见章节9.4)。
 
-However, more complicated code is necessary to check, for example, objects of type T provide a specific member function or that they can be compared using operator <. See Section 19.6.3 for a detailed example of such code. 
+但需要更复杂的代码来检查，例如，T类型的对象是够提供了特定的成员函数，或者是否有可以使用\texttt{<}操作符进行比较。相关的示例，请参见第19.6.3节。
 
-See Appendix E for a detailed discussion of concepts for C++.
+有关C++概念的详细讨论，请参阅附录E。
 
 
 

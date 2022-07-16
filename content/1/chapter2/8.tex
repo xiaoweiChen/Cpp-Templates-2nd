@@ -1,15 +1,15 @@
 
-You can make using a class template more convenient by defining a new name for the whole type.
+通过为整个类型定义一个新名称，可以使类模板更就简单。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Typedefs and Alias Declarations}
+\textbf{类型定义和别名声明}
 
-To simply define a new name for a complete type, there are two ways to do it:
+类型定义新名称，有两种方法:
 
 \begin{enumerate}
 \item
-By using the keyword typedef:
+通过使用关键字typedef:
 
 \begin{lstlisting}[style=styleCXX]
 typedef Stack<int> IntStack; // typedef
@@ -17,14 +17,14 @@ void foo (IntStack const& s); // s is stack of ints
 IntStack istack[10]; // istack is array of 10 stacks of ints
 \end{lstlisting}
 
-We call this declaration a typedef and the resulting name is called a typedef-name.
+typedef产生的名称称为typedef-name。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Using the word typedef instead of “type definition” in intentional. The keyword typedef was originally meant to suggest “type definition.” However, in C++, “type definition” really means something else (e.g., the definition of a class or enumeration type). Instead, a typedef should just be thought of as an alternative name (an “alias”) for an existing type, which can be done by a typedef.
+\hspace*{0.75cm}这里使用了typedef，而不是“类型定义”。其实，关键字typedef最初是用来建议“类型定义”的。在C++中，“类型定义”实际上意味着其他类型(例如，类或枚举类型的定义)。相反，应该将typedef视为现有类型的替代名称(“别名”)，从而使用typedef。
 \end{tcolorbox}
 
 \item
-By using the keyword using (since C++11):
+通过使用关键字using(C++11起):
 
 \begin{lstlisting}[style=styleCXX]
 using IntStack = Stack<int>; // alias declaration
@@ -32,54 +32,54 @@ void foo (IntStack const& s); // s is stack of ints
 IntStack istack[10]; // istack is array of 10 stacks of ints
 \end{lstlisting}
 
-Introduced by [DosReisMarcusAliasTemplates], this is called an alias declaration. 
+由[dosreismarcusaliastemplate]引入，称为别名声明。
 
 \end{enumerate}
 
-Note that in both cases we define a new name for an existing type rather than a new type. Thus, after the typedef
+两种情况下，都会为现有类型定义新名称。因此，
 
 \begin{lstlisting}[style=styleCXX]
 typedef Stack<int> IntStack;
 \end{lstlisting}
 
-or
+或
 
 \begin{lstlisting}[style=styleCXX]
 using IntStack = Stack<int>;
 \end{lstlisting}
 
-IntStack and Stack<int> are two interchangeable notations for the same type.
+IntStack和Stack<int>是同一类型的两种名称。
 
-As a common term for both alternatives to define a new name for an existing type, we use the term type alias declaration. The new name is a type alias then.
+作为为现有类型定义新名称的通用术语，可以用其来声明别名。因此，新名称就是原类型的别名。
 
-Because it is more readable (always having the defined type name on the left side of the =, for the remainder of this book, we prefer the alias declaration syntax when declaring an type alias.
+将已定义的类型名放在=左边(总是)阅读起来更容易，所以在本书声明类型别名时，我们更倾向使用别名声明语法。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Alias Templates}
+\textbf{模板别名}
 
-Unlike a typedef, an alias declaration can be templated to provide a convenient name for a family of types. This is also available since C++11 and is called an alias template.
+与typedef不同，别名声明可以模板化。自C++11起，这种方式就称为别名模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Alias templates are sometimes (incorrectly) referred to as typedef templates because they fulfill the same role that a typedef would if it could be made into a template.
+\hspace*{0.75cm}别名模板有时(不正确地)会称为typedef模板，若将其制成模板，将与typedef的行为相同。
 \end{tcolorbox}
 
-The following alias template DequeStack, parameterized over the element type T, expands to a Stack that stores its elements in a std::deque:
+别名模板DequeStack，对元素类型T进行参数化，展开为一个栈，将其元素实例存储在\texttt{std::deque}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 using DequeStack = Stack<T, std::deque<T>>;
 \end{lstlisting}
 
-Thus, both class templates and alias templates can be used as a parameterized type. But again, an alias template simply gives a new name to an existing type, which can still be used. Both DequeStack<int> and Stack<int, std::deque<int>> represent the same type.
+因此，类模板和别名模板都可以作为参数化类型。但别名模板只是为现有类型提供一个新名称，该类型仍然可以使用。\texttt{DequeStack<int>}和\texttt{Stack<int, std::deque<int>>}表示的就是相同类型。
 
-Note again that, in general, templates can only be declared and defined in global/namespace scope or inside class declarations.
+通常情况下，模板只能在全局/命名空间作用域或类声明内部声明和定义。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Alias Templates for Member Types}
+\textbf{成员类型的别名模板}
 
-Alias templates are especially helpful to define shortcuts for types that are members of class templates. After
+别名模板对于制作类模板成员类型的快捷方式特别合适。比如：
 
 \begin{lstlisting}[style=styleCXX]
 struct C {
@@ -88,7 +88,7 @@ struct C {
 };
 \end{lstlisting}
 
-or
+或
 
 \begin{lstlisting}[style=styleCXX]
 struct MyType {
@@ -97,23 +97,23 @@ struct MyType {
 };
 \end{lstlisting}
 
-a definition such as
+可以这样的定义
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 using MyTypeIterator = typename MyType<T>::iterator;
 \end{lstlisting}
 
-allows the use of
+也可以这样
 
 \begin{lstlisting}[style=styleCXX]
 MyTypeIterator<int> pos;
 \end{lstlisting}
 
-instead of the following:
+而不像下面这样:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The typename is necessary here because the member is a type. See Section 5.1 for details.
+\hspace*{0.75cm}因为成员是类型，所以typename是必要的。参见5.1节。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -122,21 +122,21 @@ typename MyType<T>::iterator pos;
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Type Traits Suffix \_t}
+\textbf{类型特征后缀\_t}
 
-Since C++14, the standard library uses this technique to define shortcuts for all type traits in the standard library that yield a type. For example, to be able to write
+C++14后，标准库使用这种方式为标准库中的所有类型定义了快捷方式。比如：
 
 \begin{lstlisting}[style=styleCXX]
 std::add_const_t<T> // since C++14
 \end{lstlisting}
 
-instead of
+而非
 
 \begin{lstlisting}[style=styleCXX]
 typename std::add_const<T>::type // since C++11
 \end{lstlisting}
 
-the standard library defines:
+标准库定义:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {

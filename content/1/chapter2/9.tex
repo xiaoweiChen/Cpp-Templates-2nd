@@ -1,6 +1,6 @@
-Until C++17, you always had to pass all template parameter types to class templates (unless they have default values). Since C++17, the constraint that you always have to specify the template arguments explicitly was relaxed. Instead, you can skip to define the templates arguments explicitly, if the constructor is able to deduce all template parameters (that don’t have a default value).
+C++17前，必须将所有模板参数类型传递给类模板(除非有默认值)。C++17后，必须明确指定模板参数的约束放宽了。相反，如果构造函数能够推导出所有模板形参(没有默认值)，则可以不用显式定义模板参数。
 
-For example, in all previous code examples, you can use a copy constructor without specifying the template arguments:
+例如，前面所有的代码示例中，可以使用复制构造函数，而非指定模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int> intStack1; // stack of strings
@@ -8,7 +8,7 @@ Stack<int> intStack2 = intStack1; // OK in all versions
 Stack intStack3 = intStack1; // OK since C++17
 \end{lstlisting}
 
-By providing constructors that pass some initial arguments, you can support deduction of the element type of a stack. For example, we could provide a stack that can be initialized by a single element:
+通过接受参数的构造函数，支持推断堆栈的元素类型。例如，可以提供由单个元素初始化的堆栈:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -24,59 +24,59 @@ public:
 };
 \end{lstlisting}
 
-This allows you to declare a stack as follows:
+可以这样声明栈:
 
 \begin{lstlisting}[style=styleCXX]
 Stack intStack = 0; // Stack<int> deduced since C++17
 \end{lstlisting}
 
-By initializing the stack with the integer 0, the template parameter T is deduced to be int, so that a Stack<int> is instantiated.
+使用整数0初始化堆栈，模板参数T推导为int，因此会实例化一个、\texttt{stack<int>}类型。
 
-Note the following:
+请注意以下几点:
 
 \begin{itemize}
 \item 
-Due to the definition of the int constructor, you have to request the default constructors to be available with its default behavior, because the default constructor is available only if no other constructor is defined:
+根据int构造函数的定义，必须请求默认构造函数以其默认行为可用，因为只有在没有定义其他构造函数时，默认构造函数才可用:
 \begin{lstlisting}[style=styleCXX]
 Stack() = default;
 \end{lstlisting}
 
 \item 
-The argument elem is passed to elems with braces around to initialize the vector elems with an initializer list with elem as the only argument:
+参数elem传递给带大括号的elems，以初始化初始化列表，以elem作为唯一参数:
 \begin{lstlisting}[style=styleCXX]
 : elems({elem})
 \end{lstlisting}
-There is no constructor for a vector that is able to take a single parameter as initial element directly.
+\texttt{vector}的构造函数中无法接受单个参数作为初始元素。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Even worse, there is a vector constructor taking one integral argument as initial size, so that for a stack with the initial value 5, the vector would get an initial size of five elements when : elems(elem) is used.
+\hspace*{0.75cm}更糟糕的是，\texttt{vector}的构造函数会将一个整型参数作为初始大小，因此对于初始值为5的堆栈，当使用\texttt{:elems(elem)}时，\texttt{vector}将获得5个元素的初始大小。
 \end{tcolorbox}
 
 \end{itemize}
 
-Note that, unlike for function templates, class template arguments may not be deduced only partially (by explicitly specifying only some of the template arguments). See Section 15.12 for details.
+与函数模板不同，类模板参数不能只推导部分参数(通过显式地只指定一些模板参数)。详细信息请参见15.12。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Class Template Arguments Deduction with String Literals}
+\textbf{用字符串字面值推导类模板参数}
 
-In principle, you can even initialize the stack with a string literal:
+原则上，可以用字符串字面值初始化堆栈:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack = "bottom"; // Stack<char const[7]> deduced since C++17
 \end{lstlisting}
 
-But this causes a lot of trouble: In general, when passing arguments of a template type T by reference, the parameter doesn’t decay, which is the term for the mechanism to convert a raw array type to the corresponding raw pointer type. This means that we really initialize a
+但这会带来很多麻烦:通常，通过引用传递模板类型T的参数时，参数不会衰变，衰变是指将原始数组类型转换为相应的原始指针类型的机制。这意味着会初始化了一个
 
 \begin{lstlisting}[style=styleCXX]
 Stack<char const[7]>
 \end{lstlisting}
 
-and use type char const[7] wherever T is used. For example, we may not push a string of different size, because it has a different type. For a detailed discussion see Section 7.4.
+这是应为，在使用T的地方使用了\texttt{char const[7]}。例如，我们不能推入不同大小的字符串，因为它有不同的类型。有关详细讨论，请参阅第7.4节。
 
-However, when passing arguments of a template type T by value, the parameter decays, which is the term for the mechanism to convert a raw array type to the corresponding raw pointer type. That is, the call parameter T of the constructor is deduced to be char const* so that the whole class is deduced to be a Stack<char const*>.
+但当按值传递模板类型T的阐述时，参数会衰变，将原始数组类型转换为相应的原始指针类型。也就是说，构造函数的调用参数T推导为\texttt{char const*}，因此整个类将推导为\texttt{Stack<char const*>}。
 
-For this reason, it might be worthwhile to declare the constructor so that the argument is passed by value:
+由于这个原因，可以声明构造函数，直接传递值:
 
 \begin{lstlisting}[style=styleCXX]
 class Stack {
@@ -90,13 +90,13 @@ public:
 };
 \end{lstlisting}
 
-With this, the following initialization works fine:
+有了这个，下面的初始化就可以工作了:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack = "bottom"; // Stack<char const*> deduced since C++17
 \end{lstlisting}
 
-In this case, however, we should better move the temporary elem into the stack to avoid unnecessarily copying it:
+然而，在这种情况下，最好将临时元素移到堆栈中，以避免不必要地复制:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -113,31 +113,31 @@ public:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Deduction Guides}
+\textbf{推导策略}
 
-Instead of declaring the constructor to be called by value, there is a different solution: Because handling raw pointers in containers is a source of trouble, we should disable automatically deducing raw character pointers for container classes.
+除了声明构造函数由值调用之外，还有一种不同的解决方案:因为在容器中处理指针是噩梦的开始，所以应该禁止为容器类自动推导字符指针。
 
-You can define specific deduction guides to provide additional or fix existing class template argument deductions. For example, you can define that whenever a string literal or C string is passed, the stack is instantiated for std::string:
+可以定义特定的推导策略来提供额外的，或修复现有类模板参数的推导。例如，可以定义只要传入一个字符串字面值或C字符串，栈就会实例化为\texttt{std::string}:
 
 \begin{lstlisting}[style=styleCXX]
 Stack(char const*) -> Stack<std::string>;
 \end{lstlisting}
 
-This guide has to appear in the same scope (namespace) as the class definition. Usually, it follows the class definition. We call the type following the -> the guided type of the deduction guide.
+这个策略必须出现在与类定义相同的作用域(命名空间)中。通常，它遵循类定义。将\texttt{->}后面的类型称为推导策略的引导类型。
 
-Now, the declaration with
+现在，声明
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack{"bottom"}; // OK: Stack<std::string> deduced since C++17
 \end{lstlisting}
 
-deduces the stack to be a Stack<std::string>. However, the following still doesn’t work:
+将堆栈推断为一个\texttt{Stack<std::string>}类。然而，在以下情况下仍然不能正常工作:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack = "bottom"; // Stack<std::string> deduced, but still not valid
 \end{lstlisting}
 
-We deduce std::string so that we instantiate a Stack<std::string>:
+推导\texttt{std::string}以便实例化一个\texttt{Stack<std::string>}类:
 
 \begin{lstlisting}[style=styleCXX]
 class Stack {
@@ -151,13 +151,13 @@ public:
 };
 \end{lstlisting}
 
-However, by language rules, you can’t copy initialize (initialize using =) an object by passing a string literal to a constructor expecting a std::string. So you have to initialize the stack as follows:
+但根据语言规则，不能通过将字符串字面值传递给\texttt{std::string}的构造函数来复制对象，从而完成初始化(initialize using =)。所以必须像这样初始化堆栈:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack{"bottom"}; // Stack<std::string> deduced and valid
 \end{lstlisting}
 
-Note that, if in doubt, class template argument deduction copies. After declaring stringStack as Stack<std::string> the following initializations declare the same type (thus, calling the copy constructor) instead of initializing a stack by elements that are string stacks:
+此时的疑问应该在于，类模板参数推导的副本。在将\texttt{stringStack}声明为\texttt{Stack<std::string>}之后，下面的初始化声明了相同的类型(因此，调用了复制构造函数)，而不是通过字符串堆栈元素对堆栈进行初始化:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stack2{stringStack}; // Stack<std::string> deduced
@@ -165,7 +165,7 @@ Stack stack3(stringStack); // Stack<std::string> deduced
 Stack stack4 = {stringStack}; // Stack<std::string> deduced
 \end{lstlisting}
 
-See Section 15.12 for more details about class template argument deduction.
+有关类模板参数推导的更多细节，请参见15.12节。
 
 
 

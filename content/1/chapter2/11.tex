@@ -1,29 +1,29 @@
 
 \begin{itemize}
 \item 
-A class template is a class that is implemented with one or more type parameters left open.
+类模板是在实现时保留一个或多个类型参数的类。
 
 \item 
-To use a class template, you pass the open types as template arguments. The class template is then instantiated (and compiled) for these types.
+要使用类模板，需要将类型作为模板参数传递。然后为这些类型实例化(并编译)类模板。
 
 \item 
-For class templates, only those member functions that are called are instantiated.
+对于类模板，只有那些调用的成员函数会实例化。
 
 \item 
-You can specialize class templates for certain types.
+可以为某些类型特化类模板。
 
 \item 
-You can partially specialize class templates for certain types.
+可以偏特化某些类型的类模板。
 
 \item 
-Since C++17, class template arguments can automatically be deduced from constructors.
+C++17后，可以从构造函数中自动推导出类模板的参数。
 
 \item 
-You can define aggregate class templates.
+可以定义聚合类模板。
 
 \item 
-Call parameters of a template type decay if declared to be called by value.
+如果声明为按值调用，则模板类型的调用参数会衰变。
 
 \item 
-Templates can only be declared and defined in global/namespace scope or inside class declarations.
+模板只能在全局/命名空间作用域或类声明内部声明和定义。
 \end{itemize}

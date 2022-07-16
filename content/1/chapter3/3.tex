@@ -1,6 +1,6 @@
-Note that nontype template parameters carry some restrictions. In general, they can be only constant integral values (including enumerations), pointers to objects/functions/members, lvalue references to objects or functions, or std::nullptr\_t (the type of nullptr).
+非类型模板参数有一些限制。通常，只能是整型常量值(包括枚举)，指向对象/函数/成员的指针，指向对象或函数的左值引用，或者\texttt{std::nullptr\_t}(\texttt{nullptr}的类型)。
 
-Floating-point numbers and class-type objects are not allowed as nontype template parameters:
+浮点数和类型对象不允许作为非类型模板形参:
 
 \begin{lstlisting}[style=styleCXX]
 template<double VAT> // ERROR: floating-point values are not
@@ -15,17 +15,17 @@ class MyClass { // allowed as template parameters
 };
 \end{lstlisting}
 
-When passing template arguments to pointers or references, the objects must not be string literals, temporaries, or data members and other subobjects. Because these restrictions were relaxed with each and every C++ version before C++17, additional constraints apply:
+当向指针或引用传递模板参数时，对象不能是字符串字面值、临时对象或数据成员和其他子对象。因为在C++17前，每个C++版本都放宽了这些限制，所以还有其他的限制:
 
 \begin{itemize}
 \item 
-In C++11, the objects also had to have external linkage.
+C++11中，对象必须具有外部链接。
 
 \item 
-In C++14, the objects also had to have external or internal linkage.
+C++14中，对象必须具有外部或内部链接。
 \end{itemize}
 
-Thus, the following is not possible:
+因此，以下情况是错误的:
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* name>
@@ -36,7 +36,7 @@ class MyClass {
 MyClass<"hello"> x; // ERROR: string literal "hello" not allowed
 \end{lstlisting}
 
-However there are workarounds (again depending on the C++ version):
+但也有解决方法(同样取决于C++的版本):
 
 \begin{lstlisting}[style=styleCXX]
 extern char const s03[] = "hi"; // external linkage
@@ -50,15 +50,15 @@ int main()
 }
 \end{lstlisting}
 
-In all three cases a constant character array is initialized by "hello" and this object is used as a template parameter declared with char const*. This is valid in all C++ versions if the object has external linkage (s03), in C++11 and C++14 also if it has internal linkage (s11), and since C++17 if it has no linkage at all.
+在这三种情况下，常量字符数组都由"hello"初始化，该对象被用作用\texttt{char const*}声明的模板形参。若对象具有外部链接(s03)，这在所有C++版本中都是有效的;若对象具有内部链接(s11)，则在C++11和C++14中也是有效的;若对象完全没有链接，则从C++17才开始支持。
 
-See Section 12.3.3 for a detailed discussion and Section 17.2 on page 354 for a discussion of possible future changes in this area.
+请参阅第12.3.3节和第17.2节讨论了该领域在未来变化的可能。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Avoiding Invalid Expressions}
+\textbf{避免无效的表达式}
 
-Arguments for nontype template parameters might be any compile-time expressions. For example:
+非类型模板形参的实参可以是编译时表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<int I, bool B>
@@ -67,7 +67,7 @@ class C;
 C<sizeof(int) + 4, sizeof(int)==4> c;
 \end{lstlisting}
 
-However, note that if operator> is used in the expression, you have to put the whole expression into parentheses so that the nested > ends the argument list:
+但是，若在表达式中使用\texttt{>}，必须将整个表达式放入圆括号中，以便编译器确定\texttt{>}在哪里结束:
 
 \begin{lstlisting}[style=styleCXX]
 C<42, sizeof(int) > 4> c; // ERROR: first > ends the template argument list

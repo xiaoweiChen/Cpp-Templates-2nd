@@ -1,10 +1,11 @@
-Since C++17, you can define a nontype template parameter to generically accept any type that is allowed for a nontype parameter. Using this feature, we can provide an even more generic stack class with fixed size:
+C++17后，可以定义非类型模板参数。使用这个特性，可以实现一个更通用的确定大小的堆栈类:
 
 \noindent
 \textit{basics/stackauto.hpp}
 \begin{lstlisting}[style=styleCXX]
 #include <array>
 #include <cassert>
+
 template<typename T, auto Maxsize>
 class Stack {
 	public:
@@ -56,7 +57,7 @@ T const& Stack<T,Maxsize>::top () const
 }
 \end{lstlisting}
 
-By defining
+定义
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, auto Maxsize>
@@ -65,21 +66,21 @@ class Stack {
 };
 \end{lstlisting}
 
-by using the placeholder type auto, you define Maxsize to be a value of a type not specified yet. It might be any type that is allowed to be a nontype template parameter type.
+通过使用占位符类型auto，可以将Maxsize定义为尚未指定类型的值。它可以是任何允许为非类型模板形参类型的类型。
 
-Internally you can use both the value:
+内部可以同时使用这两个值:
 
 \begin{lstlisting}[style=styleCXX]
 std::array<T,Maxsize> elems; // elements
 \end{lstlisting}
 
-and its type:
+其类型为:
 
 \begin{lstlisting}[style=styleCXX]
 using size_type = decltype(Maxsize);
 \end{lstlisting}
 
-which is then, for example, used as return type of the size() member function:
+例如，用作\texttt{size()}成员函数的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 size_type size() const { // return current number of elements
@@ -87,7 +88,7 @@ size_type size() const { // return current number of elements
 }
 \end{lstlisting}
 
-Since C++14, you could also just use auto here as return type to let the compiler find out the return type:
+C++14后，也可以在这里使用auto作为返回类型，让编译器找到返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 auto size() const { // return current number of elements
@@ -95,7 +96,7 @@ auto size() const { // return current number of elements
 }
 \end{lstlisting}
 
-With this class declaration the type of the number of elements is defined by the type used for the number of elements, when using a stack:
+通过这个类声明，当使用堆栈时，元素数量由使用类型定义:
 
 \noindent
 \textit{basics/stackauto.cpp}
@@ -125,23 +126,20 @@ int main()
 }
 \end{lstlisting}
 
-With
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int,20u> int20Stack; // stack of up to 20 ints
 \end{lstlisting}
 
-the internal size type is unsigned int, because 20u is passed.
-
-With
+因为传递了20u，所以内部大小类型是\texttt{unsigned int}。
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::string,40> stringStack; // stack of up to 40 strings
 \end{lstlisting}
 
-the internal size type is int, because 40 is passed.
+因为传递了40，内部大小类型是\texttt{int}。
 
-size() for the two stacks will have different return types, so that after
+两个堆栈的\texttt{size()}将有不同的返回类型，因此
 
 \begin{lstlisting}[style=styleCXX]
 auto size1 = int20Stack.size();
@@ -149,7 +147,7 @@ auto size1 = int20Stack.size();
 auto size2 = stringStack.size();
 \end{lstlisting}
 
-the types of size1 and size2 differ. By using the standard type trait std::is\_same (see Section D.3.3) and decltype, we can check that:
+size1和size2的类型不同。可以使用标准类型特征\texttt{std::is\_same}(参见D.3.3节)和\texttt{decltype}，进行检查:
 
 \begin{lstlisting}[style=styleCXX]
 if (!std::is_same<decltype(size1), decltype(size2)>::value) {
@@ -157,13 +155,13 @@ if (!std::is_same<decltype(size1), decltype(size2)>::value) {
 }
 \end{lstlisting}
 
-Thus, the output will be:
+因此，输出是:
 
 \begin{tcblisting}{commandshell={}}
 size types differ
 \end{tcblisting}
 
-Since C++17, for traits returning values, you can also use the suffix \_v and skip ::value (see Section 5.6 for details):
+C++17后，对于返回值可以使用后缀\texttt{\_v}并省略\texttt{::value}(详见5.6节):
 
 \begin{lstlisting}[style=styleCXX]
 if (!std::is_same_v<decltype(size1), decltype(size2)>) {
@@ -171,13 +169,13 @@ if (!std::is_same_v<decltype(size1), decltype(size2)>) {
 }
 \end{lstlisting}
 
-Note that other constraints on the type of nontype template parameters remain in effect. Especially, the restrictions about possible types for nontype template arguments discussed in Section 3.3 still apply. For example:
+对非类型模板形参类型的其他约束仍然有效。特别是，第3.3节中讨论的非类型模板参数的类型限制仍然适用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int,3.14> sd; // ERROR: Floating-point nontype argument
 \end{lstlisting}
 
-And, because you can also pass strings as constant arrays (since C++17 even static locally declared; see Section 3.3), the following is possible:
+并且，可以将字符串作为常量数组传递(C++17中甚至是静态的局部声明;见第3.3节):
 
 \noindent
 \textit{basics/message.cpp}
@@ -203,7 +201,7 @@ int main()
 }
 \end{lstlisting}
 
-Note also that even template<decltype(auto) N> is possible, which allows instantiation of N as a reference:
+还要注意的是，\texttt{template<decltype(auto) N>}也可以，其允许将N实例化为引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<decltype(auto) N>
@@ -215,7 +213,7 @@ int i;
 C<(i)> x; // N is int&
 \end{lstlisting}
 
-See Section 15.10.1 for details.
+详情参见15.10.1。
 
 
 

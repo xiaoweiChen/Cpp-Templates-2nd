@@ -1,6 +1,6 @@
-In contrast to the sample implementations of a stack in previous chapters, you can also implement a stack by using a fixed-size array for the elements. An advantage of this method is that the memory management overhead, whether performed by you or by a standard container, is avoided. However, determining the best size for such a stack can be challenging. The smaller the size you specify, the more likely it is that the stack will get full. The larger the size you specify, the more likely it is that memory will be reserved unnecessarily. A good solution is to let the user of the stack specify the size of the array as the maximum size needed for stack elements.
+与前几章的栈实现不同，这里可以通过使用固定大小的元素数组来实现栈。这种方法的优点是避免了内存管理开销。但是，这为堆栈确定最佳容量带来了困难。指定的容量越小，堆栈越有可能快速填满。指定的容量越大，有可能会浪费内存。好的解决方案是让堆栈的用户指定数组的大小，作为堆栈的最大容量。
 
-To do this, define the size as a template parameter:
+为此，可以将size定义为模板参数:
 
 \noindent
 \textit{basics/stacknontype.hpp}
@@ -56,7 +56,7 @@ T const& Stack<T,Maxsize>::top () const
 }
 \end{lstlisting}
 
-The new second template parameter, Maxsize, is of type int. It specifies the size of the internal array of stack elements:
+第二个模板形参Maxsize是int类型，指定了堆栈元素的内部数组的容量:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t Maxsize>
@@ -67,7 +67,7 @@ class Stack {
 };
 \end{lstlisting}
 
-In addition, it is used in push() to check whether the stack is full:
+另外，在push()中使用它来检查堆栈是否已满:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t Maxsize>
@@ -79,7 +79,7 @@ void Stack<T,Maxsize>::push (T const& elem)
 }
 \end{lstlisting}
 
-To use this class template you have to specify both the element type and the maximum size:
+要使用这个类模板，必须同时指定元素类型和最大容量:
 
 \noindent
 \textit{basics/stacknontype.cpp}
@@ -106,9 +106,9 @@ int main()
 }
 \end{lstlisting}
 
-Note that each template instantiation is its own type. Thus, int20Stack and int40Stack are two different types, and no implicit or explicit type conversion between them is defined. Thus, one cannot be used instead of the other, and you cannot assign one to the other.
+注意，每个模板实例化都是独立的类型。因此，int20Stack和int40Stack是两种不同的类型。因此，不能使用其中一个来代替另一个，也不能将其中一个分配给另一个。
 
-Again, default arguments for the template parameters can be specified:
+同样，可以指定模板参数的默认值:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T = int, std::size_t Maxsize = 100>
@@ -117,7 +117,7 @@ class Stack {
 };
 \end{lstlisting}
 
-However, from a perspective of good design, this may not be appropriate in this example. Default arguments should be intuitively correct. But neither type int nor a maximum size of 100 seems intuitive for a general stack type. Thus, it is better when the programmer has to specify both values explicitly so that these two attributes are always documented during a declaration.
+但从良好设计的角度来看，这样的写法在本例中可能不太合适。默认参数应该是正确的。但是对于一般的堆栈类型来说，int类型和最大容量为100似乎都不直观。因此，最好显式地指定这两个值，以便在声明期间进行记录。
 
 
 

@@ -1,32 +1,32 @@
 
 \begin{itemize}
 \item 
-To access a type name that depends on a template parameter, you have to qualify the name with a leading typename.
+要访问依赖于模板参数的类型名称，必须使用前导typename对名称进行限定。
 
 \item 
-To access members of bases classes that depend on template parameters, you have to qualify the access by this-> or their class name.
+要访问依赖于模板参数的基类成员，必须通过\texttt{this->}或类名限定访问。
 
 \item 
-Nested classes and member functions can also be templates. One application is the ability to implement generic operations with internal type conversions.
+嵌套的类和成员函数也可以是模板，一种应用是能够实现具有内部类型转换的泛型操作。
 
 \item 
-Template versions of constructors or assignment operators don’t replace predefined constructors or assignment operators.
+模板版本的构造函数或赋值操作符不能替换预定义的构造函数或赋值操作符。
 
 \item 
-By using braced initialization or explicitly calling a default constructor, you can ensure that variables and members of templates are initialized with a default value even if they are instantiated with a built-in type.
+通过使用带大括号的初始化或显式调用默认构造函数，可以确保使用默认值初始化模板的变量和成员，即使使用内置类型实例化。
 
 \item 
-You can provide specific templates for raw arrays, which can also be applicable to string literals.
+可以为原始数组提供特定的模板，这些模板也可以应用于字符串字面量。
 
 \item 
-When passing raw arrays or string literals, arguments decay (perform an array-to-pointer conversion) during argument deduction if and only if the parameter is not a reference.
+当传递原始数组或字符串字面量时，当参数不是引用时，在推导过程中会衰变(执行数组到指针的转换)。
 
 \item 
-You can define variable templates (since C++14).
+可以定义变量模板(C++14起)。
 
 \item 
-You can also use class templates as template parameters, as template template parameters.
+也可以使用类模板作为模板参数，或作为双重模板参数。
 
 \item 
-Template template arguments must usually match their parameters exactly.
+模板参数必须精确匹配。
 \end{itemize}

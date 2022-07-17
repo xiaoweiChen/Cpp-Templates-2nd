@@ -1,21 +1,21 @@
-It can be useful to allow a template parameter itself to be a class template. Again, our stack class template can be used as an example.
+允许模板参数本身是类模板也是可以的。同样，堆栈类模板可以用作示例。
 
-To use a different internal container for stacks, the application programmer has to specify the element type twice. Thus, to specify the type of the internal container, you have to pass the type of the container and the type of its elements again:
+要为堆栈使用不同的内部容器，必须两次指定元素类型。因此，要指定内部容器的类型，必须再次传递容器的类型及其元素的类型:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int, std::vector<int>> vStack; // integer stack that uses a vector
 \end{lstlisting}
 
-Using template template parameters allows you to declare the Stack class template by specifying the type of the container without respecifying the type of its elements:
+使用模板模板参数，可以通过指定容器的类型来声明Stack类模板，而无需重新指定容器元素的类型:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int, std::vector> vStack; // integer stack that uses a vector
 \end{lstlisting}
 
-To do this, you must specify the second template parameter as a template template parameter. In principle, this looks as follows:
+为此，必须将第二个模板参数指定为一个双重模板参数。如下所示:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++17, there is an issue with this version that we explain in a minute. However, this affects only the default value std::deque. Thus, we can illustrate the general features of template template parameters with this default value before we discuss how to deal with it before C++17.
+\hspace*{0.75cm}C++17前，这个版本实现有一个问题，稍后会进行解释。但是，这只影响默认值\texttt{std::deque}。因此，在讨论如何在C++17前处理它前，可以用这个默认值来说明模板参数的一般特性。
 \end{tcolorbox}
 
 \noindent
@@ -38,21 +38,21 @@ public:
 };
 \end{lstlisting}
 
-The difference is that the second template parameter is declared as being a class template:
+不同的是，第二个模板参数声明为类模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Elem> class Cont
 \end{lstlisting}
 
-The default value has changed from std::deque<T> to std::deque. This parameter has to be a class template, which is instantiated for the type that is passed as the first template parameter:
+默认值从\texttt{std::deque<T>}变为\texttt{std::deque}。这个参数必须是类模板，其作为第一个模板参数类型的实例化:
 
 \begin{lstlisting}[style=styleCXX]
 Cont<T> elems;
 \end{lstlisting}
 
-This use of the first template parameter for the instantiation of the second template parameter is particular to this example. In general, you can instantiate a template template parameter with any type inside a class template.
+使用第一个模板参数实例化第二个模板参数是本例特有的。通常，可以使用类模板中的类型实例化模板模板参数。
 
-As usual, instead of typename you could use the keyword class for template parameters. Before C++11, Cont could only be substituted by the name of a class template.
+通常，可以使用关键字class来代替typename作为模板参数。在C++11前，Cont只能用类模板名称替代。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -62,7 +62,7 @@ class Stack { // OK
 };
 \end{lstlisting}
 
-Since C++11, we can also substitute Cont with the name of an alias template, but it wasn’t until C++17 that a corresponding change was made to permit the use of the keyword typename instead of class to declare a template template parameter:
+C++11后，也可以用别名模板的名称来替换Cont。直到C++17才做了相应的更改，允许使用关键字typename，而不是class，来声明一个模板模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -72,9 +72,9 @@ class Stack { // ERROR before C++17
 };
 \end{lstlisting}
 
-Those two variants mean exactly the same thing: Using class instead of typename does not prevent us from specifying an alias template as the argument corresponding to the Cont parameter.
+这两种的含义完全相同:使用class或typename并不阻止指定别名模板作为与Cont对应的参数。
 
-Because the template parameter of the template template parameter is not used, it is customary to omit its name (unless it provides useful documentation):
+因为双重模板参数的模板参数没有使用，习惯上会省略其名字(除非提供了文档):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -84,7 +84,7 @@ class Stack {
 };
 \end{lstlisting}
 
-Member functions must be modified accordingly. Thus, you have to specify the second template parameter as the template template parameter. The same applies to the implementation of the member function. The push() member function, for example, is implemented as follows:
+必须相应地修改成员函数。因此，必须将第二个模板参数指定为双重模板参数。这同样适用于成员函数的实现。例如，\texttt{push()}成员函数的实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, template<typename> class Cont>
@@ -94,17 +94,17 @@ void Stack<T,Cont>::push (T const& elem)
 }
 \end{lstlisting}
 
-Note that while template template parameters are placeholders for class or alias templates, there is no corresponding placeholder for function or variable templates.
+虽然双重模板参数是类模板或别名模板的占位符，但函数模板或变量模板没有相应的占位符。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Template Template Argument Matching}
+\textbf{双重模板参数的匹配}
 
-If you try to use the new version of Stack, you may get an error message saying that the default value std::deque is not compatible with the template template parameter Cont. The problem is that prior to C++17 a template template argument had to be a template with parameters that exactly match the parameters of the template template parameter it substitutes, with some exceptions related to variadic template parameters (see Section 12.3.4 on page 197). Default template arguments of template template arguments were not considered, so that a match couldn’t be achieved by leaving out arguments that have default values (in C++17, default arguments are considered).
+若尝试使用新版本的\texttt{Stack}，可能会得到一个错误消息，表明默认值\texttt{std::deque}与双重模板参数Cont不兼容。问题是在C++17之前，双重模板参数必须是一个参数与它所替代的双重模板参数完全匹配的模板，一些例外与可变参数模板参数相关(参见12.3.4节)。没有考虑双重模板参数的默认模板实参，因此不考虑具有默认值的参数无法实现匹配(在C++17中，会考虑默认参数)。
 
-The pre-C++17 problem in this example is that the std::deque template of the standard library has more than one parameter: The second parameter (which describes an allocator) has a default value, but prior to C++17 this was not considered when matching std::deque to the Cont parameter.
+在本例中，C++17前的问题是标准库的\texttt{std::deque}模板有多个参数:第二个参数(用于描述分配器)有一个默认值，但在C++17前，将\texttt{std::deque}与Cont参数匹配时没有考虑到这一点。
 
-There is a workaround, however. We can rewrite the class declaration so that the Cont parameter expects containers with two template parameters:
+不过，有一个解决办法。可以重写类声明，使Cont参数包含两个模板参数的容器:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -118,9 +118,9 @@ private:
 };
 \end{lstlisting}
 
-Again, we could omit Alloc because it is not used.
+同样，可以省略Alloc，因为这里没有使用它。
 
-The final version of our Stack template (including member templates for assignments of stacks of different element types) now looks as follows:
+堆栈模板的最终版本(包括不同元素类型堆栈赋值的成员模板)现在是这样的:
 
 \noindent
 \textit{basics/stack9.hpp}
@@ -189,16 +189,16 @@ Stack<T,Cont>::operator= (Stack<T2,Cont2> const& op2)
 }
 \end{lstlisting}
 
-Note again that to get access to all the members of op2 we declare that all other stack instances are friends (omitting the names of the template parameters):
+为了访问op2的所有成员，声明所有其他堆栈实例都是友元(省略模板参数的名称):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename, template<typename, typename>class>
 friend class Stack;
 \end{lstlisting}
 
-Still, not all standard container templates can be used for Cont parameter. For example, std::array will not work because it includes a nontype template parameter for the array length that has no match in our template template parameter declaration.
+不过，并不是所有的标准容器模板都可以用于Cont参数。例如，\texttt{std::array}将不起作用，因为它包含了数组长度的非类型模板参数，在我们的模板参数声明中并没有匹配。
 
-The following program uses all features of this final version:
+下面的代码使用了这个最终版本的所有功能:
 
 \noindent
 \textit{basics/stack9test.cpp}
@@ -242,7 +242,7 @@ int main()
 }
 \end{lstlisting}
 
-The program has the following output:
+相应的输出为：
 
 \begin{tcblisting}{commandshell={}}
 iStack.top(): 2
@@ -252,7 +252,7 @@ vStack.top(): 6.6
 vStack: 4.4 2 1
 \end{tcblisting}
 
-For further discussion and examples of template template parameters, see Section 12.2.3, Section 12.3.4 on page 197, and Section 19.2.2.
+关于模板参数的进一步讨论和示例，请参见第12.2.3节、第12.3.4节和第19.2.2节。
 
 
 

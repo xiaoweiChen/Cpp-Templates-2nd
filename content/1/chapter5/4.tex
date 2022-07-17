@@ -1,6 +1,6 @@
-When passing raw arrays or string literals to templates, some care has to be taken. First, if the template parameters are declared as references, the arguments don’t decay. That is, a passed argument of "hello" has type char const[6]. This can become a problem if raw arrays or string arguments of different length are passed because the types differ. Only when passing the argument by value, the types decay, so that string literals are converted to type char const*. This is discussed in detail in Chapter 7.
+当将原始数组或字符串字面值传递给模板时，必须小心。如果模板参数声明为引用，则实参不会衰变，传入的"hello"参数为\texttt{char const[6]}类型。若因类型不同而传递不同长度的原始数组或字符串参数，这可能会成为一个问题。只有当按值传递实参时，类型才会衰变，因此字符串字面值转换为\texttt{char const*}。这将在第7章中详细讨论。
 
-Note that you can also provide templates that specifically deal with raw arrays or string literals. For example:
+注意，还可以提供专门处理原始数组或字符串字面量的模板。例如:
 
 \noindent
 \textit{basics/lessarray.hpp}
@@ -16,7 +16,7 @@ bool less (T(&a)[N], T(&b)[M])
 }
 \end{lstlisting}
 
-Here, when calling
+在这里，使用
 
 \begin{lstlisting}[style=styleCXX]
 int x[] = {1, 2, 3};
@@ -24,17 +24,17 @@ int y[] = {1, 2, 3, 4, 5};
 std::cout << less(x,y) << '\n';
 \end{lstlisting}
 
-less<>() is instantiated with T being int, N being 3, and M being 5.
+\texttt{less<>()}实例化，T为\texttt{int}，N为3，M为5。
 
-You can also use this template for string literals:
+也可以将此模板用于字符串字面值:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << less("ab","abc") << '\n';
 \end{lstlisting}
 
-In this case, less<>() is instantiated with T being char const, N being 3 and M being 4.
+在这种情况下，\texttt{less<>()}实例化，T为\texttt{char const}，N为3，M为4。
 
-If you only want to provide a function template for string literals (and other char arrays), you can do this as follows:
+若只想为字符串(和其他字符数组)提供一个函数模板，可以这样做:
 
 \noindent
 \textit{basics/lessstring.hpp}
@@ -50,7 +50,7 @@ bool less (char const(&a)[N], char const(&b)[M])
 }
 \end{lstlisting}
 
-Note that you can and sometimes have to overload or partially specialize for arrays of unknown bounds. The following program illustrates all possible overloads for arrays:
+注意，对于边界未知的数组，可以(有时必须)重载或偏特化。下面的代码演示了数组所有可能的重载:
 
 \noindent
 \textit{basics/arrays.hpp}
@@ -91,7 +91,7 @@ struct MyClass<T*> // partial specialization for pointers
 };
 \end{lstlisting}
 
-Here, the class template MyClass<> is specialized for various types: arrays of known and unknown bound, references to arrays of known and unknown bounds, and pointers. Each case is different and can occur when using arrays:
+类模板\texttt{MyClass<>}专门用于各种类型:已知和未知边界的数组、对已知和未知边界的数组的引用，以及指针。每种情况都是不同的，可以在使用数组时产生:
 
 \noindent
 \textit{basics/arrays.cpp}
@@ -128,19 +128,19 @@ int main()
 int x[] = {0, 8, 15}; // define forward-declared array
 \end{lstlisting}
 
-Note that a call parameter declared as an array (with or without length) by language rules really has a pointer type. Note also that templates for arrays of unknown bounds can be used for an incomplete type such as
+注意，由语言规则声明为数组(带或不带长度)的调用参数实际上具有指针类型。未知边界的数组模板可以用于不完整类型，例如
 
 \begin{lstlisting}[style=styleCXX]
 extern int i[];
 \end{lstlisting}
 
-And when this is passed by reference, it becomes a int(\&)[], which can also be used as a template parameter.
+当通过引用传递时，就变成了一个\texttt{int(\&)[]}，也可以用作模板参数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Parameters of type X (\&)[]——for some arbitrary type X——have become valid only in C++17, through the resolution of Core issue 393. However, many compilers accepted such parameters in earlier versions of the language.
+\hspace*{0.75cm}类型\texttt{X(\&)[]}——对于某些任意类型X——的参数仅在C++17中有效，通过核心问题393的解决。然而，在语言的早期版本中，许多编译器可以接受这样的参数。
 \end{tcolorbox}
 
-See Section 19.3.1 for another example using the different array types in generic code.
+在泛型代码中使用不同数组类型的另一种例子可参见19.3.1节。
 
 
 

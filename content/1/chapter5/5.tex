@@ -1,5 +1,5 @@
 
-Class members can also be templates. This is possible for both nested classes and member functions. The application and advantage of this ability can again be demonstrated with the Stack<> class template. Normally you can assign stacks to each other only when they have the same type, which implies that the elements have the same type. However, you can’t assign a stack with elements of any other type, even if there is an implicit type conversion for the element types defined:
+类成员也可以是模板，对于嵌套类和成员函数都有可能。\texttt{Stack<>}类模板可以再次展示这种能力的应用和优势。通常，只有具有相同的类型时，才能相互分配堆栈，这意味着元素具有相同的类型。但不能将其他类型的元素赋值给堆栈，即使对定义的元素类型有隐式的类型转换:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int> intStack1, intStack2; // stacks for ints
@@ -9,9 +9,9 @@ intStack1 = intStack2; // OK: stacks have same type
 floatStack = intStack1; // ERROR: stacks have different types
 \end{lstlisting}
 
-The default assignment operator requires that both sides of the assignment operator have the same type, which is not the case if stacks have different element types.
+默认赋值操作符要求赋值操作符的两端具有相同的类型。
 
-By defining an assignment operator as a template, however, you can enable the assignment of stacks with elements for which an appropriate type conversion is defined. To do this you have to declare Stack<> as follows:
+但通过将赋值操作符定义为模板，可以使用定义了适当类型转换的元素对堆栈赋值。要做到这一点，必须进行如下声明:
 
 \noindent
 \textit{basics/stack5decl.hpp}
@@ -35,22 +35,21 @@ public:
 };
 \end{lstlisting}
 
-The following two changes have been made:
+进行了以下两处修改:
 
 \begin{enumerate}
 \item 
-We added a declaration of an assignment operator for stacks of elements of another type T2.
+为另一种类型T2的元素堆栈添加了赋值操作符声明。
 
 \item 
-The stack now uses a std::deque<> as an internal container for the elements. Again, this is a consequence of the implementation of the new assignment operator.
+栈现在使用\texttt{std::deque<>}作为元素的内部容器。同样，这也是新赋值操作符实现的结果。
 \end{enumerate}
 
-The implementation of the new assignment operator looks like this:
+新赋值操作符的实现如下所示:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This is a basic implementation to demonstrate the template features. Issues like proper exception handling are certainly missing.
+\hspace*{0.75cm}这只是一个模板特性的基本实现。像异常处理的实现，这里没有添加。
 \end{tcolorbox}
-
 
 \noindent
 \textit{basics/stack5assign.hpp}
@@ -70,7 +69,7 @@ Stack<T>& Stack<T>::operator= (Stack<T2> const& op2)
 }
 \end{lstlisting}
 
-First let’s look at the syntax to define a member template. Inside the template with template parameter T, an inner template with template parameter T2 is defined:
+首先看看定义成员模板的语法。在模板参数为T的模板内部，定义了一个模板参数为T2的内部模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -78,9 +77,9 @@ template<typename T2>
 ...
 \end{lstlisting}
 
-Inside the member function, you may expect simply to access all necessary data for the assigned stack op2. However, this stack has a different type (if you instantiate a class template for two different argument types, you get two different class types), so you are restricted to using the public interface. It follows that the only way to access the elements is by calling top(). However, each element has to become a top element, then. Thus, a copy of op2 must first be made, so that the elements are taken from that copy by calling pop(). Because top() returns the last element pushed onto the stack, we might prefer to use a container that supports the insertion of elements at the other end of the collection. For this reason, we use a std::deque<>, which provides push\_front() to put an element on the other side of the collection.
+成员函数中，可能只希望访问所赋堆栈op2的必要数据。但这个堆栈有不同的类型(如果为两种不同的参数类型实例化一个类模板，将得到两种不同的类类型)，因此只能使用公共接口。所以，访问元素的唯一方法是调用\texttt{top()}。然而，每个元素都必须成为顶部元素。因此，必须创建op2的副本，以便通过调用\texttt{pop()}从该副本中获取元素。因为\texttt{top()}返回压入堆栈的最后一个元素，所以可能更倾向使用支持在集合的另一端插入元素的容器。所以，这里使用\texttt{std::deque<>}的\texttt{push\_front()}，将元素放在集合的另一端。
 
-To get access to all the members of op2 you can declare that all other stack instances are friends:
+要访问op2的所有成员，可以将所有其他堆栈实例声明为友元:
 
 \noindent
 \textit{basics/stack6decl.hpp}
@@ -106,13 +105,13 @@ public:
 };
 \end{lstlisting}
 
-As you can see, because the name of the template parameter is not used, you can omit it:
+因为模板参数的名字没有使用，可以省略:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename> friend class Stack;
 \end{lstlisting}
 
-Now, the following implementation of the template assignment operator is possible:
+现在，模板赋值操作符的实现可能为以下实现:
 
 \noindent
 \textit{basics/stack6assign.hpp}
@@ -129,7 +128,7 @@ Stack<T>& Stack<T>::operator= (Stack<T2> const& op2)
 }
 \end{lstlisting}
 
-Whatever your implementation is, having this member template, you can now assign a stack of ints to a stack of floats:
+无论实现的是什么，有了这个成员模板，现在可以将一堆int型对象赋值给一堆float型对象:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int> intStack; // stack for ints
@@ -139,15 +138,15 @@ floatStack = intStack; // OK: stacks have different types,
 						// but int converts to float
 \end{lstlisting}
 
-Of course, this assignment does not change the type of the stack and its elements. After the assignment, the elements of the floatStack are still floats and therefore top() still returns a float.
+当然，这个赋值不会改变堆栈及其元素的类型。赋值之后，\texttt{floatStack}的元素仍然是浮点数，因此\texttt{top()}仍然返回一个浮点数。
 
-It may appear that this function would disable type checking such that you could assign a stack with elements of any type, but this is not the case. The necessary type checking occurs when the element of the (copy of the) source stack is moved to the destination stack:
+这个函数可能会禁用类型检查，这样就可以将任何类型的元素赋给堆栈，但事实并非如此。当源堆栈(副本)的元素移动到目标堆栈时，就会发生必要的类型检查:
 
 \begin{lstlisting}[style=styleCXX]
 elems.push_front(tmp.top());
 \end{lstlisting}
 
-If, for example, a stack of strings gets assigned to a stack of floats, the compilation of this line results in an error message stating that the string returned by tmp.top() cannot be passed as an argument to elems.push\_front() (the message varies depending on the compiler, but this is the gist of what is meant):
+如果一堆字符串被赋值给一堆浮点数，这一行的编译会产生一个错误信息，表示\texttt{tmp.top()}返回的字符串不能作为参数传递给\texttt{elems.push\_front()}(错误信息会随编译器而变化，但这是其含义的重点):
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::string> stringStack; // stack of strings
@@ -156,7 +155,7 @@ Stack<float> floatStack; // stack of floats
 floatStack = stringStack; // ERROR: std::string doesn’t convert to float
 \end{lstlisting}
 
-Again, you could change the implementation to parameterize the internal container type:
+同样，可以改变实现来参数化内部容器类型:
 
 \noindent
 \textit{basics/stack7decl.hpp}
@@ -182,7 +181,7 @@ public:
 };
 \end{lstlisting}
 
-Then the template assignment operator is implemented like this:
+那么模板赋值操作符就可以这样实现:
 
 \noindent
 \textit{basics/stack7assign.hpp}
@@ -200,7 +199,7 @@ Stack<T,Cont>::operator= (Stack<T2,Cont2> const& op2)
 }
 \end{lstlisting}
 
-Remember, for class templates, only those member functions that are called are instantiated. Thus, if you avoid assigning a stack with elements of a different type, you could even use a vector as an internal container:
+对于类模板，只有那些调用的成员函数才会实例化。因此，若需要避免在堆栈中分配不同类型的元素，可以使用\texttt{vector}作为内部容器:
 
 \begin{lstlisting}[style=styleCXX]
 // stack for ints using a vector as an internal container
@@ -211,15 +210,15 @@ vStack.push(7);
 std::cout << vStack.top() << '\n';
 \end{lstlisting}
 
-Because the assignment operator template isn’t necessary, no error message of a missing member function push\_front() occurs and the program is fine.
+因为赋值操作符模板不是必需的，所以不会出现缺少成员函数\texttt{push\_front()}的错误消息，程序也没有问题。
 
-For the complete implementation of the last example, see all the files with a name that starts with stack7 in the subdirectory basics.
+要获得上一个示例的完整实现，请参阅子目录基础中以stack7开头的文件。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Specialization of Member Function Templates}
+\textbf{成员函数模板的特化}
 
-Member function templates can also be partially or fully specialized. For example, for the following class:
+成员函数模板也可以偏特化或全特化。例如，对于以下类:
 
 \noindent
 \textit{basics/boolstring.hpp}
@@ -238,7 +237,7 @@ public:
 };
 \end{lstlisting}
 
-you can provide a full specialization for the member function template as follows:
+可以为如下所示的成员函数模板提供全特化:
 
 \noindent
 \textit{basics/boolstringgetbool.hpp}
@@ -250,9 +249,9 @@ inline bool BoolString::get<bool>() const {
 }
 \end{lstlisting}
 
-Note that you don’t need and also can’t declare the specializations; you only define them. Because it is a full specialization and it is in a header file you have to declare it with inline to avoid errors if the definition is included by different translation units.
+注意，不需要也不能对特化进行声明，只需要定义。因为它是全特化的，且位于头文件中，所以若定义包含在不同的转译单元中，必须使用内联声明，以避免错误。
 
-You can use class and the full specialization as follows:
+可以使用类的全特化，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << std::boolalpha;
@@ -265,23 +264,23 @@ std::cout << s2.get<bool>() << '\n'; // prints true
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Special Member Function Templates}
+\textbf{特殊成员函数的模板}
 
-Template member functions can be used wherever special member functions allow copying or moving objects. Similar to assignment operators as defined above, they can also be constructors. However, note that template constructors or template assignment operators don’t replace predefined constructors or assignment operators. Member templates don’t count as the special member functions that copy or move objects. In this example, for assignments of stacks of the same type, the default assignment operator is still called.
+只要特殊成员函数允许复制或移动对象，就可以使用模板成员函数。与上面定义的赋值操作符类似，也可以是构造函数。但请注意模板构造函数或模板赋值操作符，不能取代预定义构造函数或赋值操作符。成员模板不视为复制或移动对象的特殊成员函数。本例中，对于相同类型的堆栈赋值，仍然使用默认赋值操作符。
 
-This effect can be good and bad:
+这种影响有好有坏:
 
 \begin{itemize}
 \item 
-It can happen that a template constructor or assignment operator is a better match than the predefined copy/move constructor or assignment operator, although a template version is provided for initialization of other types only. See Section 6.2 for details.
+模板构造函数或赋值操作符可能比预定义的复制/移动构造函数或赋值操作符更匹配，尽管只提供了用于初始化其他类型的模板版本。请参见6.2节。
 
 \item 
-It is not easy to “templify” a copy/move constructor, for example, to be able to constrain its existence. See Section 6.4 for details.
+要对复制/移动构造函数进行“模板化”以约束其存在是非常困难的。详见章节6.4。
 \end{itemize}
 
-\subsubsubsection{5.5.1\hspace{0.2cm}The .templateConstruct}
+\subsubsubsection{5.5.1\hspace{0.2cm}.template构造}
 
-Sometimes, it is necessary to explicitly qualify template arguments when calling a member template. In that case, you have to use the template keyword to ensure that a < is the beginning of the template argument list. Consider the following example using the standard bitset type:
+有时，在调用成员模板时，需要显式限定模板参数。这种情况下，必须使用\texttt{template}关键字来确保\texttt{<}是模板参数列表的开头。考虑下面使用标准\texttt{bitset}类型的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<unsigned long N>
@@ -291,13 +290,13 @@ void printBitset (std::bitset<N> const& bs) {
 }
 \end{lstlisting}
 
-For the bitset bs we call the member function template to\_string(), while explicitly specifying the string type details. Without that extra use of .template, the compiler does not know that the less-than token (<) that follows is not really less-than but the beginning of a template argument list. Note that this is a problem only if the construct before the period depends on a template parameter. In our example, the parameter bs depends on the template parameter N.
+对于bitset bs，使用\texttt{to\_string()}的成员函数模板，同时显式指定字符串类型的信息。如果没有使用\texttt{.template}，编译器就不知道后面的小于标记(\texttt{<})是模板参数列表的开头。注意，只有在句点之前的构造依赖于模板参数时才会出现问题。在我们的例子中，参数bs依赖于模板参数N。
 
-The .template notation (and similar notations such as ->template and ::template) should be used only inside templates and only if they follow something that depends on a template parameter. See Section 13.3.3 for details.
+\texttt{.template}表示法(以及类似的表示法，如\texttt{->template}和\texttt{::template})应该只在模板内部使用，并且只有当它们遵循依赖于模板参数的某些参数时才会使用。详细信息请参见13.3.3。
 
-\subsubsubsection{5.5.2\hspace{0.2cm}Generic Lambdas and Member Templates}
+\subsubsubsection{5.5.2\hspace{0.2cm}泛型Lambda和成员模板}
 
-Note that generic lambdas, introduced with C++14, are shortcuts for member templates. A simple lambda computing the “sum” of two arguments of arbitrary types:
+注意，C++14中引入的泛型Lambda是成员模板的快捷方式。计算任意类型的两个参数的“和”的简单Lambda表达式:
 
 \begin{lstlisting}[style=styleCXX]
 [] (auto x, auto y) {
@@ -305,7 +304,7 @@ Note that generic lambdas, introduced with C++14, are shortcuts for member templ
 }
 \end{lstlisting}
 
-is a shortcut for a default-constructed object of the following class:
+是以下类的默认构造对象的快捷方式:
 
 \begin{lstlisting}[style=styleCXX]
 class SomeCompilerSpecificName {
@@ -318,7 +317,7 @@ class SomeCompilerSpecificName {
 };
 \end{lstlisting}
 
-See Section 15.10.6 for details.
+详细信息请参见15.10.6。
 
 
 

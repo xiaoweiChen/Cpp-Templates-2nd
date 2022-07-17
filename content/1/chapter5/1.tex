@@ -1,4 +1,4 @@
-The keyword typename was introduced during the standardization of C++ to clarify that an identifier inside a template is a type. Consider the following example:
+关键字typename是在C++标准化过程中引入的，目的是澄清模板内的标识符是类型。比如下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -11,19 +11,19 @@ class MyClass {
 };
 \end{lstlisting}
 
-Here, the second typename is used to clarify that SubType is a type defined within class T. Thus, ptr is a pointer to the type T::SubType.
+这里，第二个typename用于澄清\texttt{SubType}是在类T中定义的类型。因此，ptr是指向类型\texttt{T::SubType}的指针。
 
-Without typename, SubType would be assumed to be a nontype member (e.g., a static data member or an enumerator constant). As a result, the expression
+若没有typename, \texttt{SubType}将假定为非类型成员(例如，静态数据成员或枚举数常量)。因此，表达式
 
 \begin{lstlisting}[style=styleCXX]
 T::SubType* ptr
 \end{lstlisting}
 
-would be a multiplication of the static SubType member of class T with ptr, which is not an error, because for some instantiations of MyClass<> this could be valid code.
+将是类T的静态\texttt{SubType}成员与ptr的乘积，这不是一个错误，因为对于\texttt{MyClass<>}的某些实例化，这可能是有效的。
 
-In general, typename has to be used whenever a name that depends on a template parameter is a type. This is discussed in detail in Section 13.3.2.
+当依赖于模板参数名称是类型时，必须使用typename。这将在第13.3.2节中详细讨论。
 
-One application of typename is the declaration to iterators of standard containers in generic code:
+typename的一中应用是在泛型代码中声明标准容器的迭代器:
 
 \noindent
 \textit{basics/printcoll.hpp}
@@ -43,7 +43,7 @@ void printcoll (T const& coll)
 }
 \end{lstlisting}
 
-In this function template, the call parameter is an standard container of type T. To iterate over all elements of the container, the iterator type of the container is used, which is declared as type const\_iterator inside each standard container class:
+这个函数模板中，调用参数是一个T类型的标准容器。要遍历容器的所有元素，需要使用容器的迭代器类型，在每个标准容器类中声明为\texttt{const\_iterator}的类型:
 
 \begin{lstlisting}[style=styleCXX]
 class stlcontainer {
@@ -54,13 +54,13 @@ class stlcontainer {
 };
 \end{lstlisting}
 
-Thus, to access type const\_iterator of template type T, you have to qualify it with a leading typename:
+因此，要访问模板类型T的\texttt{const\_iterator}类型，必须用前导的typename进行限定:
 
 \begin{lstlisting}[style=styleCXX]
 typename T::const_iterator pos;
 \end{lstlisting}
 
-See Section 13.3.2 for more details about the need for typename until C++17. Note that C++20 will probably remove the need for typename in many common cases (see Section 17.1 for details).
+有关在C++17之前需要typename的更多细节，请参阅第13.3.2节。注意，C++20在许多常见情况下可能会删除对typename的需要(请参阅第17.1节了解详细信息)。
 
 
 

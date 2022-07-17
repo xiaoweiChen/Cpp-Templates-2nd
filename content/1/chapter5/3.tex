@@ -1,4 +1,4 @@
-For class templates with base classes that depend on template parameters, using a name x by itself is not always equivalent to this->x, even though a member x is inherited. For example:
+对于具有依赖于模板参数的基类类模板，使用名称x本身并不总是等同于\texttt{this->x}，即使成员x被继承。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -16,9 +16,9 @@ public:
 };
 \end{lstlisting}
 
-In this example, for resolving the symbol bar inside foo(), bar() defined in Base is never considered. Therefore, either you have an error, or another bar() (such as a global bar()) is called.
+本例中，解析\texttt{foo()}内部的符号\texttt{bar}，不会考虑\texttt{Base}中定义的\texttt{bar()}。因此，要么出现错误，要么调用另一个\texttt{bar()}实现(例如全局\texttt{bar()})。
 
-We discuss this issue in Section 13.4.2 in detail. For the moment, as a rule of thumb, we recommend that you always qualify any symbol that is declared in a base that is somehow dependent on a template parameter with this-> or Base<T>::.
+我们将在第13.4.2节详细讨论这个问题。目前，根据经验，建议始终对基类中声明的符号进行限定，这些符号在某种程度上依赖于模板参数\texttt{this->}或\texttt{Base<T>::}。
 
 
 

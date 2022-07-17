@@ -1,51 +1,51 @@
-Since the beginning, C++ has provided call-by-value and call-by-reference, and it is not always easy to decide which one to choose: Usually calling by reference is cheaper for nontrivial objects but more complicated. C++11 added move semantics to the mix, which means that we now have different ways to pass by reference:
+从一开始，C++就提供了按值调用和按引用调用，但要决定选择哪一种并不总是那么容易:通常按引用调用对于重要的对象来说成本更低，但更复杂。C++11添加了移动语义，现在有了不同的通过引用传递的方式:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}A constant rvalue reference X const\&\& is also possible but there is no established semantic meaning for it.
+\hspace*{0.75cm}常量右值引用X const\&\&也是合法，但没有既定的语义。
 \end{tcolorbox}
 
 \begin{enumerate}
 \item 
-X const\& (constant lvalue reference):
+X const\& (常量左值引用):
 
-The parameter refers to the passed object, without the ability to modify it.
-
-\item 
-X\& (nonconstant lvalue reference):
-
-The parameter refers to the passed object, with the ability to modify it.
+参数引用传递的对象，但不能修改。
 
 \item 
-X\&\& (rvalue reference):
+X\& (非常数的左值引用):
 
-The parameter refers to the passed object, with move semantics, meaning that you can modify or “steal” the value.
+参数引用传递的对象，并能够修改。
+
+\item 
+X\&\& (右值引用):
+
+参数引用传递的对象，带有移动语义，这意味着您可以修改或“窃取”值。
 \end{enumerate}
 
-Deciding how to declare parameters with known concrete types is complicated enough. In templates, types are not known, and therefore it becomes even harder to decide which passing mechanism is appropriate.
+决定如何声明已知具体类型的参数已经够复杂的了。在模板中，类型是未知的，因此很难决定哪种传递机制更为合适。
 
-Nevertheless, in Section 1.6.1 we did recommend passing parameters in function templates by value unless there are good reasons, such as the following:
+在第1.6.1节中，我们确实建议在函数模板中按值传递参数，除非有很好的理由，例如:
 
 \begin{itemize}
 \item 
-Copying is not possible
+不可能复制
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that since C++17 you can pass temporary entities (rvalues) by value even if no copy or move constructor is available (see Section B.2.1). So, since C++17 the additional constraint is that copying for lvalues is not possible.
+\hspace*{0.75cm}注意，由于C++17，即使没有可用的复制或移动构造函数，也可以通过值传递临时实体(右值)(参见B.2.1节)。因此，由于C++17的约束，不可能复制左值。
 \end{tcolorbox}
 
 \item 
-Parameters are used to return data.
+参数用于返回数据。
 
 \item 
-Templates just forward the parameters to somewhere else by keeping all the properties of the original arguments
+模板只是通过保留原始参数的所有属性，将参数转发到其他地方
 
 \item 
-There are significant performance improvements
+有显著的性能改进
 \end{itemize}
 
-This chapter discusses the different approaches to declare parameters in templates, motivating the general recommendation to pass by value, and providing arguments for the reasons not to do so. It also discusses the tricky problems you run into when dealing with string literals and other raw arrays.
+本章讨论了在模板中声明参数的不同方法，提出了通过值传递参数的建议，并为不这样做的原因提供了参数。本文还讨论了在处理字符串字面值和其他数组时遇到的棘手问题。
 
-When reading this chapter, it is helpful to be familiar with the terminology of value categories (lvalue, rvalue, prvalue, xvalue, etc.), which is explained in Appendix B.
+阅读本章时，熟悉值类别(lvalue、rvalue、prvalue、xvalue等)的术语会有帮助，这些在附录B中都有解释。
 
 
 

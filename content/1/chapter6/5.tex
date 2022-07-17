@@ -1,10 +1,10 @@
-Even when using alias templates, the enable\_if syntax is pretty clumsy, because it uses a workaround: To get the desired effect, we add an additional template parameter and “abuse” that parameter to provide a specific requirement for the function template to be available at all. Code like this is hard to read and makes the rest of the function template hard to understand.
+即使在使用别名模板时，\texttt{enable\_if}语法也相当笨拙，因为它使用了一种变通方法:为了获得所需的效果，添加了一个的模板参数，并“滥用”该参数来提供函数模板可用的特定要求。这样的代码很难读懂，也使函数模板的其他部分难以理解。
 
-In principle, we just need a language feature that allows us to formulate requirements or constraints for a function in a way that causes the function to be ignored if the requirements/constraints are not met.
+原则上，只需要一种语言特性，允许制定函数的需求或约束，如果需求/约束没有得到满足，函数就会忽略。
 
-This is an application of the long-awaited language feature concepts, which allows us to formulate requirements/conditions for templates with its own simple syntax. Unfortunately, although long discussed, concepts still did not become part of the C++17 standard. Some compilers provide experimental support for such a feature, however, and concepts will likely become part of the next standard after C++17.
+这是期待已久的语言特性概念的一种应用，其允许用自己简单的语法制定模板的需求/条件。但尽管经过长时间的讨论，概念仍然没有成为C++17标准的一部分。然而，一些编译器提供了对这种特性的实验性支持，而且概念可能会成为C++17后的下一个标准的一部分。
 
-With concepts, as their use is proposed, we simply have to write the following:
+对于概念，正如它们的用途，只需写下以下内容:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR>
@@ -14,14 +14,14 @@ Person(STR&& n) : name(std::forward<STR>(n)) {
 }
 \end{lstlisting}
 
-We can even specify the requirement as a general concept
+甚至可以将需求指定为一般概念
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 concept ConvertibleToString = std::is_convertible_v<T,std::string>;
 \end{lstlisting}
 
-and formulate this concept as a requirement:
+把这个概念表述为一种需求
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR>
@@ -31,7 +31,7 @@ Person(STR&& n) : name(std::forward<STR>(n)) {
 }
 \end{lstlisting}
 
-This also can be formulated as follows:
+也可以这样表述:
 
 \begin{lstlisting}[style=styleCXX]
 template<ConvertibleToString STR>
@@ -40,7 +40,7 @@ Person(STR&& n) : name(std::forward<STR>(n)) {
 }
 \end{lstlisting}
 
-See Appendix E for a detailed discussion of concepts for C++.
+关于C++概念的详细讨论，请参阅附录E。
 
 
 

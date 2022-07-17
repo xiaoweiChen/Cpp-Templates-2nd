@@ -5,6 +5,13 @@
 \usepackage[utf8]{inputenc}
 \usepackage{authblk}
 
+\usepackage{fontspec}                  %引入字体设置宏包
+\setmainfont{Times New Roman}             %设置英文正文字体
+% Courier New
+% Book Antique
+\setsansfont{Arial}                    %英文无衬线字体
+\setmonofont{Courier New}              %英文等宽字体
+
 \usepackage{ctex} %导入中文包
 %\usepackage{ulem}
 \usepackage{tocvsec2}
@@ -587,8 +594,8 @@
 	\addcontentsline{toc}{subsubsection}{5.2.\hspace{0.2cm}零值初始化}
 	\subfile{content/1/chapter5/2.tex}
 	
-	\subsubsection*{\zihao{3} 5.3.\hspace{0.2cm}使用this->}
-	\addcontentsline{toc}{subsubsection}{5.3.\hspace{0.2cm}使用this->}
+	\subsubsection*{\zihao{3} 5.3.\hspace{0.2cm}使用this\texttt{->}}
+	\addcontentsline{toc}{subsubsection}{5.3.\hspace{0.2cm}使用this\texttt{->}}
 	\subfile{content/1/chapter5/3.tex}
 	
 	\subsubsection*{\zihao{3} 5.4.\hspace{0.2cm}原始数组和字符串字面量的模板}
@@ -612,8 +619,8 @@
 	\subfile{content/1/chapter5/8.tex}
 	\newpage
 	
-	\subsection*{\zihao{2} 第6章\hspace{0.5cm}移动语义与enable\_if<>}
-	\addcontentsline{toc}{subsection}{第6章\hspace{0.5cm}移动语义与enable\_if<>}
+	\subsection*{\zihao{2} 第6章\hspace{0.5cm}移动语义与\texttt{enable\_if<>}}
+	\addcontentsline{toc}{subsection}{第6章\hspace{0.5cm}移动语义与\texttt{enable\_if<>}}
 	\subfile{content/1/chapter6/0.tex}
 	
 	\subsubsection*{\zihao{3} 6.1.\hspace{0.2cm}完美转发}
@@ -641,32 +648,32 @@
 	\subfile{content/1/chapter6/6.tex}
 	\newpage
 	
-	\subsection*{\zihao{2} 第7章\hspace{0.5cm}By Value or by Reference?}
-	\addcontentsline{toc}{subsection}{第7章\hspace{0.5cm}By Value or by Reference?}
+	\subsection*{\zihao{2} 第7章\hspace{0.5cm}值还是引用?}
+	\addcontentsline{toc}{subsection}{第7章\hspace{0.5cm}值还是引用?}
 	\subfile{content/1/chapter7/0.tex}
 	
-	\subsubsection*{\zihao{3} 7.1.\hspace{0.2cm}Passing by Value}
-	\addcontentsline{toc}{subsubsection}{7.1.\hspace{0.2cm}Passing by Value}
+	\subsubsection*{\zihao{3} 7.1.\hspace{0.2cm}按值传递}
+	\addcontentsline{toc}{subsubsection}{7.1.\hspace{0.2cm}按值传递}
 	\subfile{content/1/chapter7/1.tex}
 	
-	\subsubsection*{\zihao{3} 7.2.\hspace{0.2cm}Passing by Reference}
-	\addcontentsline{toc}{subsubsection}{7.2.\hspace{0.2cm}Passing by Reference}
+	\subsubsection*{\zihao{3} 7.2.\hspace{0.2cm}按引用传递}
+	\addcontentsline{toc}{subsubsection}{7.2.\hspace{0.2cm}按引用传递}
 	\subfile{content/1/chapter7/2.tex}
 	
-	\subsubsection*{\zihao{3} 7.3.\hspace{0.2cm}Using std::ref() and std::cref()}
-	\addcontentsline{toc}{subsubsection}{7.3.\hspace{0.2cm}Using std::ref() and std::cref()}
+	\subsubsection*{\zihao{3} 7.3.\hspace{0.2cm}使用\texttt{std::ref()}和\texttt{std::cref()}}
+	\addcontentsline{toc}{subsubsection}{7.3.\hspace{0.2cm}使用\texttt{std::ref()}和\texttt{std::cref()}}
 	\subfile{content/1/chapter7/3.tex}
 	
-	\subsubsection*{\zihao{3} 7.4.\hspace{0.2cm}Dealing with String Literals and Raw Arrays}
-	\addcontentsline{toc}{subsubsection}{7.4.\hspace{0.2cm}Dealing with String Literals and Raw Arrays}
+	\subsubsection*{\zihao{3} 7.4.\hspace{0.2cm}处理字符串字面值和数组}
+	\addcontentsline{toc}{subsubsection}{7.4.\hspace{0.2cm}处理字符串字面值和数组}
 	\subfile{content/1/chapter7/4.tex}
 	
-	\subsubsection*{\zihao{3} 7.5.\hspace{0.2cm}Dealing with Return Values}
-	\addcontentsline{toc}{subsubsection}{7.5.\hspace{0.2cm}Dealing with Return Values}
+	\subsubsection*{\zihao{3} 7.5.\hspace{0.2cm}处理返回值}
+	\addcontentsline{toc}{subsubsection}{7.5.\hspace{0.2cm}处理返回值}
 	\subfile{content/1/chapter7/5.tex}
 	
-	\subsubsection*{\zihao{3} 7.6.\hspace{0.2cm}Recommended Template Parameter Declarations}
-	\addcontentsline{toc}{subsubsection}{7.6.\hspace{0.2cm}Recommended Template Parameter Declarations}
+	\subsubsection*{\zihao{3} 7.6.\hspace{0.2cm}推荐的模板参数声明}
+	\addcontentsline{toc}{subsubsection}{7.6.\hspace{0.2cm}推荐的模板参数声明}
 	\subfile{content/1/chapter7/6.tex}
 	
 	\subsubsection*{\zihao{3} 7.7.\hspace{0.2cm}总结}

@@ -1,17 +1,17 @@
-Suppose you want to write generic code that forwards the basic property of passed arguments:
+假设想写泛型代码来转发传递参数:
 
 \begin{itemize}
 \item 
-Modifyable objects should be forwarded so that they still can be modified.
+可修改的对象应该在转发时保持可修改的属性，以便它们仍然可以修改。
 
 \item 
-Constant objects should be forwarded as read-only objects.
+常量对象应作为只读对象转发。
 
 \item 
-Movable objects (objects we can “steal” from because they are about to expire) should be forwarded as movable objects.
+可移动的对象(可以“窃取”的对象，因为即将销毁)应该作为可移动对象转发。
 \end{itemize}
 
-To achieve this functionality without templates, we have to program all three cases. For example, to forward a call of f() to a corresponding function g():
+要在没有模板的情况下实现此功能，必须对所有三种情况进行编程。例如，将f()的调用转发给相应的函数g():
 
 \noindent
 \textit{basics/move1.cpp}
@@ -56,7 +56,7 @@ int main()
 }
 \end{lstlisting}
 
-Here, we see three different implementations of f() forwarding its argument to g():
+这里，f()将参数转发给g()的三种不同实现:
 
 \begin{lstlisting}[style=styleCXX]
 void f (X& val) {
@@ -70,15 +70,15 @@ void f (X&& val) {
 }
 \end{lstlisting}
 
-Note that the code for movable objects (via an rvalue reference) differs from the other code: It needs a std::move() because according to language rules, move semantics is not passed through.
+移动对象的代码(通过右值引用)与其他代码不同:需要\texttt{std::move()}，因为根据语言规则，移动语义无法传递。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The fact that move semantics is not automatically passed through is intentional and important. If it weren’t, we would lose the value of a movable object the first time we use it in a function.
+\hspace*{0.75cm}移动语义不传递是有意为之的。如果不是这样，就会在函数中第一次使用可移动对象时丢失它的值。
 \end{tcolorbox}
 
-Although val in the third f() is declared as rvalue reference its value category when used as expression is a nonconstant lvalue (see Appendix B) and behaves as val in the first f(). Without the move(), g(X\&) for nonconstant lvalues instead of g(\&\&) would be called.
+尽管在第三个f()中val被声明为右值引用，但当用作表达式时，值类别是非常量左值(参见附录B)，并且在第一个f()中表现为val。如果没有move()，将调用g(X\&)而不是g(\&\&)来表示非常量左值。
 
-If we want to combine all three cases in generic code, we have a problem:
+如果想在通用代码中结合这三种情况，就要面对一个问题:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -87,9 +87,9 @@ void f (T val) {
 }
 \end{lstlisting}
 
-works for the first two cases, but not for the (third) case where movable objects are passed.
+适用于前两种情况，但不适用于传递移动对象的(第三种)情况。
 
-C++11 for this reason introduces special rules for perfect forwarding parameters. The idiomatic code pattern to achieve this is as follows:
+C++11为此引入了完善转发参数的特殊规则。实现此目标的代码模式如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -98,31 +98,31 @@ void f (T&& val) {
 }
 \end{lstlisting}
 
-Note that std::move() has no template parameter and “triggers” move semantics for the passed argument, while std::forward<>() “forwards” potential move semantic depending on a passed  template argument. 
+\texttt{std::move()}没有模板参数，并且为传递的参数“触发”移动语义，而\texttt{std::forward<>()}会根据传递的模板参数“转发”移动语义。
 
-Don’t assume that T\&\& for a template parameter T behaves as X\&\& for a specific type X. Different rules apply! However, syntactically they look identical:
+不要认为模板参数T\&\&的行为就像特定类型T一样，它们应用完全不同的规则!但在语法上看起来一样:
 
 \begin{itemize}
 \item 
-X\&\& for a specific type X declares a parameter to be an rvalue reference. It can only be bound to a movable object (a prvalue, such as a temporary object, and an xvalue, such as an object passed with std::move(); see Appendix B for details). It is always mutable and you can always “steal” its value.
+对于特定类型X\&\&声明一个参数为右值引用，只能绑定到一个可移动的对象(prvalue，比如一个临时对象；xvalue，比如通过\texttt{std::move()}传递的对象;详见附录B)。它总是可变的，可以“窃取”它的值。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}A type like X const\&\& is valid but provides no common semantics in practice because “stealing” the internal representation of a movable object requires modifying that object. It might be used, though, to force passing only temporaries or objects marked with std::move() without being able to modify them.
+\hspace*{0.75cm}X const\&\&这样的类型是合法的，因为“窃取”可移动对象的内部表示需要修改该对象，所以在实践中没有提供通用的语义。不过，也可以强制传递带有\texttt{std::move()}标记的临时变量或对象，但不能修改它们。
 \end{tcolorbox}
 
 \item 
-T\&\& for a template parameter T declares a forwarding reference (also called universal reference).
+模板参数T的T\&\&声明为转发引用(也称为通用引用)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The term universal reference was coined by Scott Meyers as a common term that could result in either an “lvalue reference” or an “rvalue reference.” Because “universal” was, well, too universal, the C++17 standard introduced the term forwarding reference, because the major reason to use such a reference is to forward objects. However, note that it does not automatically forward. The term does not describe what it is but what it is typically used for.
+\hspace*{0.75cm}通用引用这个术语由Scott Meyers创造，其是一个常见的术语，可以指代“左值引用”或“右值引用”。因为“通用”太通用了，并且使用这种引用的主要原因是转发对象，所以C++17标准引入了术语转发引用，但它不会自动转发。这个术语没有描述它是什么，但描述了通常用于做什么。
 \end{tcolorbox}
 
-It can be bound to a mutable, immutable (i.e., const), or movable object. Inside the function definition, the parameter may be mutable, immutable, or refer to a value you can “steal” the internals from.
+可以绑定到可变、不可变(即const)或可移动对象。在函数定义内部，形参可以是可变的、不可变的，也可以引用一个可以“窃取”内部函数的值。
 \end{itemize}
 
-Note that T must really be the name of a template parameter. Depending on a template parameter is not sufficient. For a template parameter T, a declaration such as typename T::iterator\&\& is just an rvalue reference, not a forwarding reference.
+注意，T必须是模板参数的名称。仅依赖模板参数是不够的，对于模板参数T，像\texttt{typename T::iterator\&\&}这样的声明只是一个右值引用，而不是转发引用。
 
-So, the whole program to perfect forward arguments will look as follows:
+因此，完善转发的整个程序如下所示:
 
 \noindent
 \textit{basics/move2.cpp}
@@ -162,8 +162,7 @@ int main()
 }
 \end{lstlisting}
 
-Of course, perfect forwarding can also be used with variadic templates (see Section 4.3 for some examples). See Section 15.6.3 for details of perfect forwarding.
-
+当然，完美转发也可以与可变参数模板一起使用(参见4.3节的一些示例)。关于完美转发的详细介绍请参见15.6.3节。
 
 
 

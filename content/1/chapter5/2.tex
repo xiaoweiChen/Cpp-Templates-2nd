@@ -39,7 +39,7 @@ T x = T(); // x is zero (or false) if T is a built-in type
 C++17前，这种机制(现在仍受支持)只有在为复制初始化选择的构造函数不是显式的情况下才有效。在C++17中，省略了强制复制，从而避免了这种限制，而且两种语法都有效。但若没有默认构造函数，带大括号的初始化表示法可以使用初始化列表构造函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}对于某种类型X，参数类型为\texttt{std::initializer\_list<X>}的构造函数。
+\hspace*{0.75cm}对于某种类型X，参数类型为std::initializer\_list<X>的构造函数。
 \end{tcolorbox}
 
 为了确保将类型参数化的类模板成员初始化，可以定义一个默认构造函数，使用带大括号的初始化式来初始化成员:

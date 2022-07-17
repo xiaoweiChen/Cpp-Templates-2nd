@@ -1,15 +1,15 @@
-We can use enable\_if<> to solve our problem with the constructor template introduced in Section 6.2.
+可以使用\texttt{enable\_if<>}来解决在6.2节中引入的构造函数模板的问题。
 
-The problem we have to solve is to disable the declaration of the template constructor
+必须解决的问题是禁用模板构造函数的声明
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR>
 Person(STR&& n);
 \end{lstlisting}
 
-if the passed argument STR has the right type (i.e., is a std::string or a type convertible to std::string).
+若传递的参数\texttt{STR}具有正确的类型(即\texttt{std::string}或可转换为\texttt{std::string}的类型)。
 
-For this, we use another standard type trait, std::is\_convertible<FROM,TO>. With C++17, the corresponding declaration looks as follows:
+为此，使用另一个标准类型\texttt{std::is\_convertible<FROM,TO>}。在C++17中，相应的声明如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR,
@@ -18,7 +18,7 @@ template<typename STR,
 Person(STR&& n);
 \end{lstlisting}
 
-If type STR is convertible to type std::string, the whole declaration expands to
+如果\texttt{STR}类型可转换为\texttt{std::string}类型，则整个声明展开为
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR,
@@ -26,13 +26,13 @@ template<typename STR,
 Person(STR&& n);
 \end{lstlisting}
 
-If type STR is not convertible to type std::string, the whole function template is ignored.
+如果\texttt{STR}类型不能转换为\texttt{std::string}类型，则整个函数模板将忽略。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}If you wonder why we don’t instead check whether STR is “not convertible to Person,” beware: We are defining a function that might allow us to convert a string to a Person. So the constructor has to know whether it is enabled, which depends on whether it is convertible, which depends on whether it is enabled, and so on. Never use enable\_if in places that impact the condition used by enable\_if. This is a logical error that compilers do not necessarily detect.
+\hspace*{0.75cm}为什么不检查\texttt{STR}是否“不可转换为\texttt{Person}”？我们正在定义一个函数，该函数可能允许将字符串转换为\texttt{Person}。因此构造函数必须知道它是否启用，这取决于是否可转换，而可转换取决于是否启用，循环往复。永远不要在影响\texttt{enable\_if}使用的条件的地方使用\texttt{enable\_if}。这是编译器不一定能检测到的逻辑错误。
 \end{tcolorbox}
 
-Again, we can define our own name for the constraint by using an alias template:
+同样，可以使用别名模板定义名称:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -43,7 +43,7 @@ template<typename STR, typename = EnableIfString<STR>>
 Person(STR&& n);
 \end{lstlisting}
 
-Thus, the whole class Person should look as follows:
+因此，整个\texttt{Person}类如下所示:
 
 \noindent
 \textit{basics/specialmemtmpl3.hpp}
@@ -79,7 +79,7 @@ public:
 };
 \end{lstlisting}
 
-Now, all calls behave as expected:
+现在，所有行为都符合预期:
 
 \noindent
 \textit{basics/specialmemtmpl3.cpp}
@@ -96,7 +96,7 @@ int main()
 }
 \end{lstlisting}
 
-Note again that in C++14, we have to declare the alias template as follows, because the \_v version is not defined for type traits that yield a value:
+C++14中，必须如下声明别名模板，因为\texttt{\_v}版本没有为类型定义value:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -104,7 +104,7 @@ using EnableIfString = std::enable_if_t<
 						std::is_convertible<T, std::string>::value>;
 \end{lstlisting}
 
-And in C++11, we have to declare the special member template as follows, because as written the \_t version is not defined for type traits that yield a type:
+C++11中，必须声明特殊成员模板，因为\texttt{\_t}版本并没有定义type:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -113,9 +113,9 @@ using EnableIfString
 						>::type;
 \end{lstlisting}
 
-But that’s all hidden now in the definition of EnableIfString<>.
+但这些现在都隐藏在\texttt{EnableIfString<>}的定义中。
 
-Note also that there is an alternative to using std::is\_convertible<> because it requires that the types are implicitly convertible. By using std::is\_constructible<>, we also allow explicit conversions to be used for the initialization. However, the order of the arguments is the opposite is this case:
+因为它要求类型是隐式可转换的，所以使用\texttt{std::is\_convertible<>}还有另一种选择。通过使用\texttt{std::is\_constructible<>}，允许显式转换用于初始化。然而，在这种情况下，参数的顺序反的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -123,13 +123,13 @@ using EnableIfString = std::enable_if_t<
 						std::is_constructible_v<std::string, T>>;
 \end{lstlisting}
 
-See Section D.3.2 for details about std::is\_constructible<> and Section D.3.3 for details about std::is\_convertible<>. See Section D.6 for details and examples to apply enable\_if<> on variadic templates.
+关于\texttt{std::is\_constructible<>}和\texttt{std::is\_convertible<>}的详细信息请参见D.3.2节。关于在可变参数模板上应用\texttt{enable\_if<>}的详细信息和示例，请参见D.6节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Disabling Special Member Functions}
+\textbf{禁用特殊成员函数}
 
-Note that normally we can’t use enable\_if<> to disable the predefined copy/move constructors and/or assignment operators. The reason is that member function templates never count as special member functions and are ignored when, for example, a copy constructor is needed. Thus, with this declaration:
+注意，通常不能使用\texttt{enable\_if<>}来禁用预定义的复制/移动构造函数和/或赋值操作符。原因是成员函数模板永远不会算作特殊成员函数，并且在需要复制构造函数等情况下会忽略。因此，在此声明:
 
 \begin{lstlisting}[style=styleCXX]
 class C {
@@ -142,24 +142,20 @@ public:
 };
 \end{lstlisting}
 
-the predefined copy constructor is still used, when a copy of a C is requested:
+当请求一个C的副本时，预定义的复制构造函数仍然会使用:
 
 \begin{lstlisting}[style=styleCXX]
 C x;
 C y{x}; // still uses the predefined copy constructor (not the member template)
 \end{lstlisting}
 
-(There is really no way to use the member template because there is no way to specify or deduce its template parameter T.)
+(实际上没有办法使用成员模板，因为没有办法指定或推导它的模板参数T。)
 
-Deleting the predefined copy constructor is no solution, because then the trial to copy a C results in an error.
+删除预定义的复制构造函数不是解决方案，因为复制C的尝试将导致错误。
 
-There is a tricky solution, though:
+不过，有一个解决方案:
 
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Thanks to Peter Dimov for pointing out this technique
-\end{tcolorbox}
-
-We can declare a copy constructor for const volatile arguments and mark it “deleted” (i.e., define it with = delete). Doing so prevents another copy constructor from being implicitly declared. With that in place, we can define a constructor template that will be preferred over the (deleted) copy constructor for nonvolatile types:
+可以为texttt{const volatile}参数声明一个复制构造函数，并将其标记为“已删除”(即用\texttt{= delete}修饰)。这样做可以防止隐式声明另一个复制构造函数。有了这些，就可以定义一个构造函数模板，对于非易失性类型，该构造函数将优先于(已删除的)复制构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 class C
@@ -179,14 +175,14 @@ public:
 };
 \end{lstlisting}
 
-Now the template constructors are used even for “normal” copying:
+现在模板构造函数会用于“通常”的复制:
 
 \begin{lstlisting}[style=styleCXX]
 C x;
 C y{x}; // uses the member template
 \end{lstlisting}
 
-In such a template constructor we can then apply additional constraints with enable\_if<>. For example, to prevent being able to copy objects of a class template C<> if the template parameter is an integral type, we can implement the following:
+在模板构造函数中，以使用\texttt{enable\_if<>}进行约束。例如，若模板参数是整型，为了防止复制类模板\texttt{C<>}的对象，可以实现以下方法:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

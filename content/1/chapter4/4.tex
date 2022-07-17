@@ -1,11 +1,11 @@
 
-Besides the examples above, parameter packs can appear in additional places, including, for example, expressions, class templates, using declarations, and even deduction guides. Section 12.4.2 has a complete list.
+参数包还可以出现在其他地方，例如表达式、类模板、using声明，甚至推导策略。第12.4.2节有一个完整的列表。
 
-\subsubsubsection{4.4.1\hspace{0.2cm}Variadic Expressions}
+\subsubsubsection{4.4.1\hspace{0.2cm}可变参的表达式}
 
-You can do more than just forward all the parameters. You can compute with them, which means to compute with all the parameters in a parameter pack.
+不仅仅是转发所有参数，可以使用它们进行计算。也就是，可以使用参数包中的参数进行计算。
 
-For example, the following function doubles each parameter of the parameter pack args and passes each doubled argument to print():
+例如，下面的函数将参数包args的每个参数都加倍，并将每个加倍的参数传递给\texttt{print()}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T>
@@ -15,13 +15,13 @@ void printDoubled (T const&... args)
 }
 \end{lstlisting}
 
-If, for example, you call
+例如，
 
 \begin{lstlisting}[style=styleCXX]
 printDoubled(7.5, std::string("hello"), std::complex<float>(4,2));
 \end{lstlisting}
 
-the function has the following effect (except for any constructor side effects):
+该函数具有以下效果(除了构造函数的副作用):
 
 \begin{lstlisting}[style=styleCXX]
 print(7.5 + 7.5,
@@ -29,7 +29,7 @@ print(7.5 + 7.5,
 	std::complex<float>(4,2) + std::complex<float>(4,2);
 \end{lstlisting}
 
-If you just want to add 1 to each argument, note that the dots from the ellipsis may not directly follow a numeric literal:
+如果只是想给每个参数加1，请注意省略号中的点不能直接跟在数字后面:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T>
@@ -41,7 +41,7 @@ void addOne (T const&... args)
 }
 \end{lstlisting}
 
-Compile-time expressions can include template parameter packs in the same way. For example, the following function template returns whether the types of all the arguments are the same:
+编译时表达式可以以同样的方式包含模板参数包。例如，下面的函数模板返回所有参数的类型是否相同:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename... TN>
@@ -51,29 +51,29 @@ constexpr bool isHomogeneous (T1, TN...)
 }
 \end{lstlisting}
 
-This is an application of fold expressions (see Section 4.2): For
+这是折叠表达式的一种应用(参见第4.2节)
 
 \begin{lstlisting}[style=styleCXX]
 isHomogeneous(43, -1, "hello")
 \end{lstlisting}
 
-the expression for the return value expands to
+返回值的表达式展开为
 
 \begin{lstlisting}[style=styleCXX]
 std::is_same<int,int>::value && std::is_same<int,char const*>::value
 \end{lstlisting}
 
-and yields false, while
+而结果是false
 
 \begin{lstlisting}[style=styleCXX]
 isHomogeneous("hello", " ", "world", "!")
 \end{lstlisting}
 
-yields true because all passed arguments are deduced to be char const* (note that the argument types decay because the call arguments are passed by value).
+会产生true，因为传递的参数都推导为\texttt{char const*}(因为调用参数按值传递，所以参数类型衰变)。
 
-\subsubsubsection{4.4.2\hspace{0.2cm}Variadic Indices}
+\subsubsubsection{4.4.2\hspace{0.2cm}可变参的索引}
 
-As another example, the following function uses a variadic list of indices to access the corresponding element of the passed first argument:
+下面的函数使用可变索引列表来访问传递给第一个参数的对应元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename C, typename... Idx>
@@ -83,20 +83,20 @@ void printElems (C const& coll, Idx... idx)
 }
 \end{lstlisting}
 
-That is, when calling
+当使用
 
 \begin{lstlisting}[style=styleCXX]
 std::vector<std::string> coll = {"good", "times", "say", "bye"};
 printElems(coll,2,0,3);
 \end{lstlisting}
 
-the effect is to call
+则调用
 
 \begin{tcblisting}{commandshell={}}
 print (coll[2], coll[0], coll[3]);
 \end{tcblisting}
 
-You can also declare nontype template parameters to be parameter packs. For example:
+还可以将非类型模板参数声明为参数包。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<std::size_t... Idx, typename C>
@@ -106,18 +106,18 @@ void printIdx (C const& coll)
 }
 \end{lstlisting}
 
-allows you to call
+也可以使用
 
 \begin{lstlisting}[style=styleCXX]
 std::vector<std::string> coll = {"good", "times", "say", "bye"};
 printIdx<2,0,3>(coll);
 \end{lstlisting}
 
-which has the same effect as the previous example.
+这与前面的例子有相同的效果。
 
-\subsubsubsection{4.4.3\hspace{0.2cm}Variadic Class Templates}
+\subsubsubsection{4.4.3\hspace{0.2cm}可变参的类模板}
 
-Variadic templates can also be class templates. An important example is a class where an arbitrary number of template parameters specify the types of corresponding members:
+可变参数模板也可以是类模板，其中任意数量的模板参数指定了相应成员的类型:
 
 \begin{lstlisting}[style=styleCXX]
 emplate<typename... Elements>
@@ -126,9 +126,9 @@ class Tuple;
 Tuple<int, std::string, char> t; // t can hold integer, string, and character
 \end{lstlisting}
 
-This will be discussed in Chapter 25.
+这将在第25章中讨论。
 
-Another example is to be able to specify the possible types objects can have:
+另一个例子是能够指定对象可能的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -137,9 +137,9 @@ class Variant;
 Variant<int, std::string, char> v; // v can hold integer, string, or character
 \end{lstlisting}
 
-This will be discussed in Chapter 26.
+这将在第26章中讨论。
 
-You can also define a class that as a type represents a list of indices:
+也可以定义类，作为类型来表示一组索引:
 
 \begin{lstlisting}[style=styleCXX]
 // type for arbitrary number of indices:
@@ -148,7 +148,7 @@ struct Indices {
 };
 \end{lstlisting}
 
-This can be used to define a function that calls print() for the elements of a std::array or std::tuple using the compile-time access with get<>() for the given indices:
+这可以用来定义函数，该函数在编译时对给定索引使用\texttt{get<>()}访问\texttt{std::array}或\texttt{std::tuple}的元素调用\texttt{print()}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t... Idx>
@@ -158,25 +158,25 @@ void printByIdx(T t, Indices<Idx...>)
 }
 \end{lstlisting}
 
-This template can be used as follows:
+该模板的使用方法如下:
 
 \begin{lstlisting}[style=styleCXX]
 std::array<std::string, 5> arr = {"Hello", "my", "new", "!", "World"};
 printByIdx(arr, Indices<0, 4, 3>());
 \end{lstlisting}
 
-or as follows:
+或者这样:
 
 \begin{lstlisting}[style=styleCXX]
 auto t = std::make_tuple(12, "monkeys", 2.0);
 printByIdx(t, Indices<0, 1, 2>());
 \end{lstlisting}
 
-This is a first step towards meta-programming, which will be discussed in Section 8.1 and Chapter 23.
+这只元编程的开始，会在第8.1节和第23章中讨论。
 
-\subsubsubsection{4.4.4\hspace{0.2cm}Variadic Deduction Guides}
+\subsubsubsection{4.4.4\hspace{0.2cm}可变参的推导策略}
 
-Even deduction guides (see Section 2.9) can be variadic. For example, the C++ standard library defines the following deduction guide for std::arrays:
+推导策略(参见第2.9节)也可以是可变参的。例如，C++标准库定义了以下\texttt{std::arrays}的推导策略:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -186,29 +186,29 @@ namespace std {
 }
 \end{lstlisting}
 
-An initialization such as
+初始化，
 
 \begin{lstlisting}[style=styleCXX]
 std::array a{42,45,77};
 \end{lstlisting}
 
-deduces T in the guide to the type of the element, and the various U... types to the types of the subsequent elements. The total number of elements is therefore 1 + sizeof...(U):
+策略中推导出元素类型的T，以及各种\texttt{U...}类型转换为后续元素的类型。因此，元素总数为\texttt{1 + sizeof...(U)}:
 
 \begin{lstlisting}[style=styleCXX]
 std::array<int, 3> a{42,45,77};
 \end{lstlisting}
 
-The std::enable\_if<> expression for the first array parameter is a fold expression that (as introduced as isHomogeneous() in Section 4.4.1) expands to:
+第一个数组参数的\texttt{std::enable\_if<>}表达式是一个折叠表达式(正如在章节4.4.1中引入的\texttt{isHomogeneous()})展开为:
 
 \begin{lstlisting}[style=styleCXX]
 is_same_v<T, U1> && is_same_v<T, U2> && is_same_v<T, U3> ...
 \end{lstlisting}
 
-If the result is not true (i.e., not all the element types are the same), the deduction guide is discarded and the overall deduction fails. This way, the standard library ensures that all elements must have the same type for the deduction guide to succeed.
+如果结果不为true(即并非所有元素类型都相同)，则丢弃推导策略，整体推导失败。标准库确保所有元素具有相同的类型时，推导策略才能成功执行。
 
-\subsubsubsection{4.4.5\hspace{0.2cm}Variadic Base Classes and using}
+\subsubsubsection{4.4.5\hspace{0.2cm}可变参基类和using}
 
-Finally, consider the following example:
+看看下面的例子:
 
 \noindent
 \textit{basics/varusing.cpp}
@@ -255,7 +255,7 @@ int main()
 }
 \end{lstlisting}
 
-Here, we first define a class Customer and independent function objects to hash and compare Customer objects. With
+这里，首先定义了一个类\texttt{Customer}和一些独立的函数对象，用于哈希和比较\texttt{Customer}对象。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Bases>
@@ -265,15 +265,15 @@ struct Overloader : Bases...
 };
 \end{lstlisting}
 
-we can define a class derived from a variadic number of base classes that brings in the operator() declarations from each of those base classes. With
+可以定义一个派生自可变数量基类的类，该类从每个基类引入函数操作符的声明。
 
 \begin{lstlisting}[style=styleCXX]
 using CustomerOP = Overloader<CustomerHash,CustomerEq>;
 \end{lstlisting}
 
-we use this feature to derive CustomerOP from CustomerHash and CustomerEq and enable both implementations of operator() in the derived class.
+使用这个特性从\texttt{CustomerHash}和\texttt{CustomerEq}派生\texttt{CustomerOP}，并在派生类中同时启用函数操作符的实现。
 
-See Section 26.4 for another application of this technique.
+参见第26.4节了解该技术的另一种应用。
 
 
 

@@ -1,23 +1,23 @@
-Variadic templates play an important role when implementing generic libraries, such as the C++ standard library.
+可变参数模板在实现通用库(如C++标准库)时扮演着重要的角色。
 
-One typical application is the forwarding of a variadic number of arguments of arbitrary type. For example, we use this feature when:
+典型的应用是转发可变数量的类型参数。例如:
 
 \begin{itemize}
 \item 
-Passing arguments to the constructor of a new heap object owned by a shared pointer:
+向指针中堆对象的构造函数传递参数:
 \begin{lstlisting}[style=styleCXX]
 // create shared pointer to complex<float> initialized by 4.2 and 7.7:
 auto sp = std::make_shared<std::complex<float>>(4.2, 7.7);
 \end{lstlisting}
 
 \item 
-Passing arguments to a thread, which is started by the library:
+将参数传递给一个由线程库启动的线程:
 \begin{lstlisting}[style=styleCXX]
 std::thread t (foo, 42, "hello"); // call foo(42,"hello") in a separate thread
 \end{lstlisting}
 
 \item 
-Passing arguments to the constructor of a new element pushed into a vector:
+将参数传递给进入\texttt{vector}中元素的构造函数:
 \begin{lstlisting}[style=styleCXX]
 std::vector<Customer> v;
 ...
@@ -26,7 +26,7 @@ v.emplace("Tim", "Jovi", 1962); // insert a Customer initialized by three argume
 
 \end{itemize}
 
-Usually, the arguments are “perfectly forwarded” with move semantics (see Section 6.1), so that the corresponding declarations are, for example:
+通常，参数使用移动语义“完美转发”(见第6.1节)，相应的声明例如:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -48,7 +48,7 @@ namespace std {
 }
 \end{lstlisting}
 
-Note also that the same rules apply to variadic function template parameters as for ordinary parameters. For example, if passed by value, arguments are copied and decay (e.g., arrays become pointers), while if passed by reference, parameters refer to the original parameter and don’t decay:
+可变参数函数模板参数与普通参数适用相同的规则。通过值传递，参数复制并衰变(例如，数组变成指针)，若通过引用传递，参数指向原始参数，而不衰变:
 
 \begin{lstlisting}[style=styleCXX]
 // args are copies with decayed types:

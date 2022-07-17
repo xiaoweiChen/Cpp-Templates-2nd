@@ -1,6 +1,7 @@
-Since C++17, there is a feature to compute the result of using a binary operator over all the arguments of a parameter pack (with an optional initial value).
+C++17后，有一个特性可以对参数包的所有参数
+使用二元运算符计算结果(初始值可选)。
 
-For example, the following function returns the sum of all passed arguments:
+例如，下面的函数会返回所有入参的和:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T>
@@ -9,24 +10,24 @@ auto foldSum (T... s) {
 }
 \end{lstlisting}
 
-If the parameter pack is empty, the expression is usually ill-formed (with the exception that for operator \&\& the value is true, for operator || the value is false, and for the comma operator the value for an empty parameter pack is void()).
+如果参数包为空，表达式通常是错误格式的(除了操作符\&\&的值为true，操作符||的值为false，逗号操作符空形参包的值为void())。
 
-Table 4.1 lists the possible fold expressions.
+表4.1列出了可能的折叠表达式。
 
 \begin{center}
 	
 \begin{table}[H]
 	\begin{tabular}{|l|l|}
 		\hline
-		\textbf{Fold Expression}                                                                                                      & \textbf{Evaluation}                                                                                                                                                                                                     \\ \hline
+		\textbf{折叠表达式}                                                                                                      & \textbf{展开}                                                                                                                                                                                                     \\ \hline
 		\begin{tabular}[c]{@{}l@{}}( ... op pack )\\ ( pack op ... )\\ ( init op ... op pack )\\ ( pack op ... op init )\end{tabular} & \begin{tabular}[c]{@{}l@{}}((( pack1 op pack2 ) op pack3 ) ... op packN )\\ ( pack1 op ( ... ( packN-1 op packN )))\\ ((( init op pack1 ) op pack2 ) ... op packN )\\ ( pack1 op ( ... ( packN op init )))\end{tabular} \\ \hline
 	\end{tabular}
 \end{table}
 
-Table 4.1. Fold Expressions (since C++17)
+表4.1. 折叠表达式(C++17)
 \end{center}
 
-You can use almost all binary operators for fold expressions (see Section 12.4.6 for details). For example, you can use a fold expression to traverse a path in a binary tree using operator ->*:
+几乎所有的二元运算符都可以用于折叠表达式(详见12.4.6节)。例如，可以使用折叠表达式来遍历一个二叉树的路径，使用操作符\texttt{->*}:
 
 \noindent
 \textit{basics/foldtraverse.cpp}
@@ -63,15 +64,15 @@ int main()
 }
 \end{lstlisting}
 
-Here,
+这里，
 
 \begin{lstlisting}[style=styleCXX]
 (np ->* ... ->* paths)
 \end{lstlisting}
 
-uses a fold expression to traverse the variadic elements of paths from np.
+使用折叠表达式遍历从np开始的可变元素路径。
 
-With such a fold expression using an initializer, we might think about simplifying the variadic template to print all arguments, introduced above:
+这种使用初始化器的折叠表达式，可以简化可变参数模板来打印上面的所有参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -81,7 +82,7 @@ void print (Types const&... args)
 }
 \end{lstlisting}
 
-However, note that in this case no whitespace separates all the elements from the parameter pack. To do that, you need an additional class template, which ensures that any output of any argument is extended by a space:
+但注意，无法成为参数包中的每个元素输出在打印时添加空格。要做到这一点，需要一个额外的类模板，确保参数的任何输出都会添加一个空格扩展:
 
 \noindent
 \textit{basics/addspace.hpp}
@@ -105,9 +106,9 @@ void print (Args... args) {
 }
 \end{lstlisting}
 
-Note that the expression AddSpace(args) uses class template argument deduction (see Section 2.9) to have the effect of AddSpace<Args>(args), which for each argument creates an AddSpace object that refers to the passed argument and adds a space when it is used in output expressions.
+表达式\texttt{AddSpace(args)}使用类模板参数推断(参见2.9节)产生\texttt{AddSpace<Args>(args)}，这为每个参数创建一个\texttt{AddSpace}对象，该对象引用传递的参数，并在输出表达式时使用该参数添加一个空格。
 
-See Section 12.4.6 for details about fold expressions.
+关于折叠表达式的详细信息请参见12.4.6节。
 
 
 

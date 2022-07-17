@@ -1,10 +1,10 @@
 
 
-Template parameters can be defined to accept an unbounded number of template arguments. Templates with this ability are called variadic templates.
+可以接受任意数量的模板参数，具有这种能力的模板称为可变参数模板。
 
-\subsubsubsection{4.1.1\hspace{0.2cm}Variadic Templates by Example}
+\subsubsubsection{4.1.1\hspace{0.2cm}可变参数模板的示例}
 
-For example, you can use the following code to call print() for a variable number of arguments of different types:
+例如，可以使用\texttt{print()}来获取可变类型的参数:
 
 \noindent
 \textit{basics/varprint1.hpp}
@@ -23,28 +23,28 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-If one or more arguments are passed, the function template is used, which by specifying the first argument separately allows printing of the first argument before recursively calling print() for the remaining arguments. These remaining arguments named args are a function parameter pack:
+如果传递了一个或多个参数，则使用函数模板，通过指定第一个参数，允许在递归调用其余参数的\texttt{print()}之前打印第一个参数。剩下的\texttt{args}是一个函数参数包:
 
 \begin{lstlisting}[style=styleCXX]
 void print (T firstArg, Types... args)
 \end{lstlisting}
 
-using different “Types” specified by a template parameter pack:
+使用由模板参数包指定的不同“类型”:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
 \end{lstlisting}
 
-To end the recursion, the nontemplate overload of print() is provided, which is issued when the parameter pack is empty.
+要结束递归，需要提供\texttt{print()}的非模板重载，该重载在参数包为空时使用。
 
-For example, a call such as
+例如，
 
 \begin{lstlisting}[style=styleCXX]
 std::string s("world");
 print (7.5, "hello", s);
 \end{lstlisting}
 
-would output the following:
+将会输出以下内容:
 
 \begin{tcblisting}{commandshell={}}
 7.5
@@ -52,59 +52,53 @@ hello
 world
 \end{tcblisting}
 
-The reason is that the call first expands to
+调用首先展开为
 
 \begin{lstlisting}[style=styleCXX]
 print<double, char const*, std::string> (7.5, "hello", s);
 \end{lstlisting}
 
-with
-
 \begin{itemize}
 \item 
-firstArg having the value 7.5 so that type T is a double and
+firstArg的值为7.5，因此类型T是一个double类型
 
 \item 
-args being a variadic template argument having the values "hello" of type char const* and "world" of type std::string.
+args是可变参数模板参数，其值为\texttt{char const*}类型的"hello"和\texttt{std::string}类型的"world"。
 \end{itemize}
 
-After printing 7.5 as firstArg, it calls print() again for the remaining arguments, which then expands to:
+将7.5作为firstArg打印后，再次对其余参数调用\texttt{print()}，然后展开为:
 
 \begin{lstlisting}[style=styleCXX]
 print<char const*, std::string> ("hello", s);
 \end{lstlisting}
 
-with
-
 \begin{itemize}
 \item 
-firstArg having the value "hello" so that type T is a char const* here and
+firstArg的值为"hello"，所以T类型是\texttt{char const*}
 
 \item 
-args being a variadic template argument having the value of type std::string.
+args是可变参数模板参数，其值类型为\texttt{std::string}。
 \end{itemize}
 
-After printing "hello" as firstArg, it calls print() again for the remaining arguments, which then expands to:
+在将"hello"作为firstArg打印后，再次对其余参数调用\texttt{print()}，然后展开为:
 
 \begin{lstlisting}[style=styleCXX]
 print<std::string> (s);
 \end{lstlisting}
 
-with
-
 \begin{itemize}
 \item 
-firstArg having the value "world" so that type T is a std::string now and
+firstArg 的值为“world”，所以类型T现在是\texttt{std::string}
 
 \item 
-args being an empty variadic template argument having no value.
+args是空的可变参数模板参数。
 \end{itemize}
 
-Thus, after printing "world" as firstArg, we calls print() with no arguments, which results in calling the nontemplate overload of print() doing nothing.
+因此，在将"world"打印作为firstArg之后，调用\texttt{print()}时不带参数，这将调用\texttt{print()}的非模板重载，从而不进行任何操作。
 
-\subsubsubsection{4.1.2\hspace{0.2cm}Overloading Variadic and Nonvariadic Templates}
+\subsubsubsection{4.1.2\hspace{0.2cm}重载可变和非可变模板}
 
-Note that you can also implement the example above as follows:
+注意，也可以这样实现上面的例子:
 
 \noindent
 \textit{basics/varprint2.hpp}
@@ -125,17 +119,17 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-That is, if two function templates only differ by a trailing parameter pack, the function template without the trailing parameter pack is preferred.
+若两个函数模板的区别仅在于末尾参数包的不同，则首选没有末尾参数包的函数模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Initially, in C++11 and C++14 this was an ambiguity, which was fixed later (see [CoreIssue1395]), but all compilers handle it this way in all versions.
+\hspace*{0.75cm}最初，在C++11和C++14中，这是一个不明确的问题，后来得到了解决(参见[CoreIssue1395])，但所有版本的编译器都会这样处理。
 \end{tcolorbox}
 
-Section C.3.1 on page 688 explains the more general overload resolution rule that applies here.
+C.3.1节解释了这里应用的重载解析规则。
 
-\subsubsubsection{4.1.3\hspace{0.2cm}Operator sizeof...}
+\subsubsubsection{4.1.3\hspace{0.2cm}操作符sizeof...}
 
-C++11 also introduced a new form of the sizeof operator for variadic templates: sizeof.... It expands to the number of elements a parameter pack contains. Thus,
+C++11还为可变参模板引入了一种新的sizeof操作符:\texttt{sizeof...}，其值为参数包包含的元素数量。因此,
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
@@ -147,9 +141,9 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-twice prints the number of remaining arguments after the first argument passed to print(). As you can see, you can call sizeof... for both template parameter packs and function parameter packs.
+传递给\texttt{print()}的第一个参数之后，输出剩余两次参数的数量。对于模板参数包和函数参数包可以使用\texttt{sizeof...}。
 
-This might lead us to think we can skip the function for the end of the recursion by not calling it in case there are no more arguments:
+我们可能会认为，在递归结束时可以跳过该函数，在没有参数的情况下不调用它:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
@@ -162,9 +156,9 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-However, this approach doesn’t work because in general both branches of all if statements in function templates are instantiated. Whether the instantiated code is useful is a run-time decision, while the instantiation of the call is a compile-time decision. For this reason, if you call the print() function template for one (last) argument, the statement with the call of print(args...) still is instantiated for no argument, and if there is no function print() for no arguments provided, this is an error.
+但因为函数模板中所有if的两个分支都要实例化，实例化的代码是否运行是一个运行时决策，而调用的实例化是一个编译时决策。因此，如果为一个(最后一个)参数使用\texttt{print()}函数模板，则调用\texttt{print(args...)}的语句在没有参数的情况下仍然会实例化，如果没有参数的情况下没有提供\texttt{print()}函数，则会出错。
 
-However, note that since C++17, a compile-time if is available, which achieves what was expected here with a slightly different syntax. This will be discussed in Section 8.5.
+但请注意，由于C++17提供了编译时if，就可以实现了这里的期望，但在语法上略有不同。这将在第8.5节中讨论。
 
 
 

@@ -1,8 +1,8 @@
-When passing arguments by value, each argument must in principle be copied. Thus, each parameter becomes a copy of the passed argument. For classes, the object created as a copy generally is initialized by the copy constructor.
+按值传递参数时，原则上必须复制每个参数。因此，每个参数都成为所传递实参的副本。对于类，作为副本创建的对象通常由复制构造函数初始化。
 
-Calling a copy constructor can become expensive. However, there are various way to avoid expensive copying even when passing parameters by value: In fact, compilers might optimize away copy operations copying objects and can become cheap even for complex objects by using move semantics.
+调用复制构造函数的代价可能会很高。然而，即使在按值传递参数时，也有方法来避免昂贵的复制:编译器可能会优化复制对象的复制操作，并且通过使用移动语义，即使对复杂的对象也可以变得廉价。
 
-For example, let’s look at a simple function template implemented so that the argument is passed by value:
+来看一个实现的简单函数模板，参数是通过值传递的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -11,7 +11,7 @@ void printV (T arg) {
 }
 \end{lstlisting}
 
-When calling this function template for an integer, the resulting code is
+当为整数调用此函数模板时，结果代码为
 
 \begin{lstlisting}[style=styleCXX]
 void printV (int arg) {
@@ -19,16 +19,16 @@ void printV (int arg) {
 }
 \end{lstlisting}
 
-Parameter arg becomes a copy of any passed argument, whether it is an object or a literal or a value returned by a function.
+参数arg成为传入参数的副本，无论它是对象、文字还是函数返回的值。
 
-If we define a std::string and call our function template for it:
+若定义一个std::string类型，并为此调用函数模板:
 
 \begin{lstlisting}[style=styleCXX]
 std::string s = "hi";
 printV(s);
 \end{lstlisting}
 
-the template parameter T is instantiated as std::string so that we get
+模板形参T被实例化为std::string，得到
 
 \begin{lstlisting}[style=styleCXX]
 void printV (std::string arg)
@@ -37,13 +37,13 @@ void printV (std::string arg)
 }
 \end{lstlisting}
 
-Again, when passing the string, arg becomes a copy of s. This time the copy is created by the copy constructor of the string class, which is a potentially expensive operation, because in principle this copy operation creates a full or “deep” copy so that the copy internally allocates its own memory to hold the value.
+同样，在传递字符串时，arg变成了s的副本。这次的副本是由string类的复制构造函数创建的，这是一个昂贵的操作，因为这个复制操作创建了一个完整或“深”副本，以便该副本内部分配自己的内存来保存该值。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The implementation of the string class might itself have some optimizations to make copying cheaper. One is the small string optimization (SSO), using some memory directly inside the object to hold the value without allocating memory as long as the value is not too long. Another is the copy-on-write optimization, which creates a copy using the same memory as the source as long as neither source nor the copy is modified. However, the copy-on-write optimization has significant drawbacks in multithreaded code. For this reason, it is forbidden for standard strings since C++11.
+\hspace*{0.75cm}string类的实现本身可能进行了一些优化，以降低复制成本。一种是小字符串优化(SSO)，只要值不太长，就直接使用对象内部的一些内存来保存值，而不分配内存。另一种是写时复制优化，只要源文件和副本都没有修改，就会使用与源文件相同的内存创建副本。但是，写时复制优化在多线程代码中有显著的缺陷。由于这个原因，自C++11起，标准字符串是禁止使用写时复制优化。
 \end{tcolorbox}
 
-However, the potential copy constructor is not always called. Consider the following:
+但是，复制构造函数并不总调用。考虑以下代码:
 
 \begin{lstlisting}[style=styleCXX]
 std::string returnString();
@@ -54,18 +54,18 @@ printV(returnString()); // copying usually optimized away (if not, move construc
 printV(std::move(s)); // move constructor
 \end{lstlisting}
 
-In the first call we pass an lvalue, which means that the copy constructor is used. However, in the second and third calls, when directly calling the function template for prvalues (temporary objects created on the fly or returned by another function; see Appendix B), compilers usually optimize passing the argument so that no copying constructor is called at all. Note that since C++17, this optimization is required. Before C++17, a compiler that doesn’t optimize the copying away, must at least have to try to use move semantics, which usually makes copying cheap. In the last call, when passing an xvalue (an existing nonconstant object with std::move()), we force to call the move constructor by signaling that we no longer need the value of s.
+第一次调用中，传递了一个左值，使用了复制构造函数。然而，第二次和第三次调用中，当直接调用函数模板来获取prvalues(动态创建或由另一个函数返回的临时对象;参见附录B)，编译器通常会优化传递参数，这样就不会调用复制构造函数了。注意，从C++17起，这种优化是必需的。C++17前，不能优化复制的编译器，至少必须尝试使用移动语义，这通常会使复制成本降低。最后一次调用中，当传递xvalue(一个现有的带有std::move()的非常量对象)时，不再需要s的值来强制使用移动构造函数。
 
-Thus, calling an implementation of printV() that declares the parameter to be passed by value usually is only expensive if we pass an lvalue (an object we created before and typically still use afterwards, as we didn’t use std::move() to pass it). Unfortunately, this is a pretty common case. One reason is that it is pretty common to create objects early to pass them later (after some modifications) to other functions.
+因此，调用printV()的实现来声明按值传递的参数，通常只在传递左值(之前创建的对象，因为没有使用std::move()来传递它，所以在之后仍然可以使用)时才会很昂贵。不幸的是，这是一个常见的情况。原因是，在早期创建对象，并在稍后(经过一些修改)将其传递给其他函数的操作很常见。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Passing by Value Decays}
+\textbf{值传递的类型衰变}
 
-There is another property of passing by value we have to mention: When passing arguments to a parameter by value, the type decays. This means that raw arrays get converted to pointers and that qualifiers such as const and volatile are removed (just like using the value as initializer for an object declared with auto):
+还有一个必须提到的按值传递的属性:当按值传递参数时，类型会衰变。从而数组将转换为指针，并删除const和volatile等限定符(就像使用值作为使用auto声明的对象的初始化式一样):
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The term decay comes from C, and also applies to the type conversion from a function to a function pointer (see Section 11.1.1).
+\hspace*{0.75cm}术语衰变来自C语言，也适用于从函数到函数指针的类型转换(参见11.1.1节)。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -83,7 +83,7 @@ int arr[4];
 printV(arr); // decays to pointer so that arg has type char const*
 \end{lstlisting}
 
-Thus, when passing the string literal "hi", its type char const[3] decays to char const* so that this is the deduced type of T. Thus, the template is instantiated as follows:
+因此，当传递字符串字面值"hi"时，类型char const[3]衰变为char const*，从而成为T的推导类型。
 
 \begin{lstlisting}[style=styleCXX]
 void printV (char const* arg)
@@ -92,7 +92,7 @@ void printV (char const* arg)
 }
 \end{lstlisting}
 
-This behavior is derived from C and has its benefits and drawbacks. Often it simplifies the handling of passed string literals, but the drawback is that inside printV() we can’t distinguish between passing a pointer to a single element and passing a raw array. For this reason, we will discuss how to deal with string literals and other raw arrays in Section 7.4.
+这种行为有利有弊，并源自C语言。简化了对传递的字符串字面量的处理，但缺点是在printV()中，无法区分传递单个元素的指针和传递数组。因此，将在7.4节中将讨论如何处理字符串字面值和其他数组。
 
 
 

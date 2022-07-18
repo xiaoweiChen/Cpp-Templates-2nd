@@ -1,5 +1,5 @@
 
-与函数模板一样，我们在头文件中声明并定义\texttt{Stack<>}类，如下所示:
+与函数模板一样，我们在头文件中声明并定义Stack<>类，如下所示:
 
 \noindent
 \textit{basics/stack1.hpp}
@@ -42,7 +42,7 @@ T const& Stack<T>::top () const
 }
 \end{lstlisting}
 
-类模板使用C++标准库的类模板\texttt{vector<>}实现。因此，不必实现内存管理、复制构造函数和赋值操作符，可以专注于该类模板的接口。
+类模板使用C++标准库的类模板vector<>实现。因此，不必实现内存管理、复制构造函数和赋值操作符，可以专注于该类模板的接口。
 
 \subsubsubsection{2.1.1\hspace{0.2cm}声明类模板}
 
@@ -55,7 +55,7 @@ class Stack {
 };
 \end{lstlisting}
 
-这里，关键字\texttt{class}也可以用\texttt{typename}替换:
+这里，关键字class也可以用typename替换:
 
 \begin{lstlisting}[style=styleCXX]
 template<class T>
@@ -82,7 +82,7 @@ public:
 };
 \end{lstlisting}
 
-这个类的类型是\texttt{Stack<T>}，T是模板参数。因此，只要在使用该类的类型，就必须使用\texttt{Stack<T>}声明，可以推导模板参数的情况除外。但在类模板中，使用类名后不带模板实参的类，表示将模板参数作为参数的类型(详见第13.2.3节)。
+这个类的类型是Stack<T>，T是模板参数。因此，只要在使用该类的类型，就必须使用Stack<T>声明，可以推导模板参数的情况除外。但在类模板中，使用类名后不带模板实参的类，表示将模板参数作为参数的类型(详见第13.2.3节)。
 
 例如，必须声明自定义的复制构造函数和赋值操作符:
 
@@ -108,7 +108,7 @@ class Stack {
 };
 \end{lstlisting}
 
-通常\texttt{<T>}表示特殊模板参数，所以最好使用第一种方式。
+通常<T>表示特殊模板参数，所以最好使用第一种方式。
 
 还需要:
 
@@ -123,7 +123,7 @@ bool operator== (Stack<T> const& lhs, Stack<T> const& rhs);
 
 \subsubsubsection{2.1.2\hspace{0.2cm}实现成员函数}
 
-要定义类模板的成员函数，必须将其指定为模板，并且使用类模板对类型进行限定。因此，\texttt{Stack<T>}类型的成员函数push()的实现如下所示:
+要定义类模板的成员函数，必须将其指定为模板，并且使用类模板对类型进行限定。因此，Stack<T>类型的成员函数push()的实现如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

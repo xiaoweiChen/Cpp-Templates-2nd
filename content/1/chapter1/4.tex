@@ -25,16 +25,16 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-注意\texttt{std::decay\_t<>}的用法以确保返回的不是引用类型。
+注意std::decay\_t<>的用法以确保返回的不是引用类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}同样，在C++11中，必须使用typename \texttt{std::decay<…>::type}，而非\texttt{std::decay\_t<…>}(见第2.8节)。
+\hspace*{0.75cm}同样，在C++11中，必须使用typename std::decay<…>::type，而非std::decay\_t<…>(见第2.8节)。
 \end{tcolorbox}
 
-此实现要求能够为传递的类型调用默认构造函数。还有另一种解决方案，使用\texttt{std::declval}，但是这会使声明更加复杂。参见第11.2.3节中的示例。
+此实现要求能够为传递的类型调用默认构造函数。还有另一种解决方案，使用std::declval，但是这会使声明更加复杂。参见第11.2.3节中的示例。
 
 \item
-也可以使用\texttt{std::common\_type<>}来指定返回类型的默认值:
+也可以使用std::common\_type<>来指定返回类型的默认值:
 
 \noindent
 \textit{basics/maxdefault3.hpp}
@@ -49,7 +49,7 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-注意\texttt{std::common\_type<>}的衰减，因此返回值不会是引用。
+注意std::common\_type<>的衰变，因此返回值不会是引用。
 \end{enumerate}
 
 可以使用返回类型的默认值:

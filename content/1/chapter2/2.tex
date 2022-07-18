@@ -4,7 +4,7 @@
 \hspace*{0.75cm}C++17引入了类参数模板推演，如果模板参数可以从构造函数派生，则可以跳过这些参数。这会在第2.9节中进行讨论。
 \end{tcolorbox}
 
-下面的例子展示了如何使用类模板\texttt{Stack<>}:
+下面的例子展示了如何使用类模板Stack<>:
 
 \noindent
 \textit{basics/stack1test.cpp}
@@ -29,13 +29,13 @@ int main()
 }
 \end{lstlisting}
 
-通过声明类型\texttt{Stack<int>}，int在类模板中作为类型T。因此，intStack是一个对象，使用的是\texttt{vector<int>}类型，并且调用相应的成员函数。类似地，通过声明和使用\texttt{Stack<std::string>}，将创建使用\texttt{vector<std::string>}的对象，使用相应的成员函数。
+通过声明类型Stack<int>，int在类模板中作为类型T。因此，intStack是一个对象，使用的是vector<int>类型，并且调用相应的成员函数。类似地，通过声明和使用Stack<std::string>，将创建使用vector<std::string>的对象，使用相应的成员函数。
 
 注意，代码只对调用的模板(成员)函数实例化。对于类模板，只有在使用成员函数时才实例化。当然，这节省了时间和空间，并且只允许部分地使用类模板，这会在2.3节中详细讨论。
 
-这个例子中，默认构造函数push()和top()为\texttt{int}和\texttt{string}实例化，但pop()只对字符串实例化。如果类模板具有静态成员，则对于使用类模板的每个类型实例，这些成员也会实例化一次。
+这个例子中，默认构造函数push()和top()为int和string实例化，但pop()只对字符串实例化。如果类模板具有静态成员，则对于使用类模板的每个类型实例，这些成员也会实例化一次。
 
-可以像使用其他类型一样使用实例化的类模板的类型。可以使用\texttt{const}、\texttt{volatile}或从中派生数组和引用类型对其进行限定。也可以将其作为类型定义的一部分，使用\texttt{typedef}或\texttt{using}(请参阅第2.8节了解关于类型定义的详细信息)，或者在构建另一个模板类型时将其用作类型参数。例如:
+可以像使用其他类型一样使用实例化的类模板的类型。可以使用const、volatile或从中派生数组和引用类型对其进行限定。也可以将其作为类型定义的一部分，使用typedef或using(请参阅第2.8节了解关于类型定义的详细信息)，或者在构建另一个模板类型时将其用作类型参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 void foo(Stack<int> const& s) // parameter s is int stack
@@ -62,7 +62,7 @@ Stack<Stack<int>> intStackStack; // stack of stack of ints
 Stack<Stack<int> > intStackStack; // 所有C++版本都可以用
 \end{lstlisting}
 
-如果你没有这样做，使用了\texttt{>>}，就会导致语法错误:
+如果你没有这样做，就使用>>，会导致语法错误:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<Stack<int>> intStackStack; // C++11之前会报错

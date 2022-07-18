@@ -18,9 +18,9 @@ dest.begin(), // start of destination
 addValue<5,int>); // operation
 \end{lstlisting}
 
-最后一个参数实例化函数模板\texttt{addValue<>()}，将5加到传入的\texttt{int}值上。对source中的每个元素调用生成的函数，同时将其转换为目标dest。
+最后一个参数实例化函数模板addValue<>()，将5加到传入的int值上。对source中的每个元素调用生成的函数，同时将其转换为目标dest。
 
-注意，必须为模板形参\texttt{addValue<>()}指定参数\texttt{int}。推导仅适用于即时调用，而\texttt{std::transform()}需要完整的类型来推导其第四个参数的类型。不支持只替换/推导一些模板参数，并查看哪些参数适合，然后推导剩下的参数。
+注意，必须为模板形参addValue<>()指定参数int。推导仅适用于即时调用，而std::transform()需要完整的类型来推导其第四个参数的类型。不支持只替换/推导一些模板参数，并查看哪些参数适合，然后推导剩下的参数。
 
 同样，也可以指定模板参数是从前面的参数推导出来的。例如，要从传递的非类型派生返回类型:
 

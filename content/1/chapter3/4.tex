@@ -80,7 +80,7 @@ std::array<T,Maxsize> elems; // elements
 using size_type = decltype(Maxsize);
 \end{lstlisting}
 
-例如，用作\texttt{size()}成员函数的返回类型:
+例如，用作size()成员函数的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 size_type size() const { // return current number of elements
@@ -131,15 +131,15 @@ int main()
 Stack<int,20u> int20Stack; // stack of up to 20 ints
 \end{lstlisting}
 
-因为传递了20u，所以内部大小类型是\texttt{unsigned int}。
+因为传递了20u，所以内部大小类型是unsigned int。
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::string,40> stringStack; // stack of up to 40 strings
 \end{lstlisting}
 
-因为传递了40，内部大小类型是\texttt{int}。
+因为传递了40，内部大小类型是int。
 
-两个堆栈的\texttt{size()}将有不同的返回类型，因此
+两个堆栈的size()将有不同的返回类型，因此
 
 \begin{lstlisting}[style=styleCXX]
 auto size1 = int20Stack.size();
@@ -147,7 +147,7 @@ auto size1 = int20Stack.size();
 auto size2 = stringStack.size();
 \end{lstlisting}
 
-size1和size2的类型不同。可以使用标准类型特征\texttt{std::is\_same}(参见D.3.3节)和\texttt{decltype}，进行检查:
+size1和size2的类型不同。可以使用标准类型特征std::is\_same(参见D.3.3节)和decltype，进行检查:
 
 \begin{lstlisting}[style=styleCXX]
 if (!std::is_same<decltype(size1), decltype(size2)>::value) {
@@ -161,7 +161,7 @@ if (!std::is_same<decltype(size1), decltype(size2)>::value) {
 size types differ
 \end{tcblisting}
 
-C++17后，对于返回值可以使用后缀\texttt{\_v}并省略\texttt{::value}(详见5.6节):
+C++17后，对于返回值可以使用后缀\_v并省略::value(详见5.6节):
 
 \begin{lstlisting}[style=styleCXX]
 if (!std::is_same_v<decltype(size1), decltype(size2)>) {
@@ -201,7 +201,7 @@ int main()
 }
 \end{lstlisting}
 
-还要注意的是，\texttt{template<decltype(auto) N>}也可以，其允许将N实例化为引用:
+还要注意的是，template<decltype(auto) N>也可以，其允许将N实例化为引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<decltype(auto) N>

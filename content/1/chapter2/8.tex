@@ -64,14 +64,14 @@ IntStack和Stack<int>是同一类型的两种名称。
 \hspace*{0.75cm}别名模板有时(不正确地)会称为typedef模板，若将其制成模板，将与typedef的行为相同。
 \end{tcolorbox}
 
-别名模板DequeStack，对元素类型T进行参数化，展开为一个栈，将其元素实例存储在\texttt{std::deque}:
+别名模板DequeStack，对元素类型T进行参数化，展开为一个栈，将其元素实例存储在std::deque:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 using DequeStack = Stack<T, std::deque<T>>;
 \end{lstlisting}
 
-因此，类模板和别名模板都可以作为参数化类型。但别名模板只是为现有类型提供一个新名称，该类型仍然可以使用。\texttt{DequeStack<int>}和\texttt{Stack<int, std::deque<int>>}表示的就是相同类型。
+因此，类模板和别名模板都可以作为参数化类型。但别名模板只是为现有类型提供一个新名称，该类型仍然可以使用。DequeStack<int>和Stack<int, std::deque<int>>表示的就是相同类型。
 
 通常情况下，模板只能在全局/命名空间作用域或类声明内部声明和定义。
 

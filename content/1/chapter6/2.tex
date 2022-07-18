@@ -40,11 +40,11 @@ int main()
 }
 \end{lstlisting}
 
-这里，有一个具有\texttt{string}成员名的类\texttt{Person}，我们为其提供了初始化构造函数。为了支持移动语义，重载了接受\texttt{std::string}参数的构造函数:
+这里，有一个具有string成员名的类Person，我们为其提供了初始化构造函数。为了支持移动语义，重载了接受std::string参数的构造函数:
 
 \begin{itemize}
 \item 
-我们提供了仍然需要的\texttt{string}的构造函数，其名称由传递参数的副本进行初始化:
+我们提供了仍然需要的string的构造函数，其名称由传递参数的副本进行初始化:
 
 \begin{lstlisting}[style=styleCXX]
 Person(std::string const& n) : name(n) {
@@ -53,7 +53,7 @@ Person(std::string const& n) : name(n) {
 \end{lstlisting}
 
 \item 
-我们提供了一个可移动\texttt{string}对象的构造函数，使用\texttt{std::move()}来“窃取”下面的值:
+我们提供了一个可移动string对象的构造函数，使用std::move()来“窃取”下面的值:
 
 \begin{lstlisting}[style=styleCXX]
 Person(std::string&& n) : name(std::move(n)) {
@@ -70,14 +70,14 @@ Person p1(s); // init with string object => calls copying string-CONSTR
 Person p2("tmp"); // init with string literal => calls moving string-CONSTR
 \end{lstlisting}
 
-除了这些构造函数之外，这个示例还对复制和移动构造函数有特定的实现，以查看\texttt{Person}作为一个整体何时复制/移动:
+除了这些构造函数之外，这个示例还对复制和移动构造函数有特定的实现，以查看Person作为一个整体何时复制/移动:
 
 \begin{lstlisting}[style=styleCXX]
 Person p3(p1); // copy Person => calls COPY-CONSTR
 Person p4(std::move(p1)); // move Person => calls MOVE-CONSTR
 \end{lstlisting}
 
-现在用一个泛型构造函数替换两个需要传入\texttt{string}的构造函数，完美转发的参数将传递给成员name:
+现在用一个泛型构造函数替换两个需要传入string的构造函数，完美转发的参数将传递给成员name:
 
 \noindent
 \textit{basics/specialmemtmpl2.hpp}
@@ -107,7 +107,7 @@ public:
 };
 \end{lstlisting}
 
-传递\texttt{string}的构造工作正常:
+传递string的构造工作正常:
 
 \begin{lstlisting}[style=styleCXX]
 std::string s = "sname";
@@ -115,7 +115,7 @@ Person p1(s); // init with string object => calls TMPL-CONSTR
 Person p2("tmp"); // init with string literal => calls TMPL-CONSTR
 \end{lstlisting}
 
-注意，在这种情况下p2的构造并没有创建临时字符串，参数STR推导为\texttt{char const[4]}。将\texttt{std::forward<STR>}应用于构造函数的指针参数没有太大的效果，因此name成员是由一个以null结尾的字符串构造的。
+注意，在这种情况下p2的构造并没有创建临时字符串，参数STR推导为char const[4]。将std::forward<STR>应用于构造函数的指针参数没有太大的效果，因此name成员是由一个以null结尾的字符串构造的。
 
 但当我们试图调用复制构造函数时，会得到一个错误:
 
@@ -123,20 +123,20 @@ Person p2("tmp"); // init with string literal => calls TMPL-CONSTR
 Person p3(p1); // ERROR
 \end{lstlisting}
 
-当用一个可移动对象初始化一个新的\texttt{Person}时，仍然可以正常工作:
+当用一个可移动对象初始化一个新的Person时，仍然可以正常工作:
 
 \begin{lstlisting}[style=styleCXX]
 Person p4(std::move(p1)); // OK: move Person => calls MOVE-CONST
 \end{lstlisting}
 
-注意，复制一个常量\texttt{Person}也可以正常工作:
+注意，复制一个常量Person也可以正常工作:
 
 \begin{lstlisting}[style=styleCXX]
 Person const p2c("ctmp"); // init constant object with string literal
 Person p3c(p2c); // OK: copy constant Person => calls COPY-CONSTR
 \end{lstlisting}
 
-问题是，根据C++的重载解析规则(参见16.2.4节)，对于一个非常量左值\texttt{Person p}，成员模板
+问题是，根据C++的重载解析规则(参见16.2.4节)，对于一个非常量左值Person p，成员模板
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR>
@@ -149,7 +149,7 @@ Person(STR&& n)
 Person (Person const& p)
 \end{lstlisting}
 
-\texttt{STR}只是替换为\texttt{Person\&}，而对于复制构造函数，需要转换为\texttt{const}。
+STR只是替换为Person\&，而对于复制构造函数，需要转换为const。
 
 可以考虑通过提供一个非常量复制构造函数来解决这个问题:
 
@@ -157,7 +157,7 @@ Person (Person const& p)
 Person (Person& p)
 \end{lstlisting}
 
-然而，这只是部分解决方案，对于派生类的对象，成员模板仍然是更好的匹配。当传递的参数是\texttt{Person}或可以转换为\texttt{Person}的表达式时，这里真正需要的是禁用成员模板。这可以通过使用\texttt{std::enable\_if<>}来进行，这将在下一节中介绍。
+然而，这只是部分解决方案，对于派生类的对象，成员模板仍然是更好的匹配。当传递的参数是Person或可以转换为Person的表达式时，这里真正需要的是禁用成员模板。这可以通过使用std::enable\_if<>来进行，这将在下一节中介绍。
 
 
 

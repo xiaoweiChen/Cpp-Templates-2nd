@@ -1,5 +1,5 @@
 
-类成员也可以是模板，对于嵌套类和成员函数都有可能。\texttt{Stack<>}类模板可以再次展示这种能力的应用和优势。通常，只有具有相同的类型时，才能相互分配堆栈，这意味着元素具有相同的类型。但不能将其他类型的元素赋值给堆栈，即使对定义的元素类型有隐式的类型转换:
+类成员也可以是模板，对于嵌套类和成员函数都有可能。Stack<>类模板可以再次展示这种能力的应用和优势。通常，只有具有相同的类型时，才能相互分配堆栈，这意味着元素具有相同的类型。但不能将其他类型的元素赋值给堆栈，即使对定义的元素类型有隐式的类型转换:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int> intStack1, intStack2; // stacks for ints
@@ -42,7 +42,7 @@ public:
 为另一种类型T2的元素堆栈添加了赋值操作符声明。
 
 \item 
-栈现在使用\texttt{std::deque<>}作为元素的内部容器。同样，这也是新赋值操作符实现的结果。
+栈现在使用std::deque<>作为元素的内部容器。同样，这也是新赋值操作符实现的结果。
 \end{enumerate}
 
 新赋值操作符的实现如下所示:
@@ -77,7 +77,7 @@ template<typename T2>
 ...
 \end{lstlisting}
 
-成员函数中，可能只希望访问所赋堆栈op2的必要数据。但这个堆栈有不同的类型(如果为两种不同的参数类型实例化一个类模板，将得到两种不同的类类型)，因此只能使用公共接口。所以，访问元素的唯一方法是调用\texttt{top()}。然而，每个元素都必须成为顶部元素。因此，必须创建op2的副本，以便通过调用\texttt{pop()}从该副本中获取元素。因为\texttt{top()}返回压入堆栈的最后一个元素，所以可能更倾向使用支持在集合的另一端插入元素的容器。所以，这里使用\texttt{std::deque<>}的\texttt{push\_front()}，将元素放在集合的另一端。
+成员函数中，可能只希望访问所赋堆栈op2的必要数据。但这个堆栈有不同的类型(如果为两种不同的参数类型实例化一个类模板，将得到两种不同的类类型)，因此只能使用公共接口。所以，访问元素的唯一方法是调用top()。然而，每个元素都必须成为顶部元素。因此，必须创建op2的副本，以便通过调用pop()从该副本中获取元素。因为top()返回压入堆栈的最后一个元素，所以可能更倾向使用支持在集合的另一端插入元素的容器。所以，这里使用std::deque<>的push\_front()，将元素放在集合的另一端。
 
 要访问op2的所有成员，可以将所有其他堆栈实例声明为友元:
 
@@ -138,7 +138,7 @@ floatStack = intStack; // OK: stacks have different types,
 						// but int converts to float
 \end{lstlisting}
 
-当然，这个赋值不会改变堆栈及其元素的类型。赋值之后，\texttt{floatStack}的元素仍然是浮点数，因此\texttt{top()}仍然返回一个浮点数。
+当然，这个赋值不会改变堆栈及其元素的类型。赋值之后，floatStack的元素仍然是浮点数，因此top()仍然返回一个浮点数。
 
 这个函数可能会禁用类型检查，这样就可以将任何类型的元素赋给堆栈，但事实并非如此。当源堆栈(副本)的元素移动到目标堆栈时，就会发生必要的类型检查:
 
@@ -146,7 +146,7 @@ floatStack = intStack; // OK: stacks have different types,
 elems.push_front(tmp.top());
 \end{lstlisting}
 
-如果一堆字符串被赋值给一堆浮点数，这一行的编译会产生一个错误信息，表示\texttt{tmp.top()}返回的字符串不能作为参数传递给\texttt{elems.push\_front()}(错误信息会随编译器而变化，但这是其含义的重点):
+如果一堆字符串被赋值给一堆浮点数，这一行的编译会产生一个错误信息，表示tmp.top()返回的字符串不能作为参数传递给elems.push\_front()(错误信息会随编译器而变化，但这是其含义的重点):
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::string> stringStack; // stack of strings
@@ -199,7 +199,7 @@ Stack<T,Cont>::operator= (Stack<T2,Cont2> const& op2)
 }
 \end{lstlisting}
 
-对于类模板，只有那些调用的成员函数才会实例化。因此，若需要避免在堆栈中分配不同类型的元素，可以使用\texttt{vector}作为内部容器:
+对于类模板，只有那些调用的成员函数才会实例化。因此，若需要避免在堆栈中分配不同类型的元素，可以使用vector作为内部容器:
 
 \begin{lstlisting}[style=styleCXX]
 // stack for ints using a vector as an internal container
@@ -210,7 +210,7 @@ vStack.push(7);
 std::cout << vStack.top() << '\n';
 \end{lstlisting}
 
-因为赋值操作符模板不是必需的，所以不会出现缺少成员函数\texttt{push\_front()}的错误消息，程序也没有问题。
+因为赋值操作符模板不是必需的，所以不会出现缺少成员函数push\_front()的错误消息，程序也没有问题。
 
 要获得上一个示例的完整实现，请参阅子目录基础中以stack7开头的文件。
 
@@ -280,7 +280,7 @@ std::cout << s2.get<bool>() << '\n'; // prints true
 
 \subsubsubsection{5.5.1\hspace{0.2cm}.template构造}
 
-有时，在调用成员模板时，需要显式限定模板参数。这种情况下，必须使用\texttt{template}关键字来确保\texttt{<}是模板参数列表的开头。考虑下面使用标准\texttt{bitset}类型的例子:
+有时，在调用成员模板时，需要显式限定模板参数。这种情况下，必须使用template关键字来确保<是模板参数列表的开头。考虑下面使用标准bitset类型的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<unsigned long N>
@@ -290,9 +290,9 @@ void printBitset (std::bitset<N> const& bs) {
 }
 \end{lstlisting}
 
-对于bitset bs，使用\texttt{to\_string()}的成员函数模板，同时显式指定字符串类型的信息。如果没有使用\texttt{.template}，编译器就不知道后面的小于标记(\texttt{<})是模板参数列表的开头。注意，只有在句点之前的构造依赖于模板参数时才会出现问题。在我们的例子中，参数bs依赖于模板参数N。
+对于bitset bs，使用to\_string()的成员函数模板，同时显式指定字符串类型的信息。如果没有使用.template，编译器就不知道后面的小于标记(<)是模板参数列表的开头。注意，只有在句点之前的构造依赖于模板参数时才会出现问题。在我们的例子中，参数bs依赖于模板参数N。
 
-\texttt{.template}表示法(以及类似的表示法，如\texttt{->template}和\texttt{::template})应该只在模板内部使用，并且只有当它们遵循依赖于模板参数的某些参数时才会使用。详细信息请参见13.3.3。
+.template表示法(以及类似的表示法，如\texttt{->}template和::template)应该只在模板内部使用，并且只有当它们遵循依赖于模板参数的某些参数时才会使用。详细信息请参见13.3.3。
 
 \subsubsubsection{5.5.2\hspace{0.2cm}泛型Lambda和成员模板}
 

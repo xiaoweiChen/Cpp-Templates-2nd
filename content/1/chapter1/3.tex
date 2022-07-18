@@ -92,9 +92,9 @@ RT max (T1 a, T2 b);
 ::max<double>(4, 7.2) // OK: 返回类型是double，T1和T2可以进行推演
 \end{lstlisting}
 
-例子中，对\texttt{max<double>}的调用显式地将RT设置为double，但是参数T1和T2根据实参推导为int和double。
+例子中，对max<double>的调用显式地将RT设置为double，但是参数T1和T2根据实参推导为int和double。
 
-注意，\texttt{max()}的这些版本不会带来显著的优势。对于单参数版本，如果传递了两个不同类型的参数，则可以指定形参(和返回)类型。因此，使用\texttt{max()}单参数版本就好。
+注意，max()的这些版本不会带来显著的优势。对于单参数版本，如果传递了两个不同类型的参数，则可以指定形参(和返回)类型。因此，使用max()单参数版本就好。
 
 关于推演过程的详细信息，请参见第15章。
 
@@ -156,7 +156,7 @@ auto max (T1 a, T2 b) -> typename std::decay<decltype(true?a:b)>::type
 }
 \end{lstlisting}
 
-这里使用了\texttt{std::decay<>}，修饰了返回值的类型。其在标准库中的<type\_trait>头文件中定义(参见第732页的D.5节)。因为是类型，必须用typename进行限定才能访问(参见第5.1节)。
+这里使用了std::decay<>，修饰了返回值的类型。其在标准库中的<type\_trait>头文件中定义(参见第732页的D.5节)。因为是类型，必须用typename进行限定才能访问(参见第5.1节)。
 
 auto类型的初始化总是衰减的，这也适用于返回类型为auto的返回值。auto作为返回类型的行为就像下面的代码一样，其中a由i, int的衰变类型进行声明:
 
@@ -168,7 +168,7 @@ auto a = ir; // a的类型为int
 
 \subsubsubsection{1.3.3\hspace{0.2cm}返回类型为通用类型}
 
-C++11后，标准库提供了一种方法来指定选择“更通用的类型”。\texttt{std::common\_type<>::type}会产生由两个(或多个)不同类型作为模板类型的“公共类型”。例如:
+C++11后，标准库提供了一种方法来指定选择“更通用的类型”。std::common\_type<>::type会产生由两个(或多个)不同类型作为模板类型的“公共类型”。例如:
 
 \noindent
 \textit{basics/maxcommon.hpp}
@@ -182,19 +182,19 @@ std::common_type_t<T1,T2> max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-\texttt{std::common\_type}在<type\_traits>头文件中定义，其生成一个具有返回类型的结构。因此，其核心用法如下:
+std::common\_type在<type\_traits>头文件中定义，其生成一个具有返回类型的结构。因此，其核心用法如下:
 
 \begin{lstlisting}[style=styleCXX]
 typename std::common_type<T1,T2>::type // since C++11
 \end{lstlisting}
 
-C++14起，可以通过在trait名称后面添加\texttt{\_t}跳过typename和::type来简化trait的使用(详见第2.8节)，这样返回类型定义就变成了:
+C++14起，可以通过在trait名称后面添加\_t跳过typename和::type来简化trait的使用(详见第2.8节)，这样返回类型定义就变成了:
 
 \begin{lstlisting}[style=styleCXX]
 std::common_type_t<T1,T2> // C++14起可用
 \end{lstlisting}
 
-\texttt{std::common\_type<>}使用了一些模板编程技巧，会在第26.5.2节中讨论。在内部根据特定类型的三元操作符或特化的语言规则选择结果类型。因此，\texttt{::max(4,7.2)}和\texttt{::max(7.2, 4)}都返回了相同的double类型值7.2。注意\texttt{std::common\_type<>}也会衰变。详见D.5节。
+std::common\_type<>使用了一些模板编程技巧，会在第26.5.2节中讨论。在内部根据特定类型的三元操作符或特化的语言规则选择结果类型。因此，::max(4,7.2)和::max(7.2, 4)都返回了相同的double类型值7.2。注意std::common\_type<>也会衰变。详见D.5节。
 
 
 

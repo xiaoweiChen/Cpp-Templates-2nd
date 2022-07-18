@@ -5,7 +5,7 @@
 
 不仅仅是转发所有参数，可以使用它们进行计算。也就是，可以使用参数包中的参数进行计算。
 
-例如，下面的函数将参数包args的每个参数都加倍，并将每个加倍的参数传递给\texttt{print()}:
+例如，下面的函数将参数包args的每个参数都加倍，并将每个加倍的参数传递给print():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T>
@@ -69,7 +69,7 @@ std::is_same<int,int>::value && std::is_same<int,char const*>::value
 isHomogeneous("hello", " ", "world", "!")
 \end{lstlisting}
 
-会产生true，因为传递的参数都推导为\texttt{char const*}(因为调用参数按值传递，所以参数类型衰变)。
+会产生true，因为传递的参数都推导为char const*(因为调用参数按值传递，所以参数类型衰变)。
 
 \subsubsubsection{4.4.2\hspace{0.2cm}可变参的索引}
 
@@ -148,7 +148,7 @@ struct Indices {
 };
 \end{lstlisting}
 
-这可以用来定义函数，该函数在编译时对给定索引使用\texttt{get<>()}访问\texttt{std::array}或\texttt{std::tuple}的元素调用\texttt{print()}:
+这可以用来定义函数，该函数在编译时对给定索引使用get<>()访问std::array或std::tuple的元素调用print():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t... Idx>
@@ -176,7 +176,7 @@ printByIdx(t, Indices<0, 1, 2>());
 
 \subsubsubsection{4.4.4\hspace{0.2cm}可变参的推导策略}
 
-推导策略(参见第2.9节)也可以是可变参的。例如，C++标准库定义了以下\texttt{std::arrays}的推导策略:
+推导策略(参见第2.9节)也可以是可变参的。例如，C++标准库定义了以下std::arrays的推导策略:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -192,13 +192,13 @@ namespace std {
 std::array a{42,45,77};
 \end{lstlisting}
 
-策略中推导出元素类型的T，以及各种\texttt{U...}类型转换为后续元素的类型。因此，元素总数为\texttt{1 + sizeof...(U)}:
+策略中推导出元素类型的T，以及各种U...类型转换为后续元素的类型。因此，元素总数为1 + sizeof...(U):
 
 \begin{lstlisting}[style=styleCXX]
 std::array<int, 3> a{42,45,77};
 \end{lstlisting}
 
-第一个数组参数的\texttt{std::enable\_if<>}表达式是一个折叠表达式(正如在章节4.4.1中引入的\texttt{isHomogeneous()})展开为:
+第一个数组参数的std::enable\_if<>表达式是一个折叠表达式(正如在章节4.4.1中引入的isHomogeneous())展开为:
 
 \begin{lstlisting}[style=styleCXX]
 is_same_v<T, U1> && is_same_v<T, U2> && is_same_v<T, U3> ...
@@ -255,7 +255,7 @@ int main()
 }
 \end{lstlisting}
 
-这里，首先定义了一个类\texttt{Customer}和一些独立的函数对象，用于哈希和比较\texttt{Customer}对象。
+这里，首先定义了一个类Customer和一些独立的函数对象，用于哈希和比较Customer对象。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Bases>
@@ -271,7 +271,7 @@ struct Overloader : Bases...
 using CustomerOP = Overloader<CustomerHash,CustomerEq>;
 \end{lstlisting}
 
-使用这个特性从\texttt{CustomerHash}和\texttt{CustomerEq}派生\texttt{CustomerOP}，并在派生类中同时启用函数操作符的实现。
+使用这个特性从CustomerHash和CustomerEq派生CustomerOP，并在派生类中同时启用函数操作符的实现。
 
 参见第26.4节了解该技术的另一种应用。
 

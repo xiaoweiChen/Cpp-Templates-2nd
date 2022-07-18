@@ -1,4 +1,4 @@
-当将原始数组或字符串字面值传递给模板时，必须小心。如果模板参数声明为引用，则实参不会衰变，传入的"hello"参数为\texttt{char const[6]}类型。若因类型不同而传递不同长度的原始数组或字符串参数，这可能会成为一个问题。只有当按值传递实参时，类型才会衰变，因此字符串字面值转换为\texttt{char const*}。这将在第7章中详细讨论。
+当将原始数组或字符串字面值传递给模板时，必须小心。如果模板参数声明为引用，则实参不会衰变，传入的"hello"参数为char const[6]类型。若因类型不同而传递不同长度的原始数组或字符串参数，这可能会成为一个问题。只有当按值传递实参时，类型才会衰变，因此字符串字面值转换为char const*。这将在第7章中详细讨论。
 
 注意，还可以提供专门处理原始数组或字符串字面量的模板。例如:
 
@@ -24,7 +24,7 @@ int y[] = {1, 2, 3, 4, 5};
 std::cout << less(x,y) << '\n';
 \end{lstlisting}
 
-\texttt{less<>()}实例化，T为\texttt{int}，N为3，M为5。
+less<>()实例化，T为int，N为3，M为5。
 
 也可以将此模板用于字符串字面值:
 
@@ -32,7 +32,7 @@ std::cout << less(x,y) << '\n';
 std::cout << less("ab","abc") << '\n';
 \end{lstlisting}
 
-在这种情况下，\texttt{less<>()}实例化，T为\texttt{char const}，N为3，M为4。
+在这种情况下，less<>()实例化，T为char const，N为3，M为4。
 
 若只想为字符串(和其他字符数组)提供一个函数模板，可以这样做:
 
@@ -91,7 +91,7 @@ struct MyClass<T*> // partial specialization for pointers
 };
 \end{lstlisting}
 
-类模板\texttt{MyClass<>}专门用于各种类型:已知和未知边界的数组、对已知和未知边界的数组的引用，以及指针。每种情况都是不同的，可以在使用数组时产生:
+类模板MyClass<>用于各种类型:已知和未知边界的数组、对已知和未知边界的数组的引用，以及指针。每种情况都是不同的，可以在使用数组时产生:
 
 \noindent
 \textit{basics/arrays.cpp}
@@ -134,10 +134,10 @@ int x[] = {0, 8, 15}; // define forward-declared array
 extern int i[];
 \end{lstlisting}
 
-当通过引用传递时，就变成了一个\texttt{int(\&)[]}，也可以用作模板参数。
+当通过引用传递时，就变成了一个int(\&)[]，也可以用作模板参数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}类型\texttt{X(\&)[]}——对于某些任意类型X——的参数仅在C++17中有效，通过核心问题393的解决。然而，在语言的早期版本中，许多编译器可以接受这样的参数。
+\hspace*{0.75cm}类型X(\&)[]——对于某些任意类型X——的参数仅在C++17中有效，通过核心问题393的解决。然而，在语言的早期版本中，许多编译器可以接受这样的参数。
 \end{tcolorbox}
 
 在泛型代码中使用不同数组类型的另一种例子可参见19.3.1节。

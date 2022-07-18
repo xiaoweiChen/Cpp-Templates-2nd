@@ -1,6 +1,6 @@
-从C++11开始，标准库提供了辅助模板\texttt{std::enable\_if<>}，以在特定的编译时条件下忽略函数模板。
+从C++11开始，标准库提供了辅助模板std::enable\_if<>，以在特定的编译时条件下忽略函数模板。
 
-例如，函数模板\texttt{foo<>()}有如下定义:
+例如，函数模板foo<>()有如下定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -9,20 +9,20 @@ foo() {
 }
 \end{lstlisting}
 
-如果\texttt{sizeof(T) > 4}生成false，则忽略\texttt{foo<>()}的定义。
+如果sizeof(T) > 4生成false，则忽略foo<>()的定义。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}不要忘记将条件放入圆括号中，否则条件中的\texttt{>}将视为模板参数列表的结束。
+\hspace*{0.75cm}不要忘记将条件放入圆括号中，否则条件中的>将视为模板参数列表的结束。
 \end{tcolorbox}
 
-如果\texttt{sizeof(T) > 4}的结果为true，则函数模板实例展开为
+如果sizeof(T) > 4的结果为true，则函数模板实例展开为
 
 \begin{lstlisting}[style=styleCXX]
 void foo() {
 }
 \end{lstlisting}
 
-也就是说，\texttt{std::enable\_if<>}是一种类型特征，它计算作为其(第一个)模板参数传递的给定编译时表达式:
+也就是说，std::enable\_if<>是一种类型特征，它计算作为其(第一个)模板参数传递的给定编译时表达式:
 
 \begin{itemize}
 \item 
@@ -37,10 +37,10 @@ void foo() {
 \end{itemize}
 
 \item 
-如果表达式结果为false，则没有定义成员类型。由于稍后将介绍的名为SFINAE的模板特性(替换失败不为过)(请参阅8.4节)，这将忽略使用\texttt{enable\_if}表达式的函数模板。
+如果表达式结果为false，则没有定义成员类型。由于稍后将介绍的名为SFINAE的模板特性(替换失败不为过)(请参阅8.4节)，这将忽略使用enable\_if表达式的函数模板。
 \end{itemize}
 
-对于自C++14以来产生类型的类型特征，有一个对应的别名模板\texttt{std::enable\_if\_t<>}，允许跳过\texttt{typename}和\texttt{::type}(请参阅第2.8节了解详细信息)。因此，从C++14起就可以使用了
+对于自C++14以来产生类型的类型特征，有一个对应的别名模板std::enable\_if\_t<>，允许跳过typename和::type(请参阅第2.8节了解详细信息)。因此，从C++14起就可以使用了
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -49,7 +49,7 @@ foo() {
 }
 \end{lstlisting}
 
-若第二个参数传递至\texttt{enable\_if<>}或\texttt{enable\_if\_t<>}:
+若第二个参数传递至enable\_if<>或enable\_if\_t<>:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -59,7 +59,7 @@ foo() {
 }
 \end{lstlisting}
 
-如果表达式为true，则\texttt{enable\_if}构造展开为第二个参数。因此，若\texttt{MyType}是传递或推导为T的具体类型，其大小大于4，则效果为
+如果表达式为true，则enable\_if构造展开为第二个参数。因此，若MyType是传递或推导为T的具体类型，其大小大于4，则效果为
 
 \begin{lstlisting}[style=styleCXX]
 MyType foo();
@@ -83,7 +83,7 @@ void foo() {
 }
 \end{lstlisting}
 
-当\texttt{sizeof(T) > 4}时。
+当sizeof(T) > 4时。
 
 如果感觉仍然太笨拙，并且你=想让需求/约束更明确，可以使用别名模板为它定义名字:
 
@@ -97,7 +97,7 @@ void foo() {
 }
 \end{lstlisting}
 
-请参阅第20.3节，以了解如何实现\texttt{std::enable\_if}。
+请参阅第20.3节，以了解如何实现std::enable\_if。
 
 
 

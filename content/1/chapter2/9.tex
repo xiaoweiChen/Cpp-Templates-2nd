@@ -30,7 +30,7 @@ public:
 Stack intStack = 0; // Stack<int> deduced since C++17
 \end{lstlisting}
 
-使用整数0初始化堆栈，模板参数T推导为int，因此会实例化一个、\texttt{stack<int>}类型。
+使用整数0初始化堆栈，模板参数T推导为int，因此会实例化一个、stack<int>类型。
 
 请注意以下几点:
 
@@ -46,10 +46,10 @@ Stack() = default;
 \begin{lstlisting}[style=styleCXX]
 : elems({elem})
 \end{lstlisting}
-\texttt{vector}的构造函数中无法接受单个参数作为初始元素。
+vector的构造函数中无法接受单个参数作为初始元素。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}更糟糕的是，\texttt{vector}的构造函数会将一个整型参数作为初始大小，因此对于初始值为5的堆栈，当使用\texttt{:elems(elem)}时，\texttt{vector}将获得5个元素的初始大小。
+\hspace*{0.75cm}更糟糕的是，vector的构造函数会将一个整型参数作为初始大小，因此对于初始值为5的堆栈，当使用:elems(elem)时，vector将获得5个元素的初始大小。
 \end{tcolorbox}
 
 \end{itemize}
@@ -72,9 +72,9 @@ Stack stringStack = "bottom"; // Stack<char const[7]> deduced since C++17
 Stack<char const[7]>
 \end{lstlisting}
 
-这是应为，在使用T的地方使用了\texttt{char const[7]}。例如，我们不能推入不同大小的字符串，因为它有不同的类型。有关详细讨论，请参阅第7.4节。
+这是应为，在使用T的地方使用了char const[7]。例如，我们不能推入不同大小的字符串，因为它有不同的类型。有关详细讨论，请参阅第7.4节。
 
-但当按值传递模板类型T的阐述时，参数会衰变，将原始数组类型转换为相应的原始指针类型。也就是说，构造函数的调用参数T推导为\texttt{char const*}，因此整个类将推导为\texttt{Stack<char const*>}。
+但当按值传递模板类型T的阐述时，参数会衰变，将原始数组类型转换为相应的原始指针类型。也就是说，构造函数的调用参数T推导为char const*，因此整个类将推导为Stack<char const*>。
 
 由于这个原因，可以声明构造函数，直接传递值:
 
@@ -117,7 +117,7 @@ public:
 
 除了声明构造函数由值调用之外，还有一种不同的解决方案:因为在容器中处理指针是噩梦的开始，所以应该禁止为容器类自动推导字符指针。
 
-可以定义特定的推导策略来提供额外的，或修复现有类模板参数的推导。例如，可以定义只要传入一个字符串字面值或C字符串，栈就会实例化为\texttt{std::string}:
+可以定义特定的推导策略来提供额外的，或修复现有类模板参数的推导。例如，可以定义只要传入一个字符串字面值或C字符串，栈就会实例化为std::string:
 
 \begin{lstlisting}[style=styleCXX]
 Stack(char const*) -> Stack<std::string>;
@@ -131,13 +131,13 @@ Stack(char const*) -> Stack<std::string>;
 Stack stringStack{"bottom"}; // OK: Stack<std::string> deduced since C++17
 \end{lstlisting}
 
-将堆栈推断为一个\texttt{Stack<std::string>}类。然而，在以下情况下仍然不能正常工作:
+将堆栈推断为一个Stack<std::string>类。然而，在以下情况下仍然不能正常工作:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack = "bottom"; // Stack<std::string> deduced, but still not valid
 \end{lstlisting}
 
-推导\texttt{std::string}以便实例化一个\texttt{Stack<std::string>}类:
+推导std::string以便实例化一个Stack<std::string>类:
 
 \begin{lstlisting}[style=styleCXX]
 class Stack {
@@ -151,13 +151,13 @@ public:
 };
 \end{lstlisting}
 
-但根据语言规则，不能通过将字符串字面值传递给\texttt{std::string}的构造函数来复制对象，从而完成初始化(initialize using =)。所以必须像这样初始化堆栈:
+但根据语言规则，不能通过将字符串字面值传递给std::string的构造函数来复制对象，从而完成初始化(initialize using =)。所以必须像这样初始化堆栈:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stringStack{"bottom"}; // Stack<std::string> deduced and valid
 \end{lstlisting}
 
-此时的疑问应该在于，类模板参数推导的副本。在将\texttt{stringStack}声明为\texttt{Stack<std::string>}之后，下面的初始化声明了相同的类型(因此，调用了复制构造函数)，而不是通过字符串堆栈元素对堆栈进行初始化:
+此时的疑问应该在于，类模板参数推导的副本。在将stringStack声明为Stack<std::string>之后，下面的初始化声明了相同的类型(因此，调用了复制构造函数)，而不是通过字符串堆栈元素对堆栈进行初始化:
 
 \begin{lstlisting}[style=styleCXX]
 Stack stack2{stringStack}; // Stack<std::string> deduced

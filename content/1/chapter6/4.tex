@@ -1,4 +1,4 @@
-可以使用\texttt{enable\_if<>}来解决在6.2节中引入的构造函数模板的问题。
+可以使用enable\_if<>来解决在6.2节中引入的构造函数模板的问题。
 
 必须解决的问题是禁用模板构造函数的声明
 
@@ -7,9 +7,9 @@ template<typename STR>
 Person(STR&& n);
 \end{lstlisting}
 
-若传递的参数\texttt{STR}具有正确的类型(即\texttt{std::string}或可转换为\texttt{std::string}的类型)。
+若传递的参数STR具有正确的类型(即std::string或可转换为std::string的类型)。
 
-为此，使用另一个标准类型\texttt{std::is\_convertible<FROM,TO>}。在C++17中，相应的声明如下所示:
+为此，使用另一个标准类型std::is\_convertible<FROM,TO>。在C++17中，相应的声明如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR,
@@ -18,7 +18,7 @@ template<typename STR,
 Person(STR&& n);
 \end{lstlisting}
 
-如果\texttt{STR}类型可转换为\texttt{std::string}类型，则整个声明展开为
+如果STR类型可转换为std::string类型，则整个声明展开为
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR,
@@ -26,10 +26,10 @@ template<typename STR,
 Person(STR&& n);
 \end{lstlisting}
 
-如果\texttt{STR}类型不能转换为\texttt{std::string}类型，则整个函数模板将忽略。
+如果STR类型不能转换为std::string类型，则整个函数模板将忽略。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}为什么不检查\texttt{STR}是否“不可转换为\texttt{Person}”？我们正在定义一个函数，该函数可能允许将字符串转换为\texttt{Person}。因此构造函数必须知道它是否启用，这取决于是否可转换，而可转换取决于是否启用，循环往复。永远不要在影响\texttt{enable\_if}使用的条件的地方使用\texttt{enable\_if}。这是编译器不一定能检测到的逻辑错误。
+\hspace*{0.75cm}为什么不检查STR是否“不可转换为Person”？我们正在定义一个函数，该函数可能允许将字符串转换为Person。因此构造函数必须知道它是否启用，这取决于是否可转换，而可转换取决于是否启用，循环往复。永远不要在影响enable\_if使用的条件的地方使用enable\_if。这是编译器不一定能检测到的逻辑错误。
 \end{tcolorbox}
 
 同样，可以使用别名模板定义名称:
@@ -43,7 +43,7 @@ template<typename STR, typename = EnableIfString<STR>>
 Person(STR&& n);
 \end{lstlisting}
 
-因此，整个\texttt{Person}类如下所示:
+因此，整个Person类如下所示:
 
 \noindent
 \textit{basics/specialmemtmpl3.hpp}
@@ -96,7 +96,7 @@ int main()
 }
 \end{lstlisting}
 
-C++14中，必须如下声明别名模板，因为\texttt{\_v}版本没有为类型定义value:
+C++14中，必须如下声明别名模板，因为\_v版本没有为类型定义value:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -104,7 +104,7 @@ using EnableIfString = std::enable_if_t<
 						std::is_convertible<T, std::string>::value>;
 \end{lstlisting}
 
-C++11中，必须声明特殊成员模板，因为\texttt{\_t}版本并没有定义type:
+C++11中，必须声明特殊成员模板，因为\_t版本并没有定义type:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -113,9 +113,9 @@ using EnableIfString
 						>::type;
 \end{lstlisting}
 
-但这些现在都隐藏在\texttt{EnableIfString<>}的定义中。
+但这些现在都隐藏在EnableIfString<>的定义中。
 
-因为它要求类型是隐式可转换的，所以使用\texttt{std::is\_convertible<>}还有另一种选择。通过使用\texttt{std::is\_constructible<>}，允许显式转换用于初始化。然而，在这种情况下，参数的顺序反的:
+因为它要求类型是隐式可转换的，所以使用std::is\_convertible<>还有另一种选择。通过使用std::is\_constructible<>，允许显式转换用于初始化。然而，在这种情况下，参数的顺序反的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -123,13 +123,13 @@ using EnableIfString = std::enable_if_t<
 						std::is_constructible_v<std::string, T>>;
 \end{lstlisting}
 
-关于\texttt{std::is\_constructible<>}和\texttt{std::is\_convertible<>}的详细信息请参见D.3.2节。关于在可变参数模板上应用\texttt{enable\_if<>}的详细信息和示例，请参见D.6节。
+关于std::is\_constructible<>和std::is\_convertible<>的详细信息请参见D.3.2节。关于在可变参数模板上应用enable\_if<>的详细信息和示例，请参见D.6节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{禁用特殊成员函数}
 
-注意，通常不能使用\texttt{enable\_if<>}来禁用预定义的复制/移动构造函数和/或赋值操作符。原因是成员函数模板永远不会算作特殊成员函数，并且在需要复制构造函数等情况下会忽略。因此，在此声明:
+注意，通常不能使用enable\_if<>来禁用预定义的复制/移动构造函数和/或赋值操作符。原因是成员函数模板永远不会算作特殊成员函数，并且在需要复制构造函数等情况下会忽略。因此，在此声明:
 
 \begin{lstlisting}[style=styleCXX]
 class C {
@@ -155,7 +155,7 @@ C y{x}; // still uses the predefined copy constructor (not the member template)
 
 不过，有一个解决方案:
 
-可以为texttt{const volatile}参数声明一个复制构造函数，并将其标记为“已删除”(即用\texttt{= delete}修饰)。这样做可以防止隐式声明另一个复制构造函数。有了这些，就可以定义一个构造函数模板，对于非易失性类型，该构造函数将优先于(已删除的)复制构造函数:
+可以为texttt{const volatile}参数声明一个复制构造函数，并将其标记为“已删除”(即用= delete修饰)。这样做可以防止隐式声明另一个复制构造函数。有了这些，就可以定义一个构造函数模板，对于非易失性类型，该构造函数将优先于(已删除的)复制构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 class C
@@ -182,7 +182,7 @@ C x;
 C y{x}; // uses the member template
 \end{lstlisting}
 
-在模板构造函数中，以使用\texttt{enable\_if<>}进行约束。例如，若模板参数是整型，为了防止复制类模板\texttt{C<>}的对象，可以实现以下方法:
+在模板构造函数中，以使用enable\_if<>进行约束。例如，若模板参数是整型，为了防止复制类模板C<>的对象，可以实现以下方法:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

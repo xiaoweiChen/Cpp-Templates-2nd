@@ -71,7 +71,7 @@ int a[::max(sizeof(char),1000u)];
 std::array<std::string, ::max(sizeof(char),1000u)> arr;
 \end{lstlisting}
 
-注意，将1000作为\texttt{unsigned int}传递是为了避免在模板中比较有符号值和无符号值时，编译器发出的警告。
+注意，将1000作为unsigned int传递是为了避免在模板中比较有符号值和无符号值时，编译器发出的警告。
 
 第8.2节将讨论使用constexpr的例子。为了让我们的注意力集中在基本特性上，在讨论其他模板特性时，我们通常会跳过constexpr。
 

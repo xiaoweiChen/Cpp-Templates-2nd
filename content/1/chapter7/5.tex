@@ -1,21 +1,21 @@
 
 
-For return values, you can also decide between returning by value or by reference. However, returning references is potentially a source of trouble, because you refer to something that is out of your control. There are a few cases where returning references is common programming practice:
+对于返回值，还可以决定是通过值返回还是通过引用返回。但返回引用可能是麻烦的来源，因为引用的东西超出了控制范围。一些情况下，返回引用却又是常见的编程实践:
 
 \begin{itemize}
 \item 
-Returning elements of containers or strings (e.g., by operator[] or front())
+返回容器或字符串元素(例如，通过operator[]或front())
 
 \item 
-Granting write access to class members
+授予类成员写访问权限
 
 \item 
-Returning objects for chained calls (operator<< and operator>> for streams and operator= for class objects in general)
+返回链式调用的对象(流的operator<<和operator>>，类对象的operator=)
 \end{itemize}
 
-In addition, it is common to grant read access to members by returning const references.
+此外，通过返回const引用来授予成员的读权限。
 
-Note that all these cases may cause trouble if used improperly. For example:
+若使用不当，所有这些情况都可能产生麻烦。例如:
 
 \begin{lstlisting}[style=styleCXX]
 std::string* s = new std::string("whatever");
@@ -24,7 +24,7 @@ delete s;
 std::cout << c; // run-time ERROR
 \end{lstlisting}
 
-Here, we obtained a reference to an element of a string, but by the time we use that reference, the underlying string no longer exists (i.e., we created a dangling reference), and we have undefined behavior. This example is somewhat contrived (the experienced programmer is likely to notice the problem right away), but things easily become less obvious. For example:
+这里，获得了一个字符串元素的引用，但是当使用这个引用时，底层的字符串已经不存在了(创建了一个悬空引用)，并且出现了未定义的行为。这个例子有些做作(有经验的程序员可能马上就会注意到问题)，但是事情很容易变得不那么明显。例如:
 
 \begin{lstlisting}[style=styleCXX]
 auto s = std::make_shared<std::string>("whatever");
@@ -33,7 +33,7 @@ s.reset();
 std::cout << c; // run-time ERROR
 \end{lstlisting}
 
-We should therefore ensure that function templates return their result by value. However, as discussed in this chapter, using a template parameter T is no guarantee that it is not a reference, because T might sometimes implicitly be deduced as a reference:
+因此，应该确保函数模板按值返回结果。正如本章所讨论的，使用模板参数T并不能保证它不是引用，因为T有时可能会隐式推导为引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -43,7 +43,7 @@ T retR(T&& p) // p is a forwarding reference
 }
 \end{lstlisting}
 
-Even when T is a template parameter deduced from a call-by-value call, it might become a reference type when explicitly specifying the template parameter to be a reference:
+即使T是由按值调用推导而来的模板参数，当显式指定模板参数为引用时，也可能成为引用类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -56,11 +56,11 @@ int x;
 retV<int&>(x); // retT() instantiated for T as int&
 \end{lstlisting}
 
-To be safe, you have two options:
+为了安全起见，这里有两个选择:
 
 \begin{itemize}
 \item 
-Use the type trait std::remove\_reference<> (see Section D.4) to convert type T to a nonreference:
+使用类型特征std::remove\_reference<>(参见D.4节)将类型T转换为非引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -70,10 +70,10 @@ typename std::remove_reference<T>::type retV(T p)
 }
 \end{lstlisting}
 
-Other traits, such as std::decay<> (see Section D.4), may also be useful here because they also implicitly remove references.
+其他特征，如std::decay<>(参见D.4节)，因为隐式地移除引用，在这里也可能会有用。
 
 \item 
-Let the compiler deduce the return type by just declaring the return type to be auto (since C++14; see Section 1.3.2), because auto always decays:
+编译器通过声明返回类型auto来推断返回类型(C++14起;参见第1.3.2节)，因为auto总会衰变:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

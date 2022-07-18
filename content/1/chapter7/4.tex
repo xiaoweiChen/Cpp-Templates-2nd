@@ -1,15 +1,15 @@
 
-So far, we have seen the different effects for templates parameters when using string literals and raw arrays:
+我们已经看到了模板参数在使用字符串字面值和数组时的不同效果:
 
 \begin{itemize}
 \item 
-Call-by-value decays so that they become pointers to the element type.
+按值调用会衰变，使它们成为指向元素类型的指针。
 
 \item 
-Any form of call-by-reference does not decay so that the arguments become references that still refer to arrays.
+引用调用都不会衰变，因此参数成为仍然引用数组的引用。
 \end{itemize}
 
-Both can be good and bad. When decaying arrays to pointers, you lose the ability to distinguish between handling pointers to elements from handling passed arrays. On the other hand, when dealing with parameters where string literals may be passed, not decaying can become a problem, because string literals of different size have different types. For example:
+两者都可能是好的，也可能是坏的。当数组衰变为指针时，将失去区分处理指向元素的指针和处理传递的数组的能力。另一方面，在处理可能传递字符串字面值的参数时，因为不同大小的字符串字面值有不同的类型，所以不衰变可能会成为一个问题。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -21,9 +21,9 @@ void foo (T const& arg1, T const& arg2)
 foo("hi", "guy"); // ERROR
 \end{lstlisting}
 
-Here, foo("hi","guy") fails to compile, because "hi" has type char const[3], while "guy" has type char const[4], but the template requires them to have the same type T. Only if the string literals were to have the same length would such code compile. For this reason, it is strongly recommended to use string literals of different lengths in test cases.
+在这里，foo("hi"，"guy")无法进行编译，因为"hi"的类型是char const[3]，而"guy"的类型是char const[4]，但模板要求它们具有相同的类型T。只有当字符串字面值具有相同的长度时，这样的代码才能编译。出于这个原因，强烈建议在测试用例中使用不同长度的字符串字面值。
 
-By declaring the function template foo() to pass the argument by value the call is possible:
+通过声明函数模板foo()来通过值传递参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -35,7 +35,7 @@ void foo (T arg1, T arg2)
 foo("hi", "guy"); // compiles, but ...
 \end{lstlisting}
 
-But, that doesn’t mean that all problems are gone. Even worse, compile-time problems may have become run-time problems. Consider the following code, where we compare the passed argument using operator==:
+但是，这并不意味着所有的问题都消失了。更糟糕的是，编译时问题可能变成了运行时问题。考虑下面的代码，使用operator==比较传递的参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -49,21 +49,21 @@ void foo (T arg1, T arg2)
 foo("hi", "guy"); // compiles, but ...
 \end{lstlisting}
 
-As written, you have to know that you should interpret the passed character pointers as strings. But that’s probably the case anyway, because the template also has to deal with arguments coming from string literals that have been decayed already (e.g., by coming from another function called by value or being assigned to an object declared with auto).
+因为模板还必须处理来自已经衰变的字符串字面量的参数(例如，通过value调用的函数或被赋值给使用auto声明的对象)，所以必须知道应该将传递的字符指针解释为字符串。
 
-Nevertheless, in many cases decaying is helpful, especially for checking whether two objects (both passed as arguments or one passed as argument and the other expecting the argument) have or convert to the same type. One typical usage is perfect forwarding. But if you want to use perfect forwarding, you have to declare the parameters as forwarding references. In those cases, you might explicitly decay the arguments using the type trait std::decay<>(). See the story of std::make\_pair() in Section 7.6 on page 120 for a concrete example.
+许多情况下衰变是有用的，特别是用于检查两个对象(都作为参数传递，或者一个作为传递参数，另一个作为期待参数)是否具有或转换为相同的类型。一个典型的用法是完美转发，但想使用完美转发，必须将参数声明为转发引用。这种情况下，可以使用类型特征std::decay<>()显式地衰变参数。具体的例子请参阅第120页7.6节中的std::make\_pair()。
 
-Note that other type traits sometimes also implicitly decay, such as std::common\_type<>, which yields the common type of two passed argument types (see Section 1.3.3 and Section D.5).
+注意，其他类型特征有时也隐式衰变，例如std::common\_type<>，它产生两个传递参数类型的通用类型(参见章节1.3.3和章节D.5)。
 
-\subsubsubsection{7.4.1\hspace{0.2cm}Special Implementations for String Literals and Raw Arrays}
+\subsubsubsection{7.4.1\hspace{0.2cm}字符串字面值和数组的特殊实现}
 
-You might have to distinguish your implementation according to whether a pointer or an array was passed. This, of course, requires that a passed array wasn’t decayed yet.
+可能需要根据传递的是指针还是数组来区分实现。当然，这要求传递的数组还没有衰变。
 
-To distinguish these cases, you have to detect whether arrays are passed. Basically, there are two options:
+要区分这些情况，必须检测是否传递了数组。基本上有两种选择:
 
 \begin{itemize}
 \item 
-You can declare template parameters so that they are only valid for arrays:
+可以声明模板参数，使其只对数组有效:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t L1, std::size_t L2>
@@ -77,10 +77,10 @@ void foo(T (&arg1)[L1], T (&arg2)[L2])
 }
 \end{lstlisting}
 
-Here, arg1 and arg2 have to be raw arrays of the same element type T but with different sizes L1 and L2. However, note that you might need multiple implementations to support the various forms of raw arrays (see Section 5.4).
+这里，arg1和arg2必须是数组，具有相同的元素类型T，但大小不同，L1和L2。但请注意，可能需要多个实现来支持数组(参见第5.4节)。
 
 \item 
-You can use type traits to detect whether an array (or a pointer) was passed:
+可以使用类型特征来检测是否传递了数组(或指针):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -92,7 +92,7 @@ void foo (T&& arg1, T&& arg2)
 \end{lstlisting}
 \end{itemize}
 
-Due to these special handling, often the best way to deal with arrays in different ways is simply to use different function names. Even better, of course, is to ensure that the caller of a template uses std::vector or std::array. But as long as string literals are raw arrays, we always have to take them into account.
+由于这些属于特殊的处理方式，而常用的最佳方式处理数组就是使用不同的函数名。当然，更好的方法是确保模板的调用者使用std::vector或std::array。但只要字符串字面值是数组，就必须考虑这种情况。
 
 
 

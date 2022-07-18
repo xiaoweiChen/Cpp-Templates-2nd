@@ -1,26 +1,26 @@
 
 \begin{itemize}
 \item 
-When testing templates, use string literals of different length.
+测试模板时，可以使用不同长度的字符串字面值。
 
 \item 
-Template parameters passed by value decay, while passing them by reference does not decay.
+通过值传递的模板参数会衰变，而通过引用传递的模板参数不会衰变。
 
 \item 
-The type trait std::decay<> allows you to decay parameters in templates passed by reference.
+类型特征std::decay<>允许在引用传递的模板中衰变参数。
 
 \item 
-In some cases std::cref() and std::ref() allow you to pass arguments by reference when function templates declare them to be passed by value.
+在某些情况下，函数模板声明参数通过值传递时，std::cref()和std::ref()允许通过引用传递参数。
 
 \item 
-Passing template parameters by value is simple but may not result in the best performance.
+按值传递模板参数很简单，但可能无法获得最佳性能。
 
 \item 
-Pass parameters to function templates by value unless there are good reasons to do otherwise.
+按值传递参数给函数模板，除非有很好的理由不这样做。
 
 \item 
-Ensure that return values are usually passed by value (which might mean that a template parameter can’t be specified directly as a return type).
+确保返回值通常按值传递(模板参数不能直接指定为返回类型)。
 
 \item 
-Always measure performance when it is important. Do not rely on intuition; it’s probably wrong.
+在重要的时候需要衡量性能。不要依赖直觉，因为直觉很可能是错误的。
 \end{itemize}

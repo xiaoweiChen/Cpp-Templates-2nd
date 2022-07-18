@@ -1,35 +1,35 @@
-As we learned in the previous sections, we have very different ways to declare parameters that depend on template parameters:
+正如前几节中了解到的，声明依赖于模板参数的参数类型有不同的方式:
 
 \begin{itemize}
 \item 
-Declare to pass the arguments by value:
+通过值传递参数:
 
-This approach is simple, it decays string literals and raw arrays, but it doesn’t provide the best performance for large objects. Still the caller can decide to pass by reference using std::cref() and std::ref(), but the caller must be careful that doing so is valid.
+这种方法很简单，衰变字符串字面值和数组，但不能为大型对象提供最佳性能。调用者仍然可以决定使用std::cref()和std::ref()通过引用传递，但是必须确定样做的必要性。
 
 \item 
-Declare to pass the arguments by-reference:
+通过引用传递参数:
 
-This approach often provides better performance for somewhat large objects, especially when passing
+这种方法通常可以为较大的对象提供更好的性能，特别是在传递参数时
 
 \begin{itemize}
 \item[-]
-existing objects (lvalues) to lvalue references,
+现有对象(lvalue)到左值引用，
 
 \item[-]
-temporary objects (prvalues) or objects marked as movable (xvalue) to rvalue references,
+临时对象(prvalue)或标记为可移动(xvalue)的对象将引用右值，
 
 \item[-]
-or both to forwarding references.
+或者两者都为转发引用。
 \end{itemize}
 
-Because in all these cases the arguments don’t decay, you may need special care when passing string literals and other raw arrays. For forwarding references, you also have to beware that with this approach template parameters implicitly can deduce to reference types.
+这些情况下，参数都不会衰变，所以在传递字符串字面值和其他数组时可能需要特别注意。对于转发引用，还必须注意使用模板参数可以隐式地推导出引用类型的方法。
 \end{itemize}
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Don’t Be Over-Generic}
+\textbf{不要过于泛化}
 
-Note that, in practice, function templates often are not for arbitrary types of arguments. Instead, some constraints apply. For example, you may know that only vectors of some type are passed. In this case, it is better not to declare such a function too generically, because, as discussed, surprising side effects may occur. Instead, use the following declaration:
+在实践中，函数模板通常不支持任意类型的参数，所以可以进行了一些约束。例如，可能知道只传递某种类型的vector。在这种情况下，最好不要太泛化地声明这样的函数。如前所述，可能会出现令人惊讶的副作用。相反，使用以下声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -39,17 +39,17 @@ void printVector (std::vector<T> const& v)
 }
 \end{lstlisting}
 
-With this declaration of parameter v in printVector(), we can be sure that the passed T can’t become a reference because vectors can’t use references as element types. Also, it is pretty clear that passing a vector by value almost always can become expensive because the copy constructor of std::vector<> creates a copy of the elements. For this reason, it is probably never useful to declare such a vector parameter to be passed by value. If we declare parameter v just as having type T deciding, between call-by-value and call-by-reference becomes less obvious.
+通过在printVector()中声明参数v，可以确定传递的T不能成为引用，因为vector不能使用引用作为元素类型。另外，因为std::vector<>的复制构造函数会创建元素的副本，所以按值传递vector成本很高。出于这个原因，将这样的vector参数声明为按值传递可能永远不会适用。如果将参数v的声明交由类型T来决定，那么按值调用和按引用调用之间的区别就不那么明显了。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{The std::make\_pair() Example}
+\textbf{std::make\_pair()的实例}
 
-std::make\_pair<>() is a good example to demonstrate the pitfalls of deciding a parameter passing mechanism. It is a convenience function template in the C++ standard library to create std::pair<> objects using type deduction. Its declaration changed through different versions of the C++ standard:
+std::make\_pair<>()是一个很好的例子，演示了决定参数传递机制的缺陷。在C++标准库中，使用其进行类型推导，并创建std::pair<>对象，是一个方便的函数模板。它的声明在不同版本的C++标准中有所不同:
 
 \begin{itemize}
 \item
-In the first C++ standard, C++98, make\_pair<>() was declared inside namespace std to use call-by-reference to avoid unnecessary copying:
+第一个C++标准C++98中，make\_pair<>()在命名空间std中声明，以使用引用调用来避免不必要的复制:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -59,14 +59,14 @@ pair<T1,T2> make_pair (T1 const& a, T2 const& b)
 }
 \end{lstlisting}
 
-This, however, almost immediately caused significant problems when using pairs of string literals or raw arrays of different size.
+然而，当使用字符串字面值对或不同大小的数组时，这会导致严重的问题。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}See C++ library issue 181 [LibIssue181] for details
+\hspace*{0.75cm}请参见C++库的181号issue[LibIssue181]
 \end{tcolorbox}
 
 \item
-As a consequence, with C++03 the function definition was changed to use call-by-value:
+因此，在C++03中，函数定义改为使用按值调用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -76,10 +76,10 @@ pair<T1,T2> make_pair (T1 a, T2 b)
 }
 \end{lstlisting}
 
-As you can read in the rationale for the issue resolution, “it appeared that this was a much smaller change to the standard than the other two suggestions, and any efficiency concerns were more than offset by the advantages of the solution.”
+如同在问题解决方案的基本原理中所了解到的那样，“与其他两个建议相比，这似乎是对标准的一个小更改，而且任何效率方面的担忧都由该解决方案的优点所抵消。”
 
 \item[-]
-However, with C++11, make\_pair() had to support move semantics, so that the arguments had to become forwarding references. For this reason, the definition changed roughly again as follows:
+然而，在C++11中，make\_pair()必须支持移动语义，因此参数必须成为转发引用。因此，该定义又发生了如下变化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -92,10 +92,10 @@ make_pair (T1&& a, T2&& b)
 }
 \end{lstlisting}
 
-The complete implementation is even more complex: To support std::ref() and std::cref(), the function also unwraps instances of std::reference\_wrapper into real references.
+完整的实现甚至更加复杂:为了支持std::ref()和std::cref()，该函数还将std::reference\_wrapper的实例展开为实际的引用。
 \end{itemize}
 
-The C++ standard library now perfectly forwards passed arguments in many places in similar way, often combined with using std::decay<>.
+C++标准库现在在许多地方以类似的方式完美地转发传递的参数，并通常与使用std::decay<>一起使用。
 
 
 

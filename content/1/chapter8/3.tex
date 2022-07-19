@@ -1,6 +1,6 @@
-An interesting application of a compile-time test such as isPrime() is to use partial specialization to select at compile time between different implementations.
+isPrime()等编译时测试的一种应用是在编译时使用偏特化在不同实现之间进行选择。
 
-For example, we can choose between different implementations depending on whether a template argument is a prime number:
+例如，可以根据模板参数是否是素数来选择不同的实现:
 
 \begin{lstlisting}[style=styleCXX]
 // primary helper template:
@@ -29,9 +29,9 @@ long foo (std::array<T,SZ> const& coll)
 }
 \end{lstlisting}
 
-Here, depending on whether the size of the std::array<> argument is a prime number, we use two different implementations of class Helper<>. This kind of application of partial specialization is broadly applicable to select among different implementations of a function template depending on properties of the arguments it’s being invoked for.
+这里，根据std::array<>参数的大小是否为素数，使用了Helper<>类的两种不同实现。这种偏特化的应用广泛适用于函数模板根据模板参数，选择不同的实现。
 
-Above, we used two partial specializations to implement the two possible alternatives. Instead, we can also use the primary template for one of the alternatives (the default) case and partial specializations for any other special case:
+上面，使用了两个偏特化来实现两个可能的替代方案。相反，也可以对其中一个替代(默认)情况使用主模板，并对任何其他特殊情况使用偏特化版本:
 
 \begin{lstlisting}[style=styleCXX]
 // primary helper template (used if no specialization fits):
@@ -49,23 +49,23 @@ struct Helper<SZ, true>
 };
 \end{lstlisting}
 
-Because function templates do not support partial specialization, you have to use other mechanisms to change function implementation based on certain constraints. Our options include the following:
+因为函数模板不支持偏特化，所以必须使用其他机制根据某些约束来更改函数实现。可供的选择包括:
 
 \begin{itemize}
 \item 
-Use classes with static functions,
+使用带有静态函数的类，
 
 \item 
-Use std::enable\_if, introduced in Section 6.3 .
+使用std::enable\_if，在第6.3节中介绍。
 
 \item 
-Use the SFINAE feature, which is introduced next, or
+使用接下来介绍的SFINAE特性，或者
 
 \item 
-Use the compile-time if feature, available since C++17, which is introduced below in Section 8.5.
+使用编译时if特性，该特性从C++17引入，将在下面的8.5节中介绍。
 \end{itemize}
 
-Chapter 20 discusses techniques for selecting a function implementation based on constraints.
+第20章讨论了基于约束选择函数实现的技术。
 
 
 

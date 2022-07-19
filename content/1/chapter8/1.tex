@@ -1,12 +1,12 @@
-Templates are instantiated at compile time (in contrast to dynamic languages, where genericity is handled at run time). It turns out that some of the features of C++ templates can be combined with the instantiation process to produce a sort of primitive recursive “programming language” within the C++ language itself.
+模板在编译时实例化(与动态语言相反，动态语言在运行时处理泛型)。C++模板的一些特性可以与实例化过程结合，是C++中的一种递归“编程语言”。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In fact, it was Erwin Unruh who first found it out by presenting a program computing prime numbers at compile time. See Section 23.7 for details.
+\hspace*{0.75cm}事实上，是Erwin Unruh通过在编译时展示计算素数的程序第一个发现的。详见第23.7节。
 \end{tcolorbox}
 
-For this reason, templates can be used to “compute a program.” Chapter 23 will cover the whole story and all features, but here is a short example of what is possible.
+因此，模板可以用来“计算”。第23章将详细介绍所有功能，这里只是举一个简单的例子。
 
-The following code finds out at compile time whether a given number is a prime number:
+下面的代码在编译时找出给定的数字是否为素数:
 
 \noindent
 \textit{basics/isprime.hpp}
@@ -38,74 +38,68 @@ template<>
 struct IsPrime<3> { static constexpr bool value = true; };
 \end{lstlisting}
 
-The IsPrime<> template returns in member value whether the passed template parameter p is a prime number. To achieve this, it instantiates DoIsPrime<>, which recursively expands to an expression checking for each divisor d between p/2 and 2 whether the divisor divides p without remainder.
+IsPrime<>模板返回成员值，无论传递的模板参数p是否是一个素数。为了实现这一点，实例化DoIsPrime<>，其递归地展开为一个表达式，检查p/2和2之间的每个除数d是否能整除p。
 
-For example, the expression
+例如，表达式为
 
 \begin{lstlisting}[style=styleCXX]
 IsPrime<9>::value
 \end{lstlisting}
 
-\noindent
-expands to
+扩展为
 
 \begin{lstlisting}[style=styleCXX]
 DoIsPrime<9,4>::value
 \end{lstlisting}
 
-\noindent
-which expands to
+继续扩展
 
 \begin{lstlisting}[style=styleCXX]
 9%4!=0 && DoIsPrime<9,3>::value
 \end{lstlisting}
 
-\noindent
-which expands to
+继续扩展
 
 \begin{lstlisting}[style=styleCXX]
 9%4!=0 && 9%3!=0 && DoIsPrime<9,2>::value
 \end{lstlisting}
 
-\noindent
-which expands to
+继续扩展
 
 \begin{lstlisting}[style=styleCXX]
 9%4!=0 && 9%3!=0 && 9%2!=0
 \end{lstlisting}
 
-\noindent
-which evaluates to false, because 9\%3 is 0.
+计算结果为false，因为9\%3是0。
 
-As this chain of instantiations demonstrates:
+正如这个实例链所示:
 
 \begin{itemize}
 \item 
-We use recursive expansions of DoIsPrime<> to iterate over all divisors from p/2 down to 2 to find out whether any of these divisors divide the given integer exactly (i.e., without remainder).
+使用递归展开DoIsPrime<>来遍历从p/2到2的所有除数，以确定这些除数是否能整除给定整数。
 
 \item 
-The partial specialization of DoIsPrime<> for d equal to 2 serves as the criterion to end the recursion.
+当d等于2时，DoIsPrime<>的偏特化作为结束递归。
 \end{itemize}
 
-Note that all this is done at compile time. That is,
+注意，所有这些都是在编译时完成的。也就是说,
 
 \begin{lstlisting}[style=styleCXX]
 IsPrime<9>::value
 \end{lstlisting}
 
-\noindent
-expands to false at compile time.
+在编译时展开为false。
 
-The template syntax is arguably clumsy, but code similar to this has been valid since C++98 (and earlier) and has proven useful for quite a few libraries.
+模板语法可以说是笨拙的，但类似的代码自C++98(或更早)以来就一直有效，并且可以提高相当多库的效率。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++11, it was common to declare the value members as enumerator constants instead of static data members to avoid the need to have an out-of-class definition of the static data member (see Section 23.6 for details). For example:
+\hspace*{0.75cm}C++11前，通常将值成员声明为枚举数常量，而不是静态数据成员，以避免静态数据成员需要在类外定义(参见第23.6节了解详细信息)。例如:
 \begin{lstlisting}[style=styleCXX]
 enum f value = (p%d != 0) && DoIsPrime<p,d-1>::value g;
 \end{lstlisting}
 \end{tcolorbox}
 
-See Chapter 23 for details.
+详见第23章。
 
 
 

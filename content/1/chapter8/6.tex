@@ -1,20 +1,20 @@
 
 \begin{itemize}
 \item 
-Templates provide the ability to compute at compile time (using recursion to iterate and partial specialization or operator ?: for selections).
+模板提供了在编译时进行计算的能力(使用递归进行迭代，使用偏特化或operator ?:进行选择)。
 
 \item 
-With constexpr functions, we can replace most compile-time computations with “ordinary functions” that are callable in compile-time contexts.
+使用constexpr函数，可以将大多数编译时计算替换为可在编译时上下文中调用的“普通函数”。
 
 \item 
-With partial specialization, we can choose between different implementations of class templates based on certain compile-time constraints.
+使用偏特化，可以根据特定的编译时约束在类模板的不同实现之间进行选择。
 
 \item 
-Templates are used only if needed and substitutions in function template declarations do not result in invalid code. This principle is called SFINAE (substitution failure is not an error).
+模板只在需要的时候使用，在函数模板声明中的替换不会导致无效代码。这个原则称为SFINAE(替换失败不为过)。
 
 \item 
-SFINAE can be used to provide function templates only for certain types and/or constraints.
+SFINAE只能用于为特定类型和/或约束提供函数模板。
 
 \item 
-Since C++17, a compile-time if allows us to enable or discard statements according to compiletime conditions (even outside templates).
+C++17起，编译时if允许根据编译时条件(甚至在模板外部)启用或丢弃语句。
 \end{itemize}

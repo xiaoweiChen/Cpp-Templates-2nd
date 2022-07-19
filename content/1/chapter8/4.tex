@@ -1,13 +1,13 @@
 
-In C++ it is pretty common to overload functions to account for various argument types. When a compiler sees a call to an overloaded function, it must therefore consider each candidate separately, evaluating the arguments of the call and picking the candidate that matches best (see also Appendix C for some details about this process).
+C++中，以考虑各种参数类型重载函数是很常见的。因此，当编译器看到对重载函数的调用时，必须单独考虑每个候选函数，评估调用的参数并选择最匹配的候选函数(有关此过程的一些细节，请参阅附录C)。
 
-In cases where the set of candidates for a call includes function templates, the compiler first has to determine what template arguments should be used for that candidate, then substitute those arguments in the function parameter list and in its return type, and then evaluate how well it matches (just like an ordinary function). However, the substitution process could run into problems: It could produce constructs that make no sense. Rather than deciding that such meaningless substitutions lead to errors, the language rules instead say that candidates with such substitution problems are simply ignored. 
+调用的候选集合包括函数模板的情况下，编译器首先必须确定为该候选对象使用哪些模板参数，然后在函数参数列表及其返回类型中替换这些参数，然后评估其匹配程度(就像普通函数一样)。但替换过程可能会遇到问题:可能产生毫无意义的构造。语言规则并不认为这种无意义的替换会导致错误，而具有这种问题的候选者则直接忽略。
 
-We call this principle SFINAE (pronounced like sfee-nay), which stands for “substitution failure is not an error.”
+称这个原则为SFINAE(发音类似于sfee-nay)，它代表“替换失败不为过”。
 
-Note that the substitution process described here is distinct from the on-demand instantiation process (see Section 2.2 on page 27): The substitution may be done even for potential instantiations that are not needed (so the compiler can evaluate whether indeed they are unneeded). It is a substitution of the constructs appearing directly in the declaration of the function (but not its body). 
+注意，这里描述的替换过程不同于按需实例化过程(请参阅第27页的2.2节):即使是不需要的潜在实例化，也可以进行替换(因此编译器可以评估是否需要)。它是直接出现在函数声明(但不是函数体)中的构造替换。
 
-Consider the following example:
+考虑下面的例子:
 
 \noindent
 \textit{basics/len1.hpp}
@@ -27,21 +27,21 @@ typename T::size_type len (T const& t)
 }
 \end{lstlisting}
 
-Here, we define two function templates len() taking one generic argument:
+这里，定义了两个函数模板len()，接受一个泛型参数:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}We don’t name this function size() because we want to avoid a naming conflict with the C++ standard library, which defines a standard function template std::size() since C++17.
+\hspace*{0.75cm}没有将该函数命名为size()，避免与C++标准库的命名冲突，C++17引入了一个标准函数模板std::size()。
 \end{tcolorbox}
 
 \begin{enumerate}
 \item 
-The first function template declares the parameter as T(\&)[N], which means that the parameter has to be an array of N elements of type T.
+第一个函数模板将参数声明为T(\&)[N]，从而参数必须是一个由N个T类型元素组成的数组。
 
 \item 
-The second function template declares the parameter simply as T, which places no constraints on the parameter but returns type T::size\_type, which requires that the passed argument type has a corresponding member size\_type.
+第二个函数模板简单地将参数声明为T，没有对参数施加任何约束，而是返回类型T::size\_type，这要求传递的参数类型具有相应的成员size\_type。
 \end{enumerate}
 
-When passing a raw array or string literals, only the function template for raw arrays matches:
+当传递数组或字符串字面量时，只有数组的函数模板匹配:
 
 \begin{lstlisting}[style=styleCXX]
 int a[10];
@@ -49,32 +49,32 @@ std::cout << len(a); // OK: only len() for array matches
 std::cout << len("tmp"); // OK: only len() for array matches
 \end{lstlisting}
 
-According to its signature, the second function template also matches when substituting (respectively) int[10] and char const[4] for T, but those substitutions lead to potential errors in the return type T::size\_type. The second template is therefore ignored for these calls.
+根据签名，第二个函数模板在(分别)用int[10]和char const[4]替换T时也会匹配，这些替换会导致返回类型T::size\_type中出现错误。因此，对于这些调用，第二个模板将直接忽略。
 
-When passing a std::vector<>, only the second function template matches:
+当传递std::vector<>时，只有第二个函数模板匹配:
 
 \begin{lstlisting}[style=styleCXX]
 std::vector<int> v;
 std::cout << len(v); // OK: only len() for a type with size_type matches
 \end{lstlisting}
 
-When passing a raw pointer, neither of the templates match (without a failure). As a result, the compiler will complain that no matching len() function is found:
+当传递指针时，两个模板都不匹配(不会失败)。结果，编译器会抱怨没有找到匹配的len()函数:
 
 \begin{lstlisting}[style=styleCXX]
 int* p;
 std::cout << len(p); // ERROR: no matching len() function found
 \end{lstlisting}
 
-Note that this differs from passing an object of a type having a size\_type member, but no size() member function, as is, for example, the case for std::allocator<>:
+注意，这与传递一个具有size\_type成员但没有size()成员函数的类型对象不同，例如：std::allocator<>:
 
 \begin{lstlisting}[style=styleCXX]
 std::allocator<int> x;
 std::cout << len(x); // ERROR: len() function found, but can’t size()
 \end{lstlisting}
 
-When passing an object of such a type, the compiler finds the second function template as matching function template. So instead of an error that no matching len() function is found, this will result in a compile-time error that calling size() for a std::allocator<int> is invalid. This time, the second function template is not ignored.
+当传递这种类型的对象时，编译器会找到第二个函数模板作为匹配的函数模板。因此，这将导致编译时错误，即对std::allocator<int>的调用size()无效，而不是没有找到匹配的len()函数。这一次，没有忽略第二个函数模板。
 
-Ignoring a candidate when substituting its return type is meaningless can cause the compiler to select another candidate whose parameters are a worse match. For example:
+当替换候选对象的返回类型没有意义时，忽它会导致编译器选择另一个参数匹配更差的候选对象。例如:
 
 \noindent
 \textit{basics/len2.hpp}
@@ -100,15 +100,15 @@ std::size_t len (...)
 }
 \end{lstlisting}
 
-Here, we also provide a general len() function that always matches but has the worst match (match with ellipsis (...) in overload resolution (see Section C.2).
+这里，还提供了一个通用的len()函数，该函数总是匹配，但有最糟糕的匹配(在重载解析中使用省略号匹配(…))(参见C.2节)。
 
-So, for raw arrays and vectors, we have two matches where the specific match is the better match. For pointers, only the fallback matches so that the compiler no longer complains about a missing len() for this call.
+对于数组和vector，这里有两个匹配，其中特定的匹配是更好的匹配。对于指针，只有回退匹配，这样编译器就不会再抱怨这个调用缺少了len()。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In practice, such a fallback function would usually provide a more useful default, throw an exception, or contain a static assertion to result in a useful error message.
+\hspace*{0.75cm}实践中，这样的回退函数通常会提供更有用的默认值、抛出异常或包含静态断言以输出有用的错误消息。
 \end{tcolorbox}
 
-But for the allocator, the second and third function templates match, with the second function template as the better match. So, still, this results in an error that no size() member function can be called:
+但对于分配器，第二个和第三个函数模板是匹配的，第二个函数模板会进行更好的匹配。因此，这仍然会导致无法调用size()成员函数的错误:
 
 \begin{lstlisting}[style=styleCXX]
 int a[10];
@@ -126,15 +126,15 @@ std::cout << len(x); // ERROR: 2nd len() function matches best,
 					 // but can’t call size() for x
 \end{lstlisting}
 
-See Section 15.7 on page 284 for more details about SFINAE and Section 19.4 about some applications of SFINAE.
+关于SFINAE的更多细节请参见15.7节和SFINAE应用的章节19.4。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{SFINAE and Overload Resolution}
+\textbf{SFINAE和重载解析}
 
-Over time, the SFINAE principle has become so important and so prevalent among template designers that the abbreviation has become a verb. We say “we SFINAE out a function” if we mean to apply the SFINAE mechanism to ensure that function templates are ignored for certain constraints by instrumenting the template code to result in invalid code for these constraints. And whenever you read in the C++ standard that a function template “shall not participate in overload resolution unless...” it means that SFINAE is used to “SFINAE out” that function template for certain cases.
+随着时间的推移，SFINAE原则在模板设计者中变得如此重要和普遍，以至于它的缩写已经成为一个动词。若打算应用SFINAE机制来确保函数模板在某些约束条件下进行忽略，可以说“我们SFINAE出了一个函数”，方法是对模板代码进行测试，导致这些约束条件的代码无效。当在C++标准中读到函数模板“不应该参与重载解析，除非…”，这意味着SFINAE用于在“非SFINAE”情形的函数模板上。
 
-For example, class std::thread declares a constructor:
+例如，std::thread类声明了一个构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -148,19 +148,19 @@ public:
 }
 \end{lstlisting}
 
-with the following remark:
+附注如下:
 
-Remarks: This constructor shall not participate in overload resolution if decay\_t<F> is the same type as std::thread.
+备注:如果decay\_t<F>与std::thread类型相同，此构造函数将不参与重载解析。
 
-This means that the template constructor is ignored if it is called with a std::thread as first and only argument. The reason is that otherwise a member template like this sometimes might better match than any predefined copy or move constructor (see Section 6.2 on page 95 and Section 16.2.4 on page 333 for details). By SFINAE’ing out the constructor template when called for a thread, we ensure that the predefined copy or move constructor is always used when a thread gets constructed from another thread.
+这意味着如果使用std::thread作为第一个也是唯一的参数调用模板构造函数，将被忽略。原因是成员模板有时可能比预定义的复制或移动构造函数更匹配(请参阅6.2节和16.2.4节了解详细信息)。当调用一个线程时，通过SFINAE输出构造函数模板，确保当从另一个线程构造一个线程时，预定义的复制或移动构造函数总是使用。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Since the copy constructor for class thread is deleted, this also ensures that copying is forbidden.
+\hspace*{0.75cm}由于删除了类线程的复制构造函数，这也禁止了复制。
 \end{tcolorbox}
 
-Applying this technique on a case-by-case basis can be unwieldy. Fortunately, the standard library provides tools to disable templates more easily. The best-known such feature is std::enable\_if<>, which was introduced in Section 6.3 on page 98. It allows us to disable a template just by replacing a type with a construct containing the condition to disable it.
+应用这种技术可能很麻烦。幸运的是，标准库提供了更容易禁用模板的工具。这种特性是std::enable\_if<>，在6.3节中介绍。允许通过使用包含禁用条件的构造替换类型来禁用模板。
 
-As a consequence, the real declaration of std::thread typically is as follows:
+因此，std::thread的实际声明如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -176,14 +176,14 @@ namespace std {
 }
 \end{lstlisting}
 
-See Section 20.3 for details about how std::enable\_if<> is implemented, using partial specialization and SFINAE.
+请参阅第20.3节了解如何使用部分专门化和SFINAE实现std::enable\_if<>的详细信息。
 
 
-\subsubsubsection{8.4.1\hspace{0.2cm}Expression SFINAE with decltype}
+\subsubsubsection{8.4.1\hspace{0.2cm}表达式SFINAE与decltype}
 
-It’s not always easy to find out and formulate the right expression to SFINAE out function templates for certain conditions.
+对于某些条件，找出并制定正确的表达式来SFINAE出函数模板并不容易。
 
-Suppose, for example, that we want to ensure that the function template len() is ignored for arguments of a type that has a size\_type member but not a size() member function. Without any form of requirements for a size() member function in the function declaration, the function template is selected and its ultimate instantiation then results in an error:
+例如，想确保函数模板len()对于具有size\_type成员，但没有size()成员函数的参数类型就会忽略。函数声明中没有对size()成员函数的任何形式的要求，函数模板选中，最终会导致实例化错误:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -196,23 +196,23 @@ std::allocator<int> x;
 std::cout << len(x) << ’\n’; // ERROR: len() selected, but x has no size()
 \end{lstlisting}
 
-There is a common pattern or idiom to deal with such a situation:
+有一种常见的模式或习语可以用来处理这种情况:
 
 \begin{itemize}
 \item 
-Specify the return type with the trailing return type syntax (use auto at the front and -> before the return type at the end).
+使用尾部返回类型语法指定返回类型(在前面使用auto，在末尾返回类型之前使用\texttt{->})。
 
 \item 
-Define the return type using decltype and the comma operator.
+使用decltype和逗号操作符定义返回类型。
 
 \item 
-Formulate all expressions that must be valid at the beginning of the comma operator (converted to void in case the comma operator is overloaded).
+给出逗号操作符开头有效的表达式(在重载逗号操作符时转换为void)。
 
 \item 
-Define an object of the real return type at the end of the comma operator.
+在逗号操作符的末尾定义一个实际返回类型的对象。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -222,15 +222,15 @@ auto len (T const& t) -> decltype( (void)(t.size()), T::size_type() )
 }
 \end{lstlisting}
 
-Here the return type is given by
+这里的返回类型是
 
 \begin{lstlisting}[style=styleCXX]
 decltype( (void)(t.size)(), T::size_type() )
 \end{lstlisting}
 
-The operand of the decltype construct is a comma-separated list of expressions, so that the last expression T::size\_type() yields a value of the desired return type (which decltype uses to convert into the return type). Before the (last) comma, we have the expressions that must be valid, which in this case is just t.size(). The cast of the expression to void is to avoid the possibility of a user-defined comma operator overloaded for the type of the expressions.
+decltype构造的操作数是一个逗号分隔的表达式列表，因此最后一个表达式T::size\_type()会产生一个期望的返回类型的值(decltype使用该值转换为返回类型)。在(最后一个)逗号之前，必须有有效的表达式，在本例中就是t.size()。将表达式强制转换为void，是为了避免为表达式类型重载用户定义的逗号操作符的可能性。
 
-Note that the argument of decltype is an unevaluated operand, which means that you, for example, can create “dummy objects” without calling constructors, which is discussed in Section 11.2.3.
+注意，decltype的参数是一个未计算的操作数，这意味着，可以创建“虚拟对象”而不调用构造函数，这将在第11.2.3节中讨论。
 
 
 

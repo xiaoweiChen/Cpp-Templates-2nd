@@ -1,9 +1,9 @@
-Partial specialization, SFINAE, and std::enable\_if allow us to enable or disable templates as a whole. C++17 additionally introduces a compile-time if statement that allows is to enable or disable specific statements based on compile-time conditions. With the syntax if constexpr(...), the compiler uses a compile-time expression to decide whether to apply the then part or the else part (if any).
+偏特化化、SFINAE和std::enable\_if允许从整体上启用或禁用模板。C++17引入了编译时if语句，允许根据编译时条件启用或禁用特定语句。使用if constexpr(…)语法，编译器使用编译时表达式来决定是应用then部分，还是else部分(如果有的话)。
 
-As a first example, consider the variadic function template print() introduced in Section 4.1.1 on page 55. It prints its arguments (of arbitrary types) using recursion. Instead of providing a separate function to end the recursion, the constexpr if feature allows us to decide locally whether to continue the recursion:
+作为第一个例子，4.1.1节中介绍的可变参数函数模板print()，使用递归打印它的参数(任意类型)。与提供一个单独的函数来结束递归不同，constexpr if特性决定是否继续递归:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Although the code reads if constexpr, the feature is called constexpr if, because it is the “constexpr” form of if (and for historical reasons).
+\hspace*{0.75cm}虽然代码读取if constexpr，但该特性称为constexpr if，因为它是if的“constexpr”形式(由于历史原因)。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -17,9 +17,9 @@ void print (T const& firstArg, Types const&... args)
 }
 \end{lstlisting}
 
-Here, if print() is called for one argument only, args becomes an empty parameter pack so that sizeof...(args) becomes 0. As a result, the recursive call of print() becomes a discarded statement, for which the code is not instantiated. Thus, a corresponding function is not required to exist and the recursion ends.
+这里，如果只对一个参数调用print()， args将成为空形参包，因此sizeof…(args)将变为0。结果，print()的递归调用变成了一个被丢弃的语句，代码没有被实例化。因此，相应的函数不需要存在，递归结束。
 
-The fact that the code is not instantiated means that only the first translation phase (the definition time) is performed, which checks for correct syntax and names that don’t depend on template parameters (see Section 1.1.3 on page 6). For example:
+代码没有实例化意味着只执行第一个翻译阶段(定义时间)，检查正确的语法和不依赖于模板参数的名称(参见第6页的1.1.3节)。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -39,7 +39,7 @@ void foo(T t)
 }
 \end{lstlisting}
 
-Note that if constexpr can be used in any function, not only in templates. We only need a compiletime expression that yields a Boolean value. For example:
+注意，如果constexpr可以用于任何函数，而不仅在模板中。只需要一个产生布尔值的编译时表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -56,7 +56,7 @@ int main()
 }
 \end{lstlisting}
 
-With this feature, we can, for example, use our isPrime() compile-time function, introduced in Section 8.2, to perform additional code if a given size is not a prime number:
+有了这个特性，若给定的大小不是质数，可以使用在第8.2节中引入的isPrime()编译时函数执行额外的代码:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t SZ>
@@ -69,7 +69,7 @@ void foo (std::array<T,SZ> const& coll)
 }
 \end{lstlisting}
 
-See Section 14.6 for further details.
+详见14.6节。
 
 
 

@@ -1,22 +1,22 @@
 
 
-There are several ways to organize template source code. This section presents the most popular approach: the inclusion model.
+有几种方法可以组织模板源码。本节介绍一种流行的方法:包含模型。
 
-\subsubsubsection{9.1.1\hspace{0.2cm}Linker Errors}
+\subsubsubsection{9.1.1\hspace{0.2cm}连接错误}
 
-Most C and C++ programmers organize their nontemplate code largely as follows:
+大多数C和C++开发者的非模板代码大致组织如下:
 
 \begin{itemize}
 \item
-Classes and other types are entirely placed in header files. Typically, this is a file with a .hpp (or .H, .h, .hh, .hxx) filename extension.
+类和其他类型完全放在头文件中。通常，这个文件名扩展名为.hpp(或.h，.h，.hh，.hxx)的文件。
 
 \item
-For global (noninline) variables and (noninline) functions, only a declaration is put in a header file, and the definition goes into a file compiled as its own translation unit. Such a CPP file typically is a file with a .cpp (or .C, .c, .cc, or .cxx) filename extension.
+对于全局(非内联)变量和(非内联)函数，只有声明放在头文件中，定义放在实现单元编译的文件中。这样的文件通常的展名为.cpp(或.c，.c，.cc，或.cxx)的文件。
 \end{itemize}
 
-This works well: It makes the needed type definition easily available throughout the program and avoids duplicate definition errors on variables and functions from the linker.
+其使所需的类型定义在整个工程中都很容易获得，并避免了链接器中变量和函数的重复定义的错误。
 
-With these conventions in mind, a common error about which beginning template programmers complain is illustrated by the following (erroneous) little program. As usual for “ordinary code,” we declare the template in a header file:
+了解了这些习惯，下面的(错误的)程序展示了开始学习模板开发者所抱怨的常见错误。和“普通代码”一样，在头文件中声明模板:
 
 \noindent
 \textit{basics/myfirst.hpp}
@@ -31,8 +31,7 @@ void printTypeof (T const&);
 #endif // MYFIRST_HPP
 \end{lstlisting}
 
-printTypeof() is the declaration of a simple auxiliary function that prints some type information. The implementation of the function is placed in a CPP file:
-
+printTypeof()是一个简单辅助函数的声明，该函数打印一些类型信息。函数的实现放在一个CPP文件中:
 
 \noindent
 \textit{basics/myfirst.cpp}
@@ -49,13 +48,13 @@ void printTypeof (T const& x)
 }
 \end{lstlisting}
 
-The example uses the typeid operator to print a string that describes the type of the expression passed to it. It returns an lvalue of the static type std::type\_info, which provides a member function name() that shows the types of some expressions. The C++ standard doesn’t actually say that name() must return something meaningful, but on good C++ implementations, you should get a string that gives a good description of the type of the expression passed to typeid.
+该示例使用typeid操作符打印一个字符串，该字符串描述传递表达式的类型。返回一个静态类型std::type\_info的左值，提供了一个成员name()，显示一些表达式的类型。C++标准上并没有规定name()必须返回有意义的东西，但在良好的C++实现中，应该获得传递给typeid的表达式类型的字符串，该字符串对表达式的类型进行了很好的描述。
  
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}With some implementations this string is mangled (encoded with types of arguments and names of surrounding scopes to distinguish it from other names), but a demangler is available to turn it into human-readable text.
+\hspace*{0.75cm}某些实现中，这个字符串是混乱的(使用参数类型和作用域的名称进行编码，以区别于其他名称)，存在解析器可以将其转换为人类可读的文本。
 \end{tcolorbox}
 
-Finally, we use the template in another CPP file, into which our template declaration is \#included:
+最后，在另一个CPP文件中使用模板，模板声明通过\#include包含:
 
 \noindent
 \textit{basics/myfirstmain.cpp}
@@ -69,15 +68,15 @@ int main()
 }
 \end{lstlisting}
 
-A C++ compiler will most likely accept this program without any problems, but the linker will probably report an error, implying that there is no definition of the function printTypeof().
+C++编译器很可能会接受这个程序，但是链接器可能会报出错误：printTypeof()函数没有定义。
 
-The reason for this error is that the definition of the function template printTypeof() has not been instantiated. In order for a template to be instantiated, the compiler must know which definition should be instantiated and for what template arguments it should be instantiated. Unfortunately, in the previous example, these two pieces of information are in files that are compiled separately. Therefore, when our compiler sees the call to printTypeof() but has no definition in sight to instantiate this function for double, it just assumes that such a definition is provided elsewhere and creates a reference (for the linker to resolve) to that definition. On the other hand, when the compiler processes the file myfirst.cpp, it has no indication at that point that it must instantiate the template definition it contains for specific arguments.
+这个错误的原因是函数模板printTypeof()的定义没有实例化。为了实例化模板，编译器必须知道应该实例化哪个定义，以及应该为哪个模板参数实例化它。但在前面的示例中，这两个信息放在单独编译的文件中。因此，当编译器看到对printTypeof()的调用，但没有看到为double实例化这个函数的定义时，只能假设在其他地方提供了这样的定义，并创建了对该定义的引用(供链接器解析)。另一方面，当编译器处理myfirst.cpp文件时，没有指明为特定参数实例化的模板定义。
 
-\subsubsubsection{9.1.2\hspace{0.2cm}Templates in Header Files}
+\subsubsubsection{9.1.2\hspace{0.2cm}头文件中的模板}
 
-The common solution to the previous problem is to use the same approach that we would take with macros or with inline functions: We include the definitions of a template in the header file that declares that template.
+对于这个问题，常见的解决方案是使用与宏或内联函数相同的方法:在声明模板的头文件中包含模板的定义。
 
-That is, instead of providing a file myfirst.cpp, we rewrite myfirst.hpp so that it contains all template declarations and template definitions:
+也就是，不提供文件myfirst.cpp，而是重写myfirst.hpp，使其包含所有模板声明和模板定义:
 
 \noindent
 \textit{basics/myfirst2.hpp}
@@ -102,17 +101,17 @@ void printTypeof (T const& x)
 #endif // MYFIRST_HPP
 \end{lstlisting}
 
-This way of organizing templates is called the inclusion model. With this in place, you should find that our program now correctly compiles, links, and executes.
+这种组织模板的方法称为“包含模型”。并且，程序现在可以正确地编译、链接和执行。
 
-There are a few observations we can make at this point. The most notable is that this approach has considerably increased the cost of including the header file myfirst.hpp. In this example, the cost is not the result of the size of the template definition itself but the result of the fact that we must also include the headers used by the definition of our template—in this case <iostream> and <typeinfo>. You may find that this amounts to tens of thousands of lines of code because headers like <iostream> contain many template definitions of their own.
+这种方法大大增加了包含头文件myfirst.hpp的成本。在本例中，代价是必须包含模板定义所使用的头文件——本例中是<iostream>和<typeinfo>。这相当于多了数万行代码，因为像<iostream>这样的头文件其中包含许多模板定义。
 
-This is a real problem in practice because it considerably increases the time needed by the compiler to compile significant programs. We will therefore examine some possible ways to approach this problem, including precompiled headers (see Section 9.3) and the use of explicit template instantiation (see Section 14.5).
+这在实践中是一个问题，因为它增加了编译器编译重要程序所需的时间。因此，我们将研究一些方法来解决这个问题，包括预编译头文件(参见9.3节)和使用显式模板实例化(参见14.5节)。
 
-Despite this build-time issue, we do recommend following this inclusion model to organize your templates when possible until a better mechanism becomes available. At the time of writing this book in 2017, such a mechanism is in the works: modules, which is introduced in Section 17.11 on page 366. They are a language mechanism that allows the programmer to more logically organize code in such a way that a compiler can separately compile all declarations and then efficiently and selectively import the processed declarations whenever needed.
+尽管存在构建时问题，但仍然建议尽可能使用“包含模型”的方式来组织模板，除非有更好的机制可用。在写这本书的时候，这样的机制已经有了:模块，在17.11节中会介绍。它们是一种语言机制，允许开发者以某种方式组织代码:编译器可以单独编译所有声明，然后在需要时有效、有选择地导入处理过的声明。
 
-Another (more subtle) observation about the inclusion approach is that noninline function templates are distinct from inline functions and macros in an important way: They are not expanded at the call site. Instead, when they are instantiated, they create a new copy of a function. Because this is an automatic process, a compiler could end up creating two copies in two different files, and some linkers could issue errors when they find two distinct definitions for the same function. In theory, this should not be a concern of ours: It is a problem for the C++ compilation system to accommodate. In practice, things work well most of the time, and we don’t need to deal with this issue at all. For large projects that create their own library of code, however, problems occasionally show up. A discussion of instantiation schemes in Chapter 14 and a close study of the documentation that came with the C++ translation system (compiler) should help address these problems.
+关于“包含模型”的另一个(更微妙的)结果是，非内联函数模板与内联函数和宏有所不同:它们没有在调用点展开。相反，当实例化时，会创建函数副本。因为这是一个自动过程，所以编译器最终可能会在两个不同的文件中创建两个副本，而一些链接器在发现同一个函数的两个不同定义时可能会发出错误。理论上，这不是我们所关心的问题:这是C++编译系统要解决的问题。在实践中，大多数情况下都没问题，根本不需要处理这个问题。然而，对于创建自己的代码库的大型项目，偶尔会出现这种奇怪的问题。在第14章中对实例化方案的讨论和对C++翻译系统(编译器)文档的研究应该有助于解决这些问题。
 
-Finally, we need to point out that what applies to the ordinary function template in our example also applies to member functions and static data members of class templates, as well as to member function templates.
+最后，在示例中适用于普通函数模板的内容，也适用于成员函数和类模板的静态数据成员，以及成员函数模板。
 
 
 

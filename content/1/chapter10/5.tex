@@ -1,5 +1,5 @@
 
-Compare the following class template:
+比较下面的类模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, int N>
@@ -9,7 +9,7 @@ class ArrayInClass {
 };
 \end{lstlisting}
 
-with a similar plain class:
+使用普通类:
 
 \begin{lstlisting}[style=styleCXX]
 class DoubleArrayInClass {
@@ -18,17 +18,17 @@ class DoubleArrayInClass {
 };
 \end{lstlisting}
 
-The latter becomes essentially equivalent to the former if we replace the parameters T and N by double and 10 respectively. In C++, the name of this replacement is denoted as
+如果将参数T和N分别替换为double和10，则后者在本质上等价于前者。C++中，这个替换可表示为
 
 \begin{lstlisting}[style=styleCXX]
 ArrayInClass<double,10>
 \end{lstlisting}
 
-Note how the name of the template is followed by template arguments in angle brackets.
+注意模板的名称后面是如何用尖括号将模板参数括起来的。
 
-Regardless of whether these arguments are themselves dependent on template parameters, the combination of the template name, followed by the arguments in angle brackets, is called a templateid.
+不管这些实参本身是否依赖于模板形参，模板名后跟尖括号中的实参的组合称为templateid。
 
-This name can be used much like a corresponding nontemplate entity would be used. For example:
+可以像使用相应的非模板一样使用这个名称。例如:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -38,29 +38,28 @@ int main()
 }
 \end{lstlisting}
 
-It is essential to distinguish between template parameters and template arguments. In short, you can
-say that “parameters are initialized by arguments.”
+区分模板形参和模板实参很重要。简而言之，“参数由实参初始化”。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In the academic world, arguments are sometimes called actual parameters, whereas parameters are called formal parameters.
+\hspace*{0.75cm}学术界中，参数有时称为实际参数，而声明参数称为形式参数。
 \end{tcolorbox}
 
-Or more precisely:
+或者更准确地说:
 
 \begin{itemize}
 \item 
-Template parameters are those names that are listed after the keyword template in the template declaration or definition (T and N in our example).
+模板参数是那些列在模板声明或定义中的关键字Template之后的参数(示例中是T和N)。
 
 \item 
-Template arguments are the items that are substituted for template parameters (double and 10 in our example). Unlike template parameters, template arguments can be more than just “names.”
+模板实参是替代模板形参的项(在我们的示例中是double和10)。与模板形参不同，模板实参可以不仅仅是“名称”。
 
 \end{itemize}
 
-The substitution of template parameters by template arguments is explicit when indicated with a template-id, but there are various situations when the substitution is implicit (e.g., if template parameters are substituted by their default arguments).
+当使用template-id表示时，模板实参对模板形参是显式替换，但在许多情况下，替换是隐式的(例如，如果模板形参被默认实参替换)。
 
-A fundamental principle is that any template argument must be a quantity or value that can be determined at compile time. As becomes clear later, this requirement translates into dramatic benefits for the run-time costs of template entities. Because template parameters are eventually substituted by compile-time values, they can themselves be used to form compile-time expressions. This was exploited in the ArrayInClass template to size the member array array. The size of an array must be a constant-expression, and the template parameter N qualifies as such.
+基本原则是，模板参数都必须是在编译时确定。这个需求对于模板实体运行时成本有巨大的好处。因为模板形参最终会被编译时值替代，所以其本身可以用来形成编译时表达式。这在ArrayInClass模板中用来调整成员数组的大小。数组的大小必须是一个常量表达式，而模板参数N刚好符合此条件。
 
-We can push this reasoning a little further: Because template parameters are compile-time entities, they can also be used to create valid template arguments. Here is an example:
+可以进一步推进这种方式:因为模板形参是编译时实体，所以也可以用来创建有效的模板形参。下面是一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -70,7 +69,7 @@ class Dozen {
 };
 \end{lstlisting}
 
-Note how in this example the name T is both a template parameter and a template argument. Thus, a mechanism is available to enable the construction of more complex templates from simpler ones. Of course, this is not fundamentally different from the mechanisms that allow us to assemble types and functions.
+在本例中，名称T既是模板形参又是模板实参。因此，可以使用一种机制从更简单的模板构建更复杂的模板。当然，这与组装类型和函数的机制没有本质区别。
 
 
 

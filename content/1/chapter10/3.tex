@@ -1,7 +1,7 @@
 
-So far, the words declaration and definition have been used only a few times in this book. However, these words carry with them a rather precise meaning in standard C++, and that is the meaning that we use.
+目前，“声明”和“定义”这两个词在本书中只出现过几次。然而，这些词在标准C++中有相当精确的含义。
 
-A declaration is a C++ construct that introduces or reintroduces a name into a C++ scope. This introduction always includes a partial classification of that name, but the details are not required to make a valid declaration. For example:
+声明是一种C++构造，在C++作用域中引入或重新引入一个名称。此介绍会包含该名称的部分类别，但进行有效声明时不需要详细信息。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class C; // a declaration of C as a class
@@ -9,9 +9,13 @@ void f(int p); // a declaration of f() as a function and p as a named parameter
 extern int v; // a declaration of v as a variable
 \end{lstlisting}
 
-Note that even though they have a “name,” macro definitions and goto labels are not considered declarations in C++.
+注意，宏定义和goto标签在C++中不是声明。
 
-Declarations become definitions when the details of their structure are made known or, in the case of variables, when storage space must be allocated. For class type definitions, this means a braceenclosed body must be provided. For function definitions, this means a brace-enclosed body must be provided (in the common case), or the function must be designated as = default2 or = delete. For a variable, initialization or the absence of an extern specifier causes a declaration to become a definition. Here are examples that complement the preceding nondefinition declarations:
+当声明的结构已知时，或对于变量，必须分配存储空间时，声明就变成了定义。对于类类型定义，必须提供带括号的主体。对于函数定义，这就必须提供(一般情况下)用大括号括起来的函数体，或者必须将函数指定为=default或=delete。对于变量，初始化或缺少extern说明符会导致声明变成定义。下面是补充上述非定义声明的示例:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}默认函数是由编译器提供默认实现的特殊成员函数，例如：默认复制构造函数。
+\end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
 class C {}; // definition (and declaration) of class C
@@ -26,49 +30,49 @@ int w; // global variable declarations not preceded by
 // extern are also definitions
 \end{lstlisting}
 
-By extension, the declaration of a class template or function template is called a definition if it has a body. Hence,
+通过扩展，类模板或函数模板的声明若有主体，就称为定义。因此,
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 void func (T);
 \end{lstlisting}
 
-is a declaration that is not a definition, whereas
+声明不是定义，
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 class S {};
 \end{lstlisting}
 
-is in fact a definition.
+实际上是一个定义。
 
-\subsubsubsection{10.3.1\hspace{0.2cm}Complete versus Incomplete Types}
+\subsubsubsection{10.3.1\hspace{0.2cm}完整类型与不完整类型}
 
-Types can be complete or incomplete, which is a notion closely related to the distinction between a declaration and a definition. Some language constructs require complete types, whereas others are valid with incomplete types too.
+类型可以完整的或不完整的，这是一个与声明和定义之间的区别密切相关的概念。有些语言构造需要完整的类型，而其他语言构造也可以使用不完整的类型。
 
-Incomplete types are one of the following:
+不完整类型是以下类型之一:
 
 \begin{itemize}
 \item 
-A class type that has been declared but not yet defined.
+已声明但尚未定义的类类型。
 
 \item 
- An array type with an unspecified bound.
+未指定边界的数组类型。
 
 \item 
-An array type with an incomplete element type.
+不完整类型的数组类型。
 
 \item 
-void
+无效类型
 
 \item 
-An enumeration type as long as the underlying type or the enumeration values are not defined.
+枚举类型，基础类型或枚举值未定义。
 
 \item 
-Any type above to which const and/or volatile are applied.
+上面应用const和/或volatile的类型。
 \end{itemize}
 
-All other types are complete. For example:
+其他类型都是完整的。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class C; // C is an incomplete type
@@ -81,7 +85,7 @@ class C { }; // C now is a complete type (and therefore cpand elems
 int arr[10]; // arr now has a complete type
 \end{lstlisting}
 
-See Section 11.5 on page 171 for hints about how to deal with incomplete types in templates.
+有关如何处理模板中不完整类型的提示，请参阅11.5节。
 
 
 

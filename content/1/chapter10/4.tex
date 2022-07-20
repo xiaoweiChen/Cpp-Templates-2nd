@@ -1,20 +1,20 @@
-The C++ language definition places some constraints on the redeclaration of various entities. The totality of these constraints is known as the one-definition rule or ODR. The details of this rule are a little complex and span a large variety of situations. Later chapters illustrate the various resulting facets in each applicable context, and you can find a complete description of the ODR in Appendix A. For now, it suffices to remember the following ODR basics:
+C++语言定义对各种实体的声明施加了一些约束。这些约束的总和称为单一定义规则或ODR。这个规则的细节有点复杂，并且涉及到很多不同的情况。后面的章节将说明在每个适用的上下文中产生的各种情况，可以在附录A中找到ODR的完整描述。现在，记住以下ODR的基础知识就足够了:
 
 \begin{itemize}
 \item 
-Ordinary (i.e., not templates) noninline functions and member functions, as well as (noninline) global variables and static data members should be defined only once across the whole program.
+普通(即，不是模板)非内联函数和成员函数，以及(非内联)全局变量和静态数据成员在整个程序中应该只定义一次。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Global and static variables and data members can be defined as inline since C++17. This removes the requirement that they be defined in exactly one translation unit.
+\hspace*{0.75cm}C++17后，全局变量和静态变量，以及数据成员都可以定义为内联。这样就不需要在同一个翻译单元中定义它们。
 \end{tcolorbox}
 
 \item 
-Class types (including structs and unions), templates (including partial specializations but not full specializations), and inline functions and variables should be defined at most once per translation unit, and all these definitions should be identical.
+类类型(包括结构和联合)、模板(包括偏特化，但不包括全特化)以及内联函数和变量在每个翻译单元中最多定义一次，而且所有这些定义应该是相同的。
 \end{itemize}
 
-A translation unit is what results from preprocessing a source file; that is, it includes the contents named by \#include directives and produced by macro expansions.
+翻译单元是对源文件进行预处理的结果;也就是说，包含了由\#include指令命名并由宏展开生成的内容。
 
-In the remainder of this book, linkable entity refers to any of the following: a function or member function, a global variable or a static data member, including any such things generated from a template, as visible to the linker.
+在本书的其余部分中，可链接实体指的是以下任何一种:一个函数或成员函数，一个全局变量或一个静态数据成员，包括从模板生成的，对链接器可见的东西。
 
 
 

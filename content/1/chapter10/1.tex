@@ -1,66 +1,38 @@
-In C++, structs, classes, and unions are collectively called class types. Without additional qualification, the word “class” in plain text type is meant to include class types introduced with either the keyword class or the keyword struct.
+C++中，结构体、类和联合体统称为类类型。如果没有附加的限定条件，纯文本类型中的单词“class”包含通过关键字class或关键字struct引入的类类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++, the only difference between class and struct is that the default access for class is private, whereas the default access for struct is public. However, we prefer to use class for types that use new C++ features, and we use struct for ordinary C data structure that can be used as “plain old data” (POD).
+\hspace*{0.75cm}C++中，class和struct之间的唯一区别是，class的默认访问权限是private，而struct的默认访问权限是public。然而，对于使用新的C++特性的类型，我们更喜欢使用class，而对于普通的C数据结构，我们使用struct，这些数据结构可以用作“普通数据”(POD)。
 \end{tcolorbox}
 
-Note specifically that “class type” includes unions, but “class” does not.
+注意，“类类型”包括联合，但“类”不包括。
 
-There is some confusion about how a class that is a template is called:
+对于模板类的调用方式有一些混乱:
 
 \begin{itemize}
 \item 
-The term class template states that the class is a template. That is, it is a parameterized description of a family of classes.
+术语“类模板”表示类是一个模板。也就是说，它是一族类的参数化描述。
 
 \item 
-The term template class, on the other hand, has been used
+另一方面，已经使用了术语模板类
 \begin{itemize}
 \item[-]
-as a synonym for class template.
+类模板的同义词。
 
 \item[-]
-to refer to classes generated from templates.
+引用从模板生成的类。
 
 \item[-]
-to refer to classes with a name that is a template-id (the combination of a template name followed by the template arguments specified between < and >).
+使用模板id(模板名称后跟在<和>之间指定的模板参数的组合)来引用类。
 \end{itemize}
 
-The difference between the second and third meanings is somewhat subtle and unimportant for the remainder of the text.
+第二和第三个之间的区别有些微妙，不过这并不重要。
 \end{itemize}
 
-Because of this imprecision, we avoid the term template class in this book.
+由于这种确定性，所以在本书中会避免使用模板类这个术语。
 
-Similarly, we use function template, member template, member function template, and variable template but avoid template function, template member, template member function, and template variable.
+类似地，使用函数模板、成员模板、成员函数模板和变量模板，但不使用模板函数、模板成员、模板成员函数和模板变量。
 
-\begin{lstlisting}[style=styleCXX]
-template<typename T1, typename T2> // primary class template
-class MyClass {
-	...
-};
 
-template<> // explicit specialization
-class MyClass<std::string,float> {
-	...
-};
-\end{lstlisting}
-
-Strictly speaking, this is called an explicit specialization (as opposed to an instantiated or generated specialization).
-
-As described in Section 2.6 on page 33, specializations that still have template parameters are called partial specializations:
-
-\begin{lstlisting}[style=styleCXX]
-template<typename T> // partial specialization
-class MyClass<T,T> {
-	...
-};
-
-template<typename T> // partial specialization
-class MyClass<bool,T> {
-	...
-};
-\end{lstlisting}
-
-When talking about (explicit or partial) specializations, the general template is also called the primary template.
 
 
 

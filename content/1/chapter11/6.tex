@@ -1,30 +1,30 @@
-Let’s list some things to remember when implementing generic libraries (note that some of them might be introduced later in this book):
+让我们列出一些在实现泛型库时需要记住的事情(注意，其中一些可能会在后面会介绍到):
 
 \begin{itemize}
 \item 
-Use forwarding references to forward values in templates (see Section 6.1 on page 91). If the values do not depend on template parameters, use auto\&\& (see Section 11.3 on page 167).
+模板中使用转发引用来转发值(参见第91页6.1节)。如果值不依赖于模板参数，使用auto\&\&(参见11.3节)。
 
 \item 
-When parameters are declared as forwarding references, be prepared that a template parameter has a reference type when passing lvalues (see Section 15.6.2 on page 279).
+当形参声明为转发引用时，模板形参在传递左值时要有引用类型(参见15.6.2节)。
 
 \item 
-Use std::addressof() when you need the address of an object depending on a template parameter to avoid surprises when it binds to a type with overloaded operator\& (Section 11.2.2 on page 166)
+当需要依赖于模板形参的对象地址时，使用std::addressof()，以避免当对象绑定到带有重载操作符\&的类型时出现意外(11.2.2节)
 
 \item 
-For member function templates, ensure that they don’t match better than the predefined copy/move constructor or assignment operator (Section 6.4 on page 99).
+对于成员函数模板，确保不会比预定义的复制/移动构造函数或赋值操作符更好地匹配(6.4节)。
 
 \item 
-Consider using std::decay when template parameters might be string literals and are not passed by value (Section 7.4 on page 116 and Section D.4 on page 731).
+模板形参可能是字符串字面值，且不通过值传递时(7.4节和D.4节)，请考虑使用std::decay。
 
 \item 
-If you have out or inout parameters depending on template parameters, be prepared to deal with the situation that const template arguments may be specified (see, e.g., Section 7.2.2 on page 110).
+如果模板形参有out或inout形参，请准备好处理可能指定const模板实参的情况(参见7.2.2节)。
 
 \item 
-Be prepared to deal with the side effects of template parameters being references (see Section 11.4 on page 167 for details and Section 19.6.1 on page 432 for an example). In particular, you might want to ensure that the return type can’t become a reference (see Section 7.5 on page 117).
+准备好处理模板参数引用的副作用(参见11.4节了解详细信息，19.6.1节为示例)。特别是，可能想要确保返回类型不能成为引用(参见7.5节)。
 
 \item 
-Be prepared to deal with incomplete types to support, for example, recursive data structures (see Section 11.5 on page 171).
+准备好处理不完全类型以支持，例如：递归数据结构(参见11.5节)。
 
 \item 
-Overload for all array types and not just T[SZ] (see Section 5.4 on page 71).
+重载所有数组类型，而不仅仅是T[SZ](参见5.4节)。
 \end{itemize}

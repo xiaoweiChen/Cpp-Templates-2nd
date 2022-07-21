@@ -1,33 +1,32 @@
 
 \begin{itemize}
 \item 
-Templates allow you to pass functions, function pointers, function objects, functors, and lambdas as callables.
+模板允许将函数、函数指针、函数对象、函子和Lambda作为可调用对象传递。
 
 \item 
-When defining classes with an overloaded operator(), declare it as const (unless the call changes its state).
+使用重载operator()定义类时，将其声明为const(除非调用改变了状态)。
 
 \item 
-With std::invoke(), you can implement code that can handle all callables, including member functions.
+使用std::invoke()，可以处理所有可调用对象的代码，包括成员函数。
 
 \item 
-Use decltype(auto) to forward a return value perfectly.
+使用decltype(auto)来完美地转发返回值。
 
 \item 
-Type traits are type functions that check for properties and capabilities of types.
+类型特征是检查类型属性和功能性函数。
 
 \item 
-Use std::addressof() when you need the address of an object in a template.
+当需要模板中对象的地址时，可以使用std::addressof()。
 
 \item 
-Use std::declval() to create values of specific types in unevaluated expressions.
+使用std::declval()在未计算的表达式中创建特定类型的值。
 
 \item 
-Use auto\&\& to perfectly forward objects in generic code if their type does not depend on template
-parameters.
+如果对象的类型不依赖于模板参数，可以使用auto\&\&在泛型代码中完美地转发。
 
 \item 
-Be prepared to deal with the side effects of template parameters being references.
+准备好处理模板参数作为引用的副作用。
 
 \item 
-You can use templates to defer the evaluation of expressions (e.g., to support using incomplete types in class templates).
+可以使用模板来推迟对表达式的求值(例如，支持在类模板中使用不完整类型)。
 \end{itemize}

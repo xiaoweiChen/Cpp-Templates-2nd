@@ -1,4 +1,4 @@
-When implementing templates, sometimes the question comes up whether the code can deal with incomplete types (see Section 10.3.1 on page 154). Consider the following class template:
+实现模板时，有时会出现这样的问题:代码是否能够处理不完整的类型(参见10.3.1节)。来看看下面的类模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -10,7 +10,7 @@ public:
 };
 \end{lstlisting}
 
-So far, this class can be used with incomplete types. This is useful, for example, with classes that refer to elements of their own type:
+这个类可以与不完整类型一起使用。这很有用，例如：当类引用自己类型的元素时:
 
 \begin{lstlisting}[style=styleCXX]
 struct Node
@@ -20,7 +20,7 @@ struct Node
 };
 \end{lstlisting}
 
-However, for example, just by using some traits, you might lose the ability to deal with incomplete types. For example:
+然而，仅通过使用一些特性，就会失去处理不完整类型的能力。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -37,15 +37,15 @@ public:
 };
 \end{lstlisting}
 
-Here, we use the trait std::conditional (see Section D.5 on page 732) to decide whether the return type of the member function foo() is T\&\& or T\&. The decision depends on whether the template parameter type T supports move semantics. 
+这里，使用特征std::conditional(参见D.5节)来决定成员函数foo()的返回类型是T\&\&还是T\&。这取决于模板参数类型T是否支持移动语义。
 
-The problem is that the trait std::is\_move\_constructible requires that its argument is a complete type (and is not void or an array of unknown bound; see Section D.3.2 on page 721). Thus, with this declaration of foo(), the declaration of struct node fails.
+问题是特性std::is\_move\_constructible要求参数是一个完整的类型(不是void或未知边界的数组;参见的D.3.2节)。因此，在foo()的这个声明中，struct Node的声明失败了。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Not all compilers yield an error if std::is\_move\_constructible is not an incomplete type. This is allowed, because for this kind of error, no diagnostics is required. Thus, this is at least a portability problem.
+\hspace*{0.75cm}如果std::is\_move\_constructible是一个完整的类型，并不是所有的编译器都会产生错误。因为对于这种错误，不需要进行诊断。所以，在需要平台移植时需要考虑这个问题。
 \end{tcolorbox}
 
-We can deal with this problem by replacing foo() by a member template so that the evaluation of std::is\_move\_constructible is deferred to the point of instantiation of foo():
+可以将foo()替换为成员模板来解决这个问题，这样std::is\_move\_constructible的计算就会延迟到foo()的实例化点:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -61,7 +61,7 @@ public:
 };
 \end{lstlisting}
 
-Now, the traits depends on the template parameter D (defaulted to T, the value we want anyway) and the compiler has to wait until foo() is called for a concrete type like Node before evaluating the traits (by then Node is a complete type; it was only incomplete while being defined).
+现在，特性依赖于模板形参D(默认为T，我们想要的值)，编译器必须等到foo()调，如Node之前，再评估特性(那时Node是一个完整的类型，只是在定义时不完整)。
 
 
 

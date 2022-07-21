@@ -1,4 +1,4 @@
-As shown in Section 6.1 on page 91, we can use forwarding references and std::forward<> to “perfectly forward” generic parameters:
+如6.1节所示，可以使用转发引用和std::forward<>来“完美转发”泛型参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -8,7 +8,7 @@ void f (T&& t) // t is forwarding reference
 }
 \end{lstlisting}
 
-However, sometimes we have to perfectly forward data in generic code that does not come through a parameter. In that case, we can use auto\&\& to create a variable that can be forwarded. Assume, for example, that we have chained calls to functions get() and set() where the return value of get() should be perfectly forwarded to set():
+然而，有时必须完美地转发不通过参数的泛型代码中的数据。可以使用auto\&\&来创建一个可以转发的变量，假设对函数get()和set()进行了链接调用，其中get()的返回值应该完美地转发给set():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -18,7 +18,7 @@ void foo(T x)
 }
 \end{lstlisting}
 
-Suppose further that we need to update our code to perform some operation on the intermediate value produced by get(). We do this by holding the value in a variable declared with auto\&\&:
+进一步假设需要更新代码，以便对get()产生的中间值执行一些操作。通过将值保存在使用auto\&\&声明的变量中来实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -31,7 +31,7 @@ void foo(T x)
 }
 \end{lstlisting}
 
-This avoids extraneous copies of the intermediate value.
+这样可以避免对中间值的拷贝。
 
 
 

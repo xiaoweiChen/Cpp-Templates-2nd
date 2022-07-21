@@ -1,4 +1,4 @@
-Although it is not common, template type parameters can become reference types. For example:
+虽然模板类型形参不常见，但它可以成为引用类型。例如:
 
 \noindent
 \textit{basics/tmplparamref.cpp}
@@ -21,14 +21,14 @@ int main()
 }
 \end{lstlisting}
 
-Even if a reference variable is passed to tmplParamIsReference(), the template parameter T is deduced to the type of the referenced type (because, for a reference variable v, the expression v has the referenced type; the type of an expression is never a reference). However, we can force the reference case by explicitly specifying the type of T:
+即使引用变量传递给tmplParamIsReference()，模板形参T也会推导为所引用类型的类型(因为，对于引用变量v，表达式v具有所引用的类型;表达式的类型绝不是引用)。但是，可以通过显式指定T的类型来强制使用引用情况:
 
 \begin{lstlisting}[style=styleCXX]
 tmplParamIsReference<int&>(r);
 tmplParamIsReference<int&>(i);
 \end{lstlisting}
 
-Doing this can fundamentally change the behavior of a template, and, as likely as not, a template may not have been designed with this possibility in mind, thereby triggering errors or unexpected behavior. Consider the following example:
+这样做可以从根本上改变模板的行为，而且模板在设计时很可能没有考虑到这种可能性，从而触发错误或意外行为。考虑下面的例子:
 
 \noindent
 \textit{basics/referror1.cpp}
@@ -58,20 +58,20 @@ int main()
 }
 \end{lstlisting}
 
-Here we have a class with a member of template parameter type T, initialized with a nontype template parameter Z that has a zero-initialized default value. Instantiating the class with type int works as expected. However, when trying to instantiate it with a reference, things become tricky:
+这里，有一个具有模板形参类型T成员的类，用非类型模板形参Z初始化，Z具有初始值为零的默认值。用int类型实例化类符合预期。然而，当试图用引用实例化它时，麻烦出现了:
 
 \begin{itemize}
 \item 
-The default initialization no longer works.
+默认初始化不再工作。
 
 \item 
-You can no longer pass just 0 as initializer for an int.
+不能再传递0作为int的初始值。
 
 \item 
-And, perhaps most surprising, the assignment operator is no longer available because classes with nonstatic reference members have deleted default assignment operators.
+因为非静态引用成员的类已经删除了默认的赋值操作符，赋值操作符不再可用。
 \end{itemize}
 
-Also, using reference types for nontype template parameters is tricky and can be dangerous. Consider this example:
+此外，对非类型模板形参使用引用类型很麻烦，可能会很危险。考虑一下这个例子:
 
 \noindent
 \textit{basics/referror2.cpp}
@@ -106,15 +106,15 @@ int main()
 }
 \end{lstlisting}
 
-Here, the attempt to instantiate Arr for elements of a reference type results in an error deep in the code of class std::vector<>, because it can’t be instantiated with references as elements:
+这里，为引用类型的元素实例化Arr的尝试，会导致std::vector<>类代码的错误，因为它不能用引用作为元素实例化:
 
 \begin{lstlisting}[style=styleCXX]
 Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
 \end{lstlisting}
 
-The error often leads to the “error novel” described in Section 9.4 on page 143, where the compiler provides the entire template instantiation history from the initial cause of the instantiation down to the actual template definition in which the error was detected.
+这个错误经常会形成在9.4节中看到的“错误小说”，编译器提供了从初始化原因到检测到错误实际模板定义的整个模板实例化过程。
 
-Perhaps worse is the run-time error resulting from making the size parameter a reference: It allows the recorded size value to change without the container being aware of it (i.e., the size value can become invalid). Thus, operations using the size (like the print() member) are bound to run into undefined behavior (causing the program to crash, or worse):
+更糟糕的可能是由于将size参数作为引用而导致的运行时错误:其允许记录的size值在容器不知道的情况下发生变化(也就是说，size值可能会失效)。因此，使用size的操作(如print()成员)必然会出现未定义的行为(导致程序崩溃，或更糟):
 
 \begin{lstlisting}[style=styleCXX]
 int int size = 10;
@@ -124,22 +124,22 @@ size += 100; // OOPS: modifies SZ in Arr<>
 x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
 \end{lstlisting}
 
-Note that changing the template parameter SZ to be of type int const\& does not address this issue, because size itself is still modifiable.
+注意，将模板形参SZ更改为int const\&类型并不能解决这个问题，因为size本身可以修改。
 
-Arguably, this example is far-fetched. However, in more complex situations, issues like these do occur. Also, in C++17 nontype parameters can be deduced; for example:
+这个例子有些牵强。然而，在更复杂的情况下，这样的问题确实会发生。另外，C++17中可以推导出非类型形参。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, decltype(auto) SZ>
 class Arr;
 \end{lstlisting}
 
-Using decltype(auto) can easily produce reference types and is therefore generally avoided in this context (use auto by default). See Section 15.10.3 on page 302 for details.
+使用decltype(auto)可以很容易地产生引用类型，因此在上下文中最好不要使用(默认使用auto)。详见15.10.3节。
 
-The C++ standard library for this reason sometimes has surprising specifications and constraints. For example:
+出于这个原因，标准库有时会有奇怪的规范和约束。例如:
 
 \begin{itemize}
 \item 
-In order to still have an assignment operator even if the template parameters are instantiated for references, classes std::pair<> and std::tuple<> implement the assignment operator instead of using the default behavior. For example:
+为了在模板形参为引用实例化时仍然具有赋值操作符，std::pair<>和std::tuple<>类实现了赋值操作符，而不是使用默认行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -161,9 +161,9 @@ namespace std {
 \end{lstlisting}
 
 \item 
-Because of the complexity of possible side effects, instantiation of the C++17 standard library class templates std::optional<> and std::variant<> for reference types is ill-formed (at least in C++17).
+由于副作用的复杂性，C++17标准库类模板std::optional<>和std::variant<>的实例化是“病态”的(至少在C++17中是这样)。
 
-To disable references, a simple static assertion is enough:
+要禁用引用，简单的静态断言就足够了:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -177,7 +177,7 @@ class optional
 
 \end{itemize}
 
-Reference types in general are quite unlike other types and are subject to several unique language rules. This impacts, for example, the declaration of call parameters (see Section 7 on page 105) and also the way we define type traits (see Section 19.6.1 on page 432).
+引用类型通常与其他类型不同，并且受几种独特的语言规则的约束。例如，这会影响调用参数的声明(参见第7节)，以及定义类型特征的方式(参见第19.6.1节)。
 
 
 

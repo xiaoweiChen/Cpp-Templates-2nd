@@ -1,30 +1,30 @@
 
-Many libraries include interfaces to which client code passes an entity that must be “called.” Examples include an operation that must be scheduled on another thread, a function that describes how to hash values to store them in a hash table, an object that describes an order in which to sort elements in a collection, and a generic wrapper that provides some default argument values. The standard library is no exception here: It defines many components that take such callable entities.
+许多库包括客户端代码向其传递必须“调用”的接口。示例包括必须在另一个线程上调度的操作、如何将散列值存储在散列表中的函数、对集合中的元素排序的顺序的对象，以及提供默认参数值的通用包装器。标准库在这里也不例外:定义了许多使用此类的组件。
 
-One term used in this context is callback. Traditionally that term has been reserved for entities that are passed as function call arguments (as opposed to, e.g., template arguments), and we maintain this tradition. For example, a sort function may include a callback parameter as “sorting criterion,” which is called to determine whether one element precedes another in the desired sorted order.
+这种情况下使用的术语是回调，这个术语作为函数调用参数传递的实体保留的(与模板参数相反)，我们保持了这个传统。例如，sort函数可以包含一个回调参数作为“排序条件”，调用该参数来确定一个元素是否在所需排序顺序的另一个元素之前。
 
-In C++, there are several types that work well for callbacks because they can both be passed as function call arguments and can be directly called with the syntax f(...):
+C++中，有几种类型可以很好地用于回调，因为它们既可以作为函数调用参数传递，也可以以f(…)方式直接调用:
 
 \begin{itemize}
 \item 
-Pointer-to-function types
+函数指针类型
 
 \item 
-Class types with an overloaded operator() (sometimes called functors), including lambdas
+具有重载operator()(函数操作符，有时称为函子)的类类型，包括Lambda
 
 \item 
-Class types with a conversion function yielding a pointer-to-function or reference-to-function
+使用转换函数生成指向函数的指针或指向函数引用的类类型
 \end{itemize}
 
-Collectively, these types are called function object types, and a value of such a type is a function object.
+这些类型统称为函数对象类型，这种类型的值就是函数对象。
 
-The C++ standard library introduces the slightly broader notion of a callable type, which is either a function object type or a pointer to member. An object of callable type is a callable object, which we refer to as a callable for convenience.
+C++标准库引入了更宽泛的可调用类型概念，可以是函数对象类型或成员指针。可调用类型的对象是可调用对象，方便起见，这里将其称为可调用对象。
 
-Generic code often benefits from being able to accept any kind of callable, and templates make it possible to do so.
+泛型代码通常是能够接受任何类型的可调用代码。
 
-\subsubsubsection{11.1.1\hspace{0.2cm}Supporting Function Objects}
+\subsubsubsection{11.1.1\hspace{0.2cm}函数对象}
 
-Let’s look how the for\_each() algorithm of the standard library is implemented (using our own name “foreach” to avoid name conflicts and for simplicity skipping returning anything):
+来看看标准库的for\_each()算法是如何实现的(使用我们自己的“foreach”以避免名称冲突，并为跳过返回):
 
 \noindent
 \textit{basics/foreach.hpp}
@@ -39,7 +39,7 @@ void foreach (Iter current, Iter end, Callable op)
 }
 \end{lstlisting}
 
-The following program demonstrates the use of this template with various function objects:
+下面的程序演示了该模板与各种函数对象的使用:
 
 \noindent
 \textit{basics/foreach.cpp}
@@ -80,57 +80,57 @@ int main()
 }
 \end{lstlisting}
 
-Let’s look at each case in detail:
+让我们来仔细看看每种情况:
 
 \begin{itemize}
 \item 
-When we pass the name of a function as a function argument, we don’t really pass the function itself but a pointer or reference to it. As with arrays (see Section 7.4 on page 115), function arguments decay to a pointer when passed by value, and in the case of a parameter whose type is a template parameter, a pointer-to-function type will be deduced.
+当将函数名作为函数参数传递时，实际上传递的不是函数本身，而是指向函数的指针或引用。与数组一样(参见7.4节)，函数实参在按值传递时衰变为指针，对于模板形参类型的形参，将推导出指向函数的指针类型。
 
-Just like arrays, functions can be passed by reference without decay. However, function types cannot really be qualified with const. If we were to declare the last parameter of foreach() with type Callable const\&, the const would just be ignored. (Generally speaking, references to functions are rarely used in mainstream C++ code.)
-
-\item 
-Our second call explicitly takes a function pointer by passing the address of a function name. This is equivalent to the first call (where the function name implicitly decayed to a pointer value) but is perhaps a little clearer.
+就像数组一样，函数可以通过引用传递，但函数类型不能用const限定。如果用可调用的const\&类型声明foreach()的最后一个形参，那么const将会忽略。(主流C++编码中很少使用函数引用。)
 
 \item 
-When passing a functor, we pass a class type object as a callable. Calling through a class type usually amounts to invoking its operator(). So the call
+第二个调用通过传递函数名的地址显式接受函数指针。这相当于第一次调用(其中函数名隐式衰变为指针值)，但可能更清晰一些
+
+\item 
+传递函子时，将类类型对象作为可调用对象传递。通过类类型调用通常相当于调用其operator()。因此,调用
 
 \begin{lstlisting}[style=styleCXX]
 op(*current);
 \end{lstlisting}
 
-is usually transformed into
+通常被转化为
 
 \begin{lstlisting}[style=styleCXX]
 op.operator()(*current); // call operator() with parameter *current for op
 \end{lstlisting}
 
-Note that when defining operator(), you should usually define it as a constant member function. Otherwise, subtle error messages can occur when frameworks or libraries expect this call not to change the state of the passed object (see Section 9.4 on page 146 for details).
+注意，定义operator()时，应该将其定义为常量成员函数。否则，当框架或库希望此调用不会改变传递对象的状态时，就会发生微妙的错误消息(详见9.4节)。
 
-It is also possible for a class type object to be implicitly convertible to a pointer or reference to a surrogate call function (discussed in Section C.3.5 on page 694). In such a case, the call
+类类型对象也可以隐式转换为指向代理调用函数的指针或引用(在C.3.5节讨论)。在这种情况下，调用
 
 \begin{lstlisting}[style=styleCXX]
 op(*current);
 \end{lstlisting}
 
-would be transformed into
+会变成
 
 \begin{lstlisting}[style=styleCXX]
 (op.operator F())(*current);
 \end{lstlisting}
 
-where F is the type of the pointer-to-function or reference-to-function that the class type object can be converted to. This is relatively unusual.
+其中F是类类型对象可以转换为的函数指针或函数引用的类型。
 
 \item 
-Lambda expressions produce functors (called closures), and therefore this case is not different from the functor case. Lambdas are, however, a very convenient shorthand notation to introduce functors, and so they appear commonly in C++ code since C++11.
+Lambda表达式产生函子(称为闭包)，因此这种情况与函子情况没有区别。然而，Lambda是引入函子的一种非常方便的速记符号。C++11后，经常出现在C++代码中。
 
-Interestingly, lambdas that start with [] (no captures) produce a conversion operator to a function pointer. However, that is never selected as a surrogate call function because it is always a worse match than the normal operator() of the closure.
+有趣的是，以[]开头的Lambda(没有捕获)产生到函数指针的转换操作符。但是，从来没将其作为代理调用函数，因为闭包的普通operator()会匹配得更好。
 \end{itemize}
 
-\subsubsubsection{11.1.2\hspace{0.2cm}Dealing with Member Functions and Additional}
+\subsubsubsection{11.1.2\hspace{0.2cm}处理成员函数和附加函数}
 
-One possible entity to call was not used in the previous example: member functions. That’s because calling a nonstatic member function normally involves specifying an object to which the call is applied using syntax like object.memfunc(...) or ptr->memfunc(...) and that doesn’t match the usual pattern function-object(...).
+前面的例子中没有使用的实体:成员函数。这是因为调用非静态成员函数通常需要使用object.memfunc(…)或ptr->memfunc(…)这样的语法指定调用的对象，而这与通常的模式function-object(…)不匹配。
 
-Fortunately, since C++17, the C++ standard library provides a utility std::invoke() that conveniently unifies this case with the ordinary function-call syntax cases, thereby enabling calls to any callable object with a single form. The following implementation of our foreach() template uses std::invoke():
+C++17后，标准库提供了一个实用工具std::invoke()，会将这种情况与普通的函数调用语法情况统一起来，从而允许以单一形式调用可调用对象。以下foreach()模板的实现使用了std::invoke():
 
 \noindent
 \textit{basics/foreachinvoke.hpp}
@@ -149,25 +149,25 @@ void foreach (Iter current, Iter end, Callable op, Args const&... args)
 }
 \end{lstlisting}
 
-Here, besides the callable parameter, we also accept an arbitrary number of additional parameters. The foreach() template then calls std::invoke() with the given callable followed by the additional given parameters along with the referenced element. std::invoke() handles this as follows:
+这里，除了可调用的形参外，还接受任意数量的附加形参。然后，foreach()模板使用给定的可调用对象调用std::invoke()，再加上附加的给定参数和所引用的元素。std::invoke()处理如下:
 
 \begin{itemize}
 \item 
-If the callable is a pointer to member, it uses the first additional argument as the this object. All remaining additional parameters are just passed as arguments to the callable.
+如果可调用对象是指向成员的指针，则使用第一个附加参数作为this对象。所有附加参数只是作为参数传递给可调用对象。
 
 \item 
-Otherwise, all additional parameters are just passed as arguments to the callable.
+否则，所有附加参数都只是作为参数传递给可调用对象。
 \end{itemize}
 
-Note that we can’t use perfect forwarding here for the callable or additional parameters: The first call might “steal” their values, leading to unexpected behavior calling op in subsequent iterations.
+注意，我们不能在这里对可调用参数或附加参数使用完美转发:第一次调用可能“窃取”它们的值，导致在后续迭代中调用op时可能会出现意外行为。
 
-With this implementation, we can still compile our original calls to foreach() above. Now, in addition, we can also pass additional arguments to the callable and the callable can be a member function.
+有了这个实现，仍然可以编译上面对foreach()的调用。另外，还可以向可调用对象传递额外的参数，可调用对象也可以是成员函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}std::invoke() also allows a pointer to data member as a callback type. Instead of calling a function, it returns the value of the corresponding data member in the object referred to by the additional argument.
+\hspace*{0.75cm}std::invoke()允许将指向数据成员的指针作为回调类型。它不调用函数，而是返回附加参数引用的对象中相应数据成员的值。
 \end{tcolorbox}
 
-The following client code illustrates this:
+下面的客户端代码说明了这一点:
 
 \noindent
 \textit{basics/foreachinvoke.hpp}
@@ -203,13 +203,13 @@ int main()
 }
 \end{lstlisting}
 
-The first call of foreach() passes its fourth argument (the string literal "- value: ") to the first parameter of the lambda, while the current element in the vector binds to the second parameter of the lambda. The second call passes the member function memfunc() as the third argument to be called for obj passed as the fourth argument.
+foreach()的第一次调用将其第四个参数(字符串字面量"-value:")传递给Lambda的第一个形参，而vector中的当前元素绑定到Lambda的第二个形参。第二次调用传递成员函数memfunc()作为传递obj作为第四个参数的第三个参数。
 
-See Section D.3.1 for type traits that yield whether a callable can be used by std::invoke().
+有关产生std::invoke()是否可以使用可调用对象的类型特征，请参见D.3.1节。
 
-\subsubsubsection{11.1.3\hspace{0.2cm}Wrapping Function Calls}
+\subsubsubsection{11.1.3\hspace{0.2cm}使用包装函数}
 
-A common application of std::invoke() is to wrap single function calls (e.g., to log the calls, measure their duration, or prepare some context such as starting a new thread for them). Now, we can support move semantics by perfect forwarding both the callable and all passed arguments:
+std::invoke()的一个常见应用是封装单个函数调用(例如，记录调用，测量它们的持续时间，或准备一些上下文，例如启动一个新线程)。现在，可以通过完美转发可调用参数和所有传递的参数来支持移动语义:
 
 \noindent
 \textit{basics/invoke.hpp}
@@ -225,16 +225,16 @@ decltype(auto) call(Callable&& op, Args&&... args)
 }
 \end{lstlisting}
 
-The other interesting aspect is how to deal with the return value of a called function to “perfectly forward” it back to the caller. To support returning references (such as a std::ostream\&) you have to use decltype(auto) instead of just auto:
+另一个有趣的方面是如何处理被调用函数的返回值，以便将其“完美地”转发回调用者。为了支持返回引用(比如std::ostream\&)，必须使用decltype(auto)而不是auto:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Callable, typename... Args>
 decltype(auto) call(Callable&& op, Args&&... args)
 \end{lstlisting}
 
-decltype(auto) (available since C++14) is a placeholder type that determines the type of variable, return type, or template argument from the type of the associated expression (initializer, return value, or template argument). See Section 15.10.3 on page 301 for details.
+decltype(auto)(C++14)是一个占位符类型，根据相关表达式的类型(初始化器、返回值或模板参数)确定变量、返回类型或模板参数的类型。详见15.10.3节。
 
-If you want to temporarily store the value returned by std::invoke() in a variable to return it after doing something else (e.g., to deal with the return value or log the end of the call), you also have to declare the temporary variable with decltype(auto):
+如果想将std::invoke()返回的值临时存储在变量中，以便在执行其他操作(例如，处理返回值或记录调用结束)后返回它，还必须使用decltype(auto)声明临时变量:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(auto) ret{std::invoke(std::forward<Callable>(op),
@@ -243,13 +243,13 @@ decltype(auto) ret{std::invoke(std::forward<Callable>(op),
 return ret;
 \end{lstlisting}
 
-Note that declaring ret with auto\&\& is not correct. As a reference, auto\&\& extends the lifetime of the returned value until the end of its scope (see Section 11.3 on page 167) but not beyond the return statement to the caller of the function.
+注意，用auto\&\&声明ret并不正确。作为一个引用，auto\&\&扩展返回值的生命周期直到作用域结束(参见第167页11.3节)，但不超出函数调用者的返回语句。
 
-However, there is also a problem with using decltype(auto): If the callable has return type void, the initialization of ret as decltype(auto) is not allowed, because void is an incomplete type. You have the following options:
+然而，使用decltype(auto)也有一个问题:如果可调用对象的返回类型为void，则不允许将ret初始化为decltype(auto)，因为void是一个不完整的类型。现在，有以下选择:
 
 \begin{itemize}
 \item 
-Declare an object in the line before that statement, whose destructor performs the observable behavior that you want to realize. For example:
+在语句的前一行声明一个对象，它的析构函数执行希望实现的可观察行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
 struct cleanup {
@@ -262,7 +262,7 @@ return std::invoke(std::forward<Callable>(op),
 \end{lstlisting}
 
 \item 
-Implement the void and non-void cases differently:
+以不同的方式实现void和非void的情况:
 
 \noindent
 \textit{basics/invokeret.hpp}
@@ -292,21 +292,19 @@ decltype(auto) call(Callable&& op, Args&&... args)
 }
 \end{lstlisting}
 
-With
-
 \begin{lstlisting}[style=styleCXX]
 if constexpr(std::is_same_v<std::invoke_result_t<Callable, Args...>, void>)
 \end{lstlisting}
 
-we test at compile time whether the return type of calling callable with Args... is void. See Section D.3.1 on page 717 for details about std::invoke\_result<>.
+在编译时测试调用的返回类型Args…是否有void。有关std::invoke\_result<>的详细信息，请参阅D.3.1节。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}std::invoke\_result<> is available since C++17. Since C++11, to get the return type you could call: typename std::result\_of<Callable(Args...)>::type
+\hspace*{0.75cm}C++17起可用std::invoke\_result<>。C++11起，要获得返回类型，可以使用:typename std::result\_of<Callable(Args…)>::type
 \end{tcolorbox}
 
 \end{itemize}
 
-Future C++ versions might hopefully avoid the need for such as special handling of void (see Section 17.7 on page 361).
+未来的C++可能会有希望避免对void的特殊处理(参见17.7节)。
 
 
 

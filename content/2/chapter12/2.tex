@@ -1,33 +1,33 @@
 
-There are three basic kinds of template parameters:
+模板参数有三种基本类型:
 
 \begin{enumerate}
 \item 
-Type parameters (these are by far the most common)
+类型参数(最常见的)
 
 \item 
-Nontype parameters
+非类型参数
 
 \item 
-Template template parameters
+双重模板参数
 \end{enumerate}	
 
-Any of these basic kinds of template parameters can be used as the basis of a template parameter pack (see Section 12.2.4 on page 188).
+这些基本类型的模板参数都可以作为模板参数包的基础(参见12.2.4节)。
 
-Template parameters are declared in the introductory parameterization clause of a template declaration.
+模板形参在模板声明的介绍性参数化子句中进行声明。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}An exception since C++14 are the implicit template type parameters for a generic lambda; see Section 15.10.6 on page 309.
+\hspace*{0.75cm}C++14以来的例外是泛型Lambda的隐式模板类型参数，参见15.10.6节。
 \end{tcolorbox}
 
-Such declarations do not necessarily need to be named:
+这样的声明不一定需要命名:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename, int>
 class X; // X<> is parameterized by a type and an integer
 \end{lstlisting}
 
-A parameter name is, of course, required if the parameter is referred to later in the template. Note also that a template parameter name can be referred to in a subsequent parameter declaration (but not before):
+当然，如果参数在模板中引用，则需要参数名。还要注意，模板形参的名称可以在后续的形参声明中引用(但不能在前面引用):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, // the first parameter is used
@@ -36,17 +36,17 @@ template<typename T, // the first parameter is used
 class Structure;
 \end{lstlisting}
 
-\subsubsubsection{12.2.1\hspace{0.2cm}Type Parameters}
+\subsubsubsection{12.2.1\hspace{0.2cm}类型参数}
 
-Type parameters are introduced with either the keyword typename or the keyword class: The two are entirely equivalent.
+类型参数是通过关键字typename或关键字class引入的:两者等价。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The keyword class does not imply that the substituting argument should be a class type. It could be any accessible type.
+\hspace*{0.75cm}关键字class并不意味着替换参数应该是类类型。还可以是一个可访问的类型。
 \end{tcolorbox}
 
-The keyword must be followed by a simple identifier, and that identifier must be followed by a comma to denote the start of the next parameter declaration, a closing angle bracket (>) to denote the end of the parameterization clause, or an equal sign (=) to denote the beginning of a default template argument.
+关键字后面必须跟着一个简单的标识符，该标识符后面必须跟着一个逗号，表示下一个参数声明的开始，一个结束尖括号(>)表示参数化子句的结束，或者一个等号(=)表示默认模板参数的开始。
 
-Within a template declaration, a type parameter acts much like a type alias (see Section 2.8 on page 38). For example, it is not possible to use an elaborated name of the form class T when T is a template parameter, even if T were to be substituted by a class type:
+模板声明中，类型形参的作用类似于类型别名(参见2.8节)。例如，当T是模板参数时，不能使用参数T的名称:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Allocator>
@@ -57,43 +57,43 @@ class List {
 };
 \end{lstlisting}
 
-\subsubsubsection{12.2.2\hspace{0.2cm}Nontype Parameters}
+\subsubsubsection{12.2.2\hspace{0.2cm}非类型参数}
 
-Nontype template parameters stand for constant values that can be determined at compile or link time.
+非类型模板参数表示可在编译或链接时确定的常量。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Template template parameters do not denote types either; however, they are distinct from nontype parameters. This oddity is historical: Template template parameters were added to the language after type parameters and nontype parameters.
+\hspace*{0.75cm}模板形参也不表示类型，但它们不同于非类型形参。这也是个历史问题:双重模板形参在类型参数和非类型参数之后添加。
 \end{tcolorbox}
 
-The type of such a parameter (in other words, the type of the value for which it stands) must be one of the following:
+这样的参数类型(换句话说，代表的类型)必须是下列之一:
 
 \begin{itemize}
 \item 
-An integer type or an enumeration type
+整数类型或枚举类型
 
 \item 
-A pointer type
+指针类型
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}At the time of this writing, only “pointer to object” and “pointer to function” types are permitted, which excludes types like void*. However, all compilers appear to accept void* also.
+\hspace*{0.75cm}撰写本文时，只允许“指向对象的指针”和“指向函数的指针”类型，这就排除了像void*这样的类型。然而，所有的编译器似乎也能接受void*。
 \end{tcolorbox}
 
 \item 
-A pointer-to-member type
+成员指针类型
 
 \item
-An lvalue reference type (both references to objects and references to functions are acceptable)
+左值引用类型(对对象的引用和对函数的引用都可以)
 
 \item 
 std::nullptr\_t
 
 \item 
-A type containing auto or decltype(auto) (since C++17 only; see Section 15.10.1 on page 296)
+包含auto或decltype(auto)的类型(仅C++17中可用，参见15.10.1节)
 \end{itemize}
 
-All other types are currently excluded (although floating-point types may be added in the future; see Section 17.2 on page 356).
+所有其他类型目前都排除在外(尽管浮点类型可能会在将来添加，参见17.2节)。
 
-Perhaps surprisingly, the declaration of a nontype template parameter can in some cases also start with the keyword typename:
+非类型模板参数的声明，在某些情况下也使用关键字typename开头:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, // a type parameter
@@ -101,16 +101,16 @@ template<typename T, // a type parameter
 class List;
 \end{lstlisting}
 
-or with the keyword class:
+或者使用关键字class:
 
 \begin{lstlisting}[style=styleCXX]
 template<class X*> // a nontype parameter of pointer type
 class Y;
 \end{lstlisting}
 
-The two cases are easily distinguished because the first is followed by a simple identifier and then one of a small set of tokens (’=’ for a default argument, ’,’ to indicate that another template parameter follows, or a closing > to end the template parameter list). Section 5.1 on page 67 and Section 13.3.2 on page 229 explain the need for the keyword typename in the first nontype parameter.
+这两种情况很容易区分，因为第一个后面跟着一个简单的标识符，然后是一段标记('='表示默认实参，''表示后面跟着另一个模板参数，或者用>结束模板参数列表)。5.1节和的13.3.2节解释了在第一个非类型参数中使用typename关键字的必要性。
 
-Function and array types can be specified, but they are  implicitly adjusted to the pointer type to which they decay:
+函数和数组类型可以指定，但会隐式衰变为指针类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<int buf[5]> class Lexer; // buf is really an int*
@@ -120,20 +120,20 @@ template<int fun()> struct FuncWrap; // fun really has pointer to
 template<int (*)()> struct FuncWrap; // OK: this is a redeclaration
 \end{lstlisting}
 
-Nontype template parameters are declared much like variables, but they cannot have nontype specifiers like static, mutable, and so forth. They can have const and volatile qualifiers, but if such a qualifier appears at the outermost level of the parameter type, it is simply ignored:
+非类型模板参数的声明很像变量，但是它们不能有静态、可变等非类型修饰符。它们可以有const和volatile限定符，但是如果这样的限定符出现在参数类型的最外层，就会被忽略:
 
 \begin{lstlisting}[style=styleCXX]
 template<int const length> class Buffer; // const is useless here
 template<int length> class Buffer; // same as previous declaration
 \end{lstlisting}
 
-Finally, nonreference nontype parameters are always prvalues when used in expressions. 
+最后，非引用非类型参数在表达式中使用时始终是prvalue。 
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}See Appendix B for a discussion of value categories such as rvalues and lvalues.
+\hspace*{0.75cm}参见附录B中关于值类别的讨论，比如右值和左值。
 \end{tcolorbox}
 
-Their address cannot be taken, and they cannot be assigned to. A nontype parameter of lvalue reference type, on the other hand, can be used to denote an lvalue:
+地址不能取走，也不能赋予。另一方面，左值引用类型的非类型参数可用于表示左值:
 
 \begin{lstlisting}[style=styleCXX]
 template<int& Counter>
@@ -143,11 +143,11 @@ struct LocalIncrement {
 };
 \end{lstlisting}
 
-Rvalue references are not permitted.
+并且，不允许右值引用。
 
-\subsubsubsection{12.2.3\hspace{0.2cm}Template Template Parameters}
+\subsubsubsection{12.2.3\hspace{0.2cm}双重模板参数}
 
-Template template parameters are placeholders for class or alias templates. They are declared much like class templates, but the keywords struct and union cannot be used:
+双重参数是类模板或别名模板的占位符。声明很像类模板，但关键字struct和union不能使用:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename X> class C> // OK
@@ -160,16 +160,16 @@ template<template<typename X> union C> // ERROR: union not valid here
 void f(C<int>* p);
 \end{lstlisting}
 
-C++17 allows the use of typename instead of class: That change was motivated by the fact that template template parameters can be substituted not only by class templates but also by alias templates (which instantiate to arbitrary types). So, in C++17, our example above can be written instead as
+C++17允许使用typename，而非class。这种改变的原因是:双重模板参数不仅可以使用类模板替换，还可以使用别名模板(别名模板实例化为任意类型)替换。因此，在C++17中，上面的例子也可以写成
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename X> typename C> // OK since C++17
 void f(C<int>* p);
 \end{lstlisting}
 
-In the scope of their declaration, template template parameters are used just like other class or alias templates.
+双重模板参数声明的作用域内，使用方式和其他类或别名模板一样。
 
-The parameters of template template parameters can have default template arguments. These default arguments apply when the corresponding parameters are not specified in uses of the template template parameter:
+模板参数可以有默认值。这些默认值适用于没有指定相应参数的情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename T,
@@ -180,7 +180,7 @@ class Adaptation {
 };
 \end{lstlisting}
 
-T and A are the names of the template parameter of the template template parameter Container. These names be used only in the declaration of other parameters of that template template parameter. The following contrived template illustrates this concept:
+T和A是模板参数Container的模板参数名。其只能在该模板参数的其他参数声明中使用。下面的模板说明了这个概念:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename T, T*> class Buf> // OK
@@ -190,7 +190,7 @@ class Lexer {
 };
 \end{lstlisting}
 
-Usually however, the names of the template parameters of a template template parameter are not needed in the declaration of other template parameters and are therefore often left unnamed altogether. For example, our earlier Adaptation template could be declared as follows:
+然而，通常一个模板参数名在声明其他模板形参时是不需要的，因此可以不命名。例如，之前的Adaptation模板的声明可以这样写:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename,
@@ -201,16 +201,16 @@ class Adaptation {
 };
 \end{lstlisting}
 
-\subsubsubsection{12.2.4\hspace{0.2cm}Template Parameter Packs}
+\subsubsubsection{12.2.4\hspace{0.2cm}模板参数包}
 
-Since C++11, any kind of template parameter can be turned into a template parameter pack by introducing an ellipsis (...) prior to the template parameter name or, if the template parameter is unnamed, where the template parameter name would occur:
+C++11后，任何类型的模板参数都可以通过在模板参数名之前引入省略号(…)来转换为模板参数包，如果模板参数未命名，则需要对模板参数进行命名:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types> // declares a template parameter pack named Types
 class Tuple;
 \end{lstlisting}
 
-A template parameter pack behaves like its underlying template parameter, but with a crucial difference: While a normal template parameter matches exactly one template argument, a template parameter pack can match any number of template arguments. This means that the Tuple class template declared above accepts any number of (possibly distinct) types as template arguments:
+模板参数包的行为与其底层模板参数相似，但有一个关键的区别:普通模板参数只能匹配一个模板参数，而模板参数包可以匹配任意数量的模板参数。所以，上面声明的Tuple类模板接受任意数量(可能是不同的)类型作为模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 using IntTuple = Tuple<int>; // OK: one template argument
@@ -219,7 +219,7 @@ using IntTriple = Tuple<int, int, int>; // OK: three template arguments
 using EmptyTuple = Tuple<>; // OK: zero template arguments
 \end{lstlisting}
 
-Similarly, template parameter packs of nontype and template template parameters can accept any number of nontype or template template arguments, respectively:
+类似地，非类型参数和模板参数包可以分别接受任意数量的非类型参数和模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, unsigned... Dimensions>
@@ -231,9 +231,9 @@ template<typename T, template<typename,typename>... Containers>
 void testContainers(); // OK: declares a template template parameter pack
 \end{lstlisting}
 
-The MultiArray example requires all nontype template arguments to be of the same type unsigned. C++17 introduced the possibility of deduced nontype template arguments, which allows us to work around that restriction to some extent—see Section 15.10.1 on page 298 for details. 
+MultiArray要求所有非类型模板参数具有无符号类型。C++17引入了推导非类型模板参数的可能性，在一定程度上可以绕过这个限制——请参阅15.10.1节了解详细信息。
 
-Primary class templates, variable templates, and alias templates may have at most one template parameter pack and, if present, the template parameter pack must be the last template parameter. Function templates have a weaker restriction: Multiple template parameter packs are permitted, as long as each template parameter subsequent to a template parameter pack either has a default value (see the next section) or can be deduced (see Chapter 15):
+主模板、变量模板和别名模板最多可以有一个模板参数包，如果模板参数包必须是最后一个模板参数包。函数模板有一个较弱的限制:允许多个模板参数包，只要模板参数包后面的每个模板参数要么有一个默认值(参见下一节)，要么可以推导(参见第15章):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types, typename Last>
@@ -249,9 +249,9 @@ auto compose(Tensor<Dims1...>, Tensor<Dims2...>);
 // OK: the tensor dimensions can be deduced
 \end{lstlisting}
 
-The last example is the declaration of a function with a deduced return type—a C++14 feature. See also Section 15.10.1 on page 296.
+最后一个例子使用了返回类型推导——C++14的特性。请参见第15.10.1节。
 
-Declarations of partial specializations of class and variable templates (see Chapter 16) can have multiple parameter packs, unlike their primary template counterparts. That is because partial specialization are selected through a deduction process that is nearly identical to that used for function templates.
+类和变量模板的偏特化声明(参见第16章)可以有多个参数包，与主模板对应的参数包不同。这是因为偏特化是通过推导过程选择的，该推导过程与函数模板的推导过程相同。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename...> Typelist;
@@ -262,14 +262,14 @@ template<typename... Xs, typename... Ys>
 	// the Xs and Ys substitutions
 \end{lstlisting}
 
-Perhaps not surprisingly, a type parameter pack cannot be expanded in its own parameter clause. For example:
+类型参数包不能在自己的参数子句中展开。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts, Ts... vals> struct StaticValues {};
 // ERROR: Ts cannot be expanded in its own parameter list
 \end{lstlisting}
 
-However, nested templates can create similar valid situations:
+然而，嵌套模板可以创建类似，且有效情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts> struct ArgList {
@@ -278,18 +278,18 @@ template<typename... Ts> struct ArgList {
 ArgList<int, char, char>::Vals<3, ’x’, ’y’> tada;
 \end{lstlisting}
 
-A template that contains a template parameter pack is called a variadic template because it accepts a variable number of template arguments. Chapter 4 and Section 12.4 on page 200 describe the use of variadic templates.
+包含模板参数包的模板称为可变参数模板，因为能接受可变数量的模板参数。第4章和第12.4节在描述了可变参数模板的使用。
 
-\subsubsubsection{12.2.5\hspace{0.2cm}Default Template Arguments}
+\subsubsubsection{12.2.5\hspace{0.2cm}默认模板参数}
 
-Any kind of template parameter that is not a template parameter pack can be equipped with a default argument, although it must match the corresponding parameter in kind (e.g., a type parameter cannot have a nontype default argument). A default argument cannot depend on its own parameter, because the name of the parameter is not in scope until after the default argument. However, it may depend on previous parameters:
+非模板参数包中的模板参数都可以配备一个默认参数，必须在类型上与相应的参数匹配(例如，类型参数不能有非类型的默认参数)。默认参数不能依赖于它自己的参数，因为参数名直到默认参数之后才在作用域中。但是，它可能取决于前面的参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Allocator = allocator<T>>
 class List;
 \end{lstlisting}
 
-A template parameter for a class template, variable template, or alias template can have a default template argument only if default arguments were also supplied for the subsequent parameters. (A similar constraint exists for default function call arguments.) The subsequent default values are usually provided in the same template declaration, but they could also have been declared in a previous declaration of that template. The following example makes this clear:
+只有在后续参数也提供了默认参数的情况下，类模板、变量模板或别名模板的模板参数才可以有默认模板参数。(对于默认函数调用参数也存在类似的约束。)随后的默认值通常在同一个模板声明中提供，但它们可以在该模板前面的声明中进行声明。下面的例子说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename T3,
@@ -306,10 +306,10 @@ class Quintuple; // ERROR: T1 cannot have a default argument
 // because T2 doesn’t have a default
 \end{lstlisting}
 
-Default template arguments for template parameters of function templates do not require subsequent template parameters to have a default template argument:
+函数模板的参数，默认模板参数不需要后续模板参数有默认值:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Template arguments for subsequent template parameters can still be determined by template argument deduction; see Chapter 15.
+\hspace*{0.75cm}后续模板参数的模板参数，仍可以通过模板参数推导来确定，参见第15章。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -317,7 +317,7 @@ template<typename R = void, typename T>
 R* addressof(T& value); // OK: if not explicitly specified, R will be void
 \end{lstlisting}
 
-Default template arguments cannot be repeated:
+默认模板参数不能重复:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T = void>
@@ -327,11 +327,11 @@ template<typename T = void>
 class Value; // ERROR: repeated default argument
 \end{lstlisting}
 
-A number of contexts do not permit default template arguments:
+许多上下文不允许默认模板参数:
 
 \begin{itemize}
 \item 
-Partial specializations:
+偏特化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -342,14 +342,14 @@ class C<T*>; // ERROR
 \end{lstlisting}
 
 \item 
-Parameter packs:
+参数包:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts = int> struct X; // ERROR
 \end{lstlisting}
 
 \item 
-The out-of-class definition of a member of a class template:
+类模板成员类外定义：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> struct X
@@ -363,7 +363,7 @@ template<typename T = int> T X<T>::f() { // ERROR
 \end{lstlisting}
 
 \item 
-A friend class template declaration:
+友元类模板声明:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {
@@ -372,7 +372,7 @@ struct S {
 \end{lstlisting}
 
 \item 
-A friend function template declaration unless it is a definition and no declaration of it appears anywhere else in the translation unit:
+友元函数模板声明，除非是一个定义，并且在编译单元的其他地方没有它的声明:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {

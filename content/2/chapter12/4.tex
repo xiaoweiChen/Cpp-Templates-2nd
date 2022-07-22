@@ -1,13 +1,13 @@
 
-Variadic templates, introduced in Section 4.1 on page 55, are templates that contain at least one template parameter pack (see Section 12.2.4 on page 188).
+可变参数模板，已经在4.1节中介绍过了，是包含至少一个模板参数包的模板(参见12.2.4节)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The term variadic is borrowed from C’s variadic functions, which accept a variable number of function arguments. Variadic templates also borrowed from C the use of the ellipsis to denote zero or more arguments and are intended as a type-safe replacement for C’s variadic functions for some applications.
+\hspace*{0.75cm}可变参数这个术语是从C的可变参数函数借鉴而来的，可变参数函数接受任意数量的函数参数。可变参数模板还借鉴了C语言中使用省略号来表示零个或多个参数，并在某些应用程序中作为C语言可变参数函数的类型安全替代。
 \end{tcolorbox}
 
-Variadic templates are useful when a template’s behavior can be generalized to any number of arguments. The Tuple class template introduced in Section 12.2.4 on page 188 is one such type, because a tuple can have any number of elements, all of which are treated the same way. We can also imagine a simple print() function that takes any number of arguments and displays each of them in sequence.
+当模板的行为可泛化为任意数量的参数时，可变参数模板是有用的。在的12.2.4节中介绍的Tuple类模板就是这样一种类型，因为Tuple可以有任意个元素，所有元素的处理方式都是相同的。还可以看下print()函数，其也能接受任意数量的参数，并按顺序显示每个参数。
 
-When template arguments are determined for a variadic template, each template parameter pack in the variadic template will match a sequence of zero or more template arguments. We refer to this sequence of template arguments as an argument pack. The following example illustrates how the template parameter pack Types matches to different argument packs depending on the template arguments provided for Tuple:
+当为可变参数模板确定模板参数时，可变参数模板中的每个模板参数包将匹配一个由零个或多个模板参数组成的序列。我们将这个模板参数序列称为参数包。下面的例子说明了模板形参包Types，如何为Tuple提供的模板实参匹配不同的实参包:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -20,9 +20,9 @@ int a1[Tuple<int>::length]; // array of one integer
 int a3[Tuple<short, int, long>::length]; // array of three integers
 \end{lstlisting}
 
-\subsubsubsection{12.4.1\hspace{0.2cm}Pack Expansions}
+\subsubsubsection{12.4.1\hspace{0.2cm}包扩展}
 
-The sizeof... expression is an example of a pack expansion. A pack expansion is a construct that expands an argument pack into separate arguments. While sizeof... performs this expansion just to count the number of separate arguments, other forms of parameter packs—those that occur where C++ expects a list—can expand to multiple elements within that list. Such pack expansions are identified by an ellipsis (...) to the right of an element in the list. Here is a simple example where we create a new class template MyTuple that derives from Tuple, passing along its arguments:
+sizeof…表达式是包扩展的一个例子，是将参数包展开为独立参数的构造。虽然sizeof…执行这种扩展只是为了计算单独参数的数量，其他形式的形参包(即C++所期望的列表形式)可以扩展为该列表中的多个元素。此类包扩展由列表中元素右侧的省略号(…)标识。下面是一个简单的例子，我们创建了一个新的类模板MyTuple，派生自Tuple，并传递相应参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -33,12 +33,12 @@ class MyTuple : public Tuple<Types...> {
 MyTuple<int, float> t2; // inherits from Tuple<int, float>
 \end{lstlisting}
 
-The template argument Types... is a pack expansion that produces a sequence of template arguments, one for each argument within the argument pack substituted for Types. As illustrated in the example, the instantiation of type MyTuple<int, float> substitutes the argument pack int, float for the template type parameter pack Types. When this occurs in the pack expansion Types..., we get one template argument for int and one for float, so MyTuple<int, float> inherits from Tuple<int, float>.
+模板参数Types…是一个包扩展，它生成一个模板参数序列，在替换为Types的参数包中，每个参数对应一个参数。如示例所示，类型MyTuple<int，float>的实例化实参包int, float替换模板类型形参包Types。当这发生在包扩展Types…时，我们得到一个用于int的模板参数和一个用于float的模板参数，因此MyTuple<int, floa>继承自Tuple<int, float>。
 
-An intuitive way to understand pack expansions is to think of them in terms of a syntactic expansion, where template parameter packs are replaced with exactly the right number of (non-pack) template parameters and pack expansions are written out as separate arguments, once for each of the non-pack template parameters. For example, here is how MyTuple would look if it were expanded for two parameters:
+理解包扩展的一种直观方法是将其视为语法扩展，其中模板形参包替换为相应数量的(非包)模板形参，而包扩展则作为单独的参数列出。例如，如果将MyTuple展开为两个参数，会是这样的:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This syntactic understanding of pack expansions is a useful tool, but it breaks down when the template parameter packs have length zero. Section 12.4.5 on page 207 provides more details about the interpretation of zero-length pack expansions.
+\hspace*{0.75cm}这种对包扩展的语法理解是一个有用的工具，但是当模板参数包的长度为0时，就失效了。12.4.5节提供了关于零长度包扩展解释的更多细节。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -48,7 +48,7 @@ class MyTuple : public Tuple<T1, T2> {
 };
 \end{lstlisting}
 
-and for three parameters:
+对于三个参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename T3>
@@ -57,9 +57,9 @@ class MyTuple : public Tuple<T1, T2, T3> {
 };
 \end{lstlisting}
 
-However, note that you can’t access the individual elements of a parameter pack directly by name, because names such as T1, T2, and so on, are not defined in a variadic template. If you need the types, the only thing you can do is to pass them (recursively) to another class or function.
+但请注意，不能直接通过名称访问参数包中的单个元素，因为诸如T1、T2等名称在可变参数模板中没有定义。如果需要这些类型，惟一能做的就是将它们(递归地)传递给另一个类或函数。
 
-Each pack expansion has a pattern, which is the type or expression that will be repeated for each argument in the argument pack and typically comes before the ellipsis that denotes the pack expansion. Our prior examples have had only trivial patterns—the name of the parameter pack—but patterns can be arbitrarily complex. For example, we can define a new type PtrTuple that derives from a Tuple of pointers to its argument types:
+每个包展开都有一个模式，该模式将针对参数包中的每个参数重复的类型或表达式，通常出现在表示包展开的省略号之前。之前的例子只有一些简单的模式(参数包的名称)，但模式的复杂度可以调整。例如，可以定义一个新类型PtrTuple，派生自指向其参数类型的指针元组:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -70,7 +70,7 @@ class PtrTuple : public Tuple<Types*...> {
 PtrTuple<int, float> t3; // Inherits from Tuple<int*, float*>
 \end{lstlisting}
 
-The pattern for the pack expansion Types*... in the example above is Types*. Repeated substitution into this pattern produces a sequence of template type arguments, all of which are pointers to the types in the argument pack substituted for Types. Under the syntactic interpretation of pack expansions, here is how PtrTuple would look if it were expanded for three parameters:
+包扩展的模式Types*…在上面的例子中是类型*。对这个模式的重复替换会产生一系列模板类型参数，所有这些参数都是相应类型的指针。在包扩展的语法解释下，如果使用三个参数扩展PtrTuple，会是这样的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename T3>
@@ -79,53 +79,53 @@ class PtrTuple : public Tuple<T1*, T2*, T3*> {
 };
 \end{lstlisting}
 
-\subsubsubsection{12.4.2\hspace{0.2cm}Where Can Pack Expansions Occur?}
+\subsubsubsection{12.4.2\hspace{0.2cm}哪里进行包扩展?}
 
-Our examples thus far have focused on the use of pack expansions to produce a sequence of template arguments. In fact, pack expansions can be used essentially anywhere in the language where the grammar provides a comma-separated list, including:
+到目前为止，示例都集中在使用包扩展来生成一系列模板参数。事实上，包扩展可以在语法中提供逗号分隔列表的地方使用，包括:
 
 \begin{itemize}
 \item 
-In the list of base classes.
+基类列表中。
 
 \item 
-In the list of base class initializers in a constructor.
+构造函数中的基类初始化式列表中。
 
 \item 
-In a list of call arguments (the pattern is the argument expression).
+调用参数列表中(模式是参数表达式)。
 
 \item 
-In a list of initializers (e.g., in a braced initializer list).
+初始化式列表中(例如，带括号的初始化式列表中)。
 
 \item 
-In the template parameter list of a class, function, or alias template.
+类、函数或别名模板的模板参数列表中。
 
 \item 
-In the list of exceptions that can be thrown by a function (deprecated in C++11 and C++14, and disallowed in C++17).
+函数可能抛出的异常列表中(在C++11和C++14中弃用，在C++17中不允许使用)。
 
 \item 
-Within an attribute, if the attribute itself supports pack expansions (although no such attribute is defined by the C++ standard).
+属性中，如果属性本身支持包扩展(尽管C++没有定义这样的属性)。
 
 \item 
-When specifying the alignment of a declaration.
+指定声明的对齐时。
 
 \item 
-When specifying the capture list of a lambda.
+指定Lambda的捕获列表时。
 
 \item 
-In the parameter list of a function type.
+函数类型的参数列表中。
 
 \item 
-In using declarations (since C++17; see Section 4.4.5 on page 65).
+使用声明(自C++17;参见4.4.5节)。
 \end{itemize}
 
-We’ve already mentioned sizeof... as a pack-expansion mechanism that does not actually produce a list. C++17 also adds fold expressions, which are another mechanism that does not produce a comma-separated list (see Section 12.4.6 on page 207).
+已经提到了sizeof…作为一种包扩展机制，实际上不会产生列表。C++17还添加了折叠表达式，这是另一种不会产生逗号分隔列表的机制(参见第12.4.6节)。
 
-Some of these pack-expansion contexts are included merely for the sake of completeness, so we will focus our attention on only those pack-expansion contexts that tend to be useful in practice. Since pack expansions in all contexts follow the same principles and syntax, you should be able to extrapolate from the examples given here should you find a need for the more esoteric pack-expansion contexts.
+其中一些包扩展上下文仅仅是为了完整性而包含的，因此可以只关注那些在实践中可能有用的包扩展上下文。由于所有上下文中的包扩展都应遵循相同的原则和语法，因此若发现需要更深的包扩展上下文，应该能够从这里给出的示例进行推断。
 
-A pack expansion in a list of base classes expands to some number of direct base classes. Such expansions can be useful to aggregate externally supplied data and functionality via mixins, which are classes intended to be “mixed into” a class hierarchy to provide new behaviors. For example, the following Point class uses pack expansions in several different contexts to allow arbitrary mixins:
+基类列表中的包扩展扩展到一些直接基类。这样的扩展可以通过mixin聚合外部提供的数据和功能，mixin是打算“混合”到一个类层次结构中的类，以提供新的行为。例如，下面的Point类在几种不同的上下文中使用了包扩展来允许任意的mixin:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Mixins are discussed in further detail in Section 21.3 on page 508.
+\hspace*{0.75cm}mixin将在21.3节中详细讨论。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -146,11 +146,11 @@ struct Label { std::string name; };
 Point<Color, Label> p; // inherits from both Color and Label
 \end{lstlisting}
 
-The Point class uses a pack expansion to take each of the supplied mixins and expand it into a public base class. The default constructor of Point then applies a pack expansion in the base initializer list to value-initialize each of the base classes introduced via the mixin mechanism.
+Point类使用包扩展来获取每个mixin，并将其扩展为一个公共基类。然后，Point的默认构造函数在基类初始化器列表中使用包展开，通过mixin机制的引入，对每个基类进行值初始化。
 
-The member function template visitMixins is the most interesting in that it uses the results of a pack expansion as arguments to a call. By casting *this to each of the mixin types, the pack expansion produces call arguments that refer to each of the base classes corresponding to the mixins. Actually writing a visitor for use with visitMixins, which can make use of such an arbitrary number of function call arguments, is covered in Section 12.4.3 on page 204.
+成员函数模板visitMixins是最有趣的，因为它使用包展开的结果作为调用的参数。通过将*this强制转换为每个mixin类型，包扩展产生的调用参数指向与mixin对应的每个基类。实际上，可以编写访问器来使用visitMixins，可以使用任意数量的函数调用参数，这在12.4.3节中有介绍。
 
-A pack expansion can also be used within a template parameter list to create a nontype or template parameter pack:
+包扩展也可以在模板形参列表中使用，以创建非类型参数包或模板参数包:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts>
@@ -164,15 +164,15 @@ int i;
 Values<char, int, int*>::Holder<’a’, 17, &i> valueHolder;
 \end{lstlisting}
 
-Note that once the type arguments for Values<...> have been specified, the nontype argument list for Values<...>::Holder has a fixed length; the parameter pack Vs is thus not a variable-length parameter pack.
+注意，当Values<…>已指定，则Values<…>::Holder非类型参数列表长度也就固定了;因此参数包Vs不是一个变长参数包。
 
-Values is a nontype template parameter pack for which each of the actual template arguments can have a different type, as specified by the types provided for the template type parameter pack Types. Note that the ellipsis in the declaration of Values plays a dual role, both declaring the template parameter as a template parameter pack and declaring the type of that template parameter pack as a pack expansion. While such template parameter packs are rare in practice, the same principle applies in a much more general context: function parameters.
+Values是一个非类型模板参数包，其每个实际模板实参都可以具有不同的类型，由模板类型参数包types提供的类型指定。注意，Values声明中的省略号起着双重作用，既将模板参数声明为模板参数包，又将模板参数包的类型声明为包展开。虽然这样的模板参数包在实践中很罕见，但同样的原则适用于更一般的上下文:函数参数。
 
-\subsubsubsection{12.4.3\hspace{0.2cm}Function Parameter Packs}
+\subsubsubsection{12.4.3\hspace{0.2cm}函数参数包}
 
-A function parameter pack is a function parameter that matches zero or more function call arguments. Like a template parameter pack, a function parameter pack is introduced using an ellipsis (...) prior to (or in the place of) the function parameter name and, also like a template parameter pack, a function parameter pack must be expanded by a pack expansion whenever it is used. Template parameter packs and function parameter packs together are referred to as parameter packs.
+函数形参包是匹配零个或多个函数调用模板参数。与模板参数包一样，函数形参包使用省略号(…)在函数参数名称之前(或位置)引入，与模板参数包一样，函数形参包在使用时必须使用包展开符来展开。模板参数包和函数参数包可以一起称为参数包。
 
-Unlike template parameter packs, function parameter packs are always pack expansions, so their declared types must include at least one parameter pack. In the following example, we introduce a new Point constructor that copy-initializes each of the mixins from supplied constructor arguments:
+与模板参数包不同，函数参数包始终是包扩展，因此声明的类型必须至少包含一个参数包。下面的例子中，引入了一个新的Point构造函数，提供的构造函数参数会复制初始化每个mixin:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Mixins>
@@ -190,7 +190,7 @@ struct Label { std::string name; };
 Point<Color, Label> p({0x7F, 0, 0x7F}, {"center"});
 \end{lstlisting}
 
-A function parameter pack for a function template may depend on template parameter packs declared in that template, which allows the function template to accept an arbitrary number of call arguments without losing type information:
+函数模板的函数参数包可能依赖于该模板中声明的模板参数包，这允许函数模板接受任意数量的调用实参而不丢失类型信息:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -203,22 +203,22 @@ int main()
 } // int, char>
 \end{lstlisting}
 
-When calling the function template print() with some number of arguments, the types of the arguments will be placed in the argument pack to be substituted for the template type parameter pack Types, while the actual argument values will be placed into an argument pack to be substituted for the function parameter pack values. The process by which the arguments are determined from the call is described in detail in Chapter 15. For now, it suffices to note that the ith type in Types is the type of the i th value in Values and that both of these parameter packs are available within the body of the function template print().
+当调用带有参数的函数模板print()时，参数的类型将放在参数包中以替代模板类型的形参包Types，而实际参数值将放在参数包中以替代函数形参包的值。从调用中确定参数的过程将在第15章详细描述。现在，需要注意的是，Types中的第i个类型是Values中的第i个值的类型，并且这两个参数包都可以在函数模板print()中使用。
 
-The actual implementation of print() uses recursive template instantiation, a template metaprogramming technique described in Section 8.1 on page 123 and Chapter 23.
+print()的实际实现使用递归模板实例化，这种模板元编程技术在第8.1节和第23章中有描述。
 
-There is a syntactic ambiguity between an unnamed function parameter pack appearing at the end of a parameter list and a C-style “vararg” parameter. For example:
+参数列表末尾的未命名函数参数包，和C风格的“vararg”参数之间存在语法上的歧义。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void c_style(int, T...);
 template<typename... T> void pack(int, T...);
 \end{lstlisting}
 
-In the first case, the “T...” is treated as “T, ...”: an unnamed parameter of type T followed by a C-style vararg parameter. In the second case, the “T...” construct is treated as a function parameter pack because T is a valid expansion pattern. The disambiguation can be forced by adding a comma before the ellipsis (which ensures the ellipsis is treated as a C-style “vararg” parameter) or by following the ... by an identifier, which makes it a named function parameter pack. Note that in generic lambdas, a trailing ... will be treated as denoting a parameter pack if the type that immediately precedes it (with no intervening comma) contains auto.
+第一种情况下，“T…”被当作“T，…”:未命名的T类型参数，后面跟着一个C风格的可变参数。第二种情况，“T…”视为一个函数参数包，因为T是一个有效的扩展模式。若要消除歧义可以通过在省略号之前添加逗号(这可以确保省略号视为C风格的“vararg”参数)或在…后添加标识符，这可使它成为一个命名函数参数包。注意，在泛型Lambda中，末尾的…如果紧接在它前面的类型(没有中间的逗号)包含auto，则将视为参数包。
 
-\subsubsubsection{12.4.4\hspace{0.2cm}Multiple and Nested Pack Expansions}
+\subsubsubsection{12.4.4\hspace{0.2cm}多重和嵌套包扩展}
 
-The pattern of a pack expansion can be arbitrarily complex and may include multiple, distinct parameter packs. When instantiating a pack expansion containing multiple parameter packs, all of the parameter packs must have the same length. The resulting sequence of types or values will be formed element-wise by substituting the first argument of each parameter pack into the pattern, followed by the second argument of each parameter pack, and so on. For example, the following function copies all of its arguments before forwarding them on to the function object f:
+包扩展的模式的复杂可变，可能包括多个不同的参数包。当实例化包含多个参数包的包展开时，所有参数包必须具有相同的长度。通过将每个形参包的第一个参数代入模式，然后代入每个参数包的第二个参数，依此类推，形成类型或值的结果序列。例如，下面的函数在将所有参数转发给函数对象f前复制它们:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename F, typename... Types>
@@ -227,7 +227,7 @@ void forwardCopy(F f, Types const&... values) {
 }
 \end{lstlisting}
 
-The call argument pack expansion names two parameters packs, Types and values. When instantiating this template, the element-wise expansion of the Types and values parameter packs produces a series of object constructions, which builds a copy of the ith value in values by casting it to the ith type in Types. Under the syntactic interpretation of pack expansions, a three-argument forwardCopy would look like this:
+调用参数包扩展命名两个参数包，类型和值。实例化此模板时，Types和values参数包的元素级扩展将生成一系列对象构造，这些构造通过在Types中将第i个值转换为第i个类型来构建值中的第i个值的副本。在包扩展的语法解释下，forwardCopy的三个参数如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename F, typename T1, typename T2, typename T3>
@@ -236,7 +236,7 @@ void forwardCopy(F f, T1 const& v1, T2 const& v2, T3 const& v3) {
 }
 \end{lstlisting}
 
-Pack expansions themselves may also be nested. In such cases, each occurrence of a parameter pack is “expanded” by its nearest enclosing pack expansion (and only that pack expansion). The following examples illustrates a nested pack expansion involving three different parameter packs:
+包扩展也可以嵌套，参数包的每次出现都由其最近的封装包展开来“展开”(且仅是该包展开)。下面的例子演示了包含三个不同参数包的嵌套包扩展:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... OuterTypes>
@@ -248,7 +248,7 @@ class Nested {
 };
 \end{lstlisting}
 
-In the call to g(), the pack expansion with pattern InnerTypes(innerValues) is the innermost pack expansion, which expands both InnerTypes and innerValues and produces a sequence of function call arguments for the initialization of an object denoted by OuterTypes. The outer pack expansion’s pattern includes the inner pack expansion, producing a set of call arguments for the function g(), created from the initialization of each of the types in OuterTypes from the sequence of function call arguments produced by the inner expansion. Under the syntactic interpretation of this pack expansion, where OuterTypes has two arguments and both InnerTypes and innerValues have three arguments, the nesting becomes more apparent:
+对g()的调用中，带有模式InnerTypes(innerValues)的包展开是最内层的包展开，同时展开InnerTypes和innerValues，并生成函数调用参数序列，用于初始化由OuterTypes表示的对象。外部包展开的模式包括内部包展开，为函数g()生成一组调用参数，这些参数是根据内部展开生成的函数调用参数序列初始化OuterTypes中的每个类型而创建的。在这个包扩展的语法解释下，OuterTypes有两个参数，InnerTypes和innerValues都有三个参数，嵌套变得更加明显:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename O1, typename O2>
@@ -262,12 +262,11 @@ class Nested {
 };
 \end{lstlisting}
 
-Multiple and nested pack expansions are a powerful tool (e.g., see Section 26.2 on page 608).
+多重和嵌套的包扩展是一个强大的工具(例如，参见第26.2节)。
 
+\subsubsubsection{12.4.5\hspace{0.2cm}扩展空参数包}
 
-\subsubsubsection{12.4.5\hspace{0.2cm}Zero-Length Pack Expansions}
-
-The syntactic interpretation of pack expansions can be a useful tool for understanding how an instantiation of a variadic template will behave with different numbers of arguments. However, the syntactic interpretation often fails in the presence of zero-length argument packs. To illustrate this, consider the Point class template from Section 12.4.2 on page 202, syntactically substituted with zero arguments:
+对于理解可变参数模板的实例化如何使用不同数量的参数，包扩展的语法解释是一个有用的工具。然而，在零长度参数包的情况下，语法解释通常会失败。为了说明这一点，考虑12.4.2节中的Point类模板，在语法上用零参数替换:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -276,9 +275,9 @@ class Point : {
 };
 \end{lstlisting}
 
-The code as written above is ill-formed, since the template  parameter list is now empty and the empty base class and base class initializer lists each have a stray colon character.
+上面的代码是错误的，因为模板参数列表是空的，而空的基类和基类初始化器列表都有一个冒号。
 
-Pack expansions are actually semantic constructs, and the substitution of an argument pack of any size does not affect how the pack expansion (or its enclosing variadic template) is parsed. Rather, when a pack expansion expands to an empty list, the program behaves (semantically) as if the list were not present. The instantiation Point<> ends up having no base classes, and its default constructor has no base class initializers but is otherwise well-formed. This semantic rules holds even when the syntactic interpretation of zero-length pack expansion would be well-defined (but different) code. For example:
+包扩展实际上是语义结构，替换参数包并不影响如何解析包扩展(或其外围的可变参数模板)。相反，当包展开为空列表时，行为(语义上)就好像列表不存在一样。实例化点<>没有基类，默认构造函数没有基类初始化器，但在其他方面没有问题。即使零长度包扩展的语法解释是定义良好(但不同)的，这种语义规则仍然有效。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
@@ -287,17 +286,17 @@ void g(Types... values) {
 }
 \end{lstlisting}
 
-The variadic function template g() creates a value v that is direct-initialized from the sequence of values it is given. If that sequence of values is empty, the declaration of v looks, syntactically, like a function declaration T v(). However, since substitution into a pack expansion is semantic and cannot affect the kind of entity produced by parsing, v is initialized with zero arguments, that is, value-initialization.
+可变参数函数模板g()根据给定的值序列创建一个直接初始化的值v。如果这个值序列为空，v的声明在语法上看起来就像函数声明T v()。但是，由于是在语义上对包扩展进行替换，所以不会影响解析产生的实体的类型，所以用零参数初始化v，即值初始化。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}There is a similar restriction on members of class templates and nested classes within class templates: If a member is declared with a type that does not appear to be a function type, but after instantiation the type of that member is a function type, the program is ill-formed because the semantic interpretation of the member has changed from a data member to a member function.
+\hspace*{0.75cm}对于类模板的成员和类模板内嵌套类的成员也有类似的限制:如果成员声明的类型看起来不是函数类型，在实例化后该成员的类型是函数类型，则程序格式错误。因为该成员的语义解释已从数据成员变为成员函数了。
 \end{tcolorbox}
 
-\subsubsubsection{12.4.6\hspace{0.2cm}Fold Expressions}
+\subsubsubsection{12.4.6\hspace{0.2cm}折叠表达式}
 
-A recurring pattern in programming is the fold of an operation on a sequence of values. For example, a right fold of a function fn over a sequence x[1], x[2], ..., x[n-1], x[n] is given by fn(x[1], fn(x[2], fn(..., fn(x[n-1], x[n])...)))
+编程中重复出现的一种模式是对一系列值进行操作的折叠。例如，函数fn对序列x[1]， x[2]，…，x[n - 1], x[n]的折叠可以表示为fn(x[1], fn(x[2], fn(..., fn(x[n-1], x[n])...)))。
 
-While exploring a new language feature, the C++ committee ran into the need to deal with such constructs for the special case of a logical binary operator (i.e., \&\& or ||) applied to a pack expansion. Without an extra feature, we might write the following code to achieve that for the \&\& operator:
+探索一种新的语言特性时，C++委员会遇到了为应用于包扩展的逻辑二进制操作符(即\&\&或||)，从而需要处理这种构造。如果没有其他的特性，可以编写以下代码来实现\&\&操作符:
 
 \begin{lstlisting}[style=styleCXX]
 bool and_all() { return true; }
@@ -309,25 +308,25 @@ template<typename T, typename... Ts>
 	}
 \end{lstlisting}
 
-With C++17, a new feature called fold expressions was added (see Section 4.2 on page 58 for an introduction). It applies to all binary operators except ., ->, and [].
+在C++17中，添加了一个名为折叠表达式的新特性(参见4.2节的介绍)。它适用于除.、->和[]之外的所有二进制操作符。
 
-Given an unexpanded expression pattern pack and a nonpattern expression value, C++17 allows us to write for any such operator op, either
+给定一个未展开的表达式模式包和一个非模式表达式值，C++17也允许为任何此类操作符op编写代码
 
 \begin{lstlisting}[style=styleCXX]
 (pack op ... op value)
 \end{lstlisting}
 
-for a right fold of the operator (called a binary right fold), or
+对于右折算子(称为二元右折)，或
 
 \begin{lstlisting}[style=styleCXX]
 (value op ... op pack)
 \end{lstlisting}
 
-or a left fold (called a binary left fold). Note that the parentheses are required here. See Section 4.2 on page 58 for some basic examples.
+或者是左折(称为二元左折)。注意，这里需要括号。参见4.2节的一些基本示例。
 
-The fold operation applies to the sequence that results from expanding the pack and adding value as either the last element of the sequence (for a right fold) or the first element of the sequence (for a left fold).
+折叠操作适用于展开包并增加值的序列，其要么是序列的最后一个元素(适用于右折叠)，要么是序列的第一个元素(适用于左折叠)。
 
-With this feature available, code like
+有了这个特性，代码如下
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T> bool g() {
@@ -335,7 +334,7 @@ template<typename... T> bool g() {
 }
 \end{lstlisting}
 
-(where and\_all is as defined above), can instead be written as
+(其中and\_all是上面定义的)，可以写成
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T> bool g() {
@@ -343,34 +342,34 @@ template<typename... T> bool g() {
 }
 \end{lstlisting}
 
-As you’d expect, fold expressions are pack expansions. Note  that if the pack is empty, the type of the fold expression can still be determined from the non-pack operand (value in the forms above).
+折叠表达式是包的扩展。注意，如果包为空，折叠表达式的类型仍然可以根据非包操作数(上面表单中的值)确定。
 
-However, the designers of this feature also wanted an option to leave out the value operand. Two other forms are therefore available in C++17: The unary right fold
+然而，该特性的设计者还希望有一个选项来省略值操作数。因此，C++17还提供了另外两种形式:一元右折
 
 \begin{lstlisting}[style=styleCXX]
 (pack op ... )
 \end{lstlisting}
 
-and the unary left fold
+一元左折
 
 \begin{lstlisting}[style=styleCXX]
 (... op pack)
 \end{lstlisting}
 
-Again, the parentheses are required. Clearly this creates a problem for empty expansions: How do we determine their type and value? The answer is that an empty expansion of a unary fold is generally an error, with three exceptions:
+同样，括号是必需的。显然，这给空扩展带来了一个问题:如何确定类型和值?答案是一元折叠的空展开是错误的，有三个例外:
 
 \begin{itemize}
 \item
-An empty expansion of a unary fold of \&\& produces the value true,.
+对\&\&的一元折叠的空展开产生的值为true，。
 
 \item
-An empty expansion of a unary fold of || produces the value false
+对||的一元折叠进行空展开将产生值false
 
 \item
-An empty expansion of a unary fold of the comma operator (,) produces a void expression.
+逗号操作符(，)的一元折叠的空展开将产生一个空的表达式。
 \end{itemize}
 
-Note that this will create surprises if you overload one of these special operators in a somewhat unusual way. For example:
+注意，如果以一种不寻常的方式重载这些特殊操作符中的一个，将会产生意外。例如:
 
 \begin{lstlisting}[style=styleCXX]
 struct BooleanSymbol {
@@ -385,13 +384,13 @@ template<typename... BTs> void symbolic(BTs... ps) {
 }
 \end{lstlisting}
 
-Suppose we call symbolic with types that are derived from BooleanSymbol. For all expansions, the result will produce a BooleanSymbol value except for the empty expansion, which will produce a bool value.
+假设使用派生自BooleanSymbol的类型来调用symbolic。对于所有展开，结果将产生一个布尔符号值，除了空展开，其将产生一个bool值。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Because overloading these three special operators is unusual, this problem is fortunately rare (but subtle). The original proposal for fold expressions included empty expansion values for more common operators like + and *, which would have caused more serious problems.
+\hspace*{0.75cm}因为重载这三个特殊操作符很罕见，所以这个问题很少(但很微妙)。最初的折叠表达式建议为更常见的操作符(如+和*)包含空展开值，这将导致更严重的问题。
 \end{tcolorbox}
 
-We therefore generally caution against the use of unary fold expressions, and recommend using binary fold expressions instead (with an explicitly specified empty expansion value).
+因此，通常会对一元折叠表达式的使用提出警告，并建议使用二元折叠表达式(显式指定空展开的值)。
 
 
 

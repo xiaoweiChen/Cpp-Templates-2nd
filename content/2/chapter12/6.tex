@@ -1,11 +1,21 @@
-The general concept and syntax of C++ templates have remained relatively stable since their inception in the late 1980s. Class templates and function templates were part of the initial template facility. So were type parameters and nontype parameters.
+自20世纪80年代后期，C++模板的一般概念和语法一直保持相对稳定。类模板和函数模板是初始模板工具的一部分，类型参数和非类型参数也是。
 
-However, there were also some significant additions to the original design, mostly driven by the needs of the C++ standard library. Member templates may well be the most fundamental of those additions. Curiously, only member function templates were formally voted into the C++ standard. Member class templates became part of the standard by an editorial oversight.
+然而，最初的设计中也有一些重要功能的添加，主要是出于C++标准库的需要。成员模板可能是这些新增功能中最基本的。奇怪的是，只有成员函数模板被正式纳入C++标准。由于编辑上的疏忽，成员类模板成为标准的一部分。
 
-Friend templates, default template arguments, and template template parameters came afterward during the standardization of C++98. The ability to declare template template parameters is sometimes called higher-order genericity. They were originally introduced to support a certain allocator model in the C++ standard library, but that allocator model was later replaced by one that does not rely on template template parameters. Later, template template  parameters came close to being removed from the language because their specification had remained incomplete until very late in the standardization process for the 1998 standard. Eventually a majority of committee members voted to keep them and their specifications were completed.
+友元模板、默认模板实参双重模板参数是随后在C++98标准化过程中出现的。声明双重模板参数的能力有时称为高阶泛型。最初引入的原因是为了支持C++标准库中的某个分配器模型，但这个分配器模型后来被一个不依赖于双重模板参数的模型所取代。后来，双重模板参数几乎要从该语言中删除了，直到1998年标准的标准化过程的时候，规范仍然是不完整的。最终，委员会的大多数成员决定保留它们，从而形成了新的标准。
 
-Alias templates were introduced as part of the 2011 standard. Alias templates serve the same needs as the oft-requested “typedef templates” feature by making it easy to write a template that is merely a different spelling of an existing class template. The specification (N2258) that made it into the standard was authored by Gabriel Dos Reis and Bjarne Stroustrup; Mat Marcus also contributed to some of the early drafts of that proposal. Gaby also worked out the details of the variable template proposal for C++14 (N3651). Originally, the proposal only intended to support constexpr variables, but that restriction was lifted by the time it was adopted in the draft standard.
+别名模板是2011年标准的一部分。别名模板与经常要求的“类型定义模板”特性具有相同的需求，它使编写一个模板变得容易，而这个模板只不过是现有类模板的不同拼写。使之成为标准的规范(N2258)是由Gabriel Dos Reis和Bjarne Stroustrup编写的;Mat Marcus也参与了该提案的一些早期草案。Gaby还为C++14 (N3651)制定了变量模板建议的细节。最初，该提案只打算支持constexpr变量，但在标准草案中采用时，这一限制已经取消了。
 
-Variadic templates were driven by the needs of the C++11 standard library and the Boost libraries (see [Boost]), where C++ template libraries were using increasingly advanced (and convoluted) techniques to provide templates that accept an arbitrary number of template arguments. Doug Gregor, Jaakko Jarvi, Gary Powell, Jens Maurer, and Jason Merrill provided the initial specification for the ¨standard (N2242). Doug also developed the original implementation of the feature (in GNU’s GCC) while the specification was being developed, which much helped the ability to use the feature in the standard library.
+可变参数模板是由C++11标准库和Boost库(参见[Boost])的需求驱动的，其中C++模板库使用越来越高级(和复杂)的技术可以接受任意数量模板参数。Doug Gregor, J$ \ddot{a} $kko Jarvi, Gary Powell, Jens Maurer和Jason Merrill提供了标准(N2242)的初始规范。在开发规范的同时，Doug还开发了该特性的原始实现(在GNU的GCC中)，这对在标准库中使用该特性有很大帮助。
 
-Fold expressions were the work of Andrew Sutton and Richard Smith: They were added to C++17 through their paper N4191.
+折叠表达式是Andrew Sutton和Richard Smith的成果:他们通过N4191将其添加到C++17中。
+
+
+
+
+
+
+
+
+
+

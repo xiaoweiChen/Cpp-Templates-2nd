@@ -1,24 +1,23 @@
 
-When instantiating a template, template parameters are substituted by template arguments. The arguments can be determined using several different mechanisms:
+实例化模板时，模板应用模板参数。参数可以使用几种不同的机制来确定:
 
 \begin{itemize}
 \item 
-Explicit template arguments: A template name can be followed by explicit template arguments enclosed in angle brackets. The resulting name is called a template-id.
+显式模板参数:模板名称后面可以跟着用尖括号括起来的显式模板参数。产生的名称称为template-id。
 
 \item 
-Injected class name: Within the scope of a class template X with template parameters P1, P2, . . . , the name of that template (X) can be equivalent to the template-id X<P1, P2, . . . >. See Section 13.2.3 on page 221 for details.
+注入类名:类模板X的作用域内，模板参数P1, P2，…，该模板的名称(X)等价于template-id X<P1, P2, …>。详见13.2.3节。
 
 \item 
-Default template arguments: Explicit template arguments can be omitted from template instances if default template arguments are available. However, for a class or alias template, even if all template parameters have a default value, the (possibly empty) angle brackets must be provided.
-
+默认模板参数:如果默认模板参数可用，则可以从模板实例中省略模板参数。但是，对于类模板或别名模板，即使所有模板参数都有默认值，也必须提供(可能为空)尖括号。
 
 \item 
-Argument deduction: Function template arguments that are not explicitly specified may be deduced from the types of the function call arguments in a call. This is described in detail in Chapter 15. Deduction is also done in a few other situations. If all the template arguments can be deduced, no angle brackets need to be specified after the name of the function template. C++17 also introduces the ability to deduce class template arguments from the initializer of a variable declaration or functional-notation type conversion; see Section 15.12 on page 313 for a discussion.
+参数类型推导:未显式指定的函数模板参数可以从调用中的函数调用参数类型推导出来，这在第15章中有详细描述。在其他几种情况下也可以进行推导。如果所有模板参数都可以推导出来，则不需要在函数模板的名称后指定尖括号。C++17还引入了从变量声明或函数表示法，可以从类型转换初始化表达式中推导类模板参数类型;请参阅15.12节。
 \end{itemize}
 
-\subsubsubsection{12.3.1\hspace{0.2cm}Function Template Arguments}
+\subsubsubsection{12.3.1\hspace{0.2cm}函数模板参数}
 
-Template arguments for a function template can be specified explicitly, deduced from the way the template is used, or provided as a default template argument. For example:
+函数模板参数可以显式指定，可以根据模板的使用方式推导出来，也可以作为默认模板参数提供。例如:
 
 \noindent
 \textit{details/max.cpp}
@@ -38,7 +37,7 @@ int main()
 }
 \end{lstlisting}
 
-Some template arguments can never be deduced because their corresponding template parameter does not appear in a function parameter type or for some other reason (see Section 15.2 on page 271). The corresponding parameters are typically placed at the beginning of the list of template parameters so they can be specified explicitly while allowing the other arguments to be deduced. For example:
+有些模板参数永远无法推导出来，因为对应的模板参数没有出现在函数参数类型中，或者出于其他原因(参见第15.2节)。相应的参数通常放在模板参数列表的开头，以便在推导其他参数的同时显式地指定。例如:
 
 \noindent
 \textit{details/implicit.cpp}
@@ -55,9 +54,9 @@ int main()
 }
 \end{lstlisting}
 
-If we had reversed the order of the template parameters in this example (in other words, if we had written template<typename SrcT, typename DstT>), a call of implicit\_cast would have to specify both template arguments explicitly.
+如果在本例中颠倒了模板参数的顺序(换句话说，若写了template<typename SrcT, typename DstT>)，则implicit\_cast的调用必须显式指定两个模板参数。
 
-Moreover, such parameters can’t usefully be placed after a template parameter pack or appear in a partial specialization, because there would be no way to explicitly specify or deduce them.
+此外，这样的参数不能放在模板参数包之后或出现在部分特化中，因为没有办法显式地指定或推导。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename ... Ts, int N>
@@ -65,7 +64,7 @@ void f(double (&)[N+1], Ts ... ps); // useless declaration because N
 // cannot be specified or deduced
 \end{lstlisting}
 
-Because function templates can be overloaded, explicitly providing all the arguments for a function template may not be sufficient to identify a single function: In some cases, it identifies a set of functions. The following example illustrates a consequence of this observation:
+因为函数模板可以重载，显式地提供函数模板的参数可能不足以标识单个函数:某些情况下，可以标识一组函数。下面的例子说明了情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Func, typename T>
@@ -86,20 +85,20 @@ int main()
 }
 \end{lstlisting}
 
-In this example, the first call to apply() works because the type of the expression \&single<int> is unambiguous. As a result, the template argument value for the Func parameter is easily deduced. In the second call, however, \&multi<int> could be one of two different types and therefore Func cannot be deduced in this case.
+本例中，因为表达式\&single<int>的类型是明确的，对apply()的第一次调用有效。因此，Func的模板参数值很容易推导出来。然而，在第二个调用中，\&multi<int>可能是两种不同类型中的一种，因此在这种情况下不能推导Func的模板参数类型。
 
-Furthermore, it is possible that substituting template arguments in a function template results in an attempt to construct an invalid C++ type or expression. Consider the following overloaded function template (RT1 and RT2 are unspecified types):
+此外，在函数模板中替换模板参数，可能会导致构造无效的C++类型或表达式。考虑以下重载函数模板(RT1和RT2是未指定类型):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> RT1 test(typename T::X const*);
 template<typename T> RT2 test(...);
 \end{lstlisting}
 
-The expression test<int> makes no sense for the first of the two function templates because type int has no member type X. However, the second template has no such problem. Therefore, the expression \&test<int> identifies the address of a single function. The fact that the substitution of int into the first template fails does not make the expression invalid. This SFINAE (substitution failure is not an error) principle is an important ingredient to make the overloading of function templates practical and is discussed in Section 8.4 on page 129 and Section 15.7 on page 284.
+表达式test<int>对于两个函数模板中的第一个没有意义，因为int类型没有成员类型x。然而，第二个模板没有这样的问题。因此，表达式\&test<int>为单个函数的地址。将int替换到第一个模板失败的事实并不意味着表达式无效。SFINAE(替换失败不为过)原则是实现函数模板重载的重要因素，在8.4节和15.7节中进行了讨论。
 
-\subsubsubsection{12.3.2\hspace{0.2cm}Type Arguments}
+\subsubsubsection{12.3.2\hspace{0.2cm}类型参数}
 
-Template type arguments are the “values” specified for template type parameters. Any type (including void, function types, reference types, etc.) can, in general, be used as a template argument, but their substitution for the template parameters must lead to valid constructs:
+模板类型实参是为模板类型形参指定的“值”，任何类型(包括void、函数类型、引用类型等)都可以用作模板实参，但它们对模板形参的替换必须进行有效的构造:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -115,35 +114,35 @@ int main()
 }
 \end{lstlisting}
 
-\subsubsubsection{12.3.3\hspace{0.2cm}Nontype Arguments}
+\subsubsubsection{12.3.3\hspace{0.2cm}非类型模板参数}
 
-Nontype template arguments are the values substituted for nontype parameters. Such a value must be one of the following things:
+非类型模板实参是替代非类型形参的值。这样的值必须是以下条件之一:
 
 \begin{itemize}
 \item 
-Another nontype template parameter that has the right type.
+具有正确类型的另一个非类型模板形参。
 
 \item
-A compile-time constant value of integer (or enumeration) type. This is acceptable only if the corresponding parameter has a type that matches that of the value or a type to which the value can be implicitly converted without narrowing. For example, a char value can be provided for an int parameter, but 500 is not valid for an 8-bit char parameter.
+整型(或枚举)的编译时常量值。只有当相应参数的类型与值的类型匹配，或者值可以隐式转换而不收缩时，这才可以接受。例如，可以为int形参提供一个char值，但是对于8位char形参，500是一个无效的输入。
 
 \item 
-The name of an external variable or function preceded by the built-in unary \& (“address of”) operator. For functions and array variables, \& can be left out. Such template arguments match nontype parameters of a pointer type. C++17 relaxed this requirement to permit any constantexpression that produces a pointer to a function or variable.
+外部变量或函数的名称前面加上内置的一元\&("address of")操作符。对于函数和数组变量，可以省略\&。这样的模板实参匹配指针类型的非类型形参。C++17放宽了这一要求，允许产生指向函数或变量指针的常量表达式。
 
 \item 
-The previous kind of argument but without a leading \& operator is a valid argument for a nontype parameter of reference type. Here too, C++17 relaxed the constraint to permit any constantexpression glvalue for a function or variable.
+对于引用类型的非类型形参来说，前面那种不带前导\&操作符的实参是有效的实参。在这里，C++17也放宽了限制，允许函数或变量使用任意常量表达式glvalue。
 
 \item 
-A pointer-to-member constant; in other words, an expression of the form \&C::m where C is a class type and m is a nonstatic member (data or function). This matches nontype parameters of pointerto-member type only. And again, in C++17, the actual syntactic form is no longer constrained: Any constant-expression evaluating to a matching pointer-to-member constant is permitted.
+成员指针常数，形式为\&C::m的表达式，其中C是类类型，m是非静态成员(数据或函数)。这只匹配指针成员类型的非类型形参。同样，在C++ 17中，实际的语法形式不再受到限制:允许将常量表达式求值为匹配的成员常量指针。
 
 \item 
-A null pointer constant is a valid argument for a nontype parameter of pointer or pointer-tomember type.
+空指针常量是指针或指针成员类型的非类型形参的有效实参。
 \end{itemize}
 
-For nontype parameters of integral type—probably the most common kind of nontype parameter—implicit conversions to the parameter type are considered. With the introduction of constexpr conversion functions in C++11, this means that the argument before conversion can have a class type.
+对于整型非类型形参(可能是最常见的非类型形参类型)，将考虑到形参类型的隐式转换。随着C++11中constexpr的引入，这意味着转换前的实参可以具有类类型。
 
-Prior to C++17, when matching an argument to a parameter that is a pointer or reference, userdefined conversions (constructors for one argument and conversion operators) and derived-to-base conversions are not considered, even though in other circumstances they would be valid implicit conversions. Implicit conversions that make an argument more const and/or more volatile are fine.
+C++17之前，当将实参与指针或引用形参匹配时，用户定义的转换(一个实参的构造函数和转换操作符)和派生是不考虑到转换为基类的。使参数更具有const和/或volatile的隐式转换是可以的。
 
-Here are some valid examples of nontype template arguments:
+下面是一些非类型模板参数的有效示例:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, T nontypeParam>
@@ -176,21 +175,21 @@ C<long, X{}>* c7; // OK: X is first converted to int via a constexpr conversion
 // function and then to long via a standard integer conversion
 \end{lstlisting}
 
-A general constraint of template arguments is that a compiler or a linker must be able to express their value when the program is being built. Values that aren’t known until a program is run (e.g., the address of local variables) aren’t compatible with the notion that templates are instantiated when the program is built.
+模板参数需要在编译器或链接器在构建程序时，能够表示它们的值。在程序运行前不知道的值(例如，局部变量的地址)与构建时实例化模板的概念不兼容。
 
-Even so, there are some constant values that are, perhaps surprisingly, not currently valid:
+即便如此，有些常量值目前还是无效的:
 
 \begin{itemize}
 \item 
-Floating-point numbers
+浮点数
 
 \item 
-String literals
+字符串字面值
 \end{itemize}
 
-(Prior to C++11, null pointer constants were not permitted either.)
+(C++11之前，空指针常量也不允许。)
 
-One of the problems with string literals is that two identical literals can be stored at two distinct addresses. An alternative (but cumbersome) way to express templates instantiated over constant strings involves introducing an additional variable to hold the string:
+字符串字面值的问题是，两个相同的字面值可以存储在两个不同的地址。在常量字符串上实例化模板的另一种(但很麻烦)方法，是引入一个额外变量来保存字符串的:
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* str>
@@ -211,11 +210,11 @@ void foo()
 }
 \end{lstlisting}
 
-The requirement is that a nontype template parameter declared as reference or pointer can be a constant expression with external linkage in all C++ versions, internal linkage since C++11, or any linkage since C++17.
+要求是声明为引用或指针的非类型模板形参可以是一个常量表达式，在旧C++版本中具有外部链接，C++11开始的内部链接，或者C++17开始的任何链接方式。
 
-See Section 17.2 on page 354 for a discussion of possible future changes in this area.
+请参阅第17.2节，了解关于该领域未来可能变化的讨论。
 
-Here are a few other (less surprising) invalid examples:
+以下是其他一些(不那么令人惊讶)无效的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, T nontypeParam>
@@ -237,11 +236,11 @@ C<int*, &a[0]>* err3; // ERROR: addresses of array elements aren’t acceptable 
 \end{lstlisting}
 
 
-\subsubsubsection{12.3.4\hspace{0.2cm}Template Template Arguments}
+\subsubsubsection{12.3.4\hspace{0.2cm}双重模板参数}
 
-A template template argument must generally be a class template or alias template with parameters that exactly match the parameters of the template template parameter it substitutes. Prior to C++17, default template arguments of a template template argument were ignored (but if the template template parameter has default arguments, they are considered during the instantiation of the template). C++17 relaxed the matching rule to just require that the template template parameter be at least as specialized (see Section 16.2.2 on page 330) as the  corresponding template template argument.
+双重模板实参通常必须是类模板或别名模板，其形参必须与它所替换的双重模板参数的形参精确匹配。在C++17之前，双重模板参数的默认模板实参会忽略(但如果双重模板参数有默认实参，会在模板实例化期间考虑它们)。C++17放宽了匹配规则，只要求模板形参至少与对应的模板形参一样特化(参见330页的16.2.2节)。
 
-This makes the following example invalid prior to C++17:
+这使得以下示例在C++17之前无效:
 
 \begin{lstlisting}[style=styleCXX]
 #include <list>
@@ -259,9 +258,9 @@ Rel<int, double, std::list> rel; // ERROR before C++17: std::list has more than
 								// one template parameter
 \end{lstlisting}
 
-The problem in this example is that the std::list template of the standard library has more than one parameter. The second parameter (which describes an allocator) has a default value, but prior to C++17, that is not considered when matching std::list to the Container parameter.
+本例中的问题是标准库的std::list模板有多个参数。第二个参数(用于描述分配器)有默认值，但是在C++17之前，在将std::list匹配到Container参数时不会考虑默认值。
 
-Variadic template template parameters are an exception to the pre-C++17 “exact match” rule described above and offer a solution to this limitation: They enable more general matching against template template arguments. A template template parameter pack can match zero or more template parameters of the same kind in the template template argument:
+可变参数模板参数是上述C++17前“精确匹配”规则的一个例外，它为这个限制提供了一个解决方案:支持对双重模板参数进行更通用的匹配。一个双重模板参数包可以匹配零个或多个在双重模板参数中同类的模板形参:
 
 \begin{lstlisting}[style=styleCXX]
 #include <list>
@@ -276,7 +275,7 @@ Rel<int, double, std::list> rel; // OK: std::list has two template parameters
 								// but can be used with one argument
 \end{lstlisting}
 
-Template parameter packs can only match template arguments of the same kind. For example, the following class template can be instantiated with any class template or alias template having only template type parameters, because the template type parameter pack passed there as TT can match zero or more template type parameters:
+模板参数包只能匹配同类的模板实参。例如，下面的类模板可以用只有模板类型参数的类模板或别名模板实例化，因为作为TT传递的模板类型参数包可以匹配零个或多个模板类型参数:
 
 \begin{lstlisting}[style=styleCXX]
 #include <list>
@@ -301,11 +300,11 @@ AlmostAnyTmpl<std::array> withArray; // ERROR: a template type parameter pack
 									// doesn’t match a nontype template parameter
 \end{lstlisting}
 
-The fact that, prior to C++17, only the keyword class could be used to declare a template template parameter does not indicate that only class templates declared with the keyword class were allowed as substituting arguments. Indeed, struct, union, and alias templates are all valid arguments for a template template parameter (alias templates since C++11, when they were introduced). This is similar to the observation that any type can be used as an argument for a template type parameter declared with the keyword class.
+C++17前，只有关键字class可以用来声明双重模板形参，这并不意味着只有用关键字class声明的类模板才允许作为替换参数。实际上，struct模板、union模板和alias模板都是双重模板参数的有效参数(C++11引入别名模板后)。这类似于任何类型都可以使用关键字class声明的模板类型参数。
 
-\subsubsubsection{12.3.5\hspace{0.2cm}Equivalence}
+\subsubsubsection{12.3.5\hspace{0.2cm}等价参数}
 
-Two sets of template arguments are equivalent when values of the arguments are identical one-forone. For type arguments, type aliases don’t matter: It is the type ultimately underlying the type alias declaration that is compared. For integer nontype arguments, the value of the argument is compared; how that value is expressed doesn’t matter. The following example illustrates this concept:
+当参数的值——相同时，两组模板实参是等价的。对于类型参数，类型别名并不重要:要比较的是类型别名声明的最终类型。对于整型非类型实参，比较实参的值;如何表达这个值并不重要。下面的例子说明了这个概念:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, int I>
@@ -317,9 +316,9 @@ Mix<int, 3*3>* p1;
 Mix<Int, 4+5>* p2; // p2 has the same type as p1
 \end{lstlisting}
 
-(As is clear from this example, no template definition is needed to establish the equivalence of the template argument lists.)
+(从这个例子可以清楚地看出，建立模板参数列表的等价性不需要模板定义。)
 
-In template-dependent contexts, however, the “value” of a template argument cannot always be established definitely, and the rules for equivalence become a little more complicated. Consider the following example:
+然而，在与模板相关的上下文中，模板参数的“值”不能确定，因此等价规则会变得稍微复杂一些。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<int N> struct I {};
@@ -330,27 +329,27 @@ template<int N, int M> void f(I<N+M>); // #2
 template<int M, int N> void f(I<N+M>); // #3 ERROR
 \end{lstlisting}
 
-Study declarations \#1 and \#2 carefully, and you’ll notice that by just renaming M and N to, respectively, N and M, you obtain the same declaration: The two are therefore equivalent and declare the same function template f. The expressions M+N and N+M in those two declarations are called equivalent.
+仔细研究\#1和\#2声明，会看到到，通过将M和N分别重命名为N和M，会得到相同的声明:因此，这两个表达式是等价的，声明了相同的函数模板f。这两个声明中的表达式M+N和N+M等价。
 
-Declaration \#3 is, however, subtly different: The order of the operands is inverted. That makes the expression N+M in \#3 not equivalent to either of the other two expressions. However, because the expression will produce the same result for any values of the template parameters involved, those expressions are called functionally equivalent. It is an error for templates to be declared in ways that differ only because the declarations include functionally equivalent expressions that are not actually equivalent. However, such an error need not be diagnosed by your compiler. That’s because some compilers may, for example, internally represent N+1+1 in exactly the same way as N+2, whereas other compilers may not. Rather than impose a specific implementation approach, the standard allows either one and requires programmers to be careful in this area.
+然而，声明\#3略有不同:操作数的顺序是倒序的。这使得\#3中的表达式N+M不等于其他两个表达式。但是，由于表达式将为所涉及的模板参数的值产生相同的结果，这些表达式称为功能等效。如果模板声明的方式不同，只是因为声明包含了实际上不相等的功能等效表达式，那就是错误的。但是，这样的错误不需要编译器诊断。这是因为有些编译器可能在内部以与N+2完全相同的方式表示N+1+1，而其他编译器可能不会这样。该标准并没有强制规定一种特定的实现方法，而是允许其中任何一种方法，所以开发者在这方面需要三思而后行。
 
-A function generated from a function template is never equivalent to an ordinary function even though they may have the same type and the same name. This has two important consequences for class members:
+从函数模板生成的函数永远不等同于普通函数，即使具有相同的类型和相同的名称。这对类成员有两个重要的影响:
 
 \begin{enumerate}
 \item
-A function generated from a member function template never overrides a virtual function.
+从成员函数模板生成的函数不重写虚函数。
 
 \item
-A constructor generated from a constructor template is never a copy or move constructor.
+从构造函数模板生成的构造函数不是复制或移动构造函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}However, a constructor template can be a default constructor.
+\hspace*{0.75cm}但默认构造函数可以构造函数模板。
 \end{tcolorbox}
 
-Similarly, an assignment generated from an assignment template is never a copy-assignment or moveassignment operator. (However, this is less prone to problems because implicit calls of copyassignment or move-assignment operators are less common.)
+类似地，从赋值模板生成的赋值操作不是复制赋值操作符或移动赋值操作符。(然而，这不太容易出现问题，因为隐式调用复制赋值或移动赋值操作符不太常见。)
 \end{enumerate}
 
-This can be good and bad. See Section 6.2 on page 95 and Section 6.4 on page 102 for details.
+这种方式优缺点并存。请参阅6.2节和6.4节了解详细信息。
 
 
 

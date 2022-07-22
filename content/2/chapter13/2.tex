@@ -1,7 +1,7 @@
 
-There are many small details to looking up names in C++, but we will focus only on a few major concepts. The details are necessary to ensure only that (1) normal cases are treated intuitively, and (2) pathological cases are covered in some way by the standard.
+在C++中查找名称有许多小技巧，但这里只关注几个主要的。只有在下面两种情景中我们才有必要确认名称查找的细节：(1)按直观处理会犯错的普通例子(2)C++标准给出的错误例子。
 
-Qualified names are looked up in the scope implied by the qualifying construct. If that scope is a class, then base classes may also be searched. However, enclosing scopes are not considered when looking up qualified names. The following illustrates this basic principle:
+限定名在限定构造所隐含的范围内查找。如果该作用域是一个类，那么也可以搜索基类。但是，在查找限定名称时不考虑封闭作用域。基本原则如下:
 
 \begin{lstlisting}[style=styleCXX]
 int x;
@@ -21,7 +21,7 @@ void f(D* pd)
 }
 \end{lstlisting}
 
-In contrast, unqualified names are typically looked up in successively more enclosing scopes (although in member function definitions, the scope of the class and its base classes is searched before any other enclosing scopes). This is called ordinary lookup. Here is a basic example showing the main idea underlying ordinary lookup:
+相比之下，不限定名通常会依次在外围作用域中查找(尽管在成员函数定义中，类及其基类的作用域会在其他外围作用域之前搜索)，这称为常规查找。下面是一个基本的例子，展示了常规查找的主要思想:
 
 \begin{lstlisting}[style=styleCXX]
 extern int count; // #1
@@ -36,13 +36,13 @@ int lookup_example(int count) // #2
 } // the second (qualified) count refers to #1
 \end{lstlisting}
 
-A more recent twist to the lookup of unqualified names is that—in addition to ordinary lookup—they may sometimes undergo argument-dependent lookup (ADL).
+对于非限定名称的查找，最近增加了一项新的查找机制——除了常规的查找之外——有时可能要进行依赖参数的查找(ADL)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++98/C++03, this was also called Koenig lookup (or extended Koenig lookup) after Andrew Koenig, who first proposed a variation of this mechanism.
+\hspace*{0.75cm}在C++98/C++03中，这也称为Koenig查找(或扩展Koenig查找)，以Andrew Koenig命名，他首先提出了这种机制的变体。
 \end{tcolorbox}
 
-Before proceeding with the details of ADL, let’s motivate the mechanism with our perennial max() template:
+在继续研究ADL之前，让我们用max()模板来触发这个机制:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -52,7 +52,7 @@ T max (T a, T b)
 }
 \end{lstlisting}
 
-Suppose now that we need to apply this template to a type defined in another namespace:
+假设现在需要将此模板应用于定义在另一个命名空间中的类型:
 
 \begin{lstlisting}[style=styleCXX]
 namespace BigMath {
@@ -73,57 +73,57 @@ void g (BigNumber const& a, BigNumber const& b)
 }
 \end{lstlisting}
 
-The problem here is that the max() template is unaware of the BigMath namespace, but ordinary lookup would not find the operator < applicable to values of type BigNumber. Without some special rules, this greatly reduces the applicability of templates in the presence of C++ namespaces. ADL is the C++ answer to those “special rules.”
+这里的问题是max()模板不知道BigMath名称空间，但是常规查找无法找到适用于BigNumber类型值的操作符<。如果没有一些特殊的规则，这将大大降低模板在C++名称空间中的适用性。ADL是对这些“特殊规则”的回答。
 
-\subsubsubsection{13.2.1\hspace{0.2cm}Argument-Dependent Lookup}
+\subsubsubsection{13.2.1\hspace{0.2cm}ADL}
 
 
-ADL applies primarily to unqualified names that look like they name a nonmember function in a function call or operator invocation. ADL does not happen if ordinary lookup finds
-
-\begin{itemize}
-\item 
-the name of a member function,
-
-\item 
-the name of a variable,
-
-\item 
-the name of a type, or
-
-\item 
-the name of a block-scope function declaration.
-\end{itemize}
-
-ADL is also inhibited if the name of the function to be called is enclosed in parentheses.
-
-Otherwise, if the name is followed by a list of argument expressions enclosed in parentheses, ADL proceeds by looking up the name in namespaces and classes “associated with” the types of the call arguments. The precise definition of these associated namespaces and associated classes is given later, but intuitively they can be thought of as being all the namespaces and classes that are fairly directly connected to a given type. For example, if the type is a pointer to a class X, then the associated classes and namespace would include X as well as any namespaces or classes to which X belongs.
-
-The precise definition of the set of associated namespaces and associated classes for a given type is determined by the following rules:
+ADL主要适用于非限定名称，这些名称看起来像是在函数调用或操作符调用中命名非成员函数。如果在常规查找中，就不会发生ADL了
 
 \begin{itemize}
 \item 
-For built-in types, this is the empty set.
+成员函数的名称，
 
 \item 
-For pointer and array types, the set of associated namespaces and classes is that of the underlying type.
+变量名，
 
 \item 
-For enumeration types, the associated namespace is the namespace in which the enumeration is declared.
+类型的名称，或
 
 \item 
-For class members, the enclosing class is the associated class.
-
-\item 
-For class types (including union types), the set of associated classes is the type itself, the enclosing class, and any direct and indirect base classes. The set of associated namespaces is the namespaces in which the associated classes are declared. If the class is a class template instance, then the types of the template type arguments and the classes and namespaces in which the template template arguments are declared are also included.
-
-\item 
-For function types, the sets of associated namespaces and classes comprise the namespaces and classes associated with all the parameter types and those associated with the return type.
-
-\item 
-For pointer-to-member-of-class-X types, the sets of associated namespaces and classes include those associated with X in addition to those associated with the type of the member. (If it is a pointer-to-member-function type, then the parameter and return types can contribute too.)
+块作用域函数声明的名称。
 \end{itemize}
 
-ADL then looks up the name in all the associated namespaces as if the name had been qualified with each of these namespaces in turn, except that using directives are ignored. The following example illustrates this:
+若要调用的函数名在括号内，则ADL也会受到抑制。
+
+否则，若名称后面跟着用圆括号括起来的参数表达式列表，ADL将继续在与调用参数类型“相关”的名称空间和类中查找名称。这些关联的名称空间和关联类的精确定义将在后面给出，但它们可以认为是与给定类型相当直接相连的所有名称空间和类。例如，如果类型是指向类X的指针，那么相关的类和名称空间将包括X，以及X所属的任何名称空间或类。
+
+对于给定类型的关联名称空间和关联类的精确定义由以下规则确定:
+
+\begin{itemize}
+\item 
+对于内置类型，这是空集。
+
+\item 
+对于指针和数组类型，关联的名称空间和类的集合是基础类型的集合。
+
+\item 
+对于枚举类型，关联的命名空间是在其中声明枚举的命名空间。
+
+\item 
+对于类成员，外围类是关联类。
+
+\item 
+对于类类型(包括联合类型)，相关类的集合是类型本身、封闭类，以及任何直接和间接基类。关联名称空间的集合是在其中声明关联类的名称空间。如果类是类模板实例，则模板类型参数的类型以及声明模板模板参数的类和名称空间也包括在内。
+
+\item 
+对于函数类型，关联的名称空间和类集合包含与所有参数类型和返回类型关联的名称空间和类。
+
+\item 
+对于指向类X成员类型的指针，关联的命名空间和类集除了与成员类型关联的命名空间和类外，还包括与X关联的命名空间和类。(如果是指向成员函数类型的指针，那么参数和返回类型也可以起作用。)
+\end{itemize}
+
+然后，ADL在所有关联的名称空间中查找该名称，就好像该名称已经通过这些名称空间进行了限定一样(除非忽略using的指示)。下面的例子说明了这一点:
 
 \noindent
 \textit{details/adl.cpp}

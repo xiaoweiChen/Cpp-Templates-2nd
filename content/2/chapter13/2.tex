@@ -154,11 +154,11 @@ int main()
 } // the latter is preferred
 \end{lstlisting}
 
-Note that in this example, the using directive in namespace N is ignored when ADL is performed. Hence X::f() is never even a candidate for the call in main().
+在本例中执行ADL时，命名空间N中的using指令会忽略。因此，X::f()不是main()中函数调用的候选。
 
-\subsubsubsection{13.2.2\hspace{0.2cm}Argument-Dependent Lookup of Friend Declarations}
+\subsubsubsection{13.2.2\hspace{0.2cm}友元声明的ADL}
 
-A friend function declaration can be the first declaration of the nominated function. If this is the case, then the function is assumed to be declared in the nearest namespace scope (which may be the global scope) enclosing the class containing the friend declaration. However, such a friend declaration is not directly visible in that scope. Consider the following example:
+友元函数声明可以是指定函数，假定函数是在包含友元声明的类的最近的命名空间作用域(可能是全局作用域)中声明的。但是，这样的友元声明在该作用域中不可见。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -176,21 +176,21 @@ void g (C<int>* p)
 }
 \end{lstlisting}
 
-If friend declarations were visible in the enclosing namespace, then instantiating a class template may make visible the declaration of ordinary functions. This would lead to surprising behavior: The call f() would result in a compilation error unless an instantiation of the class C occurred earlier in the program!
+如果友元声明在封闭的命名空间中可见，实例化类模板可能会使普通函数的声明可见。这将导致令人惊讶的行为:调用f()将导致编译错误，除非在程序的早些时候实例化了类C!
 
-On the other hand, it can be useful to declare (and define) a function in a friend declaration only (see Section 21.2.1 on page 497 for a technique that relies on this behavior). Such a function can be found when the class of which they are a friend is among the associated classes considered by ADL.
+另一方面，只在友元声明中声明(和定义)函数也可以(参见21.2.1节，了解依赖于这种行为的方式)。当是友元的类在ADL的关联类中时，就可以找到这样的函数了。
 
-Reconsider our last example. The call f() has no associated classes or namespaces because there are no arguments: It is an invalid call in our example. However, the call f(*p) does have the associated class C<int> (because this is the type of *p), and the global namespace is also associated (because this is the namespace in which the type of *p is declared). Therefore, the second friend function declaration could be found provided the class C<int> was actually fully instantiated prior to the call. To ensure this, it is assumed that a call involving a lookup for friends in associated classes actually causes the class to be instantiated (if not done already).
+重新在看下上一个例子。调用f()没有相关类或名称空间，因为没有参数，所以是无效的调用。但是，调用f(*p)确实有关联类C<int>(因为类型是*p)，并且全局命名空间也相关联(因为这是声明*p类型的命名空间)。因此，若调用之前完全实例化C<int>，就可以找到第二个友元函数声明。为了确保这一点，假设涉及查找关联类中的友元的调用会导致类的实例化(若还没有这样做的话)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Although this was clearly intended by those who wrote the C++ standard, it is not clearly spelled out in the standard.
+\hspace*{0.75cm}虽然这是C++标准作者们的意图，但在标准中并没有明确说明。
 \end{tcolorbox}
 
-The ability of argument-dependent lookup to find friend declarations and definition is sometimes referred to as friend name injection. However, this term is somewhat misleading, because it is the name of a pre-standard C++ feature that did in fact “inject” the names of friend declarations into the enclosing scope, making them visible to normal name lookup. In our example above, this would mean that both calls would be well-formed. This chapter’s afternotes further detail the history of friend name injection.
+ADL查找友元声明和定义的能力有时被称为友元名称注入。然而，这个术语有一定的误导性，因为它是C++标准之前的一个特性名称，该特性“注入”了友元声明的名称到外围作用域，使它们对普通的名称查找可见。在上面的例子中，格式良好的两个调用。本章的后记会进一步详细介绍友元注入的历史。
 
-\subsubsubsection{13.2.3\hspace{0.2cm}Injected Class Names}
+\subsubsubsection{13.2.3\hspace{0.2cm}注入类名}
 
-The name of a class is injected inside the scope of that class itself and is therefore accessible as an unqualified name in that scope. (However, it is not accessible as a qualified name because this is the notation used to denote the constructors.) For example:
+类名注入到该类本身的作用域中，可以作为该作用域中的非限定名称访问。(因为这只是用来表示构造函数的符号，所以不能作为限定名访问)例如:
 
 \noindent
 \textit{details/adl.cpp}
@@ -220,9 +220,9 @@ int main()
 }
 \end{lstlisting}
 
-The member function C::f() returns the size of type C, whereas the function ::f() returns the size of the variable C (in other words, the size of an int object).
+成员函数C::f()返回类型C的大小，而函数::f()返回变量C的大小(换句话说，int对象的大小)。
 
-Class templates also have injected class names. However, they’re stranger than ordinary injected class names: They can be followed by template arguments (in which case they are injected class template names), but if they are not followed by template arguments they represent the class with its parameters as its arguments (or, for a partial specialization, its specialization arguments) if the context expects a type, or a template if the context expects a template. This explains the following situation:
+类模板也有注入类名。但是，比普通的方式更奇怪:它们后面可以跟着模板参数(这种情况下，注入的是类模板名)，但是如果后面没有模板参数，就表示将其形参作为实参的类(对于偏特化，则表示其特化的实参)，如果是上下文需要类型，则表示为模板。这就解释了以下情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename> class TT> class X {
@@ -237,9 +237,9 @@ template<typename T> class C {
 };
 \end{lstlisting}
 
-Note how the unqualified name refers to the injected name and is not considered the name of the template if it is not followed by a list of template arguments. To compensate, we can force the name of the template to be found by using the file scope qualifier ::.
+注意非限定名称是如何引用注入名称的，如果没有模板参数，就不会认为是模板名称。为了弥补这一点，可以使用文件作用域限定符::强制找到模板名称。
 
-The injected class name for a variadic template has an additional wrinkle: If the injected class name were directly formed by using the variadic template’s template parameters as the template arguments, the injected class name would contain template parameter packs that have not been expanded (see Section 12.4.1 on page 201 for details of pack expansion). Therefore, when forming the injected class name for a variadic template, the template argument that corresponds to a template parameter pack is a pack expansion whose pattern is that template parameter pack:
+可变参数模板注入的类名还有一个问题:如果通过使用可变参数模板的模板参数直接注入类名，那么注入的类名将包含没有展开的模板参数包(参见12.4.1节了解包展开的详细信息)。因此，当为可变参数模板参数注入类名时，对应的模板参数包是一个模式为该模板参数包的包展开:
 
 \begin{lstlisting}[style=styleCXX]
 template<int I, typename... T> class V {
@@ -248,11 +248,11 @@ template<int I, typename... T> class V {
 };
 \end{lstlisting}
 
-\subsubsubsection{13.2.4\hspace{0.2cm}Current Instantiations}
+\subsubsubsection{13.2.4\hspace{0.2cm}当前实例化类}
 
-The injected class name of a class or class template is effectively an alias for the type being defined. For a nontemplate class, this property is obvious, because the class itself is the only type with that name and in that scope. However, inside a class template or a nested class within a class template, each template instantiation produces a different type. This property is particularly interesting in that context, because it means that the injected class name refers to the same instantiation of the class template rather than some other specialization of that class template (the same holds for nested classes of class templates).
+为类或类模板的注入类名实际上是定义类型的别名。对于非模板类，这个属性很明显，因为类本身是具有该名称，且是在该作用域中的类型。但是，在类模板或类模板内嵌套的类中，每个模板实例都是不同的类型。这个属性在这个上下文中特别有趣，因为它注入的类名引用了类模板的相同实例化类，而不是该类模板的其他特化(对于类模板的嵌套类也是如此)。
 
-Within a class template, the injected class name or any type that is equivalent to the injected class name (including looking through type alias declarations) of any enclosing class or class template is said to refer to a current instantiation. Types that depend on a template parameter (i.e., dependent types) but do not refer to a current instantiation are said to refer to an unknown specialization, which may be instantiated from the same class template or some entirely different class template. The following example illustrates the difference:
+类模板中，注入类名或任何与外围类或类模板注入类名等价的类型(包括查看类型别名声明)都指向当前的实例。依赖于模板参数的类型(即依赖类型)但不引用当前实例化类型则称为引用未知特化，该特化可以从相同的类模板或完全不同的类模板实例化。下面的例子说明了其中的区别:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> class Node {
@@ -263,7 +263,7 @@ template<typename T> class Node {
 };
 \end{lstlisting}
 
-Identifying whether a type refers to a current instantiation can be confusing in the presence of nested classes and class templates. The injected class names of enclosing classes and class templates (or types equivalent to them) do refer to a current instantiation, while the names of other nested classes or class templates do not:
+嵌套类和类模板的情况下，确定类型是否引用当前实例化可能会造成混淆。外围类和类模板(或与其等价的类型)的注入类名引用当前实例化类，而其他嵌套类或类模板的名称则不引用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> class C {
@@ -284,7 +284,7 @@ template<typename T> class C {
 };
 \end{lstlisting}
 
-When a type refers to a current instantiation, the contents of that instantiated class are guaranteed to be instantiated from the class template or nested class thereof that is currently being defined. This has implications for name lookup when parsing templates—the subject of our next section—but it also leads to an alternative, more game-like way to determine whether a type X within the definition of a class template refers to a current instantiation or an unknown specialization: If another programmer can write an explicit specialization (described in detail in Chapter 16) such that X refers to that specialization, then X refers to an unknown specialization. For example, consider the instantiation of the type C<int>::J in the context of the above example: We know the definition of C<T>::J used to instantiate the concrete type (since that’s the type we’re instantiating). Moreover, because an explicit specialization cannot specialize a template or member of a template without also specializing all of the enclosing templates or members, C<int> will be instantiated from the enclosing class definition. Hence, the references to J and C<int> (where Type is int) within J refer to a current instantiation. On the other hand, one could write an explicit specialization for C<int>::I as follows:
+当类型引用当前实例化时，其内容保证从当前定义的类模板或其嵌套类中实例化。这对解析模板时的名称查找有影响，但也产生了另一种更类似游戏的方法，以确定类模板定义中的类型X是引用当前的实例化，还是未知的特化:如果另一个开发者编写显式特化(第16章中详细描述)，使X引用该特化，那么X引用未知的特化。例如，上面的例子中考虑类型C<int>::J的实例化:用于实例化C<T>::J的定义(因为这是正在实例化的类型)。此外，由于显式特化需要在了解所有外围模板或成员的情况下特化模板或模板成员，因此C<int>将从外围类定义实例化。所以，对J和C<int>(其中Type为int)的引用指向当前的实例化类。另外，可以为C<int>::I编写显式特化类，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<> struct C<int>::I {
@@ -292,6 +292,6 @@ template<> struct C<int>::I {
 };
 \end{lstlisting}
 
-Here, the specialization of C<int>::I provides a completely different definition than the one that was visible from the definition of C<T>::J, so the I inside the definition of C<T>::J refers to an unknown specialization.
+这里，为C<int>::I的特化提供了一个与C<T>::J定义中可见的定义完全不同的定义。因此C<T>::J定义中，I指的是一个未知的特化类。
 
 

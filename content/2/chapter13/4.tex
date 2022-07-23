@@ -1,9 +1,9 @@
 
-Class templates can inherit or be inherited from. For many purposes, there is nothing significantly different between the template and nontemplate scenarios. However, there is one important subtlety when deriving a class template from a base class referred to by a dependent name. Let’s first look at the somewhat simpler case of nondependent base classes.
+类模板可以继承或被继承，模板和非模板场景之间没有显著的区别。然而，当从依赖名称引用的基类派生类模板时，有一个微妙区别。让我们首先看看非依赖型基类的情况。
 
-\subsubsubsection{13.4.1\hspace{0.2cm}Nondependent Base Classes}
+\subsubsubsection{13.4.1\hspace{0.2cm}非依赖型基类}
 
-n a class template, a nondependent base class is one with a complete type that can be determined without knowing the template arguments. In other words, the name of this base is denoted using a nondependent name. For example:
+类模板中，非依赖型基类是具有完整类型的类，可以在不知道模板参数的情况下即可确定的基类。换句话说，这个基类的名称是使用非依赖型名称表示的。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename X>
@@ -26,7 +26,7 @@ class D2 : public Base<double> { // nondependent base
 };
 \end{lstlisting}
 
-Nondependent bases in templates behave very much like bases in ordinary nontemplate classes, but there is a slightly unfortunate surprise: When an unqualified name is looked up in the templated derivation, the nondependent bases are considered before the list of template parameters. This means that in the previous example, the member strange of the class template D2 always has the type T corresponding to Base<double>::T (in other words, int). For example, the following function is not valid C++ (assuming the previous declarations):
+模板中的非依赖型基类类似于普通非模板类中的基类，但当在模板派生中查找非限定名称时，非依赖型基类会优先考虑该名称，而后才是模板参数列表。类模板D2的成员strange总是对应Base<double>::T(就是int)的类型T。例如，下面的函数是无效的:
 
 \begin{lstlisting}[style=styleCXX]
 void g (D2<int*>& d2, int* p)
@@ -35,11 +35,11 @@ void g (D2<int*>& d2, int* p)
 }
 \end{lstlisting}
 
-This is counterintuitive and requires the writer of the derived template to be aware of names in the nondependent bases from which it derives—even when that derivation is indirect or the names are private. It would probably have been preferable to place template parameters in the scope of the entity they “templatize.”
+这有些违反直觉，并且要求派生模板的编写者知道派生自的非依赖型基类中的名称——即使该派生是间接的或名称是私有的。将模板参数放在它们“模板化”的范围中可能会更好。
 
-\subsubsubsection{13.4.2\hspace{0.2cm}Dependent Base Classes}
+\subsubsubsection{13.4.2\hspace{0.2cm}依赖型基类}
 
-In the previous example, the base class is fully determined. It does not depend on a template parameter. This implies that a C++ compiler can look up nondependent names in those base classes as soon as the template definition is seen. An alternative—not allowed by the C++ standard—would consist in delaying the lookup of such names until the template is instantiated. The disadvantage of this alternative approach is that it also delays any error messages resulting from missing symbols until instantiation. Hence, the C++ standard specifies that a nondependent name appearing in a template is looked up as soon as it is encountered. Keeping this in mind, consider the following example:
+前面的例子中，基类完全确定，不依赖于模板参数。只要知道模板定义，C++编译器就可以在这些基类中查找非依赖性名称。另一种方法(C++标准不允许)是延迟对这些名称的查找，直到模板实例化时再进行查找。这种方法的缺点是，由于缺少符号而导致的错误消息延迟至实例化。因此，C++标准在模板中出现的非依赖名称时就立即查找。记住这一点，看看下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -60,15 +60,15 @@ void g (DD<bool>& d)
 }
 \end{lstlisting}
 
-At point \#1 we find our reference to a nondependent name basefield: It must be looked up right away. Suppose we look it up in the template Base and bind it to the int member that we find therein. However, shortly after this we override the generic definition of Base with an explicit specialization. As it happens, this specialization changes the meaning of the basefield member to which we already committed! So, when we instantiate the definition of DD::f at point \#3 , we find that we too eagerly bound the nondependent name at point \#1 . There is no modifiable basefield in DD<bool> that was specialized at point \#2 , and an error message should have been issued.
+\#1找到了对非依赖名称basefield的引用，立即查找它。假设在Base模板中查找，并将它绑定到其中找到的int成员上。然而，此之后不久，我们使用显式特化重写了Base的定义。恰巧，这种特化改变了已经提交的basefield成员的含义!因此，在\#3实例化DD::f的定义时，发现太急于在\#1绑定非依赖名称。DD<bool>中没有在\#2特化basefield，并且发出应有的错误消息。
 
-To circumvent this problem, standard C++ says that nondependent names are not looked up in dependent base classes (but they are still looked up as soon as they are encountered).
+为了规避这个问题，标准C++在依赖型基类中不会查找非依赖名称(但在遇到它们时仍然会查找)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} This is part of the two-phase lookup rules that distinguish between a first phase when template definitions are first seen and a second phase when templates are instantiated (see Section 14.3.1 on page 249).
+\hspace*{0.75cm}这是两阶段查找规则的一部分，用来区分第一次看到模板定义时的第一阶段和模板实例化时的第二阶段(参见第14.3.1节)。
 \end{tcolorbox}
 
-So, a standard C++ compiler will emit a diagnostic at point \#1 . To correct the code, it suffices to make the name basefield dependent because dependent names can be looked up only at the time of instantiation, and at that time the concrete base instance that must be explored will be known. For example, at point \#3 , the compiler will know that the base class of DD<bool> is Base<bool> and that this has been explicitly specialized by the programmer. In this case, our preferred way to make the name dependent is as follows:
+因此，标准C++编译器将在\#1发出错误信息。要纠正代码，使名称basefield具有依赖性就好，因为依赖型名称只能在实例化时查找，而那时必须查找的具体基类实例类型就明朗了。例如，编译器在\#3将知道DD<bool>的基类是Base<bool>，并且这已经显式特化了。这种情况下，推荐的方式就是让名称转成依赖型:
 
 \begin{lstlisting}[style=styleCXX]
 // Variation 1:
@@ -79,7 +79,7 @@ class DD1 : public Base<T> {
 };
 \end{lstlisting}
 
-An alternative consists in introducing a dependency using a qualified name:
+另一种方法是使用限定名引入依赖:
 
 \begin{lstlisting}[style=styleCXX]
 // Variation 2:
@@ -90,7 +90,7 @@ class DD2 : public Base<T> {
 };
 \end{lstlisting}
 
-Care must be taken with this solution, because if the unqualified nondependent name is used to form a virtual function call, then the qualification inhibits the virtual call mechanism and the meaning of the program changes. Nonetheless, there are situations when the first variation cannot be used and this alternative is appropriate:
+使用这种解决方案必须小心，若使用非限定的非依赖名称来形成虚函数调用，那么限定会抑制虚函数调用机制，程序的含义也会发生变化。尽管如此，在某些情况下，当遇到第2种解决方案不适用的情况，可以使用方案1:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -112,11 +112,11 @@ class D : public B<T> {
 };
 \end{lstlisting}
 
-Note how we used D<T>::E instead of B<T>::E in this example. In this case, either one works. In multiple-inheritance cases, however, we may not know which base class provides the desired member (in which case using the derived class for qualification works) or multiple base classes may declare the same name (in which case we may have to use a specific base class name for disambiguation).
+这个例子中是如何用D<T>::E替换B<T>::E的。这种情况下，二者皆可。然而，在多重继承的情况下，可能不知道哪个基类提供了所需的成员(使用派生类进行限定)，或者多个基类可能声明相同的名称(必须使用特定的基类名称来消除歧义)。
 
-Note that the name one in the call one(e) is dependent on the template parameter simply because the type of one of the call’s explicit arguments is dependent. Implicitly used default arguments with a type that depends on a template parameter do not count because the compiler cannot verify this until it already has decided the lookup—a chicken-and-egg problem. To avoid subtlety, we prefer to use the this-> prefix in all situations that allow it—even for nontemplate code.
+注意，调用one(e)中的名称one依赖于模板参数，因为调用的显式参数之一是类型依赖型的。因为编译器在确定查找之前无法验证默认参数，所以对于依赖于模板形参的类型，隐式使用的默认实参无效。为了避免这些问题，我们更倾向于在允许的情况下使用this\texttt{->}前缀——同样适用于非模板代码。
 
-If you find that the repeated qualifications are cluttering up your code, you can bring a name from a dependent base class in the derived class once and for all:
+如果发现重复的限制使代码陷入混乱，可以从派生类中的依赖型基类中引入一个名称，从而一劳永逸:
 
 \begin{lstlisting}[style=styleCXX]
 // Variation 3:
@@ -128,15 +128,15 @@ class DD3 : public Base<T> {
 };
 \end{lstlisting}
 
-The lookup at point \#2 succeeds and finds the using declaration of point \#1 . However, the using declaration is not verified until instantiation time and our goal is achieved. There are some subtle limitations to this scheme. For example, if multiple bases are derived from, the programmer must select exactly which one contains the desired member.
+\#2的查找成功并找到\#1的使用的声明。然而，using声明直到实例化时才被确定。这个方案有一些限制，例如：如果派生了多个基类，开发者必须准确地选择包含所需成员的基类。
 
-When searching for a qualified name within the current instantiation, the C++ standard specifies that name lookup first search in the current instantiation and in all nondependent bases, similar to the way it performs unqualified lookup for that name. If any name is found, then the qualified name refers to a member of a current instantiation and will not be a dependent name.
+在当前实例化中搜索限定名称时，C++标准指定在当前实例化和所有非依赖型基类中首先搜索名称查找，类似于对该名称执行限定查找的方式。如果找到，则限定名称将引用当前实例化的成员，而不是依赖于名称。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}However, the lookup is nonetheless repeated when the template is instantiated, and if a different result is produced in that context, the program is ill-formed.
+\hspace*{0.75cm}但在实例化模板时仍然要重复查找，如果在该上下文中产生了不同的结果，则该程序的格式不正确。
 \end{tcolorbox}
 
-If no such name is found, and the class has any dependent bases, then the qualified name refers to a member of an unknown specialization. For example:
+如果没有找到这样的名称，并且类还有其他的依赖型基类，那么受限名称就会指代未知特化实例的某个成员。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class NonDep {

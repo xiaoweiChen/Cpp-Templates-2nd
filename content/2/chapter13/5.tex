@@ -1,33 +1,33 @@
-The first compiler really to parse template definitions was developed by a company called Taligent in the mid-1990s. Before that—and even several years after that—most compilers treated templates as a sequence of tokens to be played back through the parser at instantiation time. Hence no parsing was done, except for a minimal amount sufficient to find the end of a template definition. At the time of this writing, the Microsoft Visual C++ compiler still works this way. The Edison Design Group’s (EDG’s) compiler front end uses a hybrid technique where templates are treated internally as a sequence of annotated tokens, but a “generic parsing” is performed to validate the syntax in modes where that is desirable (EDG’s product emulates multiple other compilers; in particular, it can closely emulate the behavior of Microsoft’s compiler).
+真正用于解析模板定义的第一个编译器是在20世纪90年代中期，由一家名为Taligent的公司开发的。在此之前——甚至几年后——大多数编译器都将模板视为在实例化时才处理的标记。因此，除了找到模板定义结束位置等少许操作以外，没有进行任何解析。撰写本文时，Microsoft Visual C++编译器仍然以这种方式工作。爱迪生设计集团(EDG)的编译器前端使用了一种混合技术，模板在内部视为一个带注释的标记序列，在需要的模式中执行“通用解析”来验证语法(EDG的产品模拟多个其他编译器，可以很好地模拟微软编译器的行为)。
 
-Bill Gibbons was Taligent’s representative to the C++ committee and was the principal advocate for making templates unambiguously parsable. The Taligent effort was not released until the compiler was acquired and completed by Hewlett-Packard (HP), to become the aC++ compiler. Among its competitive advantages, the aC++ compiler was quickly recognized for its high-quality diagnostics. The fact that template diagnostics were not always delayed until instantiation time undoubtedly contributed to this perception.
+Bill Gibbons是Taligent在C++委员会的代表，其极力主张让模板可以无二义性地进行解析。然而，直到惠普公司完成第一个完整的编译器之后，Taligent公司的努力才真正产品化，也才有了一个真正编译模板的C++编译器。和其他具有竞争性优点的产品一样，这个C++编译器很快就由于高质量的错误信息而得到业界的认可。模板的错误信息不会总延迟到实例化时才发出，也要归功于这个编译器。
 
-Relatively early during the development of templates, Tom Pennello—a widely recognized parsing expert working for Metaware—noted some of the problems associated with angle brackets. Stroustrup also comments on that topic in [StroustrupDnE] and argues that humans prefer to read angle brackets rather than parentheses. However, other possibilities exist, and Pennello specifically proposed braces (e.g., Listf::Xg) at a C++ standards meeting in 1991 (held in Dallas).
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Braces are not entirely without problems either. Specifically, the syntax to specialize class templates would require nontrivial adaptation.
-\end{tcolorbox}
-
-At that time the extent of the problem was more limited because templates nested inside other templates—called member templates—were not valid, and thus the discussion of Section 13.3.3 on page 230 was largely irrelevant. As a result, the committee declined the proposal to replace the angle brackets.
-
-The name lookup rule for nondependent names and dependent base classes that is described in Section 13.4.2 on page 237 was introduced in the C++ standard in 1993. It was described to the “general public” in Bjarne Stroustrup’s [StroustrupDnE] in early 1994. Yet the first generally available implementation of this rule did not appear until early 1997 when HP incorporated it into their aC++ compiler, and by then large amounts of code derived class templates from dependent bases. Indeed, when the HP engineers started testing their implementation, they found that most of the programs that used templates in nontrivial ways no longer compiled.
+模板的早期开发过程中，Tom Pennello(Metaware公司的一位著名解析专家)就意识到了尖括号所带来的一些问题。Stroustrup也对这个话题进行了讨论[StroustrupDnE]，而且认为人们更喜欢阅读尖括号，而不是圆括号。然而，除了尖括号和圆括号，还存在其他的一些可能性:Pennello在1991年的C++标准大会(在达拉斯举办)上特别地提议使用大括号，例如(List{::X}）。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Fortunately, they found out before they released the new functionality.
+\hspace*{0.75cm}括号也不是完全没有问题。具体来说，特化类模板的语法需要进行重大的调整。
 \end{tcolorbox}
 
-In particular, all implementations of the Standard Template Library (STL) broke the rule in many hundreds—and sometimes thousands—of places.
+那时，因为嵌入在其他模板内部的模板(也称为成员模板)还是不合法的，所以问题的影响范围也非常有限，也就不会涉及到13.3.3节的问题。最后，委员会拒绝了这个取代尖括号的提议。
+
+13.4.2节中描述的非依赖型名称和依赖型基类的名称查找规则是在1993年C++标准中引入的。在1994年，Bjarne Stroustrup的[StroustrupDnE]首次公开描述了这一规则。然而直到1997年惠普才把这一规则引入C++编译器，自那以后出现了大量的派生自依赖型基类的类模板代码。当惠普工程师开始测试该实现时，发现大部分以特殊方式使用模板的代码都无法编译成功了。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Ironically, the first of these implementations had been developed by HP as well.
+\hspace*{0.75cm}幸运的是，在发布新功能之前就发现了。
 \end{tcolorbox}
 
-To ease the transition process for their customers, HP softened the diagnostic associated with code that assumed that nondependent names could be found in dependent base classes as follows: When a nondependent name used in the scope of a class template is not found using the standard rules, aC++ peeks inside the dependent bases. If the name is still not found, a hard error is issued and compilation fails. However, if the name is found in a dependent base, a warning is issued, and the name is marked to be treated as if it were dependent, so that lookup will be reattempted at instantiation time. 
+特别地，STL的所有实现都打破了这一规则。
 
-The lookup rule that causes a name in nondependent bases to hide an identically named template parameter (Section 13.4.1 on page 236) is an oversight, but suggestions to change the rule have not garnered support from the C++ standardization committee. It is best to avoid code with template parameter names that are also used in nondependent base classes. Good naming conventions are helpful for such problems.
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}具有讽刺意味的是，第一个实现也是由惠普开发的。
+\end{tcolorbox}
 
-Friend name injection was considered harmful because it made the validity of programs more sensitive to the ordering of instantiations. Bill Gibbons (who at the time was working on the Taligent compiler) was among the most vocal supporters of addressing the problem, because eliminating instantiation order dependencies enabled new and interesting C++ development environments (on which Taligent was rumored to be working). However, the Barton-Nackman trick (Section 21.2.1 on page 497) required a form of friend name injection, and it is this particular technique that caused it to remain in the language in its current (weakened) form based on ADL.
+考虑到客户的转换代码的成本，对于那些“假定非依赖型名称可以在依赖型基类中进行查找的”代码，惠普弱化了相关的错误信息。例如，对于位于类模板作用域的非依赖型名称，若利用标准原则不能找到该名称，C++就会在依赖型基类中进行查找。如果仍然找不到，才会给出一个错误而编译失败。然而，若在依赖型基类中找到了该名称，那么就会给出一个警告，对该名称进行标记，并且当成是依赖型名称，然后在实例化时再次查找。
 
-Andrew Koenig first proposed ADL for operator functions only (which is why ADL is sometimes called Koenig lookup). The motivation was primarily aesthetics: Explicitly qualifying operator names with their enclosing namespace looks awkward at best (e.g., instead of a+b we may need to write N::operator+(a, b)), and having to write using declarations for every operator can lead to unwieldy code. Hence, it was decided that operators would be looked up in the namespaces associated with arguments. ADL was later extended to ordinary function names to accommodate a limited kind of friend name injection and to support a two-phase lookup model for templates and their instantiations (Chapter 14). The generalized ADL rules are also called extended Koenig lookup.
+查找过程中，“非依赖型基类中的名称会隐藏相同名称的模板参数(13.4.1节)”这一规则显然是一个疏忽，但修改这一规则的建议还没被C++标准委员会所认可。最好的办法就是避免使用非依赖型基类中的名称作为模板参数名称。命名转换对这一类问题都是一种良好的解决方式。
 
-The specification for the angle bracket hack was added to C++11 by David Vandevoorde through his paper N1757. He also added the digraph hack via the resolution of Core issue 1104, to address a request of the United States’ review of a draft of the C++11 standard.
+友元注入一度认为是有害的，它会使得程序的合法性与实例出现的顺序紧密相关。Bill Gibbons(此时他还在Taligent公司开发编译器)就是解决这一问题的最大支持者，因为消除实例顺序依赖性激活了一个新的、有趣的C++开发领域(传闻Taligent正在做)。然而，Barton-Nackman技巧(21.2.1节)需要友元注入的形式，正是这种特殊的技术使它以基于ADL的(弱化)形式保留在语言中。
+
+Andrew Koenig首次为操作符函数提出了ADL查找(这就是为什么有时候ADL也称为Koenig查找)，动机主要是考虑美观性:“用外围命名空间显式地限定操作符名称”看起来很拖沓(例如，对于a+b，需要这样编写:N::operator+(a,b))，而为每个操作符使用using声明又会让代码看起来非常笨重。因此，才决定操作符可以在参数关联的命名空间中查找。ADL随后扩展到普通函数名称的查找，得以容纳有限种类的友元名称注入，并为模板及其实例支持两阶段查找模型(第14章)。泛化的ADL规则也称作扩展Koenig查找。
+
+David Vandevoorde通过他的论文N1757在C++11中添加了尖括号黑客规范。还通过核心问题1104的解决方案添加了“有向图黑客”，以解决美国对C++11标准草案的审查要求。

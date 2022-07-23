@@ -1,49 +1,49 @@
 
-Two fundamental activities of compilers for most programming languages are tokenization—also called scanning or lexing—and parsing. The tokenization process reads the source code as a sequence of characters and generates a sequence of tokens from it. For example, on seeing the sequence of characters int* p = 0;, the “tokenizer” will generate token descriptions for a keyword int, a symbol/operator *, an identifier p, a symbol/operator =, an integer literal 0, and a symbol/operator ;.
+大多数编程语言的编译器的两个基本活动是标记化(也称为扫描或词法)和解析。标记化过程将源代码读取为字符序列，并从中生成一系列标记。例如，当看到字符序列int* p = 0;时，“分词器”会将为关键字int、符号/运算符*、标识符p、符号/运算符=、整数文字0和符号/运算符;生成记号描述。
 
-A parser will then find known patterns in the token sequence by recursively reducing tokens or previously found patterns into higher level constructs. For example, the token 0 is a valid expression, the combination * followed by an identifier p is a valid declarator, and that declarator followed by “=” followed by the expression “0” is a valid init-declarator. Finally, the keyword int is a known type name, and, when followed by the init-declarator *p = 0, you get the initializing declaration of p.
+然后，解析器通过递归减少标记或先前模式到更高级别的构造中，从而在标记序列中找到已知的模式。例如，词牌0是一个有效的表达式，后跟标识符p的组合*是一个有效的声明符，声明符后跟“=”再后跟表达式“0”是一个初始化声明符。最后，关键字int是已知的类型名称，当后跟初始化声明器*p = 0时，即得到p的初始化声明。
 
-\subsubsubsection{13.3.1\hspace{0.2cm}Context Sensitivity in Nontemplates}
+\subsubsubsection{13.3.1\hspace{0.2cm}非模板中的上下文相关性}
 
-As you may know or expect, tokenizing is easier than parsing. Fortunately, parsing is a subject for which a solid theory has been developed, and many useful languages are not hard to parse using this theory. However, the theory works best for context-free languages, and we have already noted that C++ is context sensitive. To handle this, a C++ compiler will couple a symbol table to the tokenizer and parser: When a declaration is parsed, it is entered in the symbol table. When the tokenizer finds an identifier, it looks it up and annotates the resulting token if it finds a type. 
+词法化比解析更容易，词法解析是一门已经发展出坚实理论的学科，许多语言都使用该理论进行解析。然而，该理论最适合上下文无关的语言，我们已经知道C++是上下文敏感的。为了处理这个问题，C++编译器会将符号表与分词器和解析器耦合起来:当解析一个声明时，会使用符号表进行解析。当分词器找到一个标识符时，会进行查找，并在找到匹配类型时对结果词法进行注释。
 
-For example, if the C++ compiler sees
+例如，C++编译器看到
 
 \begin{lstlisting}[style=styleCXX]
 x*
 \end{lstlisting}
 
-the tokenizer looks up x. If it finds a type, the parser sees
+分词器会查找x，如果找到类型，解析器将看到
 
 \begin{lstlisting}[style=styleCXX]
 identifier, type, x
 symbol, *
 \end{lstlisting}
 
-and concludes that a declaration has started. However, if x is not found to be a type, then the parser receives from the tokenizer
+并得出结论说，这是一个声明。但是，如果x不是类型，则解析器从分词器接收到的信息为
 
 \begin{lstlisting}[style=styleCXX]
 identifier, nontype, x
 symbol, *
 \end{lstlisting}
 
-and the construct can be parsed validly only as a multiplication. The details of these principles are dependent on the particular implementation strategy, but the gist should be there.
+该构造只能通过乘法进行有效解析，这些细节取决于具体实现策略。
 
-Another example of context sensitivity is illustrated in the following expression:
+下面的表达式说明了上下文相关的另一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 X<1>(0)
 \end{lstlisting}
 
-If X is the name of a class template, then the previous expression casts the integer 0 to the type X<1> generated from that template. If X is not a template, then the previous expression is equivalent to
+如果X是类模板的名称，那表达式将整数0强制转换为从该模板生成的类型X<1>。如果X不是模板，则表达式等价于
 
 \begin{lstlisting}[style=styleCXX]
 (X<1)>0
 \end{lstlisting}
 
-In other words, X is compared with 1, and the result of that comparison—true or false, implicitly converted to 1 or 0 in this case—is compared with 0. Although code like this is rarely used, it is valid C++ (and valid C, for that matter). A C++ parser will therefore look up names appearing before a < and treat the < as an angle bracket only if the name is known to be that of a template; otherwise, the < is treated as an ordinary less-than operator.
+换句话说，X与1比较，比较的结果(下隐式转换为1或0)与0比较。虽然这样的代码很少使用，但它是有效的C++(和有效的C)代码。因此，C++解析器将查找出现在<之前的名称，当知道该名称是模板名称时，才将<作为尖括号处理;否则，<将视为小于操作符。
 
-This form of context sensitivity is an unfortunate consequence of having chosen angle brackets to delimit template argument lists. Here is another such consequence:
+这种形式的上下文相关性，是选择尖括号来分隔模板参数列表的结果。这是另一种情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<bool B>
@@ -58,32 +58,32 @@ void g()
 }
 \end{lstlisting}
 
-If the parentheses in Invert<(1>0)> were omitted, the greater-than symbol would be mistaken for the closing of the template argument list. This would make the code invalid because the compiler would read it to be equivalent to ((Invert<1>))0>::result.
+如果省略了Invert<(1>0)>中的圆括号，则大于符号将误认为模板参数列表的结束符号。这将使代码无效，因为编译器将其视为((Invert<1>))0>::result。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note the double parentheses to avoid parsing (Invert<1>)0 as a cast operation—yet another source of syntactic ambiguity.
+\hspace*{0.75cm}注意，使用双括号是为了避免将(Invert<1>)0作为强制转换操作进行解析——这也是导致语法歧义的另一个原因。
 \end{tcolorbox}
 
-The tokenizer isn’t spared problems with the angle-bracket notation either. For example, in
+分词器也不能避免尖括号表示法的问题。例如：
 
 \begin{lstlisting}[style=styleCXX]
 List<List<int>> a;
 			 // ^ -- no space between right angle brackets
 \end{lstlisting}
 
-the two > characters combine into a right-shift token >> and hence are never treated as two separate tokens by the tokenizer. This is a consequence of the maximum munch tokenization principle: A C++ implementation must collect as many consecutive characters as possible into a token.
+两个>字符组合成右移标记\textgreater{}\textgreater{}，因此分词器不会将其视为两个单独的标记。这是最大蒙克标记化原则的结果:C++实现必须将尽可能多的连续字符收集到标记中。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Specific exceptions were introduced to address tokenization issues described in this section.
+\hspace*{0.75cm}可以引入了特定的异常来解决本节中描述的标记化问题。
 \end{tcolorbox}
 
-As mentioned in Section 2.2 on page 28, since C++11, the C++ standard specifically calls out this case—where a nested template-id is closed by a right-shift token >>—and, within the parser, treats the right shift as being equivalent to two separate right angle brackets > and > to close two template-ids at once.
+正如在2.2节中提到的，C++11标准特别调用了这种情况——嵌套的模板标识使用\textgreater{}\textgreater{}标记作为结束——并且，在解析器中，等同于两个独立的尖括号，一次性关闭两个模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The 1998 and 2003 versions of the C++ standard did not support this “angle bracket hack.” However, the need to introduce a space between the two consecutive right angle brackets was such a common stumbling block for beginning template users that the committee decided to codify this hack in the 2011 standard.
+\hspace*{0.75cm}1998年和2003年版本的C++标准不支持这种“尖括号攻击”。然而，需要在两个连续的尖括号之间加入一个空格，这对模板初学者来说是一个障碍，因此委员会决定在2011年的标准中对这种写法进行改变。
 \end{tcolorbox}
 
-It’s interesting to note that this change silently changes the meaning of some—admittedly contrived—programs. Consider the following example:
+这一变化改变了某些程序(诚然，这些程序是人为设计的)的意义。考虑下面的例子:
 
 \noindent
 \textit{details/anglebrackethack.cpp}
@@ -111,13 +111,13 @@ int main()
 }
 \end{lstlisting}
 
-This is a valid C++98 program that outputs 0 3. It is also a valid C++11 program, but there the angle bracket hack makes the two parenthesized expressions equivalent, and the output is 0 0.
+这是一套C++98代码，输为出0 3。在使用C++11标准时，尖括号使用方式的变革使得括号内的两个语句等价，所以输出为0 0。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Some compilers that provide a C++98 or C++03 mode keep the C++11 behavior in those modes and thus print 0 0 even when formally compiling C++98/C++03 code.
+\hspace*{0.75cm}一些提供C++98或C++03模式的编译器会保持C++11在这些模式下的行为，因此即使使用C++98/C++03编译也会打印0 0。
 \end{tcolorbox}
 
-A similar problem existed because of the existence of the digraph <: as an alternative for the source character [ (which is not available on some traditional keyboards). Consider the following example:
+由于“<:”是“["(在一些传统键盘上不可用)的替代，因此也存在类似的问题。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> struct G {};
@@ -125,13 +125,13 @@ struct S;
 G<::S> gs; // valid since C++11, but an error before that
 \end{lstlisting}
 
-Before C++11, that last line of code was equivalent to G[:S> gs;, which is clearly invalid. Another “lexical hack” was added to address that problem: When a compiler sees the characters <:: not immediately followed by : or >, the leading pair of characters <: is not treated as a digraph token equivalent to [.
+C++11前，最后一行代码相当于G[:S> gs;，这显然是无效的代码标识。为了解决这个问题，添加了另一个“词法黑客”:当编译器看到字符<::没有立即跟在:或>后面时，前导“<:”不再等同于“[”。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This is therefore an exception to the aforementioned maximum munch principle.
+\hspace*{0.75cm}这是前面提到的最大蒙克原则的一个例外。
 \end{tcolorbox}
 
-This digraph hack can make previously valid (but somewhat contrived) programs invalid:
+这个黑客技巧使得以前有效(但有些人为)的代码，编程无效代码:
 
 \begin{lstlisting}[style=styleCXX]
 #define F(X) X ## :
@@ -140,21 +140,21 @@ int a[] = { 1, 2, 3 }, i = 1;
 int n = a F(<::)i]; // valid in C++98/C++03, but not in C++11
 \end{lstlisting}
 
-To understand this, note that the “digraph hack” applies to preprocessing tokens, which are the kinds of tokens acceptable to the preprocessor (they may not be acceptable after preprocessing has completed), and they are decided before macro expansion completes. With that in mind, C++98/C++03 unconditionally transforms <: into [ in the macro invocation F(<::), and the definition of n expands to
+要理解这一点，“词法黑客”适用于预处理标记，这是预处理程序可以接受的标记类型(在预处理完成后可能无法接受)，它们在宏展开完成之前决定。考虑到这一点，C++98/C++03在宏调用F(<::)中无条件地将“<:”转换为“[”，n的定义扩展为
 
 \begin{lstlisting}[style=styleCXX]
 int n = a [ :: i];
 \end{lstlisting}
 
-which is perfectly fine. C++11, however, does not perform the digraph transformation because, before macro expansion, the sequence <:: is not followed by : or >, but by ). Without the digraph transformation, the concatenation operator \#\# must attempt to glue :: and : into a new preprocessing token, but that doesn’t work because ::: is not a valid concatenation token. That standard makes this undefined behavior, which allows the compiler to do anything. Some compilers will diagnose this problem, while others won’t and will just keep the two preprocessing tokens separate, which is a syntax error because it leads to a definition of n that expands to
+这完全没问题。因为在宏展开之前，"<::"后面不是":"或">"，而是")"，所以C++11则不会进行字符转换。没有转换，连接操作符必须尝试将"::"和":"粘合到新的预处理标记中，但这不起作用，因为":::"不是有效的连接标记。C++11标准导致了这种未定义的行为，有些编译器会诊断这个问题，只是将两个预处理标记分开，这是一个语法错误，因为它导致n的定义扩展为
 
 \begin{lstlisting}[style=styleCXX]
 int n = a < :: : i];
 \end{lstlisting}
 
-\subsubsubsection{13.3.2\hspace{0.2cm}Dependent Names of Types}
+\subsubsubsection{13.3.2\hspace{0.2cm}依赖型类型名称}
 
-The problem with names in templates is that they cannot always be sufficiently classified. In particular, one template cannot look into another template because the contents of that other template can be made invalid by an explicit specialization. The following contrived example illustrates this:
+模板名称的问题在于，不能进行合理的分类。特别是，模板不能查看另一个模板，因为另一个模板的内容可以通过显式特化使其无效。下面的例子说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -184,43 +184,43 @@ void boom(Victim<void>& bomb)
 }
 \end{lstlisting}
 
-As the compiler is parsing line \#2 , it must decide whether it is seeing a declaration or a multiplication. This decision in turn depends on whether the dependent qualified name Trap<T>::x is a type name. It may be tempting to look in the template Trap at this point and find that, according to line \#1 , Trap<T>::x is not a type, which would leave us to believe that line \#2 is a multiplication. However, a little later the source corrupts this idea by overriding the generic Trap<T>::x for the case where T is void. In this case, Trap<T>::x is in fact type int.
+当编译器解析\#2行时，必须判断看到的是声明还是乘法。这又取决于依赖的限定名Trap<T>::x是否是类型名。可能很容易在模板Trap中查找，并根据\#1行，知道Trap<T>::x不是一个类型，这将使\#2行是一个乘法。但是，其为T为void的情况重写了通用的Trap<T>::x。这种情况下，Trap<T>::x实际上是int类型。
 
-In this example, the type Trap<T> is a dependent type because the type depends on the template parameter T. Moreover, Trap<T> refers to an unknown specialization (described in Section 13.2.4 on page 223), which means that the compiler cannot safely look inside the template to determine whether the name Trap<T>::x is a type or not. Had the type preceding the :: referred to a current instantiation—for example, with Victim<T>::y—the compiler could have looked into the template definition because it is certain that no other specialization could intervene. Thus, when the type preceding :: refers to the current instantiation, qualified name lookup in a template behaves very similarly to qualified name lookup for nondependent types.
+这个例子中，类型Trap<T>是一个依赖类型，该类型依赖于模板参数T。而且，Trap<T>引用了一个未知的特化(在第13.2.4节中描述)，从而编译器不能安全地查看模板内部，来确定名称Trap<T>::x是否是一个类型。如果"::"前面的类型引用当前实例化类——例如，Trap<T>::y——编译器就可以看到模板定义，从而确定没有其他特化介入。因此，当"::"前面的类型指向当前实例化类时，模板中的限定名查找与非依赖类型的限定名查找非常类似。
 
-However, as illustrated by the example, name lookup into an unknown specialization is still a problem. The language definition resolves this problem by specifying that in general a dependent qualified name does not denote a type unless that name is prefixed with the keyword typename. If it turns out, after substituting template arguments, that the name is not the name of a type, the program is invalid and your C++ compiler should complain at instantiation time. Note that this use of typename differs from the use to denote template type parameters. Unlike type parameters, you cannot equivalently replace typename with class.
+但是，对未知特化的名称查找仍然是一个问题。解决这个问题的方法是，指定依赖的限定名不表示类型，除非该名称以关键字typename作为前缀。如果在替换模板参数之后，发现名称不是类型的名称，则程序无效，并且C++编译器应该在实例化时报错。注意，typename的这种用法与表示模板类型参数的用法不同。与类型参数不同，不能等价地将typename替换为class。
 
-The typename prefix to a name is required when the name satisfies all of the following conditions:
+当名称满足以下条件时，typename前缀是必需的:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that C++20 will probably remove the need for typename in most cases (see Section 17.1 on page 354 for details).
+\hspace*{0.75cm}请注意，C++20在大多数情况下可能会删除对typename的需要(请参阅第17.1节了解详细信息)。
 \end{tcolorbox}
 
 \begin{enumerate}
 \item 
-It is qualified and not itself followed by :: to form a more qualified name.
+是有限定的，而不是它本身后面加"::"以形成一个更有限定的名称。
 
 \item 
-It is not part of an elaborated-type-specifier (i.e., a type name that starts with one of the keywords class, struct, union, or enum).
+不是详细类型说明符(即以关键字class、struct、union或enum之一开头的类型名)的一部分。
 
 \item 
-It is not used in a list of base class specifications or in a list of member initializers introducing a constructor definition.
+不在基类规范列表中或引入构造函数定义的成员初始化式列表中使用。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Syntactically, only type names are permitted within these contexts, so a qualified name is always assumed to name a type.
+\hspace*{0.75cm}从语法上讲，这些上下文中只允许使用类型名，因此可以假设使用限定名来命名类型。
 \end{tcolorbox}
 
 \item 
-It is dependent on a template parameter.
+依赖于模板参数。
 
 \item 
-It is a member of an unknown specialization, meaning that the type named by the qualifier refers to an unknown specialization.
+是未知特化的成员，由限定符命名的类型指向未知的特化类型。
 \end{enumerate}
 
-Furthermore, the typename prefix is not allowed unless at least the first two previous conditions hold. To illustrate this, consider the following erroneous example:
+此外，若不满足前两个条件，则不可使用typename前缀。为了说明这一点，看看以下的错误例子:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Adapted from [VandevoordeSolutions], proving once and for all that C++ promotes code reuse.
+\hspace*{0.75cm}改编自[VandevoordeSolutions]，多次证明C++代码重用的重要性。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -239,15 +239,15 @@ struct S : typename2 X<T>::Base {
 };
 \end{lstlisting}
 
-Each occurrence of typename—correct or not—is numbered with a subscript for easy reference. The first, typename1, indicates a template parameter. The previous rules do not apply to this first use.
+每次出现typename(不管正确与否)都用一个下标进行编号，以便于引用。第一个typename$_1$表示模板参数。前面的规则不适用于第一次使用。
 
-The second and third typenames are disallowed by the second item in the previous rules. Names of base classes in these two contexts cannot be preceded by typename. However, typename4 is required. Here, the name of the base class is not used to denote what is being initialized or derived from. Instead, the name is part of an expression to construct a temporary X<T>::Base from its argument 0 (a sort of conversion, if you will). The fifth typename is prohibited because the name that follows it, X<T>, is not a qualified name. The sixth occurrence is required if this statement is to declare a pointer. The next line omits the typename keyword and is therefore interpreted by the compiler as a multiplication. The seventh typename is optional because it satisfies the first two rules but not the last two. The eighth typename is also optional, because it refers to a member of a current instantiation (and therefore does not satisfy the last rule).
+前面规则中的第二项不允许使用第二个和第三个类型名。这两个上下文中基类的名称之前不能有typename。但是，typename$_4$是必需的。这里，基类的名称不表示要初始化或派生的对象，而该名称是表达式的一部分，该表达式从其参数0构建临时X<T>::Base(可以认为是一种转换)。禁止使用第五个typename，因为它后面的名称X<T>不是限定名称。若此语句要声明指针，则typename需要出现第六次了。下一行省略了typename关键字，因此编译器将其解释为乘法。第七个typename是可选的，因为它满足前两个规则，但不满足后两个规则。第八个typename也是可选的，因为它引用当前实例化的一个成员(因此不满足最后一个规则)。
 
-The last of the rules for determining whether the typename prefix is required can occasionally be tricky to evaluate, because it depends on the rules for determining whether a type refers to a current instantiation or an unknown specialization. In such cases, it is safest to simply add the typename keyword to indicate that you intend the qualified name that follows to be a type. The typename keyword, even if it’s optional, will provide documentation of your intent.
+确定是否需要typename前缀的最后一个规则有时很难评估，因为它依赖于确定类型是引用当前实例化，还是未知特化的规则。这种情况下，最安全的做法是添加typename关键字，以表明希望后面的限定名是类型。typename关键字，即使它是可选的，也会为开发者的意图增加可读性。
 
-\subsubsubsection{13.3.3\hspace{0.2cm}Dependent Names of Templates}
+\subsubsubsection{13.3.3\hspace{0.2cm}依赖型模板名称}
 
-A problem very similar to the one encountered in the previous section occurs when a name of a template is dependent. In general, a C++ compiler is required to treat a < following the name of a template as the beginning of a template argument list; otherwise, it is a less-than operator. As is the case with type names, a compiler has to assume that a dependent name does not refer to a template unless the programmer provides extra information using the keyword template:
+当模板名称是依赖型名称时，会出现与上一节中遇到的问题非常相似的问题。通常，C++编译器需要将模板名称后面的<作为模板参数列表的开头。与类型名的情况一样，除非开发者使用关键字template提供额外的信息，否则编译器必须假设依赖型名称不指向模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -279,19 +279,19 @@ public:
 };
 \end{lstlisting}
 
-This somewhat intricate example shows how all the operators that can qualify a name (::, ->, and .) may need to be followed by the keyword template. Specifically, this is the case whenever the type of the name or expression preceding the qualifying operator is dependent on a template parameter and refers to an unknown specialization, and the name that follows the operator is a template-id (in other words, a template name followed by template arguments in angle brackets). For example, in the expression
+这个有点复杂的示例展示了所有可以限定名称(::、->和.)的操作符(可能需要跟在template关键字的后面)。当限定操作符前面的名称或表达式的类型，依赖于模板参数，并引用未知的特化，并且操作符后面的名称是模板标识(模板名称)时，就会出现这种情况。例如：
 
 \begin{lstlisting}[style=styleCXX]
 p.template Deep<N>::f()
 \end{lstlisting}
 
-the type of p depends on the template parameter T. Consequently, a C++ compiler cannot look up Deep to see if it is a template, and we must explicitly indicate that Deep is the name of a template by inserting the prefix template. Without this prefix, p.Deep<N>::f() is parsed as ((p.Deep)<N)>f(). Note also that this may need to happen multiple times within a qualified name because qualifiers themselves may be qualified with a dependent qualifier. (This is illustrated by the declaration of the parameters of case1 and case2 in the previous example.)
+p的类型依赖于模板形参T，所以C++编译器无法通过查找Deep来确定它是否是模板，而必须通过前缀template来显式地指出Deep是模板的名称。若没有这个前缀，p.Deep<n>::f()会解析为((p.Deep)<n)>f()。这可能会在限定名中进行多次，因为限定符本身可能使用依赖限定符进行限定。(可以通过前面示例中case1和case2参数的声明来说明。)
 
-If the keyword template is omitted in cases such as these, the opening and closing angle brackets are parsed as less-than and greater-than operators. As with the typename keyword, one can safely add the template prefix to indicate that the following name is a template-id, even if the template prefix is not strictly needed.
+若省略了关键字template，那么开始和结束尖括号将解析为小于和大于操作符。与typename关键字一样，可以安全地添加template前缀，以表明下面的名称是模板标识(即使template前缀不是必须的)。
 
-\subsubsubsection{13.3.4\hspace{0.2cm}Dependent Names in Using Declarations}
+\subsubsubsection{13.3.4\hspace{0.2cm}Using中声明依赖型名称}
 
-Using declarations can bring in names from two places: namespaces and classes. The namespacecase is not relevant in this context because there are no such things as namespace templates. Using declarations that bring in names from classes, on the other hand, can bring in names only from a base class to a derived class. Such using declarations behave like “symbolic links” or “shortcuts” in the derived class to the base declaration, thereby allowing the members of the derived class to access the nominated name as if it were actually a member declared in that derived class. A short nontemplate example illustrates the idea better than mere words:
+使用声明可以引入来自两个地方的名称:名称空间和类。命名空间的情况与此不同，因为不存在“命名空间模板”。另一方面，使用从类引入名称的声明只能从基类引入名称到派生类。这种using声明的行为类似于派生类到基类声明的“符号链接”或“快捷方式”，从而允许派生类的成员访问指定的名称，就好像是派生类中声明的成员一样。简短的非模板示例会比文字更能说明这中情况:
 
 \begin{lstlisting}[style=styleCXX]
 class BX {
@@ -307,9 +307,9 @@ class DX : private BX {
 };
 \end{lstlisting}
 
-The previous using declaration brings in the name f of the base class BX into the derived class DX. In this case, this name is associated with two different declarations, thus emphasizing that we are dealing with a mechanism for names and not individual declarations of such names. Note also that this kind of using declaration can make accessible an otherwise inaccessible member. The base BX (and thus its members) are private to the class DX, except that the functions BX::f have been introduced in the public interface of DX and are therefore available to the clients of DX.
+前面的using声明将基类BX的名称f引入派生类DX。这个名称与两个不同的声明相关联，从而强调处理的是名称机制，而不是这些名称的声明。这种using声明可以使无法访问的成员，变为可访问的。基函数BX(以及它的成员)是DX类私有的，函数BX::f引入到了DX的公有接口，从而可以进行访问。
 
-By now you can probably perceive the problem when a using declaration brings in a name from a dependent class. Although we know about the name, we don’t know whether it’s the name of a type, a template, or something else:
+当using声明从从属类引入名称时，可能会发现一个问题。虽然知道名称，但不知道它是类型、模板，还是其他什么:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -328,7 +328,7 @@ class DXTT : private BXT<T> {
 };
 \end{lstlisting}
 
-Again, if we want a dependent name to be brought in by a using declaration to denote a type, we must explicitly say so by inserting the keyword typename. Strangely, the C++ standard does not provide for a similar mechanism to mark such dependent names as templates. The following snippet illustrates the problem:
+若希望通过using声明引入依赖型名称来指定类型时，则必须通过关键字typename显式说明。奇怪的是，C++标准没有提供类似的机制来将依赖名称标记为模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -339,7 +339,7 @@ class DXTM : private BXT<T> {
 }; // known template
 \end{lstlisting}
 
-The standardization committee has not been inclined to address this issue. However, C++11 alias templates do provide a partial workaround:
+标准化委员会并没有倾向于解决这个问题。然而，C++11别名模板提供了部分解决方案:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -351,11 +351,9 @@ class DXTM : private BXT<T> {
 };
 \end{lstlisting}
 
-This is a little unwieldy, but it achieves the desired effect for the case of class templates. The case of function templates (arguably less common) remains unaddressed, unfortunately.
+这有点笨拙，但是对于类模板来说，达到了预期的效果。但函数模板的情况(可以说不太常见)仍然没有得到解决。
 
-\subsubsubsection{13.3.5\hspace{0.2cm}ADL and Explicit Template Arguments}
-
-Consider the following example:
+\subsubsubsection{13.3.5\hspace{0.2cm}ADL和显式模板参数}
 
 \begin{lstlisting}[style=styleCXX]
 namespace N {
@@ -371,21 +369,21 @@ void g (N::X* xp)
 }
 \end{lstlisting}
 
-In this example, we may expect that the template select() is found through ADL in the call select<3>(xp). However, this is not the case because a compiler cannot decide that xp is a function call argument until it has decided that <3> is a template argument list. Furthermore, a compiler cannot decide that <3> is a template argument list until it has found select() to be a template. Because this chicken-and-egg problem cannot be resolved, the expression is parsed as (select<3)>(xp), which makes no sense.
+这个例子中，可能期望通过调用select<3>(xp)中的ADL找到模板select()。然而，情况并非如此，因为编译器在确定<3>是模板参数列表之前，无法确定xp是否是一个函数调用参数。此外，在找到select()是模板之前，编译器不能确定<3>是否是模板参数列表。因为无法解决这个先有鸡还是先有蛋的问题，所以表达式解析为(select<3)>(xp)。
 
-This example may give the impression that ADL is disabled for template-ids, but it is not. The code can be fixed by introducing a function template named select that is visible at the call:
+这个例子可能看起来像模板标识禁用了ADL，但事实并非如此。可以通过引入一个名为select的函数模板来修复该代码，该函数模板在调用时可见:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void select();
 \end{lstlisting}
 
-Even though it doesn’t make any sense for the call select<3>(xp), the presence of this function template ensures that select<3> will be parsed as a template-id. ADL will then find the function template N::select, and the call will succeed.
+即使select<3>(xp)没有任何意义，这个函数模板的存在确保select<3>会解析为模板标识。然后ADL会找到函数模板N::select，从而使调用成功。
 
-\subsubsubsection{13.3.6\hspace{0.2cm}Dependent Expressions}
+\subsubsubsection{13.3.6\hspace{0.2cm}依赖型表达式}
 
-Like names, expressions themselves can be dependent on template parameters. An expression that depends on a template parameter can behave differently from one instantiation to the next—for example, selecting a different overloaded function or producing a different type or constant value. Expressions that do not depend on a template parameter, in contrast, provide the same behavior in all instantiations.
+与名称一样，表达式本身也依赖于模板参数。依赖于模板参数的表达式在每次实例化和下一次实例化时的行为可能不同——例如，选择不同的重载函数或生成不同的类型或常量值。相反，不依赖于模板参数的表达式在所有实例化中行为相同。
 
-An expression can be dependent on a template parameter in several different ways. The most common form of dependent expression is a type-dependent expression, where the type of the expressionitself can vary from one instantiation to the next—for example, an expression that refers to a function parameter whose type is that of a template parameter:
+表达式可以以几种不同的方式依赖于模板参数。依赖型表达式最常见的形式是类型依赖，表达式本身的类型可以从一个实例化到下一个实例化，例如：一个表达式引用一个函数参数，其类型是模板参数的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void typeDependent1(T x)
@@ -394,7 +392,7 @@ template<typename T> void typeDependent1(T x)
 }
 \end{lstlisting}
 
-Expressions that have type-dependent subexpressions are generally type-dependent themselves—for example, calling a function f() with the argument x:
+具有依赖于类型子表达式的表达式本身通常也依赖于类型——例如，使用参数x调用函数f():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void typeDependent2(T x)
@@ -403,9 +401,9 @@ template<typename T> void typeDependent2(T x)
 }
 \end{lstlisting}
 
-Here, note that type of f(x) can vary from one instantiation to the next both because f might resolve to a template whose result type depends on the argument type and because two-phase lookup (discussed in Section 14.3.1 on page 249) might find completely different functions named f in different instantiations.
+注意f(x)的类型在不同的实例化中可能不同，这是因为f可能解析为一个结果类型依赖于参数类型的模板，也因为两阶段查找(在第14.3.1节中讨论)可能在不同的实例化中发现名为f的函数。
 
-Not all expressions that involve template parameters are type-dependent. For example, an expression that involves template parameters can produce different constant values from one instantiation to the next. Such expressions are called value-dependent expressions, the simplest of which are those that refer to a nontype template parameter of nondependent type. For example:
+并非所有涉及模板参数的表达式都依赖于类型。例如，包含模板参数的表达式，可以在每次实例化到下一次实例化时产生不同的常量值。这样的表达式称为值依赖型表达式，最简单的是引用非依赖类型的非类型模板参数表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<int N> void valueDependent1()
@@ -415,9 +413,9 @@ template<int N> void valueDependent1()
 }
 \end{lstlisting}
 
-Like type-dependent expressions, an expression is generally value-dependent if it is composed of other value-dependent expressions, so N + N or f(N) are also value-dependent expressions.
+与类型依赖表达式一样，如果表达式由其他值依赖型表达式组成，那么这个表达式也是值依赖型的，因此N + N或f(N)也是依赖值的表达式。
 
-Interestingly, some operations, such as sizeof, have a known result type, so they can turn a typedependent operand into a value-dependent expression that is not type-dependent. For example:
+有趣的是，有些操作(如sizeof)具有已知的结果类型，因此可以将依赖操作数类型的表达式，转换为不依赖值类型的表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void valueDependent2(T x)
@@ -426,9 +424,9 @@ template<typename T> void valueDependent2(T x)
 }
 \end{lstlisting}
 
-The sizeof operation always produces a value of type std::size\_t, regardless of its input, so a sizeof expression is never type-dependent, even if—as in this case—its subexpression is typedependent. However, the resulting constant value will vary from one instantiation to the next, so sizeof(x) is a value-dependent expression.
+sizeof操作会产生std::size\_t类型的值，不管输入是什么。因此sizeof表达式不依赖于类型(即使子表达式依赖于类型)。但是，产生的常量值会因实例化的不同而不同，因此sizeof(x)是一个值依赖型的表达式。
 
-What if we apply sizeof on a value-dependent expression?
+如果对值依赖型表达式应用sizeof会怎样呢?
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void maybeDependent(T const& x)
@@ -437,26 +435,26 @@ template<typename T> void maybeDependent(T const& x)
 }
 \end{lstlisting}
 
-Here, the inner sizeof expression is value-dependent, as noted above. However, the outer sizeof expression always computes the size of a std::size\_t, so both its type and constant value are consistent across all instantiations of the template, despite the innermost expression (x) being typedependent. Any expression that involves a template parameter is an instantiation-dependent expression,
+这里，内部sizeof表达式依赖于值。然而，外部的sizeof表达式总是生成std::size\_t类型的值，因此类型和常量值在模板的所有实例化中都是一致的。任何涉及模板参数的表达式都是实例化依赖型表达式，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The terms type-dependent expression and value-dependent expression are used in the C++ standard to describe the semantics of templates, and they have an effect on several aspects of template instantiation (Chapter 14). On the other hand, the term instantiation-dependent expression is mainly only used by the authors of C++ compilers. Our definition of a instantiation-dependent expression comes from the Itanium C++ ABI [ItaniumABI], which provides the basis for binary interoperability among a number of different C++ compilers.
+\hspace*{0.75cm}C++标准中使用了类型和值依赖型的表达式来描述模板的语义，它们对模板实例化的几个方面有影响(第14章)。另一方面，术语实例化依赖表达式主要供C++编译器的作者使用。我们对实例化相关表达式的定义来自Itanium C++ ABI [ItaniumABI]。
 \end{tcolorbox}
 
-even if both its type and constant value are invariant across valid instantiations. However, an instantiation-dependent expression may turn out to be invalid when instantiated. For example, instantiating maybeDependent() with an incomplete class type will trigger an error, because sizeof cannot be applied to such types.
+即使即使类型和常数值在实例化中都是不变的。然而，与实例化相关的表达式在实例化时可能会无效。例如，使用不完整的类实例化maybeDependent()将会触发一个错误，因为sizeof不能应用于此类类型。
 
-Type-, value-, and instantiation-dependence can be thought of as a series of increasingly more inclusive classifications of expressions. Any type-dependent expression is also considered to be value-dependent, because an expression whose type that varies from one instantiation to the next will naturally have its constant value vary from one instantiation to the next. Similarly, an expression whose type or value varies from one instantiation to the next depends on a template parameter in some way, so both type-dependent expressions and value-dependent expressions are instantiationdependent. This containment relationship is illustrated by Figure 13.1.
+类型、值和实例化型依赖可以看作一系列泛型的表达式分类。任何依赖于类型的表达式会认为是值依赖型的，因为表达式的类型会在不同实例化之间变化，它的常量值自然也会在不同实例化之间变化。类似地，表达式的类型或值在每次实例化中都不同，在某种程度上依赖于模板参数，因此类型依赖型和值依赖型的表达式都是实例化依赖型的。这种关系如图13.1所示。
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/2/chapter13/images/1.png} \\
-Figure 13.1. Containment relationship among type-, value-, and instantiation-dependent expressions
+图13.1. 类型、值和实例化型依赖表达式之间的关系
 \end{center}
 
-As one proceeds from the innermost context (type-dependent expressions) to the outermost context, more of the behavior of the template is determined when the template is parsed and therefore cannot vary from one instantiation to the next. For example, consider the call f(x): If x is type-dependent, then f is a dependent name that is subject to two-phase lookup (Section 14.3.1 on page 249), whereas if x is value-dependent but not type-dependent, f is a nondependent name for which name lookup can be completely determined at the time that the template is parsed.
+当从最内部的上下文(依赖于类型的表达式)到最外部的上下文时，模板的更多行为是在模板解析时决定的，因此不能在一个实例化到下一个实例化时进行变化。例如，若f(x)中的x依赖于类型，那么f依赖于名称，需要进行两阶段查找(第14.3.1节)，而若x依赖于值但不依赖于类型，那么f是不非依赖名称，在解析模板时可以完全确定其查找名称。
 
-\subsubsubsection{13.3.7\hspace{0.2cm}Compiler Errors}
+\subsubsubsection{13.3.7\hspace{0.2cm}编译错误}
 
-A C++ compiler is permitted (but not required!) to diagnose errors at the time the template is parsed when all of the instantiations of the template would produce that error. Let’s expand on the f(x) example from the previous section to explore this further:
+当所有模板实例都会产生错误时，C++编译器允许(但不是必需的!)在解析模板时诊断错误。让我们扩展上一节中的f(x)例子来进一步探讨这个问题:
 
 \begin{lstlisting}[style=styleCXX]
 void f() { }
@@ -468,7 +466,7 @@ template<int x> void nondependentCall()
 }
 \end{lstlisting}
 
-Here, the call f(x) will produce an error in every instantiation because f is a nondependent name and the only visible f accepts zero arguments, not one. A C++ compiler can produce an error when parsing the template or may wait until the first template instantiation: Commonly used compilers differ even on this simple example. One can construct similar examples with expressions that are instantiation-dependent but not value-dependent:
+这里，调用f(x)在每个实例中都会产生错误，因为f是一个非依赖名称，而且唯一可见的f不接受参数。C++编译器在解析模板时会产生错误，或者会等到第一个模板实例化时才会产生错误:即使在这个简单的例子中，常用编译器的表现也会有所不同。可以构造相似的例子：表达式是实例依赖的，但并不是值依赖的。
 
 \begin{lstlisting}[style=styleCXX]
 template<int N> void instantiationDependentBound()

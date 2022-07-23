@@ -57,16 +57,13 @@
 ## 本书相关
 
 * github地址：https://github.com/xiaoweiChen/Cpp-Templates-2nd
-
 * 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html 
-
 * vscode中配置latex：https://blog.csdn.net/Ruins_LEE/article/details/123555016
-
+* 开源示例：https://github.com/downdemo/Cpp-Templates-2ed
 * 开源翻译：
 
   * https://github.com/Walton1128/CPP-Templates-2nd--
   * https://github.com/r00tk1ts/cpp-templates-2nd
   * https://www.zhihu.com/column/c_1397602018500890624
-  
-  
+
 

@@ -1,20 +1,20 @@
 
-The examples so far illustrate requirements that are not fundamentally different from the requirements when using nontemplate classes. Many uses require a class type to be complete (see Section 10.3.1 on page 154). For the template case, the compiler will generate this complete definition from the class template definition.
+到目前为止所展示的这些例子，和使用非模板类相比并没有本质上的区别，例如：需要完整的类类型(参见第10.3.1节)。对于模板的情况，编译器将根据类模板定义生成这个完整的定义。
 
-A pertinent question now arises: How much of the template is instantiated? A vague answer is the following: Only as much as is really needed. In other words, a compiler should be “lazy” when instantiating templates. Let’s look at exactly what this laziness entails.
+那模板实例化程度如何?一个模糊的答案是:达到需要的程度即可。换句话说，编译器在实例化模板时是“延迟的”。来看看这种懒惰到底意味着什么。
 
-\subsubsubsection{14.2.1\hspace{0.2cm}Partial and Full Instantiation}
+\subsubsubsection{14.2.1\hspace{0.2cm}部分实例化和完全实例化}
 
-As we have seen, the compiler sometimes doesn’t need to substitute the complete definition of a class or function template. For example:
+正如所看到的，编译器有时不需要替换类或函数模板的完整定义。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> T f (T p) { return 2*p; }
 decltype(f(2)) x = 2;
 \end{lstlisting}
 
-In this example, the type indicated by decltype(f(2)) does not require the complete instantiation of the function template f(). A compiler is therefore only permitted to substitute the declaration of f(), but not its “body.” This is sometimes called partial instantiation.
+本例中，由decltype(f(2))表示的类型不需要函数模板f()的完整实例化。因此，编译器允许替换f()的声明，而不允许替换它的“主体”。这有时称为部分实例化。
 
-Similarly, if an instance of a class template is referred to without the need for that instance to be a complete type, the compiler should not perform a complete instantiation of that class template instance. Consider the following example:
+如果引用类模板的实例，而不需要该实例是完整类型，编译器不执行该类模板实例的完整实例化。看看下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> class Q {
@@ -24,36 +24,36 @@ template<typename T> class Q {
 Q<int>* p = 0; // OK: the body of Q<int> is not substituted
 \end{lstlisting}
 
-Here, the full instantiation of Q<int> would trigger an error, because T::Type doesn’t make sense when T is int. But because Q<int> need not be complete in this example, no full instantiation is performed and the code is okay (albeit suspicious).
+这里，因为T::Type在T为int时没有意义，所以Q<int>的实例化将触发一个错误。在这个例子中Q<int>不需要完整定义，所以没有执行完整的实例化。
 
-Variable templates also have a “full” vs. “partial” instantiation distinction. The following example illustrates it:
+变量模板也有“完整”和“部分”实例化的区别。下面的例子说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> T v = T::default_value();
 decltype(v<int>) s; // OK: initializer of v<int> not instantiated
 \end{lstlisting}
 
-A full instantiation of v<int> would elicit an error, but that is not needed if we only need the type of the variable template instance.
+v<int>的完整实例化会引起错误，但只是需要变量模板实例类型的话，不需要进行完整实例化。
 
-Interestingly, alias templates do not have this distinction: There are no two ways of substituting them.
+有趣的是，别名模板没有这种区别。
 
-In C++, when speaking about “template instantiation” without being specific about full or partial instantiation, the former is intended. That is, instantiation is full instantiation by default.
+C++谈到“模板实例化”而不确定是完整还是部分实例化时，通常说的是“完整实例化”。也就是说，实例化在默认情况下是完全实例化。
 
-\subsubsubsection{14.2.2\hspace{0.2cm}Instantiated Components}
+\subsubsubsection{14.2.2\hspace{0.2cm}实例化组件}
 
-When a class template is implicitly (fully) instantiated, each declaration of its members is instantiated as well, but the corresponding definitions are not (i.e., the member are partially instantiated). There are a few exceptions to this. First, if the class template contains an anonymous union, the members of that union’s definition are also instantiated.
+当类模板隐式(完全)实例化时，其成员的声明也会实例化，但相应的定义不会(即成员部分实例化)，当然也有一些例外。首先，若类模板包含匿名联合，则该联合定义的成员也会实例化。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Anonymous unions are always special in this way: Their members can be considered to be members of the enclosing class. An anonymous union is primarily a construct that says that some class members share the same storage.
+\hspace*{0.75cm}匿名联合在这方面总是特别的:其成员可以认为是外围类的成员。匿名联合是一种表示某些类成员共享相同存储空间的结构。
 \end{tcolorbox}
 
-The other exception occurs with virtual member functions. Their definitions may or may not be instantiated as a result of instantiating a class template. Many implementations will, in fact, instantiate the definition because the internal structure that enables the virtual call mechanism requires the virtual functions actually to exist as linkable entities. 
+另一个异常发生在虚成员函数中，其定义可以作为类模板实例化的结果而实例化，也可以不实例化。许多实现将实例化该定义，因为支持虚函数调用机制的内部结构，要求虚函数实际上作为可链接实体存在。 
 
-Default function call arguments are considered separately when instantiating templates. Specifically, they are not instantiated unless there is a call to that function (or member function) that actually makes use of the default argument. If, on the other hand, the function is called with explicit arguments that override the default, then the default arguments are not instantiated.
+实例化模板时，默认函数调用参数会单独处理。除非调用了实际使用默认参数的函数(或成员函数)，否则不会对其实例化。另外，如果函数调用时带有覆盖默认参数的显式参数，不会实例化默认参数。
 
-Similarly, exception specifications and default member initializers are not instantiated unless they are needed.
+类似地，通常不会实例化异常规范和默认成员初始化器。
 
-Let’s put together some examples that illustrate some of these principles:
+结合一些例子来说明这些原则:
 
 \noindent
 \textit{details/lazy1.hpp}
@@ -88,27 +88,27 @@ class Tricky {
 };
 \end{lstlisting}
 
-A standard C++ compiler will examine these template definitions to check the syntax and general semantic constraints. While doing so, it will “assume the best” when checking constraints involving template parameters. For example, the parameter N in the member Danger::arr could be zero or negative (which would be invalid), but it is assumed that this isn’t the case.
+标准C++编译器会检查这些模板定义，来检查语法和语义约束。在当检查涉及模板参数的约束时，将其“认为是最佳情况”。例如，成员Danger::arr中的参数N可以是零或负的(这是无效的)，但假定情况并非如此。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Some compilers, such as GCC, allow zero-length arrays as extensions and may therefore accept this code even when N ends up being 0.
+\hspace*{0.75cm}一些编译器，如GCC，允许零长度数组作为扩展，因此即使N为0，也没问题。
 \end{tcolorbox}
 
-The definitions of inclass(), struct Nested, and the anonymous union are thus not a problem.
+因此，inclass()、嵌套struct和匿名联合的定义都不是问题。
 
-For the same reason, the declaration of the member unsafe(T (*p)[N]) is not a problem, as long as N is an unsubstituted template parameter.
+只要N是一个未替换的模板参数，成员的不安全声明(T (*p)[N])也没有问题。
 
-The default argument specification (= 3) on the declaration of the member noBodyHere() is suspicious because the template Safe<> isn’t initializable with an integer, but the assumption is that either the default argument won’t actually be needed for the generic definition of Safe<T> or that Safe<T> will be specialized (see Chapter 16) to enable initialization with an integer value However, the definition of the member function error() is an error even when the template is not instantiated, because the use of Danger<-1> requires a complete definition of the class Danger<-1>, and generating that class runs into an attempt to define an array with negative size. Interestingly, while the standard clearly states that this code is invalid, it also allows compilers not to diagnose the error when the template instance is not actually used. That is, since Tricky<T,N>::error() is not used for any concrete T and N, a compiler is not required to issue an error for this case. For example, GCC and Visual C++ do not diagnose this error at the time of this writing.
+因为模板Safe<>不能用整数初始化，所以成员noBodyHere()声明的默认参数specification(=3)看起来很诡异，但假设要么默认参数不需要用Safe<T>的泛型定义，要么Safe<T>将特化(参见第16章)以使用整数值初始化。然而，即使模板没有实例化，成员函数error()也会为其定义一个错误。因为使用Danger<-1>需要完整地定义Danger<-1>类，而生成该类会导致定义一个负大小的数组。有趣的是，虽然标准明确声明此代码无效，但也允许编译器在没有实际使用模板实例时不报错误。由于Tricky<T,N>::error()不用于具体的T和N，因此编译器不需要为此发出错误。在编写本文时，GCC和Visual C++都不会对此进行报错。
 
-Now let’s analyze what happens when we add the following definition:
+现在来分析一下当添加以下定义时会发生什么:
 
 \begin{lstlisting}[style=styleCXX]
 Tricky<int, -1> inst;
 \end{lstlisting}
 
-This causes the compiler to (fully) instantiate Tricky<int, -1> by substituting int for T and -1 for N in the definition of template Tricky<>. Not all the member definitions will be needed, but the default constructor and the destructor (both implicitly declared in this case) are definitely called, and hence their definitions must be available somehow (which is the case in our example, since they are implicitly generated). As explained above, the members of Tricky<int, -1> are partially instantiated (i.e., their declarations are substituted): That process can potentially result in errors. For example, the declaration of unsafe(T (*p)[N]) creates an array type with a negative of number elements, and that is an error. Similarly, the member anonymous now triggers an error, because type Danger<-1> cannot be completed. In contrast, the definitions of the members inclass() and struct Nested are not yet instantiated, and thus no errors occur from their need for the complete type Danger<-1> (which contains an invalid array definition as we discussed earlier).
+这会导致编译器在模板Tricky<>的定义中用int替换T，用-1替换N，从而(完全)实例化Tricky<int， -1>。不是所有成员定义都需要，但默认构造函数和析构函数(隐式声明)肯定会调用，因此它们的定义必须以某种方式可用。如上所述，Tricky<int， -1>的成员会部分实例化(也就是声明被替换):这个过程可能会导致错误。例如，不安全的(T (*p)[N])声明会创建一个负数的数组类型(这是错误的)。类似地，因为类型Danger<-1>无法完成，成员anonymous会触发错误。相比之下，成员class()和struct Nested的定义还没有实例化，因此在完整类型Danger<-1>(包含前面讨论的无效数组)实例化时不会发生错误。
 
-As written, when instantiating a template, in practice, the definitions of virtual members should also be provided. Otherwise, linker errors are likely to occur. For example:
+实例化模板时，实际上也应该提供虚成员的定义。否则，可能会发生链接错误。例如:
 
 \noindent
 \textit{details/lazy2.cpp}
@@ -126,7 +126,7 @@ int main()
 }
 \end{lstlisting}
 
-Finally, a note about operator->. Consider:
+最后，注意operator\texttt{->}:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -136,14 +136,13 @@ class C {
 };
 \end{lstlisting}
 
-Normally, operator-> must return a pointer type or another class type to which operator-> applies. This suggests that the completion of C<int> triggers an error, because it declares a return type of int for operator->. However, because certain natural class template definitions trigger these kinds of definitions,the language rule is more flexible.
+通常，operator\texttt{->}必须返回指针类型或其他类类型。这样，因为声明了operator\texttt{->}的返回类型为int，C<int>的补全会触发一个错误。但某些类模板定义触发了这些类型(返回类型为T或者T*)的定义，所以语言规则更灵活。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Typical examples are smart pointer templates (e.g., the standard std::unique\_ptr<T>)
+\hspace*{0.75cm}典型的例子是智能指针模板(例如，std::unique\_ptr<T>)
 \end{tcolorbox}
 
-A user-defined operator-> is only required to return a type to which another (e.g., built-in) operator-> applies if that operator is actually selected by overload resolution. This is true even outside templates (although the relaxed behavior is less useful in those contexts). Hence, the declaration here triggers no error, even though int is substituted for the return type.
-
+只有在重载解析规则确实选择了用户自定义的operator\texttt{->}时，才要求自定义operator\texttt{->}只能返回应用其他(内置)operator\texttt{->}的类型。这甚至对模板之外的代码也同样有效(这种松弛法则(relaxed behavior)在上下文中用处不大)。因此，尽管int会替代该返回类型，但这里的声明不会触发错误。
 
 
 

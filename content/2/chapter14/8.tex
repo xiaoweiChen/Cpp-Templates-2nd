@@ -1,18 +1,18 @@
-This chapter deals with two related but different issues: the C++ template compilation model and various C++ template instantiation mechanisms.
+本章讨论两个相关但不同的问题:C++模板编译模型和C++模板实例化机制。
 
-The compilation model determines the meaning of a template at various stages of the translation of a program. In particular, it determines what the various constructs in a template mean when it is instantiated. Name lookup is an essential ingredient of the compilation model.
+编译模型在程序转换的各个阶段决定模板的含义。特别地，它确定了模板中各种构造在实例化时的含义。名称查找是编译模型的重要组成部分。
 
-Standard C++ only supports a single compilation model, the inclusion model. However, the 1998 and 2003 standards also supported a separation model of template compilation, which allowed a template definition to be written in a different translation unit from its instantiations. These exported templates were only ever implemented once, by the Edison Design Group (EDG).
+标准C++只支持一种编译模型，即包含模型。然而，1998年和2003年的标准也支持模板编译的分离模型，允许在与实例化不同的翻译单元中编写模板定义。这些导出的模板只由爱迪生设计团队(EDG)实现过。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Ironically, EDG was the most vocal opponent of the feature when it was added to the working paper for the original standard.
+\hspace*{0.75cm}具有讽刺意味的是，将该技术添加到标准文档中时，EDG是最强烈的反对者。
 \end{tcolorbox}
 
-Their implementation effort determined that (1) implementing the separation model of C++ templates was vastly more difficult and time consuming than had been anticipated, and (2) the presumed benefits of the separation model, such as improved compile times, did not materialize due to complexities of the model. As the development of the 2011 standard was wrapping up, it became clear that other implementers were not going to support the feature, and the C++ standards committee voted to remove exported templates from the language. We refer readers interested in the details of the separation model to the first edition of this book ([VandevoordeJosuttisTemplates1st]), which describes the behavior of exported templates. 
+实现工作确定了:(1)实现C++模板的分离模型比预期的要困难得多，耗时也多;(2)分离模型的假设优势(比如:改进编译时间)，由于模型的复杂性，并没有实现。随着2011年标准的开发接近尾声，并且其他实现者不打算支持该特性，C++标准委员会投票决定从该语言中删除导出模板的特性。对分离模型的细节感兴趣的读者，推荐本书的第一版([VandevoordeJosuttisTemplates1st])，其中描述了导出模板的具体行为。
 
-The instantiation mechanisms are the external mechanisms that allow C++ implementations to create instantiations correctly. These mechanisms may be constrained by requirements of the linker and other software building tools. While instantiation mechanisms differ from one implementation to the next (and each has its trade-offs), they generally do not have a significant impact on day-to-day programming in C++.
+实例化机制允许C++实现正确创建实例化的机制，这些机制可能会受到链接器和其他软件构建工具的限制。虽然实例化机制在不同的实现中不同(每个实现都有其优缺点)，但通常不会对C++的编程产生重大影响。
 
-Shortly after C++11 was completed, Walter Bright, Herb Sutter, and Andrei Alexandrescu proposed a “static if” feature not unlike constexpr if (via paper N3329). It was, however, a more general feature that could appear even outside of function definitions. (Walter Bright is the principal designer and implementer of the D programming language, which has a similar feature.) For example:
+C++11完成后不久，Walter Bright、Herb Sutter和Andrei Alexandrescu提出了一个与constexpr if类似的“静态if”特性(通过N3329)。然而，它是一个更普遍的特性，甚至可以出现在函数定义之外(Walter Bright是D编程语言的主要设计者和实现者，D语言也有类似的功能)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<unsigned long N>
@@ -25,9 +25,9 @@ struct Fact {
 };
 \end{lstlisting}
 
-Note how class-scope declarations are made conditional in this example. This powerful ability was controversial, however, with some committee members fearing that it might be abused and others not liking some technical aspects of the proposal (such as the fact that no scope is introduced by the braces and the discarded branch is not parsed at all).
+本例中，类作用域声明是有条件的。然而，这种强大能力具有争议，一些委员会成员担心它会滥用，而另一些则不喜欢该提议使用的某些技术(例如，大括号没有引入范围，并且丢弃的分支根本没有解析)。
 
-A few years later, Ville Voutilainen came back with a proposal (P0128) that was mostly what would become constexpr if statements. It went through a few minor design iterations (involving tentative keywords static\_if and constexpr\_if) and, with the help of Jens Maurer, Ville eventually shepherded the proposal into the language (via paper P0292r2).
+几年后，Ville Voutilainen带着提案(P0128)回来了，就是后来的constexpr if语句。经过了一些设计迭代(涉及到暂定的关键字static\_if和constexpr\_if)，在Jens Maurer的帮助下，Ville最终将该提案引入语言(通过P0292r2)。
 
 
 

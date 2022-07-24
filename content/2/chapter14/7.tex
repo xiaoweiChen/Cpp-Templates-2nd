@@ -1,4 +1,4 @@
-The C++ standard library includes a number of templates that are only commonly used with a few basic types. For example, the std::basic\_string class template is most commonly used with char (because std::string is a type alias of std::basic\_string<char>) or wchar\_t, although it is possible to instantiate it with other character-like types. Therefore, it is common for standard library implementations to introduce explicit instantiation declarations for these common cases. For example:
+C++标准库包含许多模板，这些模板通常只用于基本类型。例如，std::basic\_string类模板最常与char(std::string是std::basic\_string<char>的类型别名)或wchar\_t一起使用，可以用其他类似字符的类型实例化。因此，标准库实现通常会为这些常见情况引入显式的实例化声明。例如:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -12,4 +12,4 @@ namespace std {
 }
 \end{lstlisting}
 
-he source files implementing the standard library will then contain the corresponding explicit instantiation definitions, so that these common implementations can be shared among all users of the standard library. Similar explicit instantiations often exist for the various stream classes, such as basic\_iostream, basic\_istream, and so on.
+实现标准库的源文件将包含显式实例化定义，这些公共实现可以在标准库的所有用户间共享。类似的显式实例化通常存在于各种流类中，例如basic\_iostream、basic\_istream等。

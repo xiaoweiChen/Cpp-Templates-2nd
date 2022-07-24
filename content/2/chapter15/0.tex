@@ -1,5 +1,5 @@
-Explicitly specifying template arguments on every call to a function template (e.g., concat<std::string, int>(s, 3)) can quickly lead to unwieldy code. Fortunately, a C++ compiler can often automatically determine the intended template arguments using a powerful process called template argument deduction.
+每次调用函数模板时显式地指定模板参数(例如，concat<std::string, int>(s, 3))，代码很快就会变得很笨重。幸运的是，C++编译器可以使用模板参数推导的功能自动确定模板参数。
 
-In this chapter we explain the details of the template argument deduction process. As is often the case in C++, there are many rules that usually produce an intuitive result. A solid understanding of this chapter allows us to avoid the more surprising situations.
+本章中，我们会解释模板参数推导的详细过程。就像在C++中经常出现的情况一样，许多规则通常会产生直观的结果。
 
-Although template argument deduction was first developed to ease the invocation of function templates, it has since been broadened to apply to several other uses, including determining the types of variables from their initializers.
+尽管模板参数推导最初是为了简化函数模板调用而添加的，但后来扩展到了其他用途，包括从初始化式确定变量的类型。

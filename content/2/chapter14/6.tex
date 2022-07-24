@@ -1,6 +1,6 @@
-As introduced in Section 8.5 on page 134, C++17 added a new statement kind that turns out to be remarkably useful when writing templates: compile-time if. It also introduces a new wrinkle in the instantiation process.
+正如第8.5节中介绍的，C++17添加了一种新的语句类型，编写模板时非常有用:编译时if。不过，这在实例化过程中引入了一个新的问题。
 
-The following example illustrates its basic operation:
+下面的例子演示了其基本操作:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> bool f(T p) {
@@ -16,17 +16,17 @@ bool g(int n) {
 }
 \end{lstlisting}
 
-The compile-time if is an if statement, where the if keyword is immediately followed by the constexpr keyword (as in this example).
+编译时if是一个if语句，其中if关键字紧跟着constexpr关键字(如本例所示)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} Although the code reads if constexpr, the feature is called constexpr if, because it is the “constexpr” form of if.
+\hspace*{0.75cm}虽然代码读取if constexpr，但该特性称为constexpr if，因为它是if的“constexpr”形式。
 \end{tcolorbox}
 
-The parenthesized condition that follows must have a constant Boolean value (implicit conversions to bool are included in that consideration). The compiler therefore knows which branch will be selected; the other branch is called the discarded branch. Of particular interest is that during the instantiation of templates (including generic lambdas), the discarded branch is not instantiated. That is necessary for our example to be valid: We are instantiating f(T) with T = int, which means that the else branch is discarded. If it weren’t discarded, it would be instantiated and we’d run into an error for the expression p.compare(0) (which isn’t valid when p is a simple integer).
+后面的圆括号条件必须有一个确定的布尔值(包含了对bool的隐式转换)。因此，编译器知道将选择哪个分支;另一个分支为丢弃分支。特别值得注意的是，在模板(包括泛型Lambda)的实例化期间，不会实例化丢弃分支。我们使用T = int实例化f(T)，将丢弃else分支。如果没有丢弃，将会实例化，并且会遇到表达式p.compare(0)的错误信息(当p是一个简单整数时，这个表达式是错误是)。
 
-Prior to C++17 and its constexpr if statements, avoiding such errors required explicit template specialization or overloading (see Chapter 16) to achieve similar effects.
+C++17及其constexpr if语句可用之前，为了避免此类错误，需要显式的模板特化或重载(参见第16章)来达到类似的效果。
 
-The example above, in C++14, might be implemented as follows:
+上面的例子中，在C++14可以这样实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<bool b> struct Dispatch { // only to be instantiated when b is false
@@ -50,9 +50,9 @@ bool g(int n) {
 }
 \end{lstlisting}
 
-Clearly, the constexpr if alternative expresses our intention far more clearly and concisely. However, it requires implementations to refine the unit of instantiation: Whereas previously function definitions were always instantiated as a whole, now it must be possible to inhibit the instantiation of parts of them.
+显然，constexpr if替代方案使我们的意图，更加清楚和简洁。然而，需要实现来细化实例化的单元:以前的函数定义总是作为一个整体实例化，现在必须抑制部分实例化。
 
-Another very handy use of constexpr if is expressing the recursion needed to handle function parameter packs. To generalize the example, introduced in Section 8.5 on page 134:
+constexpr if的另一个用法是表示处理函数参数包所需的递归。为了推广这个例子，在第8.5节中进行了介绍:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Head, typename... Remainder>
@@ -65,9 +65,9 @@ void f(Head&& h, Remainder&&... r)
 }
 \end{lstlisting}
 
-Without constexpr if statements, this requires an additional overload of the f() template to ensure that recursion terminates.
+如果没有constexpr if语句，就需要对f()模板进行重载，以确保递归终止。
 
-Even in nontemplate contexts, constexpr if statements have a somewhat unique effect:
+即使在非模板上下文中，constexpr if语句也有些独特的效果:
 
 \begin{lstlisting}[style=styleCXX]
 void h();
@@ -78,10 +78,10 @@ void g() {
 }
 \end{lstlisting}
 
-On most platforms, the condition in g() is false and the call to h() is therefore discarded. As a consequence, h() need not necessarily be defined at all (unless it is used elsewhere, of course). Had the keyword constexpr been omitted in this example, a lack of a definition for h() would often elicit an error at link time.
+在大多数平台上，g()中的条件为false，因此会丢弃h()的调用。因此，h()不需要定义(当然，除非在其他地方使用)。如果本例中省略了关键字constexpr，那么缺少h()的定义通常会在链接时引起错误。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Optimization may nonetheless mask the error. With constexpr if the problem is guaranteed not to exist.
+\hspace*{0.75cm}优化可能会掩盖错误。如果保证不存在问题，则可以使用constexpr。
 \end{tcolorbox}
 
 

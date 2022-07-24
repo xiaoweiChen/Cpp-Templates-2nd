@@ -1,12 +1,12 @@
-When a C++ compiler encounters the use of a template specialization, it will create that specialization by substituting the required arguments for the template parameters.
+当C++编译器遇到模板特化时，将通过替换模板参数来创建该特化。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The term specialization is used in the general sense of an entity that is a specific instance of a template (see Chapter 10). It does not refer to the explicit specialization mechanism described in Chapter 16.
+\hspace*{0.75cm}术语特化用于一般意义上的实体，是模板的一个特定实例(参见第10章)，不涉及第16章中描述的显式特化机制。
 \end{tcolorbox}
 
-This is done automatically and requires no direction from the client code (or from the template definition, for that matter). This on-demand instantiation feature sets C++ templates apart from similar facilities in other early compiled languages (like Ada or Eiffel; some of these languages require explicit instantiation directives, whereas others use run-time dispatch mechanisms to avoid the instantiation process altogether). It is sometimes also called implicit or automatic instantiation.
+特化是自动完成的，不需要特殊代码(或者模板定义)的指导。这种按需变化的实例化特性将C++模板与其他早期编译语言不同(如Ada或Eiffel;一些语言需要显式的实例化指令，而其他语言则使用运行时分发机制来避免实例化)。这有时也称为隐式或自动实例化。
 
-On-demand instantiation implies that the compiler often needs access to the full definition (in other words, not just the declaration) of the template and some of its members at the point of use. Consider the following tiny source code file:
+按需实例化要求编译器在使用时，需要经常访问模板及其部分成员的完整定义(不仅仅是声明)。看看下面的示例:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> class C; // #1 declaration only
@@ -30,17 +30,17 @@ void C<T>::f() // required definition due to #6
 { }
 \end{lstlisting}
 
-At point \#1 in the source code, only the declaration of the template is available, not the definition (such a declaration is sometimes called a forward declaration). As is the case with ordinary classes, we do not need the definition of a class template to be visible to declare pointers or references to this type, as was done at point \#2 . For example, the type of the parameter of function g() does not require the full definition of the template C. However, as soon as a component needs to know the size of a template specialization or if it accesses a member of such a specialization, the entire class template definition is required to be visible. This explains why at point \#6 in the source code, the class template definition must be seen; otherwise, the compiler cannot verify that the member exists and is accessible (not private or protected). Furthermore, the member function definition is needed too, since the call at point \#6 requires C<int>::f() to exist.
+\#1处只有模板的声明是可用的，而不是定义(这种声明称为前置声明)。与普通类的情况一样，不需要类模板的定义来声明指向该类型的指针或引用，就像\#2那样。例如，函数g()的参数类型不需要模板C的完整定义。但当组件需要知道模板特化的大小时，或者访问类的特化成员时，整个类模板定义就必须可见。这解释了为什么在源代码中\#6，必须看到类模板定义;否则，编译器无法验证该成员是否存在，以及是否可访问(不是private或protected)。此外，也需要成员函数的定义，因为\#6的调用需要C<int>::f()。
 
-Here is another expression that needs the instantiation of the previous class template because the size of C<void> is needed:
+下面是另一个表达式，因为需要C<void>的大小，所以需要实例化之前的类模板:
 
 \begin{lstlisting}[style=styleCXX]
 C<void>* p = new C<void>;
 \end{lstlisting}
 
-In this case, instantiation is needed so that the compiler can determine the size of C<void>, which the new-expression needs to determine how much storage to allocate. You might observe that for this particular template, the type of the argument X substituted for T will not influence the size of the template because in any case, C<X> is an empty class. However, a compiler is not required to avoid instantiation by analyzing the template definition (and all compilers do perform the instantiation in practice). Furthermore, instantiation is also needed in this example to determine whether C<void> has an accessible default constructor and to ensure C<void> does not declare member operators new or delete.
+这种情况下需要实例化，以便编译器可以确定C<void>的大小，new表达式需要确定分配多少存储空间。对于这个特定的模板，替代T的参数X的类型不会影响模板的大小，因为C<X>是一个空类。但编译器不需要分析模板定义来避免实例化(编译器都会执行实例化)。此外，本例中还需要实例化来确定C<void>是否具有可访问的默认构造函数，并确保C<void>不会声明成员操作符new或delete。
 
-The need to access a member of a class template is not always very explicitly visible in the source code. For example, C++ overload resolution requires visibility into class types for parameters of candidate functions:
+访问类模板成员在源代码中并不总是显式可见，例如:C++重载解析要求对候选函数的参数类型可见:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -58,7 +58,7 @@ int main()
 }
 \end{lstlisting}
 
-The call candidate(42) will resolve to the overloaded declaration at point \#2 . However, the declaration at point \#1 could also be instantiated to check whether it is a viable candidate for the call (it is in this case because the one-argument constructor can implicitly convert 42 to an rvalue of type C<double>). Note that the compiler is allowed (but not required) to perform this instantiation if it can resolve the call without it (as could be the case in this example because an implicit conversion would not be selected over an exact match). Note also that the instantiation of C<double> could trigger an error, which may be surprising.
+调用candidate(42)时，将解析为在\#2处的重载声明。然而，\#1的声明也可以实例化，以检查是否是匹配的候选(因为单参数构造函数可以隐式地将42转换为类型C<double>的右值)。如果编译器可以在没有实例化的情况下解析调用，则允许(但不是必需)执行此实例化(本例可能就是这种情况，因为在精确匹配上不会选择隐式转换)。还要注意，C<double>的实例化可能会触发错误。
 
 
 

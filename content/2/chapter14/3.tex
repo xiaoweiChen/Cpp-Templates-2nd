@@ -1,25 +1,25 @@
 
-Template instantiation is the process of obtaining a regular type, function, or variable from a corresponding template entity by appropriately substituting the template parameters. This may sound fairly straightforward, but in practice many details need to be formally established.
+模板实例化是通过替换模板参数，从对应的模板实体获得类型、函数或变量的过程。这听起来挺简单，但需要确定许多细节。
 
-\subsubsubsection{14.3.1\hspace{0.2cm}Two-Phase Lookup}
+\subsubsubsection{14.3.1\hspace{0.2cm}两阶段查找}
 
-In Chapter 13 we saw that dependent names cannot be resolved when parsing templates. Instead, they are looked up again at the point of instantiation. Nondependent names, however, are looked up early so that many errors can be diagnosed when the template is first seen. This leads to the concept of two-phase lookup:
+第13章中，看到在解析模板时不能解析依赖名称。相反，它们会在实例化时再次进行查找。但是，非依赖名称会提前查找，以便在模板第一次出现时就能诊断出错误。这就引出了两阶段查找的概念:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Besides two-phase lookup, terms such as two-stage lookup or two-phase name lookup are also used.
+\hspace*{0.75cm}除了两阶段查找外，有时还使用了两阶段查找或两阶段名称查找等术语进行描述。
 \end{tcolorbox}
 
-The first phase is the parsing of a template, and the second phase is its instantiation:
+第一个阶段是解析模板，第二个阶段是实例化模板:
 
 \begin{enumerate}
 \item 
-During the first phase, while parsing a template, nondependent names are looked up using both the ordinary lookup rules and, if applicable, the rules for argument-dependent lookup (ADL). Unqualified dependent names (which are dependent because they look like the name of a function in a function call with dependent arguments) are looked up using the ordinary lookup rules, but the result of the lookup is not considered complete until an additional lookup is performed in the second phase (when the template is instantiated).
+解析模板时，使用普通查找规则和参数依赖查找规则(如果适用)来查找非依赖名称。使用普通查找规则查找非限定的依赖名称(它们是依赖的，因为看起来像带有参数型依赖的函数调用的函数名)，但是在第二阶段(模板实例化时)再次进行查找前，不会采纳第一次查找的结果。
 
 \item 
-During the second phase, while instantiating a template at a point called the point of instantiation (POI), dependent qualified names are looked up (with the template parameters replaced with the template arguments for that specific instantiation), and an additional ADL is performed for the unqualified dependent names that were looked up using ordinary lookup in the first phase.
+第二阶段中，当在实例化点(POI)处实例化模板时，将查找相关的限定名(使用该特定实例化的模板参数)，并为在第一阶段使用普通查找查找到的非限定名称型依赖执行ADL。
 \end{enumerate}
 
-For unqualified dependent names, the initial ordinary lookup—while not complete—is used to decide whether the name is a template. Consider the following example:
+对于非限定的名称型依赖，初始的普通查找(不是完整的)用于确定该名称是否为模板。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 namespace N {
@@ -39,13 +39,13 @@ int main() {
 }
 \end{lstlisting}
 
-In line \#1 , when seeing the name f followed by a <, the compiler has to decide whether that < is an angle bracket or a less-than sign. That depends on whether f is known to be the name of a template or not; in this case, ordinary lookup finds the declaration of f, which is indeed a template, and so parsing succeeds with angle brackets.
+在\#1行中，看到名称f后面跟着一个<时，编译器必须判断<是尖括号还是小于号。这取决于是否知道f是模板的名称;在本例中，普通查找查找f的声明，它实际上是一个模板，因此使用尖括号解析成功。
 
-Line \#2 , however, produces an error because no template g is found using ordinary lookup; the < is thus treated as a less-than sign, which is a syntax error in this example. If we could get past this issue, we’d eventually find the template N::g using ADL when instantiating h for T = N::E (since N is a namespace associated with E), but we cannot get that far until we successfully parse the generic definition of h.
+但是，第\#2行产生了一个错误，因为使用普通查找没有找到模板g;因此，<视为小于号，这在本例中是一个语法错误。如果能克服这个问题，会在为T = N::E实例化h时，使用ADL找到模板N::g(因为N是与E关联的名称空间)。但只有成功地解析h的泛型定义，才能进行这些操作。
 
-\subsubsubsection{14.3.2\hspace{0.2cm}Points of Instantiation}
+\subsubsubsection{14.3.2\hspace{0.2cm}实例化点}
 
-We have already illustrated that there are points in the source of template clients where a C++ compiler must have access to the declaration or the definition of a template entity. A point of instantiation (POI) is created when a code construct refers to a template specialization in such a way that the definition of the corresponding template needs to be instantiated to create that specialization. The POI is a point in the source where the substituted template could be inserted. For example:
+在模板源代码中有一些点，C++编译器必须访问模板实体的声明或定义。当代码构造引用模板特化时，需要实例化相应模板的定义来创建该特化，就会创建实例化点(POI)。POI是源中的一个点，在这里可以插入替换模板。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class MyInt {
@@ -76,17 +76,17 @@ void g(Int)
 // #4
 \end{lstlisting}
 
-When a C++ compiler sees the call f<Int>(42), it knows the template f will need to be instantiated for T substituted with MyInt: A POI is created. Points \#2 and \#3 are very close to the point of call, but they cannot be POIs because C++ does not allow us to insert the definition of ::f<Int>(Int) there. The essential difference between point \#1 and point \#4 is that at point \#4 the function g(Int) is visible, and hence the template-dependent call g(-i) can be resolved. However, if point \#1 were the POI, then that call could not be resolved because g(Int) is not yet visible. Fortunately, C++ defines the POI for a reference to a function template specialization to be immediately after the nearest namespace scope declaration or definition that contains that reference. In our example, this is point \#4 .
+C++编译器看到调用f<int>(42)时，就知道模板f需要实例化，以便用MyInt替换T:创建一个POI。\#2和\#3非常接近调用点，但它们不是POI，因为C++不允许在那里插入::f<int>(Int)的定义。\#1和\#4之间的本质区别是，\#4上函数g(Int)是可见的，因此可以解析依赖于模板的调用g(-i)。然而，如果\#1是POI，因为g(Int)还不可见，则该调用无法解析。幸运的是，C++将函数模板特化引用的POI，定义在包含该引用最近的名称空间作用域声明或定义之后，例子中是\#4。
 
-You may wonder why this example involved the type MyInt rather than simple int. The answer lies in the fact that the second lookup performed at the POI is only an ADL. Because int has no associated namespace, the POI lookup would therefore not take place and would not find function g.
+为什么这个示例是MyInt类型，而不是int？在POI执行的第二个查找只是一个ADL。因为int没有关联的名称空间，所以POI查找不会发生，也不会找到函数g。
 
-Hence, if we were to replace the type alias declaration for Int with
+因此，如果将Int的类型别名声明替换为
 
 \begin{lstlisting}[style=styleCXX]
 using Int = int;
 \end{lstlisting}
 
-the previous example would no longer compile. The following example suffers from a similar problem:
+前面的示例将不再编译。下面的例子也存在类似的问题:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -105,15 +105,15 @@ int main()
 // #2 POI for f1<int>(int)
 \end{lstlisting}
 
-The call f1(7) creates a POI for f1<int>(int) just outside of main() at point \#2 . In this instantiation, the key issue is the lookup of function g1. When the definition of the template f1 is first encountered, it is noted that the unqualified name g1 is dependent because it is the name of a function in a function call with dependent arguments (the type of the argument x depends on the template parameter T). Therefore, g1 is looked up at point \#1 using ordinary lookup rules; however, no g1 is visible at this point. At point \#2 , the POI, the function is looked up again in associated namespaces and classes, but the only argument type is int, and it has no associated namespaces and classes. Therefore, g1 is never found even though ordinary lookup at the POI would have found g1.
+调用f1(7)为f1<int>(int)在main()之外的\#2创建一个POI。在这个实例化中，关键问题是函数g1的查找。当第一次遇到模板f1的定义时，注意到非限定g1是名称型依赖，因此具有依赖参数的函数调用中的函数名(参数x的类型取决于模板参数T)。因此，g1在\#1使用普通查找规则查找，此时g1还不可见。在\#2函数在相关的名称空间和类中再次查找，但是唯一的参数类型是int，并且没有相关的名称空间和类。因此，即使在POI上普通查找可以找到g1，也找不到g1。
 
-The point of instantiation for variable templates is handled similarly to that of function templates.
+变量模板实例化点与函数模板的处理类似。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Surprisingly, this is not clearly specified in the standard at the time of this writing. However, it is not expected to be a controversial issue.
+\hspace*{0.75cm}在撰写本文时，标准中并没有明确规定。然而，估计这也不会成为一个有争议的问题。
 \end{tcolorbox}
 
-For class template specializations, the situation is different, as the following example illustrates:
+对于类模板特化，情况不同:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -131,15 +131,15 @@ unsigned long h()
 // #4
 \end{lstlisting}
 
-Again, the function scope points \#2 and \#3 cannot be POIs because a definition of a namespace scope class S<int> cannot appear there (and templates can generally not appear in function scope).
+同样，函数作用域\#2和\#3不能是POI，因为命名空间作用域类S<int>的定义不能出现在那(模板不能出现在函数作用域中)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The call operator of generic lambdas are a subtle exception to that observation.
+\hspace*{0.75cm}泛型Lambda的调用操作符是一个例外。
 \end{tcolorbox}
 
-If we were to follow the rule for function template instances, the POI would be at point \#4 , but then the expression sizeof(S<int>) is invalid because the size of S<int> cannot be determined until point \#4 is reached. Therefore, the POI for a reference to a generated class instance is defined to be the point immediately before the nearest namespace scope declaration or definition that contains the reference to that instance. In our example, this is point \#1 .
+如果遵循函数模板实例的规则，POI将在\#4设置，但是表达式sizeof(S<int>)无效，因为S<int>的大小在点\#4之前不确定。因此，对生成类实例引用的POI定义为，紧接最近的名称空间作用域声明或定义之前的点，该声明或定义包含对实例的引用。例子中就是\#1。
 
-When a template is actually instantiated, the need for additional instantiations may appear. Consider a short example:
+当模板实际实例化时，可能会出现其他实例化的需求。举一个简单的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -163,27 +163,27 @@ int main()
 // #2 : #2a , #2b
 \end{lstlisting}
 
-Our preceding discussion already established that the POI for f<double>() is at point \#2 . The function template f() also refers to the class specialization S<char> with a POI that is therefore at point \#1 . It references S<T> too, but because this is still dependent, we cannot really instantiate it at this point. However, if we instantiate f<double>() at point \#2 , we notice that we also need to instantiate the definition of S<double>. Such secondary or transitive POIs are defined slightly differently. For function templates, the secondary POI is exactly the same as the primary POI. For class entities, the secondary POI immediately precedes (in the nearest enclosing namespace scope) the primary POI. In our example, this means that the POI of f<double>() can be placed at point \#2b , and just before it—at point \#2a —is the secondary POI for S<double>. Note how this differs from the POI for S<char>.
+前面的讨论已经建立了f<double>()的POI在\#2的基础上。函数模板f()也引用了类特化S<char>，其POI位于\#1。它也引用S<T>，但因为这仍然有依赖，不能在这里实例化它。然而，如果在\#2实例化f<double>()，还需要实例化S<double>的定义。这种次要或可传递的POI定义略有不同。对于函数模板，次要POI与主POI完全相同。对于类实体，次要POI位于主POI之前(在最近的封闭命名空间范围内)。例子中，f<double>()的POI可以放置在\#2b，在它之前的点(\#2a)是S<double>的辅助POI，这与S<char>的POI完全不同。
 
-A translation unit often contains multiple POIs for the same instance. For class template instances, only the first POI in each translation unit is retained, and the subsequent ones are ignored (they are not really considered POIs). For instances of function and variable templates, all POIs are retained. In either case, the ODR requires that the instantiations occurring at any of the retained POIs be equivalent, but a C++ compiler does not need to verify and diagnose violations of this rule. This allows a C++ compiler to pick just one nonclass POI to perform the actual instantiation without worrying that another POI might result in a different instantiation.
+翻译单元通常包含同一个实例的多个POI。对于类模板实例，只保留每个翻译单元中的第一个POI，而忽略后续的POI(实际上不认为是POI)。对于函数和变量模板实例，将保留所有的POI。ODR要求在保留的POI上发生的实例化都等价，但C++编译器不需要验证和诊断是否会违反该规则。这允许C++编译器只选择一个非类POI来执行实际的实例化即可，而不用担心另一个POI可能导致不同的实例化。
 
-In practice, most compilers delay the actual instantiation of most function templates to the end of the translation unit. Some instantiations cannot be delayed, including cases where instantiation is needed to determine a deduced return type (see Section 15.10.1 on page 296 and Section 15.10.4 on page 303) and cases where the function is constexpr and must be evaluated to produce a constant result. Some compilers instantiate inline functions when they’re first used to potentially inline the call right away.
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In modern compilers the inlining of calls is typically handled by a mostly language-independent component of the compiler dedicated to optimizations (a “back end” or “middle end”). However, C++ “front ends” (the C++-specific part of the C++ compiler) that were designed in the earlier days of C++ may also have the ability to expand calls inline because older back ends were  too conservative when considering calls for inline expansion.
-\end{tcolorbox}
-
-This effectively moves the POIs of the corresponding template specializations to the end of the translation unit, which is permitted by the C++ standard as an alternative POI.
-
-\subsubsubsection{14.3.3\hspace{0.2cm}The Inclusion Model}
-
-Whenever a POI is encountered, the definition of the corresponding template must somehow be accessible. For class specializations this means that the class template definition must have been seen earlier in the translation unit. For the POIs of function and variable templates (and member functions and static data members of class templates) this is also needed, and typically template definitions are simply added to header files that are \#included into the translation unit, even when they’re nontype templates. This source model for template definitions is  called the inclusion model, and it is the only automatic source model for templates supported by the  current C++ standard.
+实际中，大多数编译器将大多数函数模板的实例化延迟到翻译单元的末尾。有些实例化不能延迟，包括需要实例化来确定导出返回类型的情况(参见15.10.1节和15.10.4节)，以及constexpr函数，必须求值以产生常量结果的情况。一些编译器在首次用于内联调用时会立刻实例化内联函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The original C++98 standard also provided a separation model. It never gained popularity and was removed just before publishing the C++11 standard.
+\hspace*{0.75cm}现代编译器中，可调用的内联通常是由编译器中一个主要独立于语言的专门优化组件(“后端”或“中端”)来处理的。然而，早期设计的C++“前端”(C++编译器中特定于C++的部分)也可能具有内联扩展调用的能力，因为旧的后端在考虑内联扩展调用时过于保守。
 \end{tcolorbox}
 
-Although the inclusion model encourages programmers to place all their template definitions in header files so that they are available to satisfy any POIs that may arise, it is also possible to explicitly manage instantiations using explicit instantiation declarations and explicit instantiation definitions (see Section 14.5 on page 260). Doing so is logistically not trivial and most of the time programmers will prefer to rely on the automatic instantiation mechanism instead. One challenge for an implementation with the automatic scheme is to deal with the possibility of having POIs for the same specialization of a function or variable templates (or the same member function or static data member of a class template instance) across different translation units. We discuss approaches to this problem next.
+C++标准允许的替代POI，这可将对应模板特化的POI移动到翻译单元的末尾。
+
+\subsubsubsection{14.3.3\hspace{0.2cm}包含模型}
+
+无论何时遇到POI，都必须以某种方式访问相应模板的定义。对于特化类，类模板定义必须在翻译单元中更早看到。对于函数和变量模板(以及成员函数和类模板的静态数据成员)的POI，这也是需要的。通常模板定义会添加到包含在翻译单元中的头文件中，即使是非类型模板。这个模板定义的源模型称为包含模型，是当前C++标准支持模板的自动源模型。
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}C++98标准也提供了一个分离模型。但从未流行起来，在发布C++11标准之前就删除了。
+\end{tcolorbox}
+
+尽管包含模型鼓励程序员将所有的模板定义放在头文件中，这样就可以满足可能出现的POI，也可以使用显式的实例化声明和显式的实例化定义来显式地管理实例化(参见14.5节)。大多数时候开发者更喜欢依赖于自动实例化的机制。使用自动模式实现的挑战是处理不同翻译单元具有函数或变量模板(或类模板实例的相同成员函数或静态数据成员)的相同特化POI的可能性。接下来我们讨论这个问题的解决方法。
 
 
 

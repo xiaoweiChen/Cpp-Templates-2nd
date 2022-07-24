@@ -1,5 +1,5 @@
 
-It is possible to create explicitly a point of instantiation for a template specialization. The construct that achieves this is called an explicit instantiation directive. Syntactically, it consists of the keyword template followed by a declaration of the specialization to be instantiated. For example:
+可以为模板特化显式地创建实例化点。实现点的构造称为显式实例化指令。语法上，由关键字template和要实例化的特化声明组成。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -13,9 +13,9 @@ template void f(long);
 template void f(char);
 \end{lstlisting}
 
-Note that every instantiation directive is valid. Template arguments can be deduced (see Chapter 15).
+每个实例化指令都有效，模板参数可以推导(参见第15章)。
 
-Members of class templates can also be explicitly instantiated in this way:
+类模板的成员也可以这样显式实例化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -30,19 +30,19 @@ template void S<int>::f();
 template class S<void>;
 \end{lstlisting}
 
-Furthermore, all the members of a class template specialization can be explicitly instantiated by explicitly instantiating the class template specialization. Because these explicit instantiation directives ensure that a definition of the named template specialization (or member thereof) is created, the explicit instantiation directives above are more accurately referred to as explicit instantiation definitions. A template specialization that is explicitly instantiated should not be explicitly specialized, and vice versa, because that would imply that the two definitions could be different (thus violating the ODR).
+此外，可以通过显式实例化类模板特化，来显式实例化类模板特化的所有成员。因为这些显式实例化指令创建了命名模板特化(或其成员)的定义，所以上面的显式实例化指令，可以称为显式实例化定义。因为这意味着两个定义可能是不同的(因此违反了ODR)，所以显式实例化的模板特化不应该显式特化，反之亦然。
 
-\subsubsubsection{14.5.1\hspace{0.2cm}Manual Instantiation}
+\subsubsubsection{14.5.1\hspace{0.2cm}手动实例化}
 
-Many C++ programmers have observed that automatic template instantiation has a nontrivial negative impact on build times. This is particularly true with compilers that implement greedy instantiation (Section 14.4.1 on page 256), because the same template specializations may be instantiated and optimized in many different translation units.
+许多C++开发者已经注意到，自动模板实例化对构建时间有很大的负面影响。对于实现贪婪实例化的编译器来说尤其如此(第14.4.1节)，因为相同的模板特化，可能在许多不同的翻译单元中实例化和优化。
 
-A technique to improve build times consists in manually instantiating those template specializations that the program requires in a single location and inhibiting the instantiation in all other translation units. One portable way to ensure this inhibition is to not provide the template definition except in the translation unit where it is explicitly instantiated.
+改进构建时间的技术包括，在特定位置手动实例化程序所需的那些模板特化，并在所有其他翻译单元中抑制实例化。确保这种抑制的一种可移植的方法是不提供模板定义，除非在显式实例化的翻译单元中定义。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In the 1998 and 2003 C++ standards, this was the only portable way to inhibit instantiation in other translation units.
+\hspace*{0.75cm}1998年和2003年的C++标准中，这是在其他翻译单元中禁止实例化的唯一可移植方法。
 \end{tcolorbox}
 
-For example:
+例如：
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -69,13 +69,13 @@ int main()
 }
 \end{lstlisting}
 
-In the first translation unit, the compiler cannot see the definition of the function template f, so it will not (cannot) produce an instantiation of f<int>. The second translation unit provides the definition of f<int> via an explicit instantiation definition; without it, the program would fail to link.
+第一个翻译单元中，编译器无法看到函数模板f的定义，因此不会(不能)生成f<int>的实例化。第二个翻译单元通过显式实例化定义提供f<int>的定义;没有它，程序将无法连接。
 
-Manual instantiation has a clear disadvantage: We must carefully keep track of which entities to instantiate. For large projects this quickly becomes an excessive burden; hence we do not recommend it. We have worked on several projects that initially underestimated this burden, and we came to regret our decision as the code matured.
+手动实例化有一个明显的缺点:必须小心地跟踪要实例化的实体。对于大型项目来说，这很快就会成为一个负担;因此，我们不建议这样做。我们曾参与过几个最初低估了这个负担的项目，随着代码的成熟，我们后面就开始后悔开始的决定。
 
-However, manual instantiation also has a few advantages because the instantiation can be tuned to the needs of the program. Clearly, the overhead of large headers is avoided, as is the overhead of repeatedly instantiating the same templates with the same arguments in multiple translation units. Moreover, the source code of template definition can be kept hidden, but then no additional instantiations can be created by a client program.
+然而，手动实例化也有一些优点，因为可以根据程序的需要进行调整。显然，避免了巨型头文件的开销，也避免了在多个翻译单元中使用相同参数重复实例化相同模板的开销。此外，模板定义的源代码可以隐藏，但是使用程序就不能进行额外的实例化。
 
-Some of the burden of manual instantiation can be alleviated by placing the template definition into a third source file, conventionally with the extension .tpp. For our function f, this breaks down into:
+通过将模板定义放置到第三个源文件(通常扩展名为.tpp)中，可以减轻手动实例化的一些负担。对于函数f，可以分解为:
 
 \begin{lstlisting}[style=styleCXX]
 // f.hpp:
@@ -94,30 +94,30 @@ template<typename T> void f() // definition
 template void f<int>(); // manual instantiation
 \end{lstlisting}
 
-This structure provides some flexibility. One can include only f.hpp to get the declaration of f, with no automatic instantiation. Explicit instantiations can be manually added to f.cpp as needed. Or, if manual instantiations become too onerous, one can also include f.tpp to enable automatic instantiation.
+这种结构提供了一定的灵活性。可以只包含f.hpp来获得f的声明，可以根据需要将显式实例化添加到f.cpp中。或者，若手动实例化过于繁重，还可以包含f.tpp来启用自动实例化。
 
-\subsubsubsection{14.5.2\hspace{0.2cm}Explicit Instantiation Declarations}
+\subsubsubsection{14.5.2\hspace{0.2cm}显式实例化声明}
 
-A more targeted approach to the elimination of redundant automatic instantiations is the use of an explicit instantiation declaration, which is an explicit instantiation directive prefixed by the keyword extern. An explicit instantiation declaration generally suppresses automatic instantiation of the named template specialization, because it declares that the named template specialization will be defined somewhere in the program (by an explicit instantiation definition). We say generally, because there are many exceptions to this:
+消除冗余自动实例化的一种更有针对性的方法是使用显式实例化声明，它以关键字extern为前缀的显式实例化指令。显式实例化声明通常会抑制已命名模板特化的自动实例化，因为声明已命名模板特化将在程序中的某个地方定义(通过显式实例化定义)。之所以说一般，是因为有很多例外情况:
 
 \begin{itemize}
 \item 
-Inline functions can still be instantiated for the purpose of expanding them inline (but no separate object code is generated).
+内联函数仍然可以实例化，以便内联扩展(不会生成单独的目标代码)。
 
 \item 
-Variables with deduced auto or decltype(auto) types and functions with deduced return types can still be instantiated to determine their types.
+具有auto或decltype(auto)类型的变量，以及具有推导返回类型的函数，可以实例化以确定类型。
 
 \item 
-Variables whose values are usable as constant-expressions can still be instantiated so their values can be evaluated.
+值可用作常量表达式的变量仍然可以实例化，以便计算它们的值。
 
 \item 
-Variables of reference types can still be instantiated so the entity they reference can be resolved.
+引用类型的变量仍然可以实例化，以便解析引用的实体。
 
 \item 
-Class templates and alias templates can still be instantiated to check the resulting types.
+类模板和别名模板仍然可以实例化，以检查产生的类型。
 \end{itemize}
 
-Using explicit instantiation declarations, we can provide the template definition for f in the header (t.hpp), then suppress automatic instantiation for commonly used specializations, as follows:
+使用显式的实例化声明，可以在头文件(t.hpp)中提供f的模板定义，然后抑制常用特化的自动实例化，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 // t.hpp:
@@ -132,12 +132,12 @@ template void f<int>(); // definition
 template void f<float>(); // definition
 \end{lstlisting}
 
-Each explicit instantiation declaration must be paired with a corresponding explicit instantiation definition, which must follow the explicit instantiation declaration. Omitting the definition will result in a linker error.
+每个显式实例化声明必须与相应的显式实例化定义配对，该定义必须在显式实例化声明之后。省略该定义将导致链接器报错。
 
-Explicit instantiation declarations can be used to improve compile or link times when certain specializations are used in many different translation units. Unlike with manual instantiation, which requires manually updating the list of explicit instantiation definitions each time a new specialization is required, explicit instantiation declarations can be introduced as an optimization at any point. However, the compile-time benefits may not be as significant as with manual instantiation, both because some redundant automatic instantiation is likely to occur and because the template definitions are still parsed as part of the header.
+在许多不同的翻译单元中使用特定的专特化时，可以使用显式实例化声明来改进编译或链接时间。手动实例化需要在需要新的特化时手动更新显式实例化定义列表。与手动实例化不同的是，可以将显式实例化声明作为一种优化引入。然而，编译时的好处可能没有手动实例化那么显著，因为可能会出现一些冗余的自动实例化，而且模板定义仍然会作为头文件的一部分进行解析。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} An interesting part of this optimization problem is to determine exactly which specializations are good candidates for explicit instantiation declarations. Low-level utilities such as the common Unix tool nm can be useful in identifying which automatic instantiations actually made it into the object files that comprise a program.
+\hspace*{0.75cm}这个优化问题的有趣部分是，确定哪些特化适合显式的实例化声明。低层实用程序(如Unix工具nm)在识别程序的目标文件中的自动实例化方面非常有用。
 \end{tcolorbox}
 
 

@@ -1,4 +1,4 @@
-When the argument of a function call is an initializer list, that argument doesn’t have a specific type, so in general no deduction will be performed from that given pair (A, P) because there is no A. For example:
+当函数调用的参数是初始化列表时，参数没有特定的类型，所以通常不会从一对给定的(A, P)进行推断，因为没有A。例如:
 
 \begin{lstlisting}[style=styleCXX]
 #include <initializer_list>
@@ -10,7 +10,7 @@ int main() {
 }
 \end{lstlisting}
 
-However, if the parameter type P, after removing references and top-level const and volatile qualifiers, is equivalent to std::initializer\_list<P0> for some type P0 that has a deducible pattern, deduction proceeds by comparing P0 to the type of each element in the initializer list, succeeding only if all of the elements have the same type:
+然而，若参数类型P在除去引用以及顶级的const和volatile限定符后，等价于某些类型P0的std::initializer\_list，这种类型的P0具有可推导的模式，推导通过将P0与初始化列表中每个元素的类型进行比较，只有当所有元素都具有相同类型时，推导才会成功:
 
 \noindent
 \textit{basics/initlist.cpp}
@@ -26,7 +26,7 @@ int main()
 }
 \end{lstlisting}
 
-Similarly, if the parameter type P is a reference to an array type with element type P0 for some type P0 that has a deducible pattern, deduction proceeds by comparing P0 to the type of each element in the initializer list, succeeding only if all of the elements have the same type. Furthermore, if the bound has a deducible pattern (i.e., just names a nontype template parameter), then that bound is deduced to the number of elements in the list.
+类似地，如果参数类型P是一个类型数组的引用(有可推导的模式)，推导过程也会将初始化列表的每个元素的类型与P类型数组的元素类型进行比较，仅当所有元素都有相同的类型时，推导才成功。此外，如果(数组)边界有可推导模式(即，只指定非类型模板参数)，那么该边界会推导为初始化列表中元素的数量。
 
 
 

@@ -1,4 +1,4 @@
-Parameterized types that are considerably more complex than just “T” can be matched to a given argument type. Here are a few examples that are still fairly basic:
+比“T”复杂得多的参数化类型可以匹配到给定的参数类型。下面是一些例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -24,17 +24,17 @@ void g (int*** ppp)
 }
 \end{lstlisting} 
 
-Complex type declarations are built from more elementary constructs (pointer, reference, array, and function declarators; pointer-to-member declarators; template-ids; and so forth), and the matching process proceeds from the top-level construct and recurses through the composing elements. It is fair to say that most type declaration constructs can be matched in this way, and these are called deduced contexts. However, a few constructs are not deduced contexts. For example:
+复杂类型声明由更基本的构造(指针、引用、数组和函数声明符;指向成员的声明符;模板标识;等等)，匹配过程从顶层构造开始，递归地遍历各个元素。可以说，大多数类型声明构造都可以用这种方式匹配，这称为推导上下文。然而，有一些结构不是推断上下文的。例如:
 
 \begin{itemize}
 \item 
-Qualified type names. For example, a type name like Q<T>::X will never be used to deduce a template parameter T.
+限定类型名称。例如，永远不会使用像Q<T>::X这样的类型名来推导模板参数T。
 
 \item 
-Nontype expressions that are not just a nontype parameter. For example, a type name like S<I+1> will never be used to deduce I. Neither will T be deduced by matching against a parameter of type int(\&)[sizeof(S<T>)].
+非类型参数不只有非类型表达式，像S<I+1>这样的类型名永远不会用于推断I，也不会通过匹配类型为int(\&)[sizeof(S<T>)]的参数来推断T的类型。
 \end{itemize}
 
-These limitations should come as no surprise because the deduction would, in general, not be unique (or even finite), although this limitation of qualified type names is sometimes easily overlooked. A nondeduced context does not automatically imply that the program is in error or even that the parameter being analyzed cannot participate in type deduction. To illustrate this, consider the following, more intricate example:
+这些限制并不奇怪，因为推导过程通常不是唯一的(甚至是有限的)，尽管限定类型名的这种限制有时很容易忽略。非推导上下文不会表示程序出错，甚至不会说明分析的参数不能参与类型推导。为了说明这一点，看看下面这个更复杂的例子:
 
 \noindent
 \textit{basics/fppm.cpp}
@@ -56,9 +56,9 @@ int main()
 }
 \end{lstlisting}
 
-In the function template fppm(), the subconstruct X<N>::I is a nondeduced context. However, the member-class component X<N> of the pointer-to-member type is a deducible context, and when the parameter N, which is deduced from it, is plugged in the nondeduced context, a type compatible with that of the actual argument \&X<33>::f is obtained. The deduction therefore succeeds on that argument-parameter pair.
+函数模板fppm()中，子构造X<N>::I不用推导上下文。然而，成员指针类型的成员类组件X<N>是一个可推导上下文，当它推导出的参数N放入到非推导上下文时，将获得与实际实参类型兼容的类型\&X<33>::f。因此，在参数匹配，推导成功。
 
-Conversely, it is possible to deduce contradictions for a parameter type entirely built from deduced contexts. For example, assuming suitably declared class templates X and Y:
+相反，对于完全由推导的上下文构建的参数类型，推导也可能出现矛盾。例如，声明的类模板X和Y:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -71,7 +71,7 @@ void g()
 }
 \end{lstlisting}
 
-The problem with the second call to the function template f() is that the two arguments deduce different arguments for the parameter T, which is not valid. (In both cases, the function call argument is a temporary object obtained by calling the default constructor of the class template X.)
+第二次调用函数模板f()的问题是，两个参数T会推导出不同的类型，这是无效的。(这两种情况下，函数调用参数都是通过调用类模板X的默认构造函数，获得的临时对象。)
 
 
 

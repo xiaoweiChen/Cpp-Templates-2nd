@@ -1,4 +1,4 @@
-There are several situations in which the pair (A, P) used for deduction is not obtained from the arguments to a function call and the parameters of a function template. The first situation occurs when the address of a function template is taken. In this case, P is the parameterized type of the function template declaration, and A is the function type underlying the pointer that is initialized or assigned to. For example:
+几种情况下，用于推导的一对(A, P)不能从函数调用的参数和函数模板参数中获得。第一种情况发生在获取函数模板地址时，P是函数模板声明的参数化类型，A是初始化或赋值给指针的函数类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -7,30 +7,30 @@ void f(T, T);
 void (*pf)(char, char) = &f;
 \end{lstlisting}
 
-In this example, P is void(T, T) and A is void(char, char). Deduction succeeds with T substituted with char, and pf is initialized to the address of the specialization f<char>.
+这个例子中，P是void(T, T)， A是void(char, char)。char替换T后，推导成功，pf初始化为特化的地址f<char>。
 
-Similarly, function types are used for P and A for a few other special situations:
+类似地，函数类型用于P和A的一些特殊情况:
 
 \begin{itemize}
 \item 
-Determining a partial ordering between overloaded function templates
+确定重载函数模板之间的部分顺序
 
 \item 
- Matching an explicit specialization to a function template
+将显式特化与函数模板匹配
 
 \item 
-Matching an explicit instantiation to a template
+将显式实例化与模板匹配
 
 \item 
-Matching a friend function template specialization to a template
+将友元函数模板特化与模板进行匹配
 
 \item 
-Matching a placement operator delete or operator delete[] to a corresponding placement operator new or operator new[] template
+将替换operator delete或operator delete[]与对应替换operator new或operator new[]的模板进行匹配
 \end{itemize}
 
-Some of these topics, along with the use of template argument deduction for class template partial specializations, are further developed in Chapter 16.
+其中一些话题，以及在类模板部分特化中使用模板参数推导，将在第16章中进一步讨论。
 
-Another special situation occurs with conversion function templates. For example:
+另一种特殊情况发生在转换函数模板中。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class S {
@@ -39,7 +39,7 @@ class S {
 };
 \end{lstlisting}
 
-In this case, the pair (P, A) is obtained as if it involved an argument of the type to which we are attempting to convert and a parameter type that is the return type of the conversion function. The following code illustrates one variation:
+这种情况下，获得(P, A)对，就好像包含一个要转换的类型和一个作为转换函数返回类型的类型:
 
 \begin{lstlisting}[style=styleCXX]
 void f(int (&)[20]);
@@ -50,9 +50,9 @@ void g(S s)
 }
 \end{lstlisting}
 
-Here we are attempting to convert S to int (\&)[20]. Type A is therefore int[20] and type P is T. The deduction succeeds with T substituted with int[20].
+这里，试图将S转换为int(\&)[20]。因此，类型A为int[20]，类型P为T。int[20]替换T，推导成功。
 
-Finally, some special treatment is also needed for the deduction of the auto placeholder type. That is discussed in Section 15.10.4 on page 303.
+最后，还需要对推断自动占位符类型进行一些特殊处理。这在第15.10.4节中会进行讨论。
 
 
 

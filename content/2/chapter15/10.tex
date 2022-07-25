@@ -1,9 +1,9 @@
 
-C++11 includes the ability to declare a variable whose type is deduced from its initializer. It also provides a mechanism to express the type of a named entity (a variable or function) or of an expression. These facilities turned out to be very convenient, and C++14 and C++17 added additional variations on that theme.
+C++11包含了声明一个变量的能力，该变量的类型是由其初始化式推导出来的，还提供了一种机制来表示命名实体(变量或函数)或表达式的类型。这些工具非常方便，C++14和C++17在这个基础上增加了其他的版本。
 
-\subsubsubsection{15.10.1\hspace{0.2cm}The autoType Specifier}
+\subsubsubsection{15.10.1\hspace{0.2cm}auto类型指示符}
 
-The auto type specifier can be used in a number of places (primarily, namespace scopes and local scopes) to deduce the type of a variable from its initializer. In such cases, auto is called a placeholder type (another placeholder type, decltype(auto), will be described a little later in Section 15.10.2 on page 298). For example:
+auto类型说明符可以用于许多地方(主要是命名空间作用域和局部作用域)，以从变量的初始化式推断其类型。在这种情况下，auto称为占位符类型(另一种占位符类型decltype(auto)将在第15.10.2节介绍)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Container>
@@ -17,7 +17,7 @@ void useContainer(Container const& container)
 }
 \end{lstlisting}
 
-The two uses of auto in the example above eliminate the need to write two long and potentially complicated types, the container’s iterator type and the iterator’s value type:
+上面的例子中，auto的两次使用消除了书写容器的迭代器类型和迭代器的值类型这两种长，且可能很复杂的类型的需要:
 
 \begin{lstlisting}[style=styleCXX]
 typename Container::const_iterator pos = container.begin();
@@ -26,35 +26,35 @@ typename std::iterator_traits<typename Container::iterator>::reference
 	element = *pos++;
 \end{lstlisting}
 
-Deduction for auto uses the same mechanism as template argument deduction. The type specifier auto is replaced by an invented template type parameter T, then deduction proceeds as if the variable were a function parameter and its initializer the corresponding function argument. For the first auto example, that corresponds to the following situation:
+auto的推导使用与模板参数推导机制相同。类型指示符auto取代模板类型参数T，然后继续推导，就好像该变量是一个函数参数，初始化式是相应的函数参数一样。对于第一个auto，情况如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void deducePos(T pos);
 deducePos(container.begin());
 \end{lstlisting}
 
-where T is the type to be deduced for auto. One of the immediate consequences of this is that a variable of type auto will never be a reference type. The use of auto\& within the second auto example illustrates how one produces a reference to a deduced type. Its deduction is equivalent to the following function template and call:
+其中T为auto的推导类型。这样做的结果是auto类型的变量永远不会是引用类型。第二个auto示例中使用auto\&，说明了如何生成对推导类型的引用。这里的推导等价于以下函数模板和调用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> deduceElement(T& element);
 deduceElement(*pos++);
 \end{lstlisting}
 
-Here, element will always be of reference type, and its initializer cannot produce a temporary.
+这里，元素将始终为引用类型，其初始化式不能产生临时变量。
 
-It is also possible to combine auto with rvalue references, but doing so makes it behave like a forwarding reference, because the deduction model for
+也可以将auto和右值引用结合使用，但这样会使行为类似于转发引用，因为推导模型
 
 \begin{lstlisting}[style=styleCXX]
 auto&& fr = ...;
 \end{lstlisting}
 
-is based on a function template:
+基于函数模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename t> void f(T&& fr); // auto replaced by template parameter T
 \end{lstlisting}
 
-That explains the following example:
+这解释了下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 int x;
@@ -63,7 +63,7 @@ auto&& lr = x; // Also OK: auto = int& and reference collapsing makes
 // lr an lvalue reference
 \end{lstlisting}
 
-This technique is frequently used in generic code to bind the result of a function or operator invocation whose value category (lvalue vs. rvalue) isn’t known, without having to make a copy of that result. For example, it is often the preferred way to declare the iterating value in a range-based for loop:
+这种技术在泛型代码中经常用于绑定值类别(左值与右值)未知的函数或操作符调用的结果，而无需复制该结果。例如，在基于范围的for循环中声明迭代值通常是首选方式:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Container> void g(Container c) {
@@ -73,9 +73,9 @@ template<typename Container> void g(Container c) {
 }
 \end{lstlisting}
 
-Here we do not know the signatures of the container’s iteration interfaces, but by using auto\&\& we can be confident that no additional copies are made of the values we are iterating through. std::forward<T>() can be invoked as usual on the variable as usual, if perfect forwarding of the bound value is desired. That enables a kinds of “delayed” perfect forwarding. See Section 11.3 on page 167 for an example.
+这里不知道容器迭代接口的签名，但是通过使用auto\&\&我们可以确定，正在迭代的值不会产生多余的副本。std::forward<T>()可以像往常一样对变量调用，若希望完美地转发绑定值。这就实现了一种“延迟”的完美转发。参见第11.3节中的示例。
 
-In addition to references, one can combine the auto specifier to make a variable const, a pointer, a member pointer, and so on, but auto has to be the “main” type specifier of the declaration. It cannot be nested in a template argument or part of the declarator that follows the type specifier. The following example illustrates various possibilities:
+除了引用之外，还可以结合auto说明符来创建常量、指针、成员指针等，但auto必须是声明的“主”类型说明符，不能嵌套在模板参数或类型说明符后面声明符的一部分中。下面的例子说明了各种可能性:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> struct X { T const m; };
@@ -86,9 +86,9 @@ X<auto> xa = X<int>(); // ERROR: auto in template argument
 int const auto::*pm2 = &X<int>::m; // ERROR: auto is part of the “declarator”
 \end{lstlisting}
 
-There are no technical reasons why C++ could not support all the cases in this last example, but the C++ committee felt that the benefits were outweighed by both the additional implementation cost and the potential for abuse.
+C++不支持最后一个例子中的所有情况(这并不是技术上的原因)，但C++委员会认为，额外的实现成本和潜在的滥用会超过带来的好处。
 
-In order to avoid confusing both programmers and compilers, the old use of auto as a “storage class specifier” is no longer permitted in C++11 (and later standards):
+为了避免同时搞晕开发者和编译器，在C++11(以及后来的标准)中不再允许使用auto作为“存储类说明符”:
 
 \begin{lstlisting}[style=styleCXX]
 int g() {
@@ -97,30 +97,30 @@ int g() {
 }
 \end{lstlisting}
 
-This old use of auto (inherited from C) is always redundant. Most compilers can usually disambiguate that use from the new use as a placeholder (even though they don’t have to), offering a transition path from older C++ code to newer C++ code. The old use of auto is very rare in practice, however.
+这种auto(继承自C)的旧用法总是多余的。大多数编译器通常可以将新用法和旧用法区分为占位符(不必这样做)，提供从旧的C++代码到新C++代码的转换。然而，auto在C++11前用的非常少。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Deduced Return Types}
+\textbf{推导返回类型}
 
-C++14 added another situation where a deducible auto placeholder type can appear: function return types. For example:
+C++14增加了另一种可以出现可推导的自动占位符类型的情况:函数返回类型。
 
 \begin{lstlisting}[style=styleCXX]
 auto f() { return 42; }
 \end{lstlisting}
 
-defines a function with return type int (the type of 42). This can be expressed using trailing return type syntax also:
+定义一个返回类型为int(类型为42)的函数。这也可以用尾部返回类型语法表示:
 
 \begin{lstlisting}[style=styleCXX]
 auto f() -> auto { return 42; }
 \end{lstlisting}
 
-In the latter case, the first auto announces the trailing return type, and the second auto is the placeholder type to deduce. There is little reason to favor that more verbose syntax, however.
+第一个auto声明尾部的返回类型，第二个auto是要推导的占位符类型。
 
-The same mechanism exists for lambdas by default: If no return type is specified explicitly, the lambda’s return type is deduced as if it were auto:
+默认情况下，Lambda存在相同的机制:如果没有显式指定返回类型，Lambda的返回类型会推导为auto:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Although C++14 introduced deduced return types in general, they were already available to C++11 lambdas using a specification that was not worded in terms of deduction. In C++14, that specification was updated to use the general auto deduction mechanism (from a programmer’s point of view, there is no difference).
+\hspace*{0.75cm}虽然C++14引入了推导返回类型，但C++11的Lambda已经可以使用了，规范没有使用推导。C++14中，该规范更新为使用通用的自动推断机制(从开发者的角度来看，两者没有区别)。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -128,21 +128,21 @@ auto lm = [] (int x) { return f(x); };
 // same as: [] (int x) -> auto f return f(x); g
 \end{lstlisting}
 
-Functions can be declared separately from their definition. That is true with functions whose return type is deduced also:
+函数声明可以与其定义分开。对于可以推导出返回类型的函数也是如此:
 
 \begin{lstlisting}[style=styleCXX]
 auto f(); // forward declaration
 auto f() { return 42; }
 \end{lstlisting}
 
-However, the forward declaration is of very limited use in a case like this, since the definition must be visible at any point where the function is used. Perhaps surprisingly, it is not valid to provide a forward declaration with a “resolved” return type. For example:
+但前置声明在这种情况下用途非常有限，因为定义必须在使用函数的地方可见。提供具有“已解析”返回类型的前置声明是无效的。例如:
 
 \begin{lstlisting}[style=styleCXX]
 int known();
 auto known() { return 42; } // ERROR: incompatible return type
 \end{lstlisting}
 
-Mostly, the ability to forward declare a function with a deduced return type is only useful to be able to move a member function definition outside the class definition because of stylistic preferences:
+由于风格上的偏好，使用推导的返回类型前置声明函数的能力，只在能够将成员函数定义移出类定义时有用:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {
@@ -153,36 +153,35 @@ auto S::f() { return 42; }
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Deducible Nontype Parameters}
+\textbf{可推导的非类型参数}
 
-Prior to C++17, nontype template arguments had to be declared with a specific type. However, that type could be a template parameter type. For example:
+C++17前，非类型模板参数必须用特定的类型声明。但是，该类型可以是模板参数类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, T V> struct S;
 S<int, 42>* ps;
 \end{lstlisting}
 
-n this example, having to specify the type of the nontype template argument—that is, specifying int in addition to 42—can be tedious. C++17 therefore added the ability to declare nontype template parameters whose actual types are deduced from the corresponding template argument. They are declared as follows:
+本例中，必须指定非类型模板参数的类型——即除了42之外还要指定int。因此，C++17增加了声明非类型模板参数的能力，其实际类型由对应的模板参数推导而来。声明如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto V> struct S;
 \end{lstlisting}
 
-which enables
 
 \begin{lstlisting}[style=styleCXX]
 S<42>* ps;
 \end{lstlisting}
 
-Here the type of V for S<42> is deduced to be int because 42 has type int. Had we written S<42u> instead, the type of V would have been deduced to be unsigned int (see Section 15.10.1 on page 294 for the details of deducing auto type specifiers).
+这里S<42>的V类型推导为int类型，因为42具有int类型。若写成S<42u>，V的类型就会被推导为无符号int(有关推导自动类型说明符的细节，请参阅15.10.1节)。
 
-Note that the general constraints on the type of nontype template parameters remain in effect. For example:
+注意，对非类型模板参数类型的常规约束仍然有效。例如:
 
 \begin{lstlisting}[style=styleCXX]
 S<3.14>* pd; // ERROR: floating-point nontype argument
 \end{lstlisting}
 
-A template definition with that kind of deducible nontype parameter often also needs to express the actual type of the corresponding argument. That is easily done using the decltype construct (see Section 15.10.2 on page 298). For example:
+具有这种可演绎非类型参数的模板定义，通常还需要表示相应参数的实际类型。这很容易使用decltype完成(参见第15.10.2节)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto V> struct Value {
@@ -190,7 +189,7 @@ template<auto V> struct Value {
 };
 \end{lstlisting}
 
-auto nontype template parameters are also useful to parameterize templates on members of classes. For example:
+自动非类型模板参数在对类成员的模板进行参数化时也很有用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename> struct PMClassT;
@@ -219,50 +218,51 @@ int main() {
 }
 \end{lstlisting}
 
-Here we used a helper class template PMClassT to retrieve from a pointer-to-member type its “parent” class type, using class template partial specialization (described in Section 16.4 on page 347).
+这里，使用了一个助手类模板PMClassT，使用类模板的部分特化(在第16.4节中描述)从成员指针类型的“父”类类型中检索。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The same technique can be used to extract the associated member type: Instead of using Type = C; use using Type = M;.
+\hspace*{0.75cm}可以使用相同的技术来提取关联的成员类型:使用using Type= M;替换using Type = C;
 \end{tcolorbox}
 
-With an auto template parameter, we only have to specify the pointer-to-member constant \&S::i as a template argument. Prior to C++17, we’d also have to specify a pointer-member-type; that is, something like
+对于自动模板参数，只需要指定指向成员的指针常量\&S::i作为模板参数。C++17前，还必须指定成员指针类型;这有点像
 
 \begin{lstlisting}[style=styleCXX]
 OldCounterHandle<int S::*, &S::i>
 \end{lstlisting}
 
-which is unwieldy and feels redundant.
+即笨拙又冗余。
+
+该特性也可以用于非类型参数包:
 
 \begin{lstlisting}[style=styleCXX]
-As you’d expect, that feature can also be used for nontype parameter packs:
 template<auto... VS> struct Values {
 };
 Values<1, 2, 3> beginning;
 Values<1, ’x’, nullptr> triplet;
 \end{lstlisting}
 
-The triplet example shows that each nontype parameter element of the pack can be deduced to a distinct type. Unlike the case of multiple variable declarators (see Section 15.10.4 on page 303), there is no requirement that all the deductions be equivalent.
+三元算例表明，包中的每个非类型参数元素都可以推导出不同的类型。与多变量声明符的情况不同(见15.10.4节)，不要求所有推导都等价。
 
-If we want to force a homogeneous pack of nontype template parameters, that is possible too:
+如果想强制使用同构的非类型模板形参包，可以这样:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto V1, decltype(V1)... VRest> struct HomogeneousValues {
 };
 \end{lstlisting}
 
-However, the template argument list cannot be empty in that particular case.
+然而，需要模板参数列表不能为空在特定情况下。
 
-See Section 3.4 on page 50 for a complete example using auto as template parameter type.
+使用auto作为模板参数类型的完整示例请参见第3.4节。
 
-\subsubsubsection{15.10.2\hspace{0.2cm}Expressing the Type of an Expression with decltype}
+\subsubsubsection{15.10.2\hspace{0.2cm}用decltype表示表达式的类型}
 
-While auto avoids the need to write out the type of the variable, it doesn’t easily allow one to use the type of that variable. The decltype keyword resolves that issue: It allows a programmer to express the precise type of an expression or declaration. However, programmers should be careful about a subtle difference in what decltype produces, depending on whether the passed argument is a declared entity or an expression:
+虽然auto避免了写变量类型的需要，但想要使用该变量类型时就没那么容易了。decltype关键字解决了这个问题，其允许开发者使用精确类型来表示表达式或进行声明。然而，开发则应该注意decltype产生的细微差别，这取决于传递的参数是声明还是表达式:
 
 \begin{itemize}
 \item 
-If e is the name of an entity (such as a variable, function, enumerator, or data member) or a class member access, decltype(e) yields the declared type of that entity or the denoted class member. Thus, decltype can be used to inspect the type of a variable.
+如果e是实体(如变量、函数、枚举器或数据成员)或类成员访问的名称，则decltype(e)生成该实体声明的类型或指定的类成员。因此，decltype可以用来检查变量的类型。
 
-This is useful when one wants to exactly match the type of an existing declaration. For example, consider the following variables y1 and y2:
+这用在需要精确匹配现有声明的类型时。例如，有以下变量y1和y2:
 
 \begin{lstlisting}[style=styleCXX]
 auto x = ...;
@@ -270,27 +270,27 @@ auto y1 = x + 1;
 decltype(x) y2 = x + 1;
 \end{lstlisting}
 
-Depending on the initializer for x, y1 may or may not have the same type as x: It depends on behavior of +. If x were deduced to an int, y1 would also be an int. If x were deduced to a char, y1 would be an int, because the sum of a char with 1 (which by definition is an int) is an int. The use of decltype(x) in the type of y2 ensures that it always has the same type as x.
+根据x的初始化式，y1的类型可能与x相同，也可能不同:它取决于+的行为。如果x推导为int型，y1也会是int型。如果x推导为char类型，y1将是int类型，因为char类型与1(根据定义为int类型)的和是一个int类型。在y2的类型中使用decltype(x)，可以确保它始终与x具有相同的类型。
 
 \item 
-Otherwise, if e is any other expression, decltype(e) produces a type that reflects the type and value category of that expression as follows:
+否则，如果e是其他表达式，decltype(e)会产生一个类型，表示该表达式的类型和值别，如下所示:
 
 \begin{itemize}
 \item[-]
-If e is an lvalue of type T, decltype(e) produces T\&
+如果e是类型T的左值，则decltype(e)生成T\&。
 
 \item[-]
-If e is an xvalue of type T, decltype(e) produces T\&\&.
+如果e是类型T的xvalue，则decltype(e)生成T\&\&。
 
 \item[-]
-If e is a prvalue of type T, decltype(e) produces T.
+如果e是类型T的prvalue，则decltype(e)生成T。
 \end{itemize}
 
-See Appendix B for a detailed discussion about value categories. 
+有关值别的详细讨论请参见附录B。
 
 \end{itemize}
 
-The difference can be demonstrated by the following example:
+差别可以通过下面的例子来表明:
 
 \begin{lstlisting}[style=styleCXX]
 e difference can be demonstrated by the following example:
@@ -310,27 +310,27 @@ void g (std::string&& s)
 }
 \end{lstlisting}
 
-In the first four expressions, decltype is invoked for the variable s:
+前四个表达式中，对变量s使用了decltype:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(s) // declared type of entity e designated by s
 \end{lstlisting}
 
-which means that decltype produces the declared type of s, std::string\&\&. In the last four expressions, the operand of the decltype construct is not just a name because in every case the expression is (s), which is a parenthesized name. In that case, the type will reflect the value category of (s):
+decltype会产生s的声明类型，std::string\&\&。最后四个表达式中，decltype构造的操作数不仅仅是一个名称，因为每种情况下表达式都是(s)，一个带圆括号的名称。在这种情况下，类型将反映(s)的值别:
 
 \begin{lstlisting}[style=styleCXX]
 decltype((s)) // check the value category of (s)
 \end{lstlisting}
 
-Our expression refers to a variable by name and is thus an lvalue:
+表达式通过名称指向一个变量，因此是左值:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}As mentioned elsewhere, treating a parameter of rvalue reference type as an lvalue rather than an xvalue is intended as a safety feature, because anything with a name (like a parameter) can easily be referenced multiple times in a function. If it were an xvalue, its first use might cause its value to be “moved away,” causing surprising behavior for every subsequent use. See Section 6.1 on page 91 and Section 15.6.3 on page 280.
+\hspace*{0.75cm}将右值引用类型的参数当作左值，而不是xvalue是一种安全特性，因为任何带有名称的参数都可以在函数中多次引用。如果它是一个xvalue，第一次使用可能会导致值被“移走”。参见第6.1节和第15.6.3节。
 \end{tcolorbox}
 
-By the rules above, this means that decltype(s) is an ordinary (i.e., lvalue) reference to std::string (since the type of (s) is std::string). This is one of the few places in C++ where parenthesizing an expression changes the meaning of the program other than affecting the associativity of operators.
+根据上面的规则，decltype(s)是std::string的普通引用(即左值)(因为(s)的类型是std::string)。C++中除了影响运算符的结合性外，这是少数几个用圆括号括表达式会改变程序含义的地方。
 
-The fact that decltype computes the type of an arbitrary expression e can be helpful in various places. Specifically, decltype(e) preserves enough information about an expression to make it possible to describe the return type of a function that returns the expression e itself “perfectly”: decltype computes the type of that expression, but it also propagates the value category of the expression to the caller of the function. For example, consider a simple forwarding function g() that returns the results of calling f():
+decltype会计算表达式e的类型，可能会惠及在各个方面。具体来说,decltype(e)保留足够的信息对表达式可以描述函数的返回类型，“完美地”返回表达式e本身:decltype计算表达式的类型，也可以将表达式的值类别传递给函数的调用者。例如，一个简单的转发函数g()，返回调用f()的结果:
 
 \begin{lstlisting}[style=styleCXX]
 ??? f();
@@ -341,37 +341,37 @@ decltype(f()) g()
 }
 \end{lstlisting}
 
-The return type of g() depends on the return type of f(). If f() were to return int\&, the computation of g()’s return type would first determine that the expression f() has type int. This expression is an lvalue, because f() returns an lvalue reference, so the declared return type of g() becomes int\&. Similarly, if the return type of f() were an rvalue reference type, the call f() would be an xvalue, and decltype would produce an rvalue reference type that exactly matches the type returned by f(). Essentially, this form of decltype takes the primary characteristics of an arbitrary expression—its type and value category—and encodes them in the type system in a manner that enables perfect forwarding of return values.
+g()的返回类型取决于f()。如果f()返回int\&， g()的返回类型的计算将首先确定表达式f()的类型为int。这个表达式是左值，因为f()返回左值引用，所以g()声明的返回类型变成int\&。类似地，如果f()的返回类型是右值引用类型，调用f()将返回一个xvalue，而decltype将产生一个与f()返回类型完全匹配的右值引用类型。本质上，这种形式的decltype采用了表达式的主要特征——类型和值别——并在类型系统中，以一种能够完美转发返回值的方式对它们进行编码。
 
-decltype can also be useful when the value-producing auto deduction is not sufficient. For example, assume we have a variable pos of some unknown iterator type, and we want to create a variable element that refers to the element stored by pos. We could use
+decltype在auto推导不足以产生值的情景中也十分有用。例如，有一个未知迭代器类型的变量pos，是某种未知的迭代器类型，我们希望创建一个变量element，该element可以通过pos解引用来获取。
 
 \begin{lstlisting}[style=styleCXX]
 auto element = *pos;
 \end{lstlisting}
 
-However, this will always make a copy of the element. If we instead try
+然而，这始终都会对元素进行拷贝。如果写成
 
 \begin{lstlisting}[style=styleCXX]
 auto& element = *pos;
 \end{lstlisting}
 
-then we will always receive a reference to the element, but the program will fail if the iterator’s operator* returns a value.
+将始终接收到该元素的引用，但如果迭代器的操作符*返回一个值，程序将会出错。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}When we used the latter formulation in our introductory example of auto, we implicitly assumed that the iterators produced references to some underlying storage. While this is generally true for container iterator (and required by the standard containers other than vector<bool>), it is not the case for all iterators.
+\hspace*{0.75cm}在auto的介绍性示例中使用后一种形式时，我们隐式地假定迭代器生成了对某些底层存储的引用。虽然通常适用于容器迭代器(除了vector<bool>以外的标准容器)，但并非适用于所有迭代器。
 \end{tcolorbox}
 
-To address this problem, we can use decltype so that the value- or reference-ness of the iterator’s operator* is preserved:
+为了解决这个问题，可以使用decltype来保留迭代器操作符*的值性或引用性:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(*pos) element = *pos;
 \end{lstlisting}
 
-This will use a reference when the iterator supports it and copy the value when the iterator does not. Its primary deficiency is that it requires the initializer expression to be written twice: once in the decltype (where it is not evaluated) and once as the actual initializer. C++14 introduces the decltype(auto) construct to address that issue, which we will discuss next.
+当迭代器提供的是引用时，就会产生一个引用类型；否则，就会进行值的复制。其主要缺陷是要求初始化式表达式写两次:一次在decltype中(在那里不求值)，一次作为实际的初始化式。C++14引入了decltype(auto)构造来解决这个问题，我们将在下文中讨论。
 
 \subsubsubsection{15.10.3\hspace{0.2cm}decltype(auto)}
 
-C++14 adds a feature that is a combination of auto and decltype: decltype(auto). Like the auto type specifier, it is a placeholder type, and the type of a variable, return type, or template argument is determined from the type of the associated expression (initializer, return value, or template argument). However, unlike just auto, which uses the rules for template argument deduction to determine the type of interest, the actual type is determined by applying the decltype construct directly to the expression. An example illustrates this:
+C++14添加了一个结合了auto和decltype的特性:decltype(auto)。与auto类型说明符一样，它是占位符类型，变量、返回类型或模板参数的类型由关联表达式的类型(初始化式、返回值或模板参数)确定。但是，与auto不同的是，auto使用模板参数推导规则来确定感兴趣的类型，实际的类型是通过直接对表达式应用decltype来确定。下面的例子说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 int i = 42; // i has type int
@@ -382,9 +382,9 @@ auto x = ref; // x1 has type int and is a new independent object
 decltype(auto) y = ref; // y has type int const& and also refers to i
 \end{lstlisting}
 
-The type of y is obtained by applying decltype to the initializer expression, here ref, which is int const\&. In contrast, the rules for auto type deduction produce type int.
+y的类型是通过对初始化式应用decltype获得的，这里是ref，类型是int const\&。相反，自动类型推导规则产生的是int类型。
 
-Another example shows the difference when indexing a std::vector (which produces an lvalue):
+另一个例子展示了索引std::vector(生成左值)的区别:
 
 \begin{lstlisting}[style=styleCXX]
 std::vector<int> v = { 42 };
@@ -392,19 +392,19 @@ auto x = v[0]; // x denotes a new object of type int
 decltype(auto) y = v[0]; // y is a reference (type int&)
 \end{lstlisting}
 
-This neatly addresses the redundancy in our previous example:
+这很好地解决了前面例子中冗余的问题:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(*pos) element = *pos;
 \end{lstlisting}
 
-which can now be rewritten as
+现在可以重写为
 
 \begin{lstlisting}[style=styleCXX]
 decltype(auto) element = *pos;
 \end{lstlisting}
 
-It is frequently convenient for return types too. Consider the following example:
+返回类型通常也很方便。看看下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename C> class Adapt
@@ -417,9 +417,9 @@ template<typename C> class Adapt
 };
 \end{lstlisting}
 
-If container[idx] produces an lvalue, we want to pass that lvalue to the caller (who might wish to takes its address or modify it): That requires an lvalue reference type, which is exactly what decltype(auto) resolves to. If instead a prvalue is produced, a reference type would result in dangling references, but, fortunately, decltype(auto) will produce an object type (not a reference type) for that case.
+如果container[idx]产生一个左值，我们希望将这个左值传递给调用者(调用者可能希望获取它的地址或修改它):这需要一个左值引用类型，这正是decltype(auto)解析的。如果生成prvalue，则引用类型将导致悬空引用，但decltype(auto)将针对这种情况生成对象类型(而不是引用类型)。
 
-Unlike auto, decltype(auto) does not allow specifiers or declarator operators that modify its type. For example:
+与auto不同，decltype(auto)不允许修改其类型的说明符或声明符操作符:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(auto)* p = (void*)nullptr; // invalid
@@ -427,7 +427,7 @@ int const N = 100;
 decltype(auto) const NN = N*N; // invalid
 \end{lstlisting}
 
-Note also that parentheses in the initializer may be significant (since they are significant for the decltype construct as discussed in Section 6.1 on page 91):
+初始化式中的圆括号可能很重要(对于decltype构造很重要，如第6.1节所述):
 
 \begin{lstlisting}[style=styleCXX]
 int x;
@@ -435,7 +435,7 @@ decltype(auto) z = x; // object of type int
 decltype(auto) r = (x); // reference of type int&
 \end{lstlisting}
 
-This especially means that parentheses can have a severe impact on the validity of return statements:
+圆括号会对return语句的有效性产生影响:
 
 \begin{lstlisting}[style=styleCXX]
 int g();
@@ -446,7 +446,7 @@ decltype(auto) f() {
 }
 \end{lstlisting}
 
-Since C++17, decltype(auto) can also be used for deducible nontype parameters (see Section 15.10.1 on page 296). The following example illustrates this:
+C++17后，decltype(auto)也可以用于可演绎的非类型参数(参见第15.10.1节):
 
 \begin{lstlisting}[style=styleCXX]
 template<decltype(auto) Val> class S
@@ -459,11 +459,11 @@ S<c> sc; // #1 produces S<42>
 S<(v)> sv; // #2 produces S<(int&)v>
 \end{lstlisting}
 
-In line \#1 , the lack of parentheses around c causes the deducible parameter to be of the type of c itself (i.e., int). Because c is a constant-expression of value 42, this is equivalent to S<42>. In line \#2 , the parentheses cause decltype(auto) to become a reference type int\&, which can bind to the global variable v of type int. Thus, with this declaration the class template depends on a reference to v, and any change of the value of v might impact the behavior of class S (see Section 11.4 on page 167 for details). (S<v> without parentheses, on the other hand, would be an error, because decltype(v) is int, and therefore a constant argument of type int would be expected. However, v doesn’t designate a constant int value.)
+\#1行中，c的圆括号的缺失导致可推导参数类型是c本身的类型(int)。因为c是值为42的常数表达式，所以它等价于S<42>。\#2行中，圆括号使decltype(auto)成为一个引用类型int\&，可以绑定到int类型的全局变量v。因此，通过声明，类模板依赖于对v的引用，而v值的变化可能会影响类S的行为(详见第11.4节)。(S<v>，不带圆括号，则会产生错误，因为decltype(v)是int类型，因此需要int类型的常量参数。但是，v不是一个int型常量值。)
 
-Note that the nature of the two cases is somewhat different; we therefore think that such nontype template parameters are likely to cause surprise and do not anticipate that they will be widely used.
+注意，这两种情况的性质有些不同;因此，我们认为这样的非类型模板参数很可能会引起意外，也没有料到它们会广泛使用。
 
-Finally, a comment about using deduced nontype parameters in function templates:
+最后，给出在函数模板中使用推导非类型参数的注解：
 
 \begin{lstlisting}[style=styleCXX]
 template<auto N> struct S {};
@@ -472,7 +472,7 @@ S<42> x;
 int r = f(x);
 \end{lstlisting}
 
-In this example, the type of the parameter N of function template f<>() is deduced from the type of the nontype parameter of S. That’s possible because a name of the form X<...> where X is a class template is a deduced context. However, there are also many patterns that cannot be deduced that way:
+函数模板f<>()的参数N的类型是根据s的非类型参数的类型推导出来的。这是可能的，因为形式为X<…>(X是类模板)用于推导上下文。然而，也有许多模式不能这样推导:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto V> int f(decltype(V) p);
@@ -480,12 +480,12 @@ int r1 = deduce<42>(42); // OK
 int r2 = deduce(42); // ERROR: decltype(V) is a nondeduced context
 \end{lstlisting}
 
-In this case, decltype(V) is a nondeduced context: There is no unique value of V that matches the argument 42 (e.g., decltype(7) produces the same type as decltype(42)). Therefore, the nontype template parameter must be specified explicitly to be able to call this function.
+decltype(V)是不可推导的上下文:V没有唯一的值与参数42匹配(例如，decltype(7)产生与decltype(42)相同的类型)。因此，必须显式指定非类型模板参数才能调用此函数。
 
 
-\subsubsubsection{15.10.4\hspace{0.2cm}Special Situations for autoDeduction}
+\subsubsubsection{15.10.4\hspace{0.2cm}auto类型推导的特殊情况}
 
-There are a few special situations for the otherwise simple deduction rules of auto. The first is when the initializer for a variable is an initializer list. The corresponding deduction for a function call would fail, because we cannot deduce a template type parameter from an initializer list argument:
+auto的简单推导规则也有一些特殊情况。第一个是当变量的初始化式为初始化器列表的情况。函数调用的相应推导会失败，因为无法从初始化器列表的参数推导出模板类型参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -495,7 +495,7 @@ deduceT({ 2, 3, 4}); // ERROR
 deduceT({ 1 }); // ERROR
 \end{lstlisting}
 
-However, if our function has a more specific parameter as follows
+但是，如果函数有一个更具体的参数
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -504,23 +504,23 @@ void deduceInitList(std::initializer_list<T>);
 deduceInitList({ 2, 3, 5, 7 }); // OK: T deduced as int
 \end{lstlisting}
 
-then deduction succeeds. Copy-initializing (i.e., initialization with the = token) an auto variable with an initializer list is therefore defined in terms of that more specific parameter:
+则推导成功。因此，复制初始化(使用=进行初始化)具有初始化列表的auto变量可以写为更具体的参数:
 
 \begin{lstlisting}[style=styleCXX]
 auto primes = { 2, 3, 5, 7 }; // primes is std::initializer_list<int>
 deduceT(primes); // T deduced as std::initializer_list<int>
 \end{lstlisting}
 
-Before C++17, the corresponding direct-initialization of auto variables (i.e., without the = token) was also handled that way, but this was changed in C++17 to better match the behavior expected by most programmers:
+C++17前，相应的auto变量的直接初始化(不使用=)也可以这样处理，但在C++17中做了改变，可以更好地匹配大多数开发者的期望:
 
 \begin{lstlisting}[style=styleCXX]
 auto oops { 0, 8, 15 }; // ERROR in C++17
 auto val { 2 }; // OK: val has type int in C++17
 \end{lstlisting}
 
-Prior to C++17, both initializations were valid, initializing both both oops and val of type initializer\_list<int>.
+C++17前，两个初始化都有效，初始化类型initializer\_list<int>的oops和val。
 
-Interestingly, returning a braced initializer list for a function with a deducible placeholder type is invalid:
+有趣的是，为可推导占位符类型的函数，返回带大括号的初始化列表是无效的:
 
 \begin{lstlisting}[style=styleCXX]
 auto subtleError() {
@@ -528,18 +528,18 @@ auto subtleError() {
 }
 \end{lstlisting}
 
-That is because an initializer list in function scope is an object that points into an underlying array object (with the element values specified in the list) that expires when the function returns. Allowing the construct would thus encourage what is in effect a dangling reference.
+这是因为函数作用域中的初始化列表是指向底层数组对象(具有列表中指定的元素值)，该对象在函数返回时过期。因此，允许这种结构将出现悬垂引用。
 
-Another special situation occurs when multiple variable declarations share the same auto, as in the following:
+另一种特殊情况发生在多个变量声明，共享相同的auto时，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 auto first = container.begin(), last = container.end();
 \end{lstlisting}
 
-In such cases, deduction is performed independently for each declaration. In other words, there is an invented template type parameter T1 for first and another invented template type parameter T2 for last. Only if both deductions succeed, and the deductions for T1 and T2 are the same type, are the declarations well-formed. This can produce some interesting cases:
+这种情况下，对每个声明独立执行推导。换句话说，第一个是新创建的模板类型参数T1，最后一个是新创建的模板类型参数T2。只有当两个推论都成功，并且T1和T2的推论是相同的类型时，声明才是良好的。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This example does not use our usual style for placing the * immediately adjacent to the auto, because it could mislead the reader into thinking we are declaring two pointers. On the other hand, the opacity of these declarations is a good argument for being conservative when declaring multiple entities in a single declaration
+\hspace*{0.75cm}这个例子没有使用通常的样式将*放在auto的近邻，这样会误导读者认为我们声明了两个指针。另一方面，当在一个声明中声明多个实体时，这些声明的不透明性是一个很好的理由
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -548,9 +548,9 @@ auto *cp = &c, d = c; // OK
 auto e = c, f = c+1; // ERROR: deduction mismatch char vs. int
 \end{lstlisting}
 
-Here, two pairs of variables are declared with a shared auto specifier. The declarations of cp and d deduce the same type char for auto, so this is valid code. The declarations of e and f, however, deduce char and int due to the promotion to int when computing c+1, and that inconsistency results in an error.
+使用共享的auto声明了两对变量。cp和d的声明为auto推导出相同的char类型，因此这是有效的代码。然而，由于在计算c+1时将char和int提升为int, e和f的声明会推导出char和int，而这种不一致会导致错误。
 
-A somewhat parallel special situation can also occur with placeholders for deduced return types. Consider the following example:
+对于推导的返回类型的占位符，也可能出现类似的特殊情况。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 auto f(bool b) {
@@ -562,7 +562,7 @@ auto f(bool b) {
 }
 \end{lstlisting}
 
-In this case, each return statement is deduced independently, but if different types are deduced, the program is invalid. If the returned expression calls the function recursively, deduction cannot occur and the program is invalid unless a prior deduction already determined the return type. That means that the following code is invalid:
+每个return语句都进行独立的推导，但如果推导的类型不同，则程序无效。如果返回表达式递归调用函数，则不能进行推导，程序无效，除非之前的推导已经确定了返回类型。以下代码是无效的:
 
 \begin{lstlisting}[style=styleCXX]
 auto f(int n)
@@ -575,7 +575,7 @@ auto f(int n)
 }
 \end{lstlisting}
 
-but the following otherwise equivalent code is fine:
+但下面的等价代码是可以的:
 
 \begin{lstlisting}[style=styleCXX]
 auto f(int n)
@@ -588,20 +588,20 @@ auto f(int n)
 }
 \end{lstlisting}
 
-Deduced return types have another special case with no counterpart in deduced variable types or deduced nontype parameter types:
+推导的返回类型还有另一种特殊情况，在推导的变量类型或非类型参数类型中，没有对应的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 auto f1() { } // OK: return type is void
 auto f2() { return; } // OK: return type is void
 \end{lstlisting}
 
-Both f1() and f2() are valid and have a void return type. However, if the return type pattern cannot match void, such cases are invalid:
+f1()和f2()都是有效的，并且返回类型为void。但是，如果返回类型模式不能匹配void，这样的情况是无效的:
 
 \begin{lstlisting}[style=styleCXX]
 auto* f3() {} // ERROR: auto* cannot deduce as void
 \end{lstlisting}
 
-As you’d expect, any use of a function template with a deduced return type requires the immediate instantiation of that template to determine the return type with certainty. That, however, has a surprising consequence when it comes to SFINAE (described in Section 8.4 on page 129 and Section 15.7 on page 284). Consider the following example:
+任何使用推导返回类型的函数模板，都需要立即实例化模板，以确定返回类型。然而，当涉及到SFINAE(在第8.4节和第15.7节中描述)时，这有一个令人惊讶的结果。看看下面的例子:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -630,17 +630,17 @@ using AddResultB = decltype(addB(X(), X())); // ERROR: instantiation of addB<X>
 // is ill-formed
 \end{lstlisting}
 
-Here, the use of decltype(auto) rather than decltype(t+u) for addB() causes an error during overload resolution: The function body of the addB() template must be fully instantiated to determine its return type. That instantiation isn’t in the immediate context (see Section 15.7.1 on page 285) of the call to addB() and therefore doesn’t fall under the SFINAE filter but results in an outright error. It is therefore important to remember that deduced return types are not merely a shorthand for a complex explicit return type and they should be used with care (i.e., with the understanding that they shouldn’t be called in the signatures of other function templates that would count on SFINAE properties).
+addB()使用decltype(auto)，而不是decltype(t+u)会导致重载解析期间的错误:addB()模板的函数体必须完全实例化，以确定其返回类型。这个实例化并不在调用addB()的直接上下文中(参见第15.7.1节)，因此不属于SFINAE，会导致一个直接的错误。因此，推导的返回类型不仅仅是复杂的显式返回类型的简写，而且应该小心地使用(理解它们不应该在依赖SFINAE属性的其他函数模板中进行调用)。
 
-\subsubsubsection{15.10.5\hspace{0.2cm}Structured Bindings}
+\subsubsubsection{15.10.5\hspace{0.2cm}结构化绑定}
 
-C++17 added a new feature known as structured bindings.
+C++17增加了一个新特性，称为结构化绑定。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} The term structured bindings was used in the original proposal for the feature and was also eventually used for the formal specification in the language. Briefly, however, that specification used the term decomposition declarations instead.
+\hspace*{0.75cm}术语结构化绑定在该特性的原始提议中使用，最终也用于正式规范。简单地说，规范使用了术语分解声明。
 \end{tcolorbox}
 
-It is most easily introduced with a small example:
+用一个小例子就可以展示:
 
 \begin{lstlisting}[style=styleCXX]
 struct MaybeInt { bool valid; int value; };
@@ -648,24 +648,24 @@ MaybeInt g();
 auto const&& [b, N] = g(); // binds b and N to the members of the result of g()
 \end{lstlisting}
 
-The call to g() produces a value (in this case a simple class aggregate of type MaybeInt) that can be decomposed into “elements” (in this case, the data members of MaybeInt). The value of that call is produced as if the bracketed list of identifiers [b, N] were replaced by a distinct variable name. If that name were e, the initialization would be equivalent to:
+对g()的调用会产生一个值(是一个简单的MaybeInt类型的类聚合)，可以分解为“元素”(MaybeInt的数据成员)。该调用产生的值就像括号中的标识符列表[b, N]中不同的变量名替换一样。如果该名称为e，初始化将等价于:
 
 \begin{lstlisting}[style=styleCXX]
 auto const&& e = g();
 \end{lstlisting}
 
-The bracketed identifiers are then bound to the elements of e. Thus, you can think of [b, N] as introducing names for the pieces of e (we will discuss some details of that binding below).
+然后中括号中的每个标识符会绑定到e的对应元素上。因此，可以认为[b, N]就是e中标识符的每个名称(下面会讨论绑定的细节)。
 
-Syntactically, a structured binding must always have an auto type optionally extended by const and/or volatile qualifiers and/or \&and/or \&\& declarator operators (but not a * pointer declarator or some other declarator construct). It is followed by a bracketed list containing at least one identifier (reminiscent of the “capture” list of lambdas). That in turn has to be followed by an initializer.
+从语法上讲，结构化绑定必须始终具有auto类型，可选地通过const和/或volatile限定符和/或\&和/或\&\&声明符操作符扩展(但不能使用*指针声明符或其他声明符构造)。后面是一个中括号列表，其中至少得有一个标识符(类似Lambdas的“捕获”列表)，再后必须跟一个初始化式。
 
-Three different kinds of entities can initialize a structured binding:
+三种不同的类别可以初始化结构化绑定:
 
 \begin{enumerate}
 \item
-The first case is the simple class type, where all the nonstatic data members are public (as in our example above). For this case to apply, all the nonstatic data members have to be public (either all directly in the class itself or all in the same, unambiguous public base class; no anonymous unions may be involved). In that case, the number of bracketed identifiers must equal the number of members, and using one of these identifiers within the scope of the structured bindings amounts to using the corresponding member of the object denoted by e (with all the associated properties; e.g., if the corresponding member is a bit field, it is not possible to take its address).
+第一种情况是简单类类型，其中所有非静态数据成员都是公共的(如上面的示例所示)。要在这种情况下应用，所有非静态数据成员必须是公共的(要么直接在类本身中，要么全部在相同的、明确的公共基类中;不得涉及匿名联合体)。带括号的标识符数量必须等于成员的数量，并且在结构化绑定的范围内使用这些标识符中的一个，就等于使用e所表示的对象的相应成员(具有所有相关的属性;例如，如果对应的成员是位域，则不可能取其地址)。
 
 \item
-The second case corresponds to arrays. Here is an example:
+第二种情况对应于数组。下面是一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 int main() {
@@ -676,9 +676,9 @@ int main() {
 }
 \end{lstlisting}
 
-Unsurprisingly, the bracketed initializers are just shorthand for the corresponding elements of the unnamed array variable. The number of array elements must equal the number of bracketed initializers.
+括号中的初始化式，只是未命名数组变量对应元素的简写。数组元素的数量必须等于括起来的初始化式的数量。
 
-Here is another example:
+下面是另一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 auto f() -> int(&)[2]; // f() returns reference to int array
@@ -687,54 +687,54 @@ auto [ x, y ] = f(); // #1
 auto& [ r, s ] = f(); // #2
 \end{lstlisting}
 
-Line \#1 is special: Ordinarily, the entity e described earlier would be deduced from the following for this case:
+\#1比较特殊:对于这种情况，前面描述的实体e可以从下面形式进行推导:
 
 \begin{lstlisting}[style=styleCXX]
 auto e = f();
 \end{lstlisting}
 
-However, that would deduce the decayed pointer to the array, which is not what happens when performing the structured binding of an array. Instead, e is deduced to be a variable of array type corresponding to the type of the initializer. Then that array is copied from the initializer, element by element: That is a somewhat unusual concept for built-in arrays.
+但这将推导出指向数组的指针，而这不是在执行数组的结构化绑定时发生的事情。相反，e会推导为一个数组类型的变量，对应于初始化式的类型。此后该数组从初始化式中逐个元素拷贝:对于内置数组来说这是个不太寻常的概念。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The other two places where built-in arrays are copied are lambda captures and generated copy constructors.
+\hspace*{0.75cm}复制内置数组的另外两个位置是Lambda捕获和生成的复制构造函数。
 \end{tcolorbox}
 
-Finally, x and y become aliases for the expressions e[0] and e[1], respectively.
+最后，x和y分别成为表达式e[0]和e[1]的别名。
 
-Line \#2 , does not involve array copying and follows the usual rules for auto. So the hypothetical e is declared as follows:
+\#2不涉及数组复制，并遵循auto的通常规则。假设的e声明如下:
 
 \begin{lstlisting}[style=styleCXX]
 auto& e = f();
 \end{lstlisting}
 
-which yields a reference to an array, and x and y again become aliases for the expressions e[0] and e[1], respectively (which are lvalues referring directly to the elements of the array produced by the call to f()).
+这将产生对数组的引用，x和y再次成为表达式e[0]和e[1]的别名(直接引用由调用f()产生的数组元素的左值)。
 
 \item
-Finally, a third option allows std::tuple-like classes to have their elements decomposed through a template-based protocol using get<>(). Let E be the type of the expression (e) with e declared as above. Because E is the type of an expression, it is never a reference type. If the expression std::tuple\_size<E>::value is a valid integral constant expression, it must equal the number of bracketed identifiers (and the protocol kicks in, taking precedence over the first option but not the second option for arrays). Let’s denote the bracketed identifiers by n0, n1, n2, and so forth. If e has any member named get, then the behavior is as if these identifiers are declared as
+最后，第三个选项允许类似于std::tuple的类使用get<>()通过基于模板的协议分解元素。设E是表达式(e)的类型，e如上声明。因为E是表达式的类型，所以从来不是引用类型。如果表达式std::tuple\_size<e>::value是一个整型常量表达式，必须等于括号内标识符的数量(并且协议生效，优先于数组的第一个选项，但不优先于数组的第二个选项)。用标识符n0、n1、n2等表示括号中的标识符。如果e具有名为get的成员，则行为就像将如下声明:
 
 \begin{lstlisting}[style=styleCXX]
 std::tuple_element<i, E>::type& ni = e.get<i>();
 \end{lstlisting}
 
-if e was deduced to have a reference type, or
+如果e推导为具有引用类型，或
 
 \begin{lstlisting}[style=styleCXX]
 std::tuple_element<i, E>::type&& ni = e.get<i>();
 \end{lstlisting}
 
-otherwise. If e has no member get, then the corresponding declarations become instead
+如果e没有成员get，则相应的声明会变成:
 
 \begin{lstlisting}[style=styleCXX]
 std::tuple_element<i, E>::type& ni = get<i>(e);
 \end{lstlisting}
 
-or
+或
 
 \begin{lstlisting}[style=styleCXX]
 std::tuple_element<i, E>::type&& ni = get<i>(e);
 \end{lstlisting}
 
-where get is only looked up in associated classes and namespaces. (In all cases, get is assumed to be a template and therefore the < follows is an angle bracket.) The std::tuple, std::pair, and std::array templates all implement this protocol, making, for example, the following code valid:
+get只会在关联的类和命名空间中查找(get假设为一个模板，因此跟随的<是一个尖括号(而非小于号))。std::tuple，std::pair和std::array模板都实现了这一协议，代码如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 #include <tuple>
@@ -744,7 +744,7 @@ auto [b, i] = bi;
 int r = i; // initializes r to 42
 \end{lstlisting}
 
-However, it is not difficult to add specializations of std::tuple\_size, std::tuple\_element, and a function template or member function template get<>() that will make this mechanism work for an arbitrary class or enumeration type. For example:
+然而，添加std::tuple\_size、std::tuple\_element和函数模板或成员函数模板get<>()并不困难，可以将使此机制应用于类或枚举类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 #include <utility>
@@ -773,16 +773,13 @@ auto [i, d] = M(); // as if: int&& i = 42; double&& d = 7.0;
 
 \end{enumerate}
 
-Note that you only need to include <utility> to use the two tuple-like access helper functions std::tuple\_size<> and std::tuple\_element<>.
+注意，只需要包含<utility>就可以使用两个类似元组的访问助手函数std::tuple\_size<>和std::tuple\_element<>。
 
-In addition, note that the third case above (using the tuple-like protocol) performs an actual initialization of the bracketed initializers and the bindings are actual reference variables; they are not just aliases for another expression (unlike the first two cases using simple class types and arrays). That’s of interest because that reference initialization could go wrong; for example, it might throw  an exception, and that exception is now unavoidable. However, the C++ standardization committee also discussed the possibility of not associating the identifiers with initialized references but instead having each later use of the identifiers evaluate a get<>() expression. That would have allowed structured bindings to be used with types where the “first” value must be tested before accessing the “second” value (e.g., based on std::optional).
+另外，请注意上面的第三种情况(使用类似元组的协议)对括起来的初始化式执行实际的初始化，绑定是实际的引用变量;不仅仅是另一个表达式的别名(不像前两种情况使用简单的类型和数组)。因为引用初始化可能出错，可能会抛出异常，而这个异常目前无法避免。然而，C++标准化委员会还讨论了不将标识符与初始化的引用关联起来，让标识符以后的每次使用计算get<>()表达式的可能性。这允许结构化绑定用于在访问“第二个”值之前，测试“第一个”值的类型(例如std::optional)。
 
+\subsubsubsection{15.10.6\hspace{0.2cm}泛型Lambda}
 
-\subsubsubsection{15.10.6\hspace{0.2cm}Generic Lambdas}
-
-Lambdas have quickly become one of the most popular C++11 features, in part because they significantly ease the use of the functional constructs in the C++ standard library and in many other modern
-C++ libraries, due largely to their concise syntax. However, within templates themselves, lambdas
-can become fairly verbose due to the need to spell out the parameter and result types. For example, consider a function template that finds the first negative value from a sequence:
+Lambda已经迅速成为最受欢迎的C++11特性，部分原因是简化了C++标准库和许多现代C++库中函数结构的使用，这归功于其简洁的语法。但是，在模板本身内部，Lambdas可能会变得冗长，因为需要详细说明参数和结果类型。例如，一个从序列中查找第一个负数的函数模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iter>
@@ -796,7 +793,7 @@ Iter findNegative(Iter first, Iter last)
 }
 \end{lstlisting}
 
-In this function template, the most complicated part of the lambda (by far) is its parameter type. C++14 introduced the notion of “generic” lambdas, where one or more of the parameter types use auto to deduce the type rather than writing it specifically:
+这个函数模板中，Lambda(到目前为止)最复杂的部分是它的参数类型。C++14引入了"泛型"Lambda的概念，其中一个或多个参数类型使用auto来推导该类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iter>
@@ -809,9 +806,9 @@ Iter findNegative(Iter first, Iter last)
 }
 \end{lstlisting}
 
-An auto in a parameter of a lambda is handled similarly to an auto in the type of a variable with an initializer: It is replaced by an invented template type parameter T. However, unlike in the variable case, the deduction isn’t performed immediately because the argument isn’t known at the time the lambda is created. Instead, the lambda itself becomes generic (if it wasn’t already), and the invented template type parameter is added to its template parameter list. Thus, the lambda above can be invoked with any argument type, so long as that argument type supports the < 0 operation whose result is convertible to bool. For example, this lambda could be called with either an int or a float value.
+Lambda参数auto的处理与使用初始化式的变量类型的auto处理相似:同样由一个引入的模板类型参数T来取代。然而，与变量的情况不同，推导不会立即执行，因为在创建Lambda时参数未知。相反，Lambda本身会变成泛型(它还没有泛型的话)，并且所引入的模板类型参数添加到它的模板参数列表中。因此，上面的Lambda可以用任何参数类型进行调用，只要该参数类型支持结果可转换为bool的<0操作。例如，这个Lambda可以用int或float值调用。
 
-To understand what it means for a lambda to be generic, we first consider the implementation model for a nongeneric lambda. Given the lambda
+要理解Lambda为泛型意味着什么，首先考虑非泛型Lambda的实现模型。给定lambda
 
 \begin{lstlisting}[style=styleCXX]
 [] (int i) {
@@ -819,13 +816,13 @@ To understand what it means for a lambda to be generic, we first consider the im
 }
 \end{lstlisting}
 
-the C++ compiler translates this expression into an instance of a newly invented class specific to this lambda. This instance is called a closure or closure object, and the class is called a closure type. The closure type has a function call operator, and hence the closure is a function object.
+C++编译器将这个表达式转换为一个新的Lambda类实例。这个实例称为闭包或闭包对象，类称为闭包类型。闭包类型有一个函数操作符，因此闭包是一个函数对象。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This translation model of lambdas is actually used in the specification of the C++ language, making it both a convenient and an accurate description of the semantics. Captured variables become data members, the conversion of a noncapturing lambda to a function pointer is modeled as a conversion function in the class, and so on. And because lambdas are function objects, whenever rules for function objects are defined, they also apply to lambdas.
+\hspace*{0.75cm}Lambda的这种转换模型实际上用于C++语言的规范中，这使得它既方便又准确地描述了语义。捕获的变量成为数据成员，非捕获Lambda到函数指针的转换建模为类中的转换函数等。因为Lambda是函数对象，所以无论何时定义了函数对象的规则，其也适用于Lambda。
 \end{tcolorbox}
 
-For this lambda, the closure type would look something like the following (we leave out the conversion function to a pointer-to-function value for brevity and simplicity):
+对于这个Lambda，闭包类型如下所示(简洁起见，省略了转换函数为指向函数值的指针):
 
 \begin{lstlisting}[style=styleCXX]
 class SomeCompilerSpecificNameX
@@ -839,9 +836,9 @@ class SomeCompilerSpecificNameX
 };
 \end{lstlisting}
 
-If you check the type category for a lambda, std::is\_class<> will yield true (see Section D.2.1 on page 705).
+如果检查类型类别中是否有Lambda，std::is\_class<>将产生true(参见第D.2.1节)。
 
-A lambda expression thus results in an object of this class (the closure type). For example:
+Lambda表达式从而导致该类的对象(关闭类型)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 foo(...,
@@ -850,14 +847,14 @@ foo(...,
 	});
 \end{lstlisting}
 
-creates an object (the closure) of the internal compiler-specific class SomeCompilerSpecificNameX:
+创建一个内部编译器特定类SomeCompilerSpecificNameX的对象(闭包):
 
 \begin{lstlisting}[style=styleCXX]
 foo(...,
 	SomeCompilerSpecificNameX{}); // pass an object of the closure type
 \end{lstlisting}
 
-If the lambda were to capture local variables:
+如果Lambda要捕获局部变量:
 
 \begin{lstlisting}[style=styleCXX]
 int x, y;
@@ -867,7 +864,7 @@ int x, y;
 }
 \end{lstlisting}
 
-those captures would be modeled as initializing members of the associated class type:
+这些捕获将为相关类类型的初始化成员:
 
 \begin{lstlisting}[style=styleCXX]
 class SomeCompilerSpecificNameY {
@@ -883,7 +880,7 @@ public:
 };
 \end{lstlisting}
 
-For a generic lambda, the function call operator becomes a member function template, so our simple generic lambda
+对于泛型Lambda，函数调用操作符成为成员函数模板，因此简单泛型Lambda
 
 \begin{lstlisting}[style=styleCXX]
 [] (auto i) {
@@ -891,7 +888,7 @@ For a generic lambda, the function call operator becomes a member function templ
 }
 \end{lstlisting}
 
-is transformed into the following invented class (again, ignoring the conversion function, which becomes a conversion function template in the generic lambda case):
+会转换成下面的类(同样地，忽略了函数转换，在泛型Lambda场景中它是一个转换函数模板):
 
 \begin{lstlisting}[style=styleCXX]
 class SomeCompilerSpecificNameZ
@@ -906,7 +903,7 @@ class SomeCompilerSpecificNameZ
 };
 \end{lstlisting}
 
-The member function template is instantiated when the closure is invoked, which is usually not at the point where the lambda expression appears. For example:
+成员函数模板在调用闭包时实例化，通常不是在Lambda表达式出现的地方。例如:
 
 \begin{lstlisting}[style=styleCXX]
 #include <iostream>
@@ -925,7 +922,7 @@ int main()
 }
 \end{lstlisting}
 
-Here the lambda expression appears in main(), and that’s where an associated closure is created. However, the call operator of the closure isn’t instantiated at that point. Instead, the invoke() function template is instantiated with the closure type as the first parameter type and int (the type of 21) as a second and third parameter type. That instantiation of invoke is called with a copy of the closure (which is still a closure associated with the original lambda), and it instantiates the operator() template of the closure to satisfy the instantiated call f(ps...).
+这里，Lambda表达式出现在main()中，并在那里创建了相关的闭包。然而，闭包的调用操作符并没有在此时实例化。invoke()函数模板的实例化使用闭包类型作为第一个参数类型，int(21的类型)作为第二个和第三个参数类型。调用invoke的实例化是用闭包副本调用的(仍然与原始Lambda关联的闭包)，实例化闭包的operator()模板可用来满足实例化调用f(ps…)。
 
 
 

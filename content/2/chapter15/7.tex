@@ -1,12 +1,12 @@
 
 
-The SFINAE (substitution failure is not an error) principle, introduced in Section 8.4 on page 129, is an important aspect of template argument deduction that prevents unrelated function templates from causing errors during overload resolution.
+SFINAE(替换失败不为过)原则在第8.4节中介绍，其对模板参数类型的推导有很大的影响，可以避免不相关的函数模板在重载解析期间引起的错误。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}SFINAE also applies to the substitution of partial class template specializations. See Section 16.4 on page 347
+\hspace*{0.75cm}SFINAE也适用于部分类模板特化的替换。参见第16.4节
 \end{tcolorbox}
 
-For example, consider a pair of function templates that extracts the beginning iterator for a container or an array:
+例如，考虑一对函数模板，用于提取容器或数组的起始迭代器:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, unsigned N>
@@ -31,59 +31,59 @@ int main()
 }
 \end{lstlisting}
 
-The first call to begin(), in which the argument is a std::vector<int>, attempts template argument deduction for both begin() function templates:
+对begin()的第一次调用，其中参数是std::vector<int>，尝试对begin()函数模板进行模板参数推导:
 
 \begin{itemize}
 \item 
-Template argument deduction for the array begin() fails, because a std::vector is not an array, so it is ignored.
+数组begin()的模板参数推导失败，因为std::vector不是数组，所以忽略。
 
 \item 
-Template argument deduction for the container begin() succeeds with Container deduced to std::vector<int>, so that the function template is instantiated and called.
+容器begin()的模板实参推导成功，将Container推导为std::vector<int>，从而实例化和调用函数模板。
 \end{itemize}
 
-The second call to begin(), in which the argument is an array, also partially fails:
+对begin()的第二次调用，参数是一个数组，也会部分失败:
 
 \begin{itemize}
 \item 
-Deduction for the array begin() succeeds with T deduced to int and N deduced to 10.
+数组begin()推导成功，T推导为int, N推导为10。
 
 \item 
-Deduction for the container begin() determines that Container should be replaced by int[10]. While in general this substitution is fine, the produced return type Container::iterator is invalid, because an array type does not have a nested type named iterator. In any other context, trying to access a nested type that does not exist would cause an immediate compile-time error. During the substitution of template arguments, SFINAE turns such errors into deduction failures, and the function template is removed from consideration. Thus, the second begin() candidate is ignored and the specialization of the first begin() function template is called.
+对容器begin()的推导决定了将Container替换为int[10]。虽然通常来说这种替换没有问题，但产生的返回类型Container::iterator是无效的，因为数组类型没有名为iterator的迭代器类型。在其他上下文中，访问不存在的迭代器类型将导致编译错误。SFINAE在替换模板参数时，将这些错误转化为推导失败，不再考虑函数模板。因此，忽略第二个begin()候选，并调用第一个begin()模板的特化。
 \end{itemize}
 
-\subsubsubsection{15.7.1\hspace{0.2cm}Immediate Context}
+\subsubsubsection{15.7.1\hspace{0.2cm}即时上下文}
 
-SFINAE protects against attempts to form invalid types or expressions, including errors due to ambiguities or access control violations, that occur within the immediate context of the function template substitution. Defining the immediate context of a function template substitution is more easily done by defining what is not in that context.
+SFINAE可以避免形成无效类型或表达式的尝试，包括在函数模板替换的即时上下文中发生的由二义性或违反访问控制引起的错误。通过定义函数模板替换的即时上下文，可以更容易地定义不在该上下文中的内容。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The immediate context includes many things, including various kinds of lookup, alias template substitutions, overload resolution, etc. Arguably the term is a bit of a misnomer, because some of the activities it includes are not closely tied to the function template being substituted.
+\hspace*{0.75cm}即时上下文包括很多东西，各种查找、别名模板替换、重载解析等。可以说，这个术语有不恰当，因为包含的一些活动与所替换的函数模板没有关系。
 \end{tcolorbox}
 
-Specifically, during function template substitution for the purpose of deduction, anything that happens during the instantiation of
+在函数模板替换过程中，为了推导而发生的实例化期间的事，都不在函数模板替换的即时上下文中：
 
 \begin{itemize}
 \item 
-the definition of a class template (i.e., its “body” and list of base classes),
+类模板的定义(即“主体”和基类列表)
 
 \item 
-the definition of a function template (“body” and, in the case of a constructor, its constructorinitializers),
+函数模板的定义(函数模板本身，对于构造函数，则是构造函数初始化式)
 
 \item 
-the initializer of a variable template,
+变量模板的初始化式
 
 \item 
-a default argument,
+默认参数
 
 \item 
-a default member initializer, or
+默认成员初始化式
 
 \item 
-an exception specification
+异常规范
 \end{itemize}
 
-is not part of the immediate context of that function template substitution. Any implicit definition of special member functions triggered by the substitution process is not part of the immediate context of the substitution either. Everything else is part of that context.
+不是函数模板替换的即时上下文的一部分。由替换过程触发的特殊成员函数的隐式定义，也不是替换的即时上下文的一部分。其他一切都是上下文的一部分。
 
-So if substituting the template parameters of a function template declaration requires the instantiation of the body of a class template because a member of that class is being referred to, an error during that instantiation is not in the immediate context of the function template substitution and is therefore a real error (even if another function template matches without error). For example:
+因此，若替换函数模板声明的模板参数需要实例化类模板的主体，该类的一个成员正在引用，那么实例化期间的错误并不在函数模板替换的即时上下文中，因此是一个真正的错误(即使另一个函数模板匹配没有错误)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -104,9 +104,9 @@ int main()
 } // instantiates Array<int&>, which then fails
 \end{lstlisting}
 
-The main difference between this example and the prior example is where the failure occurs. In the prior example, the failure occurred when forming a type typename Container::iterator that was in the immediate context of the substitution of function template begin(). In this example, the failure occurs in the instantiation of Array<int\&>, which—although it was triggered from the function template’s context—actually occurs in the context of the class template Array. Therefore, the SFINAE principle does not apply, and the compiler will produce an error.
+此示例与上一个示例的主要区别在于错误位置。前面的例子中，错误发生在typename Container::iterator类型时，该类型位于函数模板begin()替换的即时上下文中。本例中，失败发生在Array<int\&>的实例化中，尽管由函数模板的上下文触发，但实际上发生在类模板Array的上下文中。因此，SFINAE原理在这里不适用，编译器将产生错误。
 
-Here is a C++14 example—relying on deduced return types (see Section 15.10.1 on page 296)—that involves an error during the instantiation of a function template definition:
+下面是C++14的例子——依赖于推导的返回类型(参见15.10.1节)——在函数模板定义的实例化过程中会产生一个错误:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> auto f(T p) {
@@ -123,11 +123,11 @@ int main()
 }
 \end{lstlisting}
 
-The call g(42) deduces T to be int. Making that substitution in the declaration of g() requires us to determine the type of f(p) (where p is now known to be of type int) and therefore to determine the return type of f(). There are two candidates for f(). The nontemplate candidate is a match, but not a very good one because it matches with an ellipsis parameter. Unfortunately, the template candidate has a deduced return type, and so we must instantiate its definition to determine that return type. That instantiation fails because p->m is not valid when p is an int and since the failure is outside the immediate context of the substitution (because it’s in a subsequent instantiation of a function definition), the failure produces an error. Because of this, we recommend avoiding deduced return types if they can easily be specified explicitly.
+调用g(42)将T推导为int。在g()的声明中进行替换需要确定f(p)的类型(p现在已知是int类型)，因此需要确定f()的返回类型。f()有两个候选。非模板候选匹配，但不是很好，因为它匹配一个省略号参数。不幸的是，模板候选有一个推导的返回类型，因此必须实例化它的定义来确定返回类型。这个实例化失败的原因是p\texttt{->}m在p是int时无效，而且由于失败在替换的即时上下文之外(因为在函数定义的后续实例化中)，失败产生了一个错误。因此，若可以显式指定推导返回类型，这里建议不使用它们。
 
-SFINAE was originally intended to eliminate surprising errors due to unintended matches with function template overloading, as with the container begin() example. However, the ability to detect an invalid expression or type enables remarkable compile-time techniques, allowing one to determine whether a particular syntax is valid. These techniques are discussed in Section 19.4 on page 416.
+SFINAE最初的目的是为了消除由于函数模板重载意外匹配而导致的错误，比如:容器begin()的例子。但检测无效表达式或类型的能力可以实现更卓越的编译技术，允许判断特定语法是否有效。这些技术将在第19.4节中讨论。
 
-See especially Section 19.4.4 on page 424 for an example of making a type trait SFINAE-friendly to avoid problems due to the immediate context issue.
+请参阅第19.4.4节，以获得使类型SFINAE友好的例子，以避免由于即时上下文问题造成的问题。
 
 
 

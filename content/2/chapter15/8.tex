@@ -1,22 +1,22 @@
 
 
-Template argument deduction is a powerful feature, eliminating the need to explicitly specify template arguments in most calls to function templates and enabling both function template overloading (see Section 1.5 on page 15) and partial class template specialization (see Section 16.4 on page 347).
+模板参数推导是一个强大的特性，消除了在大多数函数模板调用中显式指定模板参数的需要，并且启用了函数模板重载(参见第1.5节)和部分类模板特化(参见第16.4节)。
 
-However, there are a few limitations that programmers may encounter when using templates and those limitations are discussed in this section.
+但是，开发者在使用模板时可能会遇到一些限制，本节来讨论一下这些限制。
 
-\subsubsubsection{15.8.1\hspace{0.2cm}Allowable Argument Conversions}
+\subsubsubsection{15.8.1\hspace{0.2cm}合法的参数转换}
 
-Normally, template deduction attempts to find a substitution of the function template parameters that make the parameterized type P identical to type A. However, when this is not possible, the following differences are tolerable when P contains a template parameter in a deduced context:
+通常，模板推导试图找到函数模板参数的替换类型，使参数化的类型P与类型A相同。然而，当这不可能时，当P在推导上下文中包含模板参数时，以下差异合理的:
 
 \begin{itemize}
 \item 
-If the original parameter was declared with a reference declarator, the substituted P type may be more const/volatile-qualified than the A type.
+若原始参数是用引用声明符声明的，那么替换的P类型可能比A类型更符合const/volatile限定。
 
 \item 
-If the A type is a pointer or pointer-to-member type, it may be convertible to the substituted P type by a qualification conversion (in other words, a conversion that adds const and/or volatile qualifiers).
+如果A类型是指针或成员指针类型，则可以通过限定转换转换为替换的P类型(换句话说，就是添加const和/或volatile限定符的转换)。
 
 \item 
-Unless deduction occurs for a conversion operator template, the substituted P type may be a base class type of the A type or a pointer to a base class type of the class type for which A is a pointer type. For example:
+除非对转换操作符模板进行涂掉，否则替换的P类型可以是A类型的基类类型，或者是指向A为基类类型的指针。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -35,7 +35,7 @@ void g(D<long> dl)
 \end{lstlisting}
 \end{itemize}
 
-If P does not contain a template parameter in a deduced context, then all implicit conversion are permissible. For example:
+如果P在推导的上下文中不包含模板参数，那么所有隐式转换都是可以进行。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> int f(T, typename T::X);
@@ -50,9 +50,9 @@ int r = f(v, 7.0); // OK: T is deduced to int through the first parameter,
 					// which can be constructed from a double value
 \end{lstlisting}
 
-The relaxed matching requirements are considered only if an exact match was not possible. Even so, deduction succeeds only if exactly one substitution was found to fit the A type to the substituted P type with these added conversions.
+只有在不能精确匹配的情况下才考虑宽松匹配要求。即便如此，只有找到一个替换使A类型与添加了这些转换的P类型相匹配，推导才会成功。
 
-Note that these rules are very narrow in scope, ignoring (for example) various conversions that could be applied to the function arguments to make a call succeed. For example, consider the following call to the max() function template shown in Section 15.1 on page 269:
+注意，这些规则的作用范围非常窄，忽略了(例如)可以应用于函数参数以使调用成功的各种转换。例如，考虑下面对max()函数模板的调用，如15.1节所示:
 
 \begin{lstlisting}[style=styleCXX]
 std::string maxWithHello(std::string s)
@@ -61,19 +61,19 @@ std::string maxWithHello(std::string s)
 }
 \end{lstlisting}
 
-Here, template argument deduction from the first argument deduces T to std::string, while deduction from the second argument deduces T to char[6], so template argument deduction fails, because both parameters use the same template parameter. This failure may come as a surprise, because the string literal "hello" is implicitly convertible to std::string, and the call
+这里由第一个参数推导的模板参数将T推导为std::string，而由第二个参数推导的模板实参数T推导为char[6]，因此模板参数推导失败，因为两个参数使用相同的模板参数。这个失败可能令人惊讶，因为字符串字面量“hello”隐式转换为std::string和调用
 
 \begin{lstlisting}[style=styleCXX]
 ::max<std::string>(s, "hello")
 \end{lstlisting}
 
-would have succeeded.
+这样就成功了。
 
-Perhaps even more surprising is that when the two arguments have different class types derived from a common base class, deduction does not consider that common base class as a candidate for the deduced type. See Section 1.2 on page 7 for a discussion of this issue and possible solutions.
+当两个参数从一个公共基类派生出不同的类类型时，推导并不认为该公共基类是推导出的类型的候选者。参见1.2节对此问题的讨论和可能的解决方案。
 
-\subsubsubsection{15.8.2\hspace{0.2cm}Class Template Arguments}
+\subsubsubsection{15.8.2\hspace{0.2cm}类模板参数}
 
-Prior to C++17, template argument deduction applied exclusively to function and member function templates. In particular, the arguments for a class template were not deduced from the arguments to a call of one of its constructors. For example:
+C++17前，模板参数推导只适用于函数和成员函数模板。特别地，类模板的参数并没有从参数导出到对其构造函数的调用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -89,14 +89,11 @@ S x(12); // ERROR before C++17: the class template parameter T was not deduced f
 // the constructor call argument 12
 \end{lstlisting}
 
-This limitation is lifted in C++17—see Section 15.12 on page 313.
+这个限制在C++17中取消了，参见第15.12节。
 
+\subsubsubsection{15.8.3\hspace{0.2cm}默认调用参数}
 
-
-
-\subsubsubsection{15.8.3\hspace{0.2cm}Default Call Arguments}
-
-Default function call arguments can be specified in function templates just as they are in ordinary functions:
+默认函数调用参数可以在函数模板中指定，就像在普通函数一样:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -106,7 +103,7 @@ void init (T* loc, T const& val = T())
 }
 \end{lstlisting}
 
-In fact, as this example shows, the default function call argument can depend on a template parameter. Such a dependent default argument is instantiated only if no explicit argument is provided—a principle that makes the following example valid:
+正如这个例子所示，默认函数调用参数可以依赖于模板参数。这种依赖的默认参数只有在没有提供显式参数的情况下，才会实例化——这一原则使得下面的例子有效:
 
 \begin{lstlisting}[style=styleCXX]
 class S {
@@ -125,7 +122,7 @@ int main()
 }
 \end{lstlisting}
 
-Even when a default call argument is not dependent, it cannot be used to deduce template arguments. This means that the following is invalid C++:
+即使不依赖默认调用参数，也不能用它来推导模板参数。这意味着以下代码无效:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -139,9 +136,9 @@ int main()
 }
 \end{lstlisting}
 
-\subsubsubsection{15.8.4\hspace{0.2cm}Exception Specifications}
+\subsubsubsection{15.8.4\hspace{0.2cm}异常规范}
 
-Like default call arguments, exception specifications are only instantiated when they are needed. This means that they do not participate in template argument deduction. For example:
+与默认调用参数一样，异常规范只在需要时才实例化。它们不参与模板参数推导。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -155,9 +152,9 @@ void test(int i)
 }
 \end{lstlisting}
 
-The noexcept specification in the function marked \#1 tries to call a nonexistent function. Normally, such an error directly within the declaration of the function template would trigger a template argument deduction failure (SFINAE), allowing the call f(i, i) to succeed by selecting the function marked \#2 that is an otherwise lesser match (matching with an ellipsis parameter is the worst kind of match from the point of overload resolution; see Appendix C). However, because exception specifications do not participate in template argument deduction, overload resolution selects \#1 and the program becomes ill-formed when the noexcept specification is later instantiated.
+\#1的函数中的noexcept规范试图调用一个不存在的函数。通常，在函数模板声明中直接出现这样的错误，会触发模板参数推导失败(SFINAE)，通过选择\#2的匹配较小的函数(与省略号形参匹配从重载解析的角度来看，是最糟糕的匹配类型;详见附录C)但是，由于异常说明不参与模板参数推导，所以重载解析选择\#1，当noexcept后来实例化时，程序就会呈现出一种病态的形式。
 
-The same rules apply to exception specifications that list the potential exception types:
+相同的规则适用于潜在异常类型的异常规范：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -172,7 +169,7 @@ void test(int i)
 }
 \end{lstlisting}
 
-However, these “dynamic” exception specifications have been deprecated since C++11 and were removed in C++17.
+然而，这些“动态”异常规范自C++11以来已弃用，并在C++17中删除。
 
 
 

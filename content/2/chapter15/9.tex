@@ -1,4 +1,4 @@
-When a function template argument cannot be deduced, it may be possible to explicitly specify it following the function template name. For example:
+当不能推导函数模板参数时，可以在函数模板名称后面显式地指定。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> T default_value()
@@ -12,7 +12,7 @@ int main()
 }
 \end{lstlisting}
 
-This may be done also for template parameters that are deducible:
+对于可推导的模板参数也可以这样做:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void compute(T p)
@@ -26,9 +26,9 @@ int main()
 }
 \end{lstlisting}
 
-Once a template argument is explicitly specified, its corresponding parameter is no longer subject to deduction. That, in turn, allows conversions to take place on the function call parameter that would not be possible in a deduced call. In the example above, the argument 2 in the call compute<double>(2) will be implicitly converted to double.
+当显式指定了模板参数，对应参数就不再需要推导了。这又允许对函数调用参数进行转换，而这在推导式调用中不可能进行。上面的例子中，compute<double>(2)调用中的参数2将隐式转换为double。
 
-It is possible to explicitly specify some template arguments while having others be deduced. However, the explicitly specified ones are always matched left-to-right with the template parameters. Therefore, parameters that cannot be deduced (or that are likely to be specified explicitly) should be specified first. For example:
+可以显式地指定一些模板参数，同时推导出其他参数。但是，显式指定的参数总是与模板参数从左到右匹配。因此，应该首先指定不能推导(或显式指定)的参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Out, typename In>
@@ -43,7 +43,7 @@ int main() {
 }
 \end{lstlisting}
 
-It is occasionally useful to specify an empty template argument list to ensure the selected function is a template instance while still using deduction to determine the template arguments:
+有时，指定空的模板参数列表是有用的，以确保所选函数是一个模板实例，同时可以使用推导来确定模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 int f(int); // #1
@@ -54,9 +54,9 @@ int main() {
 }
 \end{lstlisting}
 
-Here f(42) selects the nontemplate function because overload resolution prefers an ordinary function over a function template if all other things are equal. However, for f<>(42) the presence of a template argument list rules out the nontemplate function (even though no actual template arguments are specified).
+f(42)选择非模板函数，因为重载解析在所有其他条件都相同的情况下更匹配普通函数。但是，对于f<>(42)，因模板参数列表的存在，排除了非模板函数(即使没有指定实际的模板参数)。
 
-In the context of friend function declarations, the presence of an explicit template argument list has an interesting effect. Consider the following example:
+友元函数声明的上下文中，显式模板参数列表的存在有一个有趣的效果。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 void f();
@@ -69,11 +69,11 @@ namespace N {
 }
 \end{lstlisting}
 
-When a plain identifier is used to name a friend function, that function is only looked up within the nearest enclosing scope, and if it is not found there, a new entity is declared in that scope (but it remains “invisible” except when looked up via argument-dependent lookup (ADL); see Section 13.2.2 on page 220). That is what happens with our first friend declaration above: No f is declared within namespace N, and so a new N::f() is “invisibly” declared.
+使用普通标识符命名友元函数时，该函数只会在最近的封闭范围内查找，如果找不到，则会在该范围内声明一个新实体(但仍然是“不可见”的，除非通过参数依赖查找(ADL);参见第13.2.2节)。这就是上面第一个友元声明所发生的情况:没有f在名称空间N中声明，所以新的N::f()是“不可见”的声明。
 
-However, when the identifier naming the friend is followed by a template argument list, a template must be visible through normal lookup at that point, and normal lookup will go up any number of scopes that may be required. So, our second declaration above will find the global function template f(), but the compiler will then issue an error because the return types do not match (since no ADL is performed here, the declaration created by the preceding friend function declaration is ignored).
+但为友元命名的标识符后面跟着模板参数列表时，此时模板必须通过常规查找可见，而常规查找将向可能需要的任意数量的作用域延伸。因此，上面的第二个声明会找到全局函数模板f()，但是编译器会发出一个错误，因为返回类型不匹配(这里没有执行ADL，由前面友元函数声明创建的声明会忽略)。
 
-Explicitly specified template arguments are substituted using SFINAE principles: If the substitution leads to an error in the immediate context of that substitution, the function template is discarded, but other templates may still succeed. For example:
+使用SFINAE原则替换显式指定的模板参数:如果替换在即时上下文中导致错误，则丢弃函数模板，但其他模板仍可能成功。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> typename T::EType f(); // #1
@@ -84,7 +84,7 @@ int main() {
 }
 \end{lstlisting}
 
-Here, substituting int* for T in candidate \#1 causes substitution to fail, but in candidate \#2 it succeeds, and therefore that is the candidate selected. In fact, if after substitution exactly one candidate remains, then the name of the function template with the explicit template arguments behaves pretty much like an ordinary function name, including decaying to a pointer-to-function type in many contexts. That is, replacing main() above by
+将int*替换为候选\#1中的T导致替换失败，但在候选\#2中成功了，因此这就是选中的候选。如果在替换之后只剩下一个候选函数，那么带有显式模板参数的函数模板行为与普通函数非常相似，包括在许多上下文中衰变为指向函数类型的指针。也就是说，将上面的main()替换为
 
 \begin{lstlisting}[style=styleCXX]
 int main() {
@@ -92,7 +92,7 @@ int main() {
 }
 \end{lstlisting}
 
-produces a valid translation unit. However, the following example:
+生成一个有效的翻译单元。然而，下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void f(T);
@@ -103,9 +103,9 @@ int main() {
 }
 \end{lstlisting}
 
-is not valid because f<int*> does not identify a single function in that case.
+无效，因为f<int*>在这种情况下没有标识单个函数。
 
-Variadic function templates can be used with explicit template arguments also:
+可变参数函数模板也可以与显式的模板参数一起使用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename ... Ts> void f(Ts ... ps);
@@ -115,7 +115,7 @@ int main() {
 }
 \end{lstlisting}
 
-Interestingly, a pack can be partially explicitly specified and partially deduced:
+有趣的是，包可以部分显式地指定和部分推导:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename ... Ts> void f(Ts ... ps);

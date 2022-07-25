@@ -1,4 +1,4 @@
-Alias templates (see Section 2.8 on page 39) are “transparent” with respect to deduction. That means that wherever an alias template appears with some template arguments, that alias’s definition (i.e., the type to the right of the =) is substituted with the arguments, and the resulting pattern is what is used for the deduction. For example, template argument deduction succeeds in the following three calls:
+别名模板(参见第2.8节)在推导方面是“透明的”。只要一个别名模板带有一些模板参数出现，别名定义(=右边的类型)会替换为参数，产生的结果为推导所用。例如，模板实参推导对下面的三个调用都会成功:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -27,16 +27,16 @@ void test(DequeStack<int> intStack)
 }
 \end{lstlisting}
 
-n the first call (to f1()), the use of the alias template DequeStack in the type of intStack has no effect on deduction: The specified type DequeStack<int> is treated as its substituted type Stack<int, std::deque<int>>. The second and third calls have the same deduction behavior, because DequeStack<T> in f2() and the substituted form Stack<T, std::deque<T>> in f3() are equivalent. For the purposes of template argument deduction, template aliases are transparent: They can be used to clarify and simplify code but have no effect on how deduction operates.
+第一次调用(对f1())中，在intStack类型中使用别名模板DequeStack对演绎没有影响:指定的类型DequeStack<int>可视为其替代类型Stack<int, std::deque<int>>。第二次和第三次调用具有相同的涂掉行为，因为f2()中的DequeStack<T>和f3()中的替代形式与Stack<T, std::deque<T>>相同。对模板实参推导的目标来说，模板别名是透明的:可以用来区分和简化代码，但是对于推导如何进行却不会产生效果。
 
-Note that this is possible because alias templates cannot be specialized (see Chapter 16 for details on the topic of template specialization). Suppose the following were possible:
+这是可能的，因为别名模板不能特化(参见第16章关于模板特化主题的详细信息)。假设以下代码可行:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> using A = T;
 template<> using A<int> = void; // ERROR, but suppose it were possible...
 \end{lstlisting}
 
-Then we would not be able to match A<T> against type void and conclude that T must be void because both A<int> and A<void> are equivalent to void. The fact that this is not possible guarantees that each use of an alias can be generically expanded according to its definition, which allows it to be transparent for deduction.
+因为A<int>和A<void>都等于void，所以不能将A<t>与void类型匹配并得出结论T一定是void。不可能做到这一点的，别名的每次使用都可以根据其定义进行扩展，从而使别名可以进行透明地推导。
 
 
 

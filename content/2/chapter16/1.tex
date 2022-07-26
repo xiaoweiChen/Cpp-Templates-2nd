@@ -1,5 +1,5 @@
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -30,19 +30,19 @@ T tmp(*a);
 }
 \end{lstlisting}
 
-or simple types, the generic implementation of exchange() works well. However, for types with expensive copy operations, the generic implementation may be much more expensive—both in terms of machine cycles and in terms of memory usage—than an implementation that is tailored to the particular, given structure. In our example, the generic implementation requires one call to the copy constructor of Array<T> and two calls to its copy-assignment operator. For large data structures these copies can often involve copying relatively large amounts of memory. However, the functionality of exchange() could presumably often be replaced just by swapping the internal data pointers, as is done in the member function exchangeWith().
+或者简单类型，exchange()的泛型实现工作得很好。但对于具有昂贵的复制操作的类型，泛型实现可能要比为特定结构的定制实现昂贵得多。示例中，泛型实现需要调用一次Array<T>的复制构造函数，并调用两次其复制赋值操作符。对于大型数据结构，通常涉及复制较大的内存。然而，exchangeWith()可以通过交换内部数据指针来替换，就像在exchangeWith()中那样。
 
 
-\subsubsubsection{16.1.1\hspace{0.2cm}Transparent Customization}
+\subsubsubsection{16.1.1\hspace{0.2cm}透明的定制化}
 
-In our previous example, the member function exchangeWith() provides an efficient alternative to the generic exchange() function, but the need to use a different function is inconvenient in several ways:
+成员函数exchangeWith()提供了通用的exchange()函数的有效替代，但需要使用不同的函数在以下情况下不是很方便:
 
 \begin{enumerate}
 \item 
-Users of the Array class have to remember an extra interface and must be careful to use it when possible.
+Array类的用户必须记住多个接口，并且需要小心地使用。
 
 \item 
-Generic algorithms can generally not discriminate between various possibilities. For example:
+泛型算法通常不能区分各种可能性。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -56,7 +56,7 @@ void genericAlgorithm(T* x, T* y)
 
 \end{enumerate}
 
-Because of these considerations, C++ templates provide ways to customize function templates and class templates transparently. For function templates, this is achieved through the overloading mechanism. For example, we can write an overloaded set of quickExchange() function templates as follows:
+C++模板提供了透明地自定义函数模板和类模板的方法。对于函数模板，这是通过重载机制实现的。例如，可以重载一个quickExchange()函数模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -81,12 +81,12 @@ void demo(Array<int>* p1, Array<int>* p2)
 }
 \end{lstlisting}
 
-The first call to quickExchange() has two arguments of type int*, and therefore deduction succeeds only with the first template, declared at point \#1 , when T is substituted by int. There is therefore no doubt regarding which function should be called. In contrast, the second call can be matched with either template: Viable functions for the call quickExchange(p1, p2) are obtained both when substituting Array<int> for T in the first template and when substituting int in the second template. Furthermore, both substitutions result in functions with parameter types that exactly match the argument types of the second call. Ordinarily, this would lead us to conclude that the call is ambiguous, but (as we will discuss later) the C++ language considers the second template to be “more specialized” than the first. All other things being equal, overload resolution prefers the more specialized template and hence selects the template at point \#2 .
+对quickExchange()的第一个调用有两个int*类型的参数，因此当用int替换T时，只有在第一个模板(\#1声明)上推导成功。相比之下，第二个调用可以与任意一个模板匹配:调用quickExchange(p1, p2)的函数是在第一个模板中用Array<int>替换T时获得的，第二个模板中用int替换时也可获得。而且，这两次替换的结果是，函数参数类型与第二次调用的参数类型完全匹配。通常，可以得出这样的结论:调用有二义性，但是C++语言认为第二个模板比第一个模板“更加特化”。在其他条件相同的情况下，重载解析更倾向于使用更特化的模板，因此选择了\#2处的模板。
 
 
-\subsubsubsection{16.1.2\hspace{0.2cm}Transparent Customization}
+\subsubsubsection{16.1.2\hspace{0.2cm}语义透明性}
 
-The use of overloading as shown in the previous section is very useful in achieving transparent customization of the instantiation process, but it is important to realize that this “transparency” depends a great deal on the details of the implementation. To illustrate this, consider our quickExchange() solution. Although both the generic algorithm and the one customized for Array<T> types end up swapping the values that are being pointed to, the side effects of the operations are very different. This is dramatically illustrated by considering some code that compares the exchange of struct objects with the exchange of Array<T>s:
+上一节中所示的重载使用，用于实现实例化过程的透明定制化，但这种“透明”在很大程度上取决于实现细节。考虑quickExchange()的解决方案。虽然泛型算法和为Array<T>类型定制的算法最终都会交换指向的值，但操作的副作用不同。通过考虑一些比较struct对象交换和Array<T>交换的代码，可以说明这一点:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {
@@ -105,7 +105,7 @@ void distinguish (Array<int> a1, Array<int> a2)
 \end{lstlisting}
 
 
-This example shows that a pointer p into the first Array becomes a pointer into the second array after quickExchange() is called. However, the pointer into the non-Array s1 remains pointing into s1 even after the exchange operation: Only the values that were pointed to were exchanged. The difference is significant enough that it may confuse clients of the template implementation. The prefix quick\_ is helpful in attracting attention to the fact that a shortcut may be taken to realize the desired operation. However, the original generic exchange() template can still have a useful optimization for Array<T>s:
+调用quickExchange()之后，指向第一个数组的指针p变成了指向第二个数组的指针。但是，即使在交换操作之后，指向非数组s1的指针仍然指向s1:只交换所指向的值。前缀quick\_is有助于使用快捷方式来实现所需的操作，但通用exchange()模板仍然可以对Array<T>进行优化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -119,7 +119,7 @@ void exchange (Array<T>* a, Array<T>* b)
 }
 \end{lstlisting}
 
-The advantage of this version over the generic code is that no (potentially) large temporary Array<T> is needed. The exchange() template is called recursively so that good performance is achieved even for types such as Array<Array<char>>. Note also that the more specialized version of the template is not declared inline because it does a considerable amount of work of its own, whereas the original generic implementation is inline because it performs only a few operations (each of which is potentially expensive).
+该版本与泛型代码相比的优点是不需要(可能)临时Array<T>。exchange()模板可递归调用，因此即使对于像Array<Array<char>>这样的类型，也可以具有良好的性能。注意，更特化的模板版本没有声明为内联，因为其做了相当多的工作，而原始的泛型实现是内联的，因为只进行了少量的操作(每个操作都可能很昂贵)。
 
 
 

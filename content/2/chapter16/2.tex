@@ -1,6 +1,6 @@
 
 
-In the previous section we saw that two function templates with the same name can coexist, even though they may be instantiated so that both have identical parameter types. Here is another simple example of this:
+在上一节中，了解了名称相同的两个函数模板可以共存，即使以相同的参数类型实例化。下面是另一个例子:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -19,9 +19,9 @@ int f(T*)
 }
 \end{lstlisting}
 
-When T is substituted by int* in the first template, a function is obtained that has exactly the same parameter (and return) types as the one obtained by substituting int for T in the second template. Not only can these templates coexist, their respective instantiations can coexist even if they have identical parameter and return types.
+第一个模板中用int*替换T时，得到的函数与在第二个模板中用int替换T得到的函数具有相同的参数(和返回)类型。不仅这些模板可以共存，它们各自的实例化也可以共存，即使具有相同的参数和返回类型。
 
-The following demonstrates how two such generated functions can be called using explicit template argument syntax (assuming the previous template declarations):
+下面演示了如何使用显式模板参数语法调用这两个生成的函数(假设前面对模板进行了声明):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -36,48 +36,48 @@ int main()
 }
 \end{lstlisting}
 
-This program has the following output:
+程序输出：
 
 \begin{tcblisting}{commandshell={}}
 12
 \end{tcblisting}
 
-To clarify this, let’s analyze the call f<int*>((int*)nullptr) in detail. The syntax f<int*>() indicates that we want to substitute the first template parameter of the template f() with int* without relying on template argument deduction. In this case there is more than one template f(), and therefore an overload set is created containing two functions generated from templates: f<int*>(int*) (generated from the first template) and f<int*>(int**) (generated from the second template). The argument to the call (int*)nullptr has type int*. This matches only the function generated from the first template, and hence that is the function that ends up being called.
+为了澄清这一点，这里详细分析一下f<int*>((int*)nullptr)的调用。语法f<int*>()表示用int*替换模板f()的第一个模板参数。这里不止一个模板f()，因此创建了一个重载集，其中包含从模板生成的两个函数:f<int*>(int*)(从第一个模板生成)和f<int*>(int**)(从第二个模板生成)。调用(int*)nullptr的参数类型为int*，这只匹配从第一个模板生成的函数。
 
-For the second call, on the other hand, the created overloading set contains f<int>(int) (generated from the first template) and f<int>(int*) (generated from the second template), so that only the second template matches.
+对于第二次调用，创建的重载集包含f<int>(int)(从第一个模板生成)和f<int>(int*)(从第二个模板生成)，因此只有第二个模板匹配。
 
-\subsubsubsection{16.2.1\hspace{0.2cm}Signatures}
+\subsubsubsection{16.2.1\hspace{0.2cm}签名}
 
-Two functions can coexist in a program if they have distinct signatures. We define the signature of a function as the following information:
+如果两个函数有不同的签名，可以在一个程序中共存。函数签名的定义如下所示:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This definition differs from that given in the C++ standard, but its consequences are equivalent.
+\hspace*{0.75cm}这个定义与C++标准中给出的定义不同，但其结果等价。
 \end{tcolorbox}
 
 \begin{enumerate}
 \item 
-The unqualified name of the function (or the name of the function template from which it was 	generated)
+函数的非限定名(或生成函数模板的名称)
 
 \item 
-The class or namespace scope of that name and, if the name has internal linkage, the translation unit in which the name is declared
+名称在类或命名空间作用域中，若该名称具有内部链接，则声明为该名称的翻译单元
 
 \item 
- The const, volatile, or const volatile qualification of the function (if it is a member function with such a qualifier)
+函数的const、volatile或const volatile限定符(若具有这样限定符的成员函数)
 
 \item 
-The \& or \&\& qualification of the function (if it is a member function with such a qualifier)
+函数的\&或\&\&限定符(若具有这样限定符的成员函数)
 
 \item 
-The types of the function parameters (before template parameters are substituted if the function is generated from a function template)
+函数参数的类型(若函数是由函数模板生成，则指的是替换前的模板参数)
 
 \item 
-Its return type, if the function is generated from a function template
+函数是由函数模板生成的，则包括它的函数返回类型
 
 \item 
-The template parameters and the template arguments, if the function is generated from a function template
+如果函数是从函数模板中生成，则包括模板参数和模板实参
 \end{enumerate}
 
-This means that the following templates and their instantiations could, in principle, coexist in the same program:
+这意味着下面的模板和实例化体可以在一个程序中共存：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -93,7 +93,7 @@ template<typename T>
 char f2(T);
 \end{lstlisting}
 
-However, they cannot always be used when they’re declared in the same scope because instantiating both creates an overload ambiguity. For example, calling f2(42) when both the templates above are declared will clearly create an ambiguity. Another example is illustrated below:
+然而，当定义在相同的作用域中时，因为实例化会产生重载歧义，所以不能总一起使用。例如，调用f2(42)对于上面声明的模板会产生歧义：
 
 \begin{lstlisting}[style=styleCXX]
 #include <iostream>
@@ -116,19 +116,19 @@ int main()
 }
 \end{lstlisting}
 
-Here, the function
+这里，函数
 
 \begin{lstlisting}[style=styleCXX]
 f1<T1 = char, T2 = char>(T1, T2)
 \end{lstlisting}
 
-can coexist with the function
+可以与下面函数共存
 
 \begin{lstlisting}[style=styleCXX]
 f1<T1 = char, T2 = char>(T2, T1)
 \end{lstlisting}
 
-but overload resolution will never prefer one over the other. If the templates appear in different translation units, then the two instantiations can actually exist in the same program (and, e.g., a linker should not complain about duplicate definitions because the signatures of the instantiations are distinct):
+但是重载解析永远无法判断出哪一个更合适。如果模板在不同的编译单元中出现，这两个实例化体实际上可以在同一个程序中共存(并且，链接器不会抱怨重复的定义，这是因为实例化的签名是有区别的):
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -163,14 +163,14 @@ int main()
 }
 \end{lstlisting}
 
-This program is valid and produces the following output:
+该程序有效，其输出如下：
 
 \begin{tcblisting}{commandshell={}}
 f1(T2, T1)
 f1(T1, T2)
 \end{tcblisting}
 
-\subsubsubsection{16.2.2\hspace{0.2cm}Partial Ordering of Overloaded Function Templates}
+\subsubsubsection{16.2.2\hspace{0.2cm}重载函数模板的部分排序}
 
 Reconsider our earlier example: We found that after substituting the given template argument lists (<int*> and <int>), overload resolution ended up selecting the right function to call:
 

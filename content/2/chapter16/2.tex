@@ -172,14 +172,14 @@ f1(T1, T2)
 
 \subsubsubsection{16.2.2\hspace{0.2cm}重载函数模板的部分排序}
 
-Reconsider our earlier example: We found that after substituting the given template argument lists (<int*> and <int>), overload resolution ended up selecting the right function to call:
+重新考虑前面的例子:发现在替换了给定的模板参数列表(<int*>和<int>)后，重载解析最终调用了正确的函数:
 
 \begin{tcblisting}{commandshell={}}
 std::cout << f<int*>((int*)nullptr); // calls f<T>(T)
 std::cout << f<int>((int*)nullptr); // calls f<T>(T*)
 \end{tcblisting}
 
-However, a function is selected even when explicit template arguments are not provided. In this case, template argument deduction comes into play. Let’s slightly modify function main() in the previous example to discuss this mechanism:
+但是，因为模板参数推导发挥了作用，即使没有提供显式模板参数，函数也会选中。稍微修改一下前面例子中的main():
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -207,50 +207,50 @@ int main()
 }
 \end{lstlisting}
 
-Consider the first call, f(0): The type of the argument is int, which matches the type of the parameter of the first template if we substitute T with int. However, the parameter type of the second template is always a pointer and, hence, after deduction, only an instance generated from the first template is a candidate for the call. In this case overload resolution is trivial.
+考虑第一个调用，f(0):参数类型是int，如果用int替换T，其与第一个模板的参数类型匹配。但是，第二个模板的参数类型始终是指针，在推导之后，会从第一个模板生成的实例是候选，重载解析在这没什么用。
 
-The same applies to the second call: f(nullptr): The type of the argument is std::nullptr\_t, which again only matches for the first template.
+f(nullptr):参数的类型是std::nullptr\_t，也只能匹配第一个模板。
 
-The third call (f((int*)nullptr)) is more interesting: Argument deduction succeeds for both templates, yielding the functions f<int*>(int*) and f<int>(int*). From a traditional overload resolution perspective, both are equally good functions to call with an int* argument, which would suggest that the call is ambiguous (see Appendix C). However, in this sort of case, an additional overload resolution criterion comes into play: The function generated from the more specialized template is selected. Here (as we see shortly), the second template is considered more specialized and thus the output of our example is
+第三个调用(f(int*)nullptr)更有趣:两个模板都成功推导了参数，产生了函数f<int*>(int*)和f<int>(int*)。从重载解析的角度来看，使用int*参数调用这两个函数都是同样的，从而具有二义性(参见附录C)。然而，另外的重载解析标准起了作用:选择从更特化的模板生成的函数。这里，第二个模板更特化，因此示例的输出为
 
 \begin{tcblisting}{commandshell={}}
 112
 \end{tcblisting}
 
-\subsubsubsection{16.2.3\hspace{0.2cm}Formal Ordering Rules}
+\subsubsubsection{16.2.3\hspace{0.2cm}正式的排序规则}
 
-In our last example, it may seem very intuitive that the second template is more special than the first because the first can accommodate just about any argument type, whereas the second allows only pointer types. However, other examples are not necessarily as intuitive. In what follows, we describe the exact procedure to determine whether one function template participating in an overload set is more specialized than the other. Note that these are partial ordering rules: It is possible that given two templates, neither can be considered more specialized than the other. If overload resolution must select between two such templates, no decision can be made, and the program contains an ambiguity error.
+上一个示例中，因为第一个模板可以接受任何参数类型，所以第二个模板似乎比第一个模板更特化，而第二个模板只接受指针类型。然而，其他例子并不一定如此直观。接下来，描述了确定参与重载集的函数模板，是否比另一个更特化的过程。注意，这些是部分排序规则:有可能给定两个模板，其中一个比另一个更特化。如果重载解析必须在两个这样的模板之间进行选择，则不能做出决定，并且程序包含一个模糊错误。
 
-Let’s assume we are comparing two identically named function templates that seem viable for a given function call. Overload resolution is decided as follows:
+假设正在比较两个名称相同的函数模板，对于给定的函数调用似乎是可行的。重载解析的决定如下所示:
 
 
 \begin{itemize}
 \item 
-Function call parameters that are covered by a default argument and ellipsis parameters that are not used are ignored in what follows.
+函数调用参数中没有被使用的默认参数和省略号参数在后续将忽略。
 
 \item 
-We then synthesize two artificial lists of argument types (or for conversion function templates, a return type) by substituting every template parameter as follows:
+然后，通过如下替换每个模板参数，构造出两个类型列表(对于转换函数模板，是返回类型):
 
 \begin{enumerate}
 \item 
-Replace each template type parameter with a unique invented type.
+将每个模板类型参数替换为一个独特的虚拟类型。
 
 \item 
-Replace each template template parameter with a unique invented class template.
+将每个双重模板参数替换为一个独特的虚拟类模板。
 
 \item 
-Replace each nontype template parameter with a unique invented value of the appropriate type.
+将每个非类型模板参数替换为创建的相应类型的值。
 \end{enumerate}
 
-(Types, templates, and values that are invented in this context are distinct from any other types, templates, or values that either the programmer used or the compiler synthesized in other contexts.)
+(虚构出的类型、模板和值在这一上下文中都与任何其他的类型、模板或值不同，这些其他的类型、模板或值要么是开发者使用的，要么是编译器在其他上下文中合成的。)
 
 \item 
-If template argument deduction of the second template against the first synthesized list of argument types succeeds with an exact match, but not vice versa, then the first template is more specialized than the second. Conversely, if template argument deduction of the first template against the second synthesized list of argument types succeeds with an exact match, but not vice versa, then the second template is more specialized than the first. Otherwise (either no deduction succeeds or both succeed), there is no ordering between the two templates.
+如果第二个模板对第一个合成的参数类型列表的模板参数推导实现了精确匹配，反之则不行，那么第一个模板比第二个模板更特化。相反，如果第一个模板对第二个合成参数类型列表的模板参数推导成功实现精确匹配，反之则不行，那么第二个模板比第一个模板更特化。
 \end{itemize}
 
-Let’s make this concrete by applying it to the two templates in our last example. From these two templates, we synthesize two lists of argument types by replacing the template parameters as described earlier: (A1) and (A2*) (where A1 and A2 are unique made up types). Clearly, deduction of the first template against the second list of argument types succeeds by substituting A2* for T. However, there is no way to make T* of the second template match the nonpointer type A1 in the first list. Hence, we formally conclude that the second template is more specialized than the first.
+将其应用到上一个示例中的两个模板中，从而使其更直观。两个模板通过替换模板参数合成两个参数类型列表:(A1)和(A2*)(其中A1和A2是唯一的组成类型)。通过将A2*替换为T，第一个模板对第二个参数类型列表的推导成功了。但是，没有办法使第二个模板的T*匹配第一个列表中的非指针类型A1。因此得出结论，第二个模板比第一个更特化。
 
-Consider a more intricate example involving multiple function parameters:
+考虑一个涉及多个函数参数的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -265,15 +265,15 @@ void example(int* p)
 }
 \end{lstlisting}
 
-First, because the actual call does not use the ellipsis parameter for the first template and the last parameter of the second template is covered by its default argument, these parameters are ignored in the partial ordering. Note that the default argument of the first template is not used; hence the corresponding parameter participates in the ordering.
+因为实际调用不使用第一个模板的省略号参数，而第二个模板的最后一个参数由其默认参数替代，所以这些参数在部分排序中忽略。注意没有使用第一个模板的默认参数;因此，相应的参数参与了排序。
 
-The synthesized lists of argument types are (A1*, A1 const*) and (A2 const*, A2*). Template argument deduction of (A1*, A1 const*) versus the second template actually succeeds with the substitution of T with A1 const, but the resulting match is not exact because a qualification adjustment is needed to call t<A1 const>(A1 const*, A1 const*, A1 const* = 0) with arguments of types (A1*, A1 const*). Similarly, no exact match can be found by deducing template arguments for the first template from the argument type list (A2 const*, A2*). Therefore, there is no ordering relationship between the two templates, and the call is ambiguous.
+参数类型的合成列表为(A1*，A1 const*)和(A2 const*，A2*)。与第二个模板相比，(A1*，A1 const*)的模板参数推导实际上成功地将T替换为A1 const，因为需要进行限定调整，所以无法进行精确匹配，使用类型为(A1*，A1 const*)的参数调用T<A1 const>(A1 const*，A1 const*，A1 const* = 0)。类似地，通过从参数类型列表(A2 const*，A2*)推导出第一个模板的参数，也找不到精确匹配。因此，两个模板之间没有排序关系，并且调用存在二义性。
 
-The formal ordering rules generally result in the intuitive selection of function templates. Once in a while, however, an example comes up for which the rules do not select the intuitive choice. It is therefore possible that the rules will be revised to accommodate those examples in the future.
+正式化的排序规则通常会直接选择函数模板。然而，有时会出现规则与直觉不符的例子。因此，将来可能会修改规则，从而适用于所有例子。。
 
-\subsubsubsection{16.2.4\hspace{0.2cm}Templates and Nontemplates}
+\subsubsubsection{16.2.4\hspace{0.2cm}模板和非模板}
 
-Function templates can be overloaded with nontemplate functions. All else being equal, the nontemplate function is preferred in selecting the actual function being called. The following example illustrates this:
+函数模板可以用非模板函数重载。在其他条件相同的情况下，在选择要调用的实际函数时，会首选非模板函数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -300,13 +300,13 @@ int main()
 }
 \end{lstlisting}
 
-This outputs
+输出为
 
 \begin{tcblisting}{commandshell={}}
 Nontemplate
 \end{tcblisting}
 
-However, when const and reference qualifiers differ, priorities for overload resolution can change. For example:
+但是，当const限定符和引用限定符不同时，重载解析的优先级可能会改变。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -335,16 +335,16 @@ int main()
 }
 \end{lstlisting}
 
-The program has the following output:
+程序输出如下:
 
 \begin{tcblisting}{commandshell={}}
 Template
 Nontemplate
 \end{tcblisting}
 
-Now, the function template f<>(T\&) is a better match when passing a nonconstant int. The reason is that for an int the instantiated f<>(int\&) is a better match than f(int const\&). Thus, the difference is not only the fact that one function is a template and the other is not. In that case the general rules of overload resolution apply (see Section C.2 on page 682). Only when calling f() for a int const, do both signatures have the same type int const\&, so that the nontemplate is preferred.
+函数模板f<>(T\&)在传递非常量int时，匹配的更好。对于int来说，实例化的f<>(int\&)比f(int const\&)匹配得更好。因此，区别不仅仅在于是否是函数是模板，可以使用重载解析的一般性规则(见第C.2节)。只有对int const调用f()时，两个签名才具有相同的int const\&类型，因此首选非模板函数。
 
-For this reason, it’s a good idea to declare the member function template as
+因此，将成员函数模板声明
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -354,7 +354,7 @@ std::string f(T const&)
 }
 \end{lstlisting}
 
-Nevertheless, this effect can easily occur accidentally and cause surprising behavior when member functions are defined that accept the same arguments as copy or move constructors. For example:
+然而，当成员函数定义为接受与复制或移动构造函数相同的参数时，这种效果很容易发生意。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -389,7 +389,7 @@ int main()
 }
 \end{lstlisting}
 
-The program has the following output:
+程序输出如下:
 
 \begin{tcblisting}{commandshell={}}
 template constructor
@@ -398,14 +398,14 @@ copy constructor
 template constructor
 \end{tcblisting}
 
-Thus, the member function template is a better match for copying a C than the copy constructor. And for std::move(c), which yields type C const\&\& (a type that is possible but usually doesn’t have meaningful semantics), the member function template also is a better match than the move constructor.
+因此，成员函数模板比复制构造函数更适合复制C。对于std::move(c)，会产生类型C的const\&\&(这是一种可能的类型，但通常没有有意义的语义)，成员函数模板也比移动构造函数更好。
 
-For this reason, usually you have to partially disable such member function templates when they might hide copy or move constructors. This is explained in Section 6.4 on page 99.
+当成员函数模板可能隐藏复制或移动构造函数时，通常必须部分禁用这些成员函数模板。这在第6.4节中有解释。
 
 
-\subsubsubsection{16.2.5\hspace{0.2cm}Variadic Function Templates}
+\subsubsubsection{16.2.5\hspace{0.2cm}可变参函数模板}
 
-Variadic function templates (see Section 12.4 on page 200) require some special treatment during partial ordering, because deduction for a parameter pack (described in Section 15.5 on page 275) matches a single parameter to multiple arguments. This behavior introduces several interesting situations for function template ordering, illustrated by the following example:
+可变参数函数模板(参见第12.4节)在部分排序过程中需要特殊处理，参数包的推导(在第15.5节中描述)会将单个参数与多个参数匹配。这种行为为函数模板排序引入了几种有趣的情况:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -439,31 +439,31 @@ int main()
 }
 \end{lstlisting}
 
-The output of this example, which we will discuss in a moment, is
+这个示例的输出是
 
 \begin{tcblisting}{commandshell={}}
 231
 \end{tcblisting}
 
-In the first call, f(0, 0.0), each of the function templates named f is considered. For the first function template, f(T*), deduction fails both because the template parameter T cannot be deduced and because there are more function arguments than parameters for this nonvariadic function template. The second function template, f(Ts...), is variadic: Deduction in this case compares the pattern of a function parameter pack (Ts) against against the types of the two arguments (int and double, respectively), deducing Ts to the sequence (int, double). For the third function template, f(Ts*...), deduction compares the pattern of the function parameter pack Ts* against each of the argument types. This deduction fails (Ts cannot be deduced), leaving only the second function template viable. Function template ordering is not required.
+第一个调用f(0, 0.0)中，将考虑名为f的函数模板。对于第一个函数模板f(T*)，推导失败的原因有两个:一是无法推导出模板参数T，二是这个非变参函数模板的函数实参比形参多。第二个函数模板f(Ts…)是可变的:推导将函数参数包(Ts)的模式与两个参数的类型(分别为int和double)进行比较，将Ts演绎为序列(int, double)。对于第三个函数模板f(Ts*…)，推导将函数参数包Ts*的模式与每个参数类型进行比较。这个推导失败了(不能推导Ts)，只剩下第二个函数模板。这里，不需要对函数模板排序。
 
-The second call, f((int*)nullptr, (double*)nullptr), is more interesting: Deduction fails for the first function template because there are more function arguments than parameters, but deduction succeeds for the second and third templates. Written explicitly, the resulting calls would be
+第二个调用f((int*)nullptr，(double*)nullptr):对于第一个函数模板，推导失败，因为函数实参比形参多，但是对于第二个和第三个模板，推导成功。
 
 \begin{lstlisting}[style=styleCXX]
 f<int*,double*>((int*)nullptr, (double*)nullptr) // for second template
 \end{lstlisting}
 
-and
+和
 
 \begin{lstlisting}[style=styleCXX]
 f<int,double>((int*)nullptr, (double*)nullptr) // for third template
 \end{lstlisting}
 
-Partial ordering then considers the second and third templates, both of which are variadic as follows: When applying the formal ordering rules described in Section 16.2.3 on page 331 to a variadic template, each template parameter pack is replaced by a single made-up type, class template, or value. For example, this means that the synthesized argument types for the second and third function templates are A1 and A2*, respectively, where A1 and A2 are unique, made-up types. Deduction of the second template against the third’s list of argument types succeeds by substituting the single-element sequence (A2*) for the parameter pack Ts. However, there is no way to make the pattern Ts* of the third template’s parameter pack match the nonpointer type A1, so the third function template (which accepts pointer arguments) is considered more specialized than the second function template (which accepts any arguments).
+部分排序考虑第二个和第三个模板，这两个都是可变参数模板:当对可变参数模板应用第16.2.3节描述的正式排序规则时，每个模板参数包将替换为单个组成的类型、类模板或值。这意味着第二个和第三个函数模板的合成参数类型分别是A1和A2*，其中A1和A2是合成类型。通过将参数包Ts替换为单元素序列(A2*)，第二个模板针对第三个参数类型列表的推导成功。然而，没有办法使第三个模板的参数包的模式Ts*与非指针类型A1匹配，因此第三个函数模板(接受指针参数)比第二个函数模板(接受任何参数)更特化。
 
-The third call, f((int*)nullptr), introduces a new wrinkle: Deduction succeeds for all three of the function templates, requiring partial ordering to compare a nonvariadic template to a variadic template. To illustrate, we compare the first and third function templates. Here, the synthesized argument types are A1* and A2*, where A1 and A2 are unique, made-up types. Deduction of the first template against the third’s synthesized argument list would normally succeed by substituting A2 for T. In the other direction, deduction of the third template against the first’s synthesized argument list succeeds by substituting the single-element sequence (A1) for the parameter pack Ts. Partial ordering between the first and third templates would normally result in an ambiguity. However, a special rule prohibits an argument that originally came from a function parameter pack (e.g., the third template’s parameter pack Ts*...) from matching a parameter that is not a parameter pack (the first template’s parameter T *). Hence, template deduction of the first template against the third’s synthesized argument list fails, and the first template is considered more specialized than the third. This special rule effectively considers nonvariadic templates (those with a fixed number of parameters) to be more specialized than variadic templates (with a variable number of parameters).
+第三个调用，f((int*)nullptr)，引入了一个新的问题:所有三个函数模板都能成功推导，需要对非变参模板和变参模板进行部分排序。为了说明这一点，我们将比较第一个和第三个函数模板。这里，合成参数类型是A1*和A2*，其中A1和A2是合成类型。通过将A2替换为T，第一个模板对第三个合成参数列表的推导会成功。另外，通过将单元素序列(A1)替换为参数包Ts，第三个模板对第一个合成参数列表的推导会成功。第一个模板和第三个模板之间的部分排序会产生歧义。然而，有一个特殊规则禁止来自函数参数包的实参(例如，第三个模板的参数包Ts*…)匹配非参数包的形参(第一个模板的形参T*)。因此，第一个模板对第三个合成参数列表的模板推导失败，并且第一个模板比第三个模板更特化。这个特殊规则认为非变参模板(具有固定数量的参数)比变参模板(具有可变数量的参数)更特化。
 
-The rules described above apply equally to pack expansions that occur in types in the function signature. For example, we can wrap the parameters and arguments of each of the function templates in our previous example into a variadic class template Tuple to arrive at a similar example not involving function parameter packs:
+上面描述的规则同样适用于函数签名中的类型中的包扩展。可以将前面示例中每个函数模板的形参和实参包装到可变参数类模板Tuple中，从而得到一个不涉及函数参数包的示例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -501,7 +501,7 @@ int main()
 }
 \end{lstlisting}
 
-Function template ordering considers the pack expansions in the template arguments to Tuple analogously to the function parameter packs in our previous example, resulting in the same output:
+函数模板排序将Tuple的模板参数中的包扩展为函数参数包，会输出相同的结果:
 
 \begin{tcblisting}{commandshell={}}
 231

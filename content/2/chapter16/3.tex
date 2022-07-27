@@ -1,23 +1,23 @@
 
-The ability to overload function templates, combined with the partial ordering rules to select the “best” matching function template, allows us to add more specialized templates to a generic implementation to tune code transparently for greater efficiency. However, class templates and variable templates cannot be overloaded. Instead, another mechanism was chosen to enable transparent customization of class templates: explicit specialization. The standard term explicit specialization refers to a language feature that we call full specialization instead. It provides an implementation for a template with template parameters that are fully substituted: No template parameters remain. Class templates, function templates, and variable templates can be fully specialized.
+重载函数模板的能力，结合部分排序规则来选择“最佳”匹配的函数模板，允许通用实现添加更多特化的模板，透明地调优代码以提高效率。但是，类模板和变量模板不能重载。相反，选择了另一种机制来支持类模板的透明定制:显式特化，指的是一种全特化的语言特性。它提供了一个模板的实现，可以完全替换模板参数:没有保留模板参数。类模板、函数模板和变量模板可以全特化。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Alias templates are the only form of template that cannot be specialized, either by a full specialization or a partial specialization. This restriction is necessary to make the use of template aliases transparent to the template argument deduction process Section 15.11 on page 312.
+\hspace*{0.75cm}别名模板是唯一一种不能通过全特化或偏特化进行特化的模板。为了使模板别名的模板参数推导透明化，这个限制是必要的。参见第15.11节。
 \end{tcolorbox}
 
-So can members of class templates that may be defined outside the body of a class definition (i.e., member functions, nested classes, static data members, and member enumeration types).
+在类定义体之外定义的类模板成员(即成员函数、嵌套类、静态数据成员和成员枚举类型)也可以这样做。
 
-In a later section, we will describe partial specialization. This is similar to full specialization, but instead of fully substituting the template parameters, some parameterization is left in the alternative implementation of a template. Full specializations and partial specializations are both equally “explicit” in our source code, which is why we avoid the term explicit specialization in our discussion. Neither full nor partial specialization introduces a totally new template or template instance. Instead, these constructs provide alternative definitions for instances that are already implicitly declared in the generic (or unspecialized) template. This is a relatively important conceptual observation, and it is a key difference with overloaded templates.
+后面的一节中，将描述偏特化。这类似于全特化，不完全替换模板参数，而是在模板的替代实现中保留了一些参数。全特化和偏特化在源码中都是显式的，这就是为什么在讨论中避免使用显式特化这个术语。全特化和偏特化都不会引入全新的模板或模板实例，这些构造为已经在泛型(或非特化)模板中隐式声明实例提供了显式定义。这是一个相对重要的概念，也是与重载模板的关键区别。
 
-\subsubsubsection{16.3.1\hspace{0.2cm}Full Class Template Specialization}
+\subsubsubsection{16.3.1\hspace{0.2cm}类模板全特化}
 
-A full specialization is introduced with a sequence of three tokens: template, <, and >.
+通过三个标记的序列引入了全特化:template、<和>。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The same prefix is also needed to declare full function template specializations. Earlier designs of the C++ language did not include this prefix, but the addition of member templates required additional syntax to disambiguate complex specialization cases.
+\hspace*{0.75cm}声明完整的函数模板特化也需要相同的前缀。C++早期设计不包括这个前缀，但是成员模板的添加需要额外的语法来消除复杂的特化歧义。
 \end{tcolorbox}
 
-In addition, the class name is followed by the template arguments for which the specialization is declared. The following example illustrates this:
+此外，类名后面跟着声明特化的模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -37,9 +37,9 @@ class S<void> {
 };
 \end{lstlisting}
 
-Note how the implementation of the full specialization does not need to be related in any way to the generic definition: This allows us to have member functions of different names (info versus msg). The connection is solely determined by the name of the class template.
+全特化的实现不需要与泛型定义相关:这允许拥有不同名称的成员函数(info和msg)。其与泛型定义的关联，仅为类模板决定的名称。
 
-The list of specified template arguments must correspond to the list of template parameters. For example, it is not valid to specify a nontype value for a template type parameter. However, template arguments for parameters with default template arguments are optional:
+指定的模板实参列表必须与模板形参列表对应，为模板类型参数指定非类型值是无效的。但是，对于带有默认模板实参的形参，模板实参是可选的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -75,7 +75,7 @@ class S<char, char> { // definition for #3
 };
 \end{lstlisting}
 
-As this example also shows, declarations of full specializations (and of templates) do not necessarily have to be definitions. However, when a full specialization is declared, the generic definition is never used for the given set of template arguments. Hence, if a definition is needed but none is provided, the program is in error. For class template specialization, it is sometimes useful to “forward declare” types so that mutually dependent types can be constructed. A full specialization declaration is identical to a normal class declaration in this way (it is not a template declaration). The only differences are the syntax and the fact that the declaration must match a previous template declaration. Because it is not a template declaration, the members of a full class template specialization can be defined using the ordinary out-of-class member definition syntax (in other words, the template<> prefix cannot be specified):
+正如这个示例，全特化(和模板)的声明不一定是定义。但当声明全特化时，对给定的模板参数集从不使用泛型定义。因此，如果需要定义但没有提供，程序就会出错。对于类模板特化，有时“前置声明”类型很有用，这可以构造相互依赖的类型。全特化声明与普通类声明相同(不是模板声明)，区别是语法和声明必须与前面的模板声明相匹配。因为不是模板声明，所以完整类模板特化的成员可以使用普通的类外成员定义语法来定义(换句话说，不能指定template<>的前缀):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -92,7 +92,7 @@ void S<char**>::print() const
 }
 \end{lstlisting}
 
-A more complex example may reinforce this notion:
+更复杂的例子可能会强化这一概念:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -172,7 +172,7 @@ void clear(char* buf)
 
 This example is clearly contrived to keep it short, but it illustrates that care must be taken to ensure that the declaration of the specialization is visible to all the users of the generic template. In practical terms, this means that a declaration of the specialization should normally follow the declaration of the template in its header file. When the generic implementation comes from an external source (such that the corresponding header files should not be modified), this is not necessarily practical, but it may be worth creating a header including the generic template followed by declarations of the specializations to avoid these hard-to-find errors. We find that, in general, it is better to avoid specializing templates coming from an external source unless it is clearly marked as being designed for that purpose.
 
-\subsubsubsection{16.3.2\hspace{0.2cm}Full Function Template Specialization}
+\subsubsubsection{16.3.2\hspace{0.2cm}函数模板全特化}
 
 The syntax and principles behind (explicit) full function template specialization are much the same as those for full class template specialization, but overloading and argument deduction come into play.
 
@@ -257,7 +257,7 @@ template<> int g(int, int y)
 
 Alternatively, the specialization could be made inline, in which case its definition can be (and should be) placed in the header file.
 
-\subsubsubsection{16.3.3\hspace{0.2cm}Full Variable Template Specialization}
+\subsubsubsection{16.3.3\hspace{0.2cm}变量模板全特化}
 
 Variable templates can also be fully specialized. By now, the syntax should be intuitive:
 
@@ -276,7 +276,7 @@ template<> BitIterator null_iterator<std::bitset<100>>;
 // BitIterator doesn’t match T::iterator, and that is fine
 \end{lstlisting}
 
-\subsubsubsection{16.3.4\hspace{0.2cm}Full Member Specialization}
+\subsubsubsection{16.3.4\hspace{0.2cm}成员全特化}
 
 Not only member templates, but also ordinary static data members and member functions of class templates, can be fully specialized. The syntax requires template<> prefix for every enclosing class template. If a member template is being specialized, a template<> must also be added to denote that it is being specialized. To illustrate the implications of this, let’s assume the following declarations:
 

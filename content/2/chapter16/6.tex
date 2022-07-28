@@ -1,11 +1,10 @@
-Full template specialization was part of the C++ template mechanism from the start. Function template overloading and class template partial specialization, on the other hand, came much later. The HP aC++ compiler was the first to implement function template overloading, and EDG’s C++ front end was the first to implement class template partial specialization. The partial ordering principles described in this chapter were originally invented by Steve Adamczyk and John Spicer (who are both of EDG).
+全特模板从一开始就是C++模板机制的一部分。另一方面，函数模板重载和类模板偏特化出现得晚得多。HP aC++编译器是第一个实现函数模板重载的，EDG的C++前端是第一个实现类模板偏特化的。本章描述的部分排序原则最初是由EDG的Steve Adamczyk和John Spicer发明。
 
-The ability of template specializations to terminate an otherwise infinitely recursive template definition (such as the List<T*> example presented in Section 16.4 on page 348) was known for a long time. However, Erwin Unruh was perhaps the first to note that this could lead to the interesting notion of template metaprogramming: using the template nstantiation mechanism to perform nontrivial computations at compile time. We devote Chapter 23 to this topic.
+模板特化终止无限递归模板定义的能力(如第16.4节中给出的List<T*>示例)由来已久。然而，Erwin Unruh可能是第一个注意到这可能导致模板元编程概念的人:使用模板实例化机制在编译时执行计算。我们会在第23章专门讨论这个话题。
 
-You may legitimately wonder why only class templates and variable templates can be partially specialized. The reasons are mostly historical. It is probably possible to define the same mechanism for function templates (see Chapter 17). In some ways, the effect of overloading function templates is similar, but there are also some subtle differences. These differences are mostly related to the fact that only the primary template needs to be looked up when a use is encountered. The specializations are considered only afterward, to determine which implementation should be used. In contrast, all overloaded function templates must be brought into an overload set by looking them up, and they may come from different namespaces or classes. This increases the likelihood of unintentionally overloading a template name somewhat.
+可能想知道为什么只有类模板和变量模板可以偏专门化，主要是历史原因。其实，也可以为函数模板定义相同的机制(参见第17章)。重载函数模板的效果相似，但有一些细微的差异。使用时，只需要查找主模板。特化只在使用之后考虑，以确定应该使用哪种实现。相反，必须通过查找将所有重载函数模板引入重载集，而且它们可能来自不同的名称空间或类。这增加了无意中重载模板名称的可能性。
 
-Conversely, it is also imaginable to allow a form of overloading of class templates and variable templates. Here is an example:
-
+相反，可以想象允许重载类模板和变量模板的形式:
 
 \begin{lstlisting}[style=styleCXX]
 // invalid overloading of class templates
@@ -13,4 +12,4 @@ template<typename T1, typename T2> class Pair;
 template<int N1, int N2> class Pair;
 \end{lstlisting}
 
-However, there doesn’t seem to be a pressing need for such a mechanism.
+然而，似乎并没有迫切需要这样一种机制。

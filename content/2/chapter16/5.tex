@@ -1,8 +1,8 @@
-When variable templates were added to the draft C++11 standard, several aspects of their specifications were overlooked, and some of those issues have still not been formally resolved. However, actual implementations generally agree on the handling of these issues.
+当变量模板添加到C++ 11标准草案中时，忽略了规范的几个方面，其中一些问题仍然没有解决。然而，实际的实现通常会对这些问题进行处理。
 
-Perhaps the most surprising of these issues is that the standard refers to the ability to partially specialize variable templates, but it does not describe how they are declared or what they mean. What follows is thus based on C++ implementations in practice (which do permit such partial specializations), and not on the C++ standard.
+也许这些问题中最令人惊讶的是，标准提到了偏特化变量模板的能力，但它没有描述如何声明它们或它们的含义。因此，下面的内容是基于实践中的C++实现(确实允许这样的偏特化)，而不是基于C++标准。
 
-As one would expect, the syntax is similar to full variable template specialization, except that template<> is replaced by an actual template declaration header, and the template argument list following the variable template name must depend on template parameters. For example:
+其语法类似于全变量模板特化，不同的是使用实际的模板声明替换template<>，并且变量模板名称后面的模板参数列表必须依赖于模板参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> constexpr std::size_t SZ = sizeof(T);
@@ -10,7 +10,7 @@ template<typename T> constexpr std::size_t SZ = sizeof(T);
 template<typename T> constexpr std::size_t SZ<T&> = sizeof(void*);
 \end{lstlisting}
 
-As with the full specialization of variable templates, the type of a partial specialization is not required to match that of the primary template:
+与变量模板的全特化一样，偏特化的类型不需要匹配主模板的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> typename T::iterator null_iterator;
@@ -19,7 +19,7 @@ template<typename T, std::size_t N> T* null_iterator<T[N]> = null_ptr;
 // T* doesn’t match T::iterator, and that is fine
 \end{lstlisting}
 
-The rules regarding the kinds of template arguments that can be specified for a variable template partial specialization are identical to those for class template specializations. Similarly, the rules to select a specialization for a given list of concrete template arguments are identical too.
+关于为变量模板偏特化指定的模板参数类型的规则与为类模板特化指定的规则相同。类似地，为给定的具体模板参数列表选择特化的规则也相同。
 
 
 

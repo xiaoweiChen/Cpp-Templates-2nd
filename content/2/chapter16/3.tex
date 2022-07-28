@@ -119,7 +119,7 @@ template<typename U>
 int Outside<void>::Inside<U>::count = 1;
 \end{lstlisting}
 
-A full specialization is a replacement for the instantiation of a certain generic template, and it is not valid to have both the explicit and the generated versions of a template present in the same program. An attempt to use both in the same file is usually caught by a compiler:
+全特化是对某个泛型模板实例化的替代，在同一个程序中不能同时存在一个模板的显式版本和生成版本。若在同一个文件中使用，编译器会报错:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -132,7 +132,7 @@ template<>
 class Invalid<double>; // ERROR: Invalid<double> already instantiated
 \end{lstlisting}
 
-Unfortunately, if the uses occur in different translation units, the problem may not be caught so easily. The following invalid C++ example consists of two files and compiles and links on many implementations, but it is invalid and dangerous:
+若使用发生在不同的翻译单元中，问题可能就不那么容易发现了。下面是一个错误的C++示例，其由两个文件组成，并在许多实现上进行编译和链接:
 
 \begin{lstlisting}[style=styleCXX]
 // Translation unit 1:
@@ -170,13 +170,13 @@ void clear(char* buf)
 }
 \end{lstlisting}
 
-This example is clearly contrived to keep it short, but it illustrates that care must be taken to ensure that the declaration of the specialization is visible to all the users of the generic template. In practical terms, this means that a declaration of the specialization should normally follow the declaration of the template in its header file. When the generic implementation comes from an external source (such that the corresponding header files should not be modified), this is not necessarily practical, but it may be worth creating a header including the generic template followed by declarations of the specializations to avoid these hard-to-find errors. We find that, in general, it is better to avoid specializing templates coming from an external source unless it is clearly marked as being designed for that purpose.
+这个示例为了简短而设计，说明必须注意确保特化的声明对泛型模板的所有使用者可见，特化的声明通常应该跟在模板头文件的声明之后。当通用实现来自外部源时(这样对应的头文件就不会修改)，这并不一定实用，但是创建包含通用模板和随后的特化声明的头文件可以这样做，以避免一些难以找到的错误。通常情况下，最好避免使用来自外部源的模板特化，除非明确标记是为此目的而设计的。
 
 \subsubsubsection{16.3.2\hspace{0.2cm}函数模板全特化}
 
-The syntax and principles behind (explicit) full function template specialization are much the same as those for full class template specialization, but overloading and argument deduction come into play.
+(显式的)全函数模板特化背后的语法和原则与全类模板特化的语法和原则相似，但是重载和参数推导会发挥作用。
 
-The full specialization declaration can omit explicit template arguments when the template being specialized can be determined via argument deduction (using as argument types the parameter types provided in the declaration) and partial ordering. For example:
+当特化模板可以通过参数推导(使用声明中提供的参数类型)和部分排序来确定时，全特化声明可以省略显式的模板参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -202,7 +202,7 @@ template<> int f(int*) // OK: specialization of #2
 }
 \end{lstlisting}
 
-A full function template specialization cannot include default argument values. However, any default arguments that were specified for the template being specialized remain applicable to the explicit specialization:
+完整函数模板特化不能包含默认参数值。然而，为特化的模板指定默认参数仍然适用于显式的专门化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -217,13 +217,13 @@ template<> int f(int, int = 35) // ERROR
 }
 \end{lstlisting}
 
-(That’s because a full specialization provides an alternative definition, but not an alternative declaration. At the point of a call to a function template, the call is entirely resolved based on the function template.)
+(因为全特化提供了替代定义，而不是替代声明。调用函数模板时，调用完全基于函数模板进行解析。)
 
-A full specialization is in many ways similar to a normal declaration (or rather, a normal redeclaration). In particular, it does not declare a template, and therefore only one definition of a noninline full function template specialization should appear in a program. However, we must still ensure that a declaration of the full specialization follows the template to prevent attempts at using the function generated from the template. The declarations for a template g() and one full specialization would therefore typically be organized in two files as follows:
+全特化在许多方面与普通声明(更确切地说，是普通的声明)相似。特别是，这里没有声明模板，在程序中只出现了一个非内联全函数模板特化的定义。但仍须确保全特化的声明遵循模板规则，以避免使用从通用模板生成的函数。因此，模板g()和一个全特化的声明通常在两个文件中定义，如下所示:
 
 \begin{itemize}
 \item 
-The interface file contains the definitions of primary templates and partial specializations but declares only the full specializations:
+接口文件包含主要模板和偏特化的定义，但只声明全特化版本:
 
 \begin{lstlisting}[style=styleCXX]
 #ifndef TEMPLATE_G_HPP
@@ -244,7 +244,7 @@ template<> int g(int, int y);
 \end{lstlisting}
 
 \item 
-The corresponding implementation file defines the full specialization:
+对应的实现文件对全特化函数进行了定义:
 
 \begin{lstlisting}[style=styleCXX]
 #include "template_g.hpp"
@@ -255,11 +255,11 @@ template<> int g(int, int y)
 \end{lstlisting}
 \end{itemize}
 
-Alternatively, the specialization could be made inline, in which case its definition can be (and should be) placed in the header file.
+特化也可以内联，其定义可以(应该)放在头文件中。
 
 \subsubsubsection{16.3.3\hspace{0.2cm}变量模板全特化}
 
-Variable templates can also be fully specialized. By now, the syntax should be intuitive:
+变量模板也可以全特化，语法很直观:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> constexpr std::size_t SZ = sizeof(T);
@@ -267,7 +267,7 @@ template<typename T> constexpr std::size_t SZ = sizeof(T);
 template<> constexpr std::size_t SZ<void> = 0;
 \end{lstlisting}
 
-Clearly, the specialization can provide an initializer that is distinct from that resulting from the template. Interestingly, a variable template specialization is not required to have a type matching that of the template being specialized:
+显然，特化可以提供与模板产生的初始化式不同的初始化式。有趣的是，变量模板特化并不要求其类型与特化模板匹配:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> typename T::iterator null_iterator;
@@ -278,7 +278,7 @@ template<> BitIterator null_iterator<std::bitset<100>>;
 
 \subsubsubsection{16.3.4\hspace{0.2cm}成员全特化}
 
-Not only member templates, but also ordinary static data members and member functions of class templates, can be fully specialized. The syntax requires template<> prefix for every enclosing class template. If a member template is being specialized, a template<> must also be added to denote that it is being specialized. To illustrate the implications of this, let’s assume the following declarations:
+不仅是成员模板，普通的静态数据成员和类模板的成员函数也可以全特化。该语法要求每个外围类模板都使用template<>。若要特化成员模板，必须添加template<>来表示特化。假设有以下声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -314,7 +314,7 @@ class Outer<bool> { // #8
 };
 \end{lstlisting}
 
-The ordinary members code at point \#4 and print() at point \#5 of the generic Outer template \#1 have a single enclosing class template and hence need one template<> prefix to specialize them fully for a specific set of template arguments:
+普通成员代码在泛型外部模板\#1的点\#4和点\#5的print()有单独的外围类模板，因此需要template<>来为特定的模板参数进行全特化:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -327,9 +327,9 @@ void Outer<void>::print() const
 }
 \end{lstlisting}
 
-These definitions are used over the generic ones at points \#4 and \#5 for class Outer<void>, but other members of class Outer<void> are still generated from the template at point \#1 . Note that after these declarations, it is no longer valid to provide an explicit specialization for Outer<void>.
+对于类Outer<void>，这些定义在点\#4和点\#5的泛型上使用，但是类Outer<void>的其他成员在点\#1的模板中生成。在声明之后，为Outer<void>提供的显式特化将不再有效。
 
-Just as with full function template specializations, we need a way to declare the specialization of an ordinary member of a class template without specifying a definition (to prevent multiple definitions). Although nondefining out-of-class declarations are not allowed in C++ for member functions and static data members of ordinary classes, they are fine when specializing members of class templates. The previous definitions could be declared with
+与函数模板全特化一样，需要一种方法来声明类模板普通成员的特化，而不需要指定定义(避免多个定义)。虽然C++中不允许对成员函数和普通类的静态数据成员进行非定义的类外声明，但在特化类模板成员时，可以使用。前面的定义可以在这里声明
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -339,7 +339,7 @@ template<>
 void Outer<void>::print() const;
 \end{lstlisting}
 
-The attentive reader might point out that the nondefining declaration of the full specialization of Outer<void>::code looks exactly like a definition to be initialized with a default constructor. This is indeed so, but such declarations are always interpreted as nondefining declarations. For a full specialization of a static data member with a type that can only be initialized using a default constructor, we must resort to initializer list syntax. Given the following:
+细心的读者可能会指出，Outer<void>::code的全特化的非定义声明看起来与用默认构造函数初始化的定义完全相同，但这样的声明总是解释为非定义声明。对于只能使用默认构造函数初始化的类型中，静态数据成员的全特化必须求助于初始化列表语法:
 
 \begin{lstlisting}[style=styleCXX]
 class DefaultInitOnly {
@@ -355,30 +355,30 @@ class Statics {
 };
 \end{lstlisting}
 
-the following is a declaration:
+以下是声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
 DefaultInitOnly Statics<DefaultInitOnly>::sm;
 \end{lstlisting}
 
-while the following is a definition that calls the default constructor:
+下面是调用默认构造函数的定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
 DefaultInitOnly Statics<DefaultInitOnly>::sm{};
 \end{lstlisting}
 
-Prior to C++11, this was not possible. Default initialization was thus not available for such specializations. Typically, an initializer copying a default value was used:
+C++11前，这是不可能的。因此，这种特化不能使用默认初始化式。通常，会复制默认值的初始化式:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
 DefaultInitOnly Statics<DefaultInitOnly>::sm = DefaultInitOnly();
 \end{lstlisting}
 
-Unfortunately, for our example that was not possible because the copy constructor is deleted. However, C++17 introduced mandatory copy-elision rules, which make that alternative valid, because no copy constructor invocation is involved anymore.
+但对于我们的示例来说，这是不可能的，因为复制构造函数删除了。但是，C++17引入了强制复制省略规则，这使得这种替代方法有效，因为不再涉及复制构造函数调用。
 
-The member template Outer<T>::Inner can also be specialized for a given template argument without affecting the other members of the specific instantiation of Outer<T>, for which we are specializing the member template. Again, because there is one enclosing template, we will need one template<> prefix. This results in code like the following
+成员模板Outer<T>::Inner也可以为给定的模板参数特化，而不影响Outer<T>特定实例化的其他成员，可以为其特化成员模板。同样，因为是一个封闭的模板，所以需要一个template<>。这将产生如下代码
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -393,7 +393,7 @@ template<>
 	long Outer<wchar_t>::Inner<X>::count;
 \end{lstlisting}
 
-The template Outer<T>::Inner can also be fully specialized, but only for a given instance of Outer<T>. We now need two template<> prefixes: one because of the enclosing class and one because we’re fully specializing the (inner) template:
+模板Outer<T>::Inner也可以全特化，但只适用于Outer<T>的特定实例。现在需要两个template<>:一个为外围类，另一个为全特化(内部)模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -409,7 +409,7 @@ template<typename X>
 template<> class Outer<X>::Inner<void>; // ERROR
 \end{lstlisting}
 
-Contrast this with the specialization of the member template of Outer<bool>. Because the latter is already fully specialized, there is no enclosing template, and we need only one template<> prefix:
+将其与Outer<bool>的成员模板的特化进行对比。因为后者已经全特化了，所以不是封闭的模板，所以只需要一个template<>:
 
 \begin{lstlisting}[style=styleCXX]
 template<>

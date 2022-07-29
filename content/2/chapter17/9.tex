@@ -1,8 +1,8 @@
-n the context of programming, reflection refers to the ability to programmatically inspect features of the program (e.g., answering questions such as Is a type an integer? or What nonstatic data members does a class type contain?). Metaprogramming is the craft of “programming the program,” which usually amounts to programmatically generating new code. Reflective metaprogramming, then, is the craft of automatically synthesizing code that adapts itself to existing properties (often, types) of a program.
+编程上下文中，反射指的是以编程方式检查程序特性的能力(例如，回答诸如类型是整数吗？或类类型包含哪些非静态数据成员？)元编程是“对程序进行编程”的技巧，相当于以编程方式生成新代码。因此，反射式元编程是一种自动合成代码，使其适应程序的现有属性(通常是类型)的技术。
 
-In Part III of this book, we will explore how templates can achieve some simple forms of reflection and metaprogramming (in some sense, template instantiation is a form of metaprogramming, because it causes the synthesis of new code). However, the capabilities of C++17 templates are rather limited when it comes to reflection (e.g., it is not possible to answer the question What nonstatic data members does a class type contain?) and the options for metaprogramming are often inconvenient in various ways (in particular, the syntax becomes unwieldy and the performance is disappointing).
+本书的第三部分中，我们将探讨模板如何实现一些简单形式的反射和元编程(某种意义上，模板实例化是元编程的一种形式，因为它会导致新代码的合成)。然而，当涉及到反射时，C++17模板的能力是相当有限的(例如，不可能回答这个问题:一个类类型包含哪些非静态数据成员？)，元编程的选项不是很方便(特别是，语法变得笨拙，性能令人失望)。
 
-Recognizing the potential of new facilities in this area, the C++ standardization committee created a study group (SG7) to explore options for more powerful reflection. That group’s charter was later extended to cover metaprogramming also. Here is an example of one of the options being considered:
+认识到这一领域新特性的潜力，C++标准化委员会创建了一个研究小组(SG7)，以探索更强大的反射选项。组织的章程后来也扩展到元编程，以下是正在考虑的选项的一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void report(T p) {
@@ -19,11 +19,11 @@ template<typename T> void report(T p) {
 }
 \end{lstlisting}
 
-Quite a few new things are present in this code. First, the constexpr{...} construct forces the statements in it to be evaluated at compile time, but if it appears in a template, this evaluation is only done when the template is instantiated. Second, the reflexpr() operator produces an expression of opaque type std::meta::info that is a handle to reflected information about its argument (the type substituted for T in this example). A library of standard metafunctions permits querying this metainformation. One of those standard metafunctions is std::meta::data\_members, which produces a sequence of std::meta::info objects describing the direct nonstatic data members of its operand. So the for loop above is really a loop over the nonstatic data members of p.
+这段代码中有很多新内容。首先，constexpr{…}构造强制其中的语句在编译时进行求值，但若出现在模板中，则只在模板实例化时进行求值。其次，reflexpr()操作符会生成一个不透明类型std::meta::info的表达式，这是一个句柄，用于反映关于其参数的信息(在本例中是T的类型)。标准元函数库允许查询此元信息。标准元函数之一是std::meta::data\_members，会生成一个std::meta::info序列，描述其操作数的直接非静态数据成员。所以上面的for循环实际上是对p的非静态数据成员的循环。
 
-At the core of the metaprogramming capabilities of this system is the ability to “inject” code in various scopes. The construct->{...} injects statements and/or declarations right after the statement or declaration that kicked off a constexpr evaluation. In this example, that means after the constexpr{...} construct. The code fragments being injected can contain certain patterns to be replaced by computed values. In this example, (:...:) produces a string literal value (the expression std::meta::name(info) produces a string-like object representing the unqualified name of the entity—data member in this case—represented by info). Similarly, the expression (.info.) produces an identifier naming the entity represented by info. Other patterns to produce types, template argument lists, etc. are also proposed.
+该系统元编程能力的核心是在各种范围内“注入”代码的能力。构造\texttt{->}{…}在启动constexpr求值的语句或声明之后，注入语句和/或声明。本例中，在constexpr{…}构造。注入的代码片段可以包含特定的模式，这些模式可以使用计算值替换。这个例子中，(:…:)产生了一个字符串字面值(表达式std::meta::name(info)产生了一个类似字符串的对象，表示实体数据成员的非限定名，在这个例子中由info表示)。类似地，表达式(.info.)产生一个标识符，命名info所表示的实体。还提出了用于生成类型、模板参数列表等的其他模式。
 
-With all that in place, instantiating the function template report() for a type:
+所有这些就绪之后，实例化类型的函数模板report():
 
 \begin{lstlisting}[style=styleCXX]
 struct X {
@@ -32,7 +32,7 @@ struct X {
 };
 \end{lstlisting}
 
-would produce an instantiation similar to
+会产生类似于
 
 \begin{lstlisting}[style=styleCXX]
 template<> void report(X const& p) {
@@ -41,9 +41,9 @@ template<> void report(X const& p) {
 }
 \end{lstlisting}
 
-That is, this function automatically generates a function to output the nonstatic data member values of a class type.
+该函数自动生成一个函数来输出类类型的非静态数据成员值。
 
-There are many applications for these types of capabilities. While it is likely that something like this will eventually be adopted into the language, it is unclear in what time frame it can be expected. That said, a few experimental implementations of such systems have been demonstrated at the time of this writing. (Just before going to press with this book, SG7 agreed on the general direction of using constexpr evaluation and a value type somewhat like std::meta::info to deal with reflective metaprogramming. The injection mechanism presented here, however, was not agreed on, and most likely a different system will be pursued.)
+这些类型的功能有许多应用程序。虽然类似的东西很可能最终会采纳到语言中，但还不清楚会在什么时候采用。在撰写本文时已经演示了一些实验性实现。(出版这本书之前，SG7同意使用constexpr求值和类似std::meta::info的值类型来处理反射式元编程。然而，这里提出的注入机制没有达成一致意见，可能会采取另一种方式)
 
 
 

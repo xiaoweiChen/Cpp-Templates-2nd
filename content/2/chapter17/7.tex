@@ -1,31 +1,31 @@
-When programming templates, regularity is a virtue: If a single construct can cover all cases, it makes our template simpler. One aspect of our programs that is somewhat irregular are types. For example, consider the following:
+编写模板时，规则性是一种优点:如果单一构造可以覆盖所有情况，会使模板更简单。我们的程序有一点不规则，那就是类型。例如，考虑以下情况:
 
 \begin{lstlisting}[style=styleCXX]
 auto&& r = f(); // error if f() returns void
 \end{lstlisting}
 
-That works for just about any type that f() returns except void. The same problem occurs when using decltype(auto):
+这适用于f()返回的所有类型，除了void。同样的问题发生在使用decltype(auto):
 
 \begin{lstlisting}[style=styleCXX]
 decltype(auto) r = f(); // error if f()
 \end{lstlisting}
 
-void is not the only irregular type: Function types and reference types often also exhibit behaviors that make them exceptional in some way. However, it turns out that void often complicates our templates and that there is no deep reason for void to be unusual that way. For example, see Section 11.1.3 on page 162 for an example how this complicates the implementation of a perfect std::invoke() wrapper.
+void并不是唯一的非规范类型:函数类型和引用类型在某些方面也经常出现异常行为。然而，void会使模板变得复杂。例如，第11.1.3节如何使完美的std::invoke()包装器实现复杂化的示例。
 
-We could just decree that void is a normal value type with a unique value (like std::nullptr\_t for nullptr). For backward compatibility purposes, we’d still have to keep a special case for function declarations like the following:
+可以将void定义为具有唯一值的普通值类型(如std::nullptr\_t表示nullptr)。为了向后兼容的目的，仍需要为函数声明保留一个特殊的情况:
 
 \begin{lstlisting}[style=styleCXX]
 void g(void); // same as void g();
 \end{lstlisting}
 
-However, in most other ways, void would become a complete value type. We could then for example declare void variables and references:
+然而，在大多数方式中，void会成为一个完整的值类型。例如，可以声明void变量和引用:
 
 \begin{lstlisting}[style=styleCXX]
 void v = void{};
 void&& rrv = f();
 \end{lstlisting}
 
-Most importantly, many templates would no longer need to be specialized for the void case.
+更重要的是，许多模板不再需要专门处理void。
 
 
 

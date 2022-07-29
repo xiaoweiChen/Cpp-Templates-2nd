@@ -1,4 +1,4 @@
-Template argument deduction for pack expansions only works when the pack expansion occurs at the end of the parameter or argument list. This means that while it is fairly simple to extract the first element from a list:
+只有当包展开发生或参数列表的末尾时，包展开的模板参数推导才有效。虽然从列表中提取第一个元素相当简单:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -10,7 +10,7 @@ struct Front<FrontT, Types...> {
 };
 \end{lstlisting}
 
-one cannot easily extract the last element of the list due to the restrictions placed on partial specializations described in Section 16.4 on page 347:
+在第16.4节中描述的对偏特化的限制，不能简单地提取列表的最后一个元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -22,7 +22,7 @@ struct Back<Types..., BackT> { // ERROR: pack expansion not at the end of
 };
 \end{lstlisting}
 
-Template argument deduction for variadic function templates is similarly restricted. It is plausible that the rules regarding template argument deduction of pack expansions and partial specializations will be relaxed to allow the pack expansion to occur anywhere in the template argument list, making this kind of operation far simpler. Moreover, it is possible—albeit less likely—that deduction could permit multiple pack expansions within the same parameter list:
+可变参数函数模板的模板参数推导也受到类似的限制。关于包展开和偏特化的模板参数推导的规则将放宽，允许包展开发生在模板参数列表的任何地方，这使得操作更加简单。此外，推论允许在同一个参数列表中进行多个包扩展(尽管可能性较小):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types> class Tuple {
@@ -38,7 +38,7 @@ struct Split<T, Before..., T, After...> {
 };
 \end{lstlisting}
 
-Allowing multiple pack expansions introduces additional complexity. For example, does Split separate at the first occurrence of T, the last occurrence, or one in between? How complicated can the deduction process become before the compiler is permitted to give up?
+允许多个包扩展会带来额外的复杂性。例如，Split是在T第一次出现时分开，在T最后一次出现时分开，还是在两者之间分开?演绎过程会变得多复杂，编译器才会放弃推导?
 
 
 

@@ -1,4 +1,4 @@
-Parameter packs were introduced in C++11, but dealing with them often requires recursive template instantiation techniques. Recall this outline of code discussed in Section 14.6 on page 263:
+参数包是在C++11中引入的，但处理它们通常需要递归模板实例化技术。回想一下14.6节中讨论的代码大纲:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Head, typename... Remainder>
@@ -11,11 +11,11 @@ void f(Head&& h, Remainder&&... r) {
 }
 \end{lstlisting}
 
-This example is made simpler by exploiting the features of the C++17 compile-time if statement (see Section 8.5 on page 134), but it remains a recursive instantiation technique that may be somewhat expensive to compile.
+通过使用C++17编译时if语句的特性(请参阅第8.5节)，这个示例变得更简单了，但仍然属于递归实例化技术，编译起来可能会很耗时。
 
-Several committee proposals have tried to simplify this state of affairs somewhat. One example is the introduction of a notation to pick a specific element from a pack. In particular, for a pack P the notation P.[N] has been suggested as a way to denote element N+1 of that pack. Similarly, there have been proposals to denote “slices” of packs (e.g., using the notation P.[b, e]).
+委员会的几项提案试图在某种程度上简化这种状况。一个例子是引入了从包中挑选特定元素的符号。特别地，对于一个组合P，有人建议用P[N]来表示该组合中的元素N+1。同样，也有人建议将包装表示为“片”(例如，使用P.[b, e]符号)。
 
-While examining such proposals, it has become clear that they interact somewhat with the notion of reflective metaprogramming discussed above. It is unclear at this time whether specific pack selection mechanisms will be added to the language or whether metaprogramming facilities covering this need will be provided instead.
+研究这些建议时，可以清楚地看到它们与上面讨论的反射元编程概念有一定的相关性。目前还不清楚是否会将特定的包选择机制添加到该C++中，或者是否会提供满足这一需求的元编程工具。
 
 
 

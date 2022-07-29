@@ -1,6 +1,6 @@
-Among the restrictions on nontype template arguments, perhaps the most surprising to beginning and advanced template writers alike is the inability to provide a string literal as a template argument.
+对非类型模板参数的限制中，可能最让初学者和高级模板编写者感到惊讶的是不能提供字符串字面值作为模板参数。
 
-The following example seems intuitive enough:
+看看下面的例子：
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* msg>
@@ -15,9 +15,9 @@ int main()
 }
 \end{lstlisting}
 
-However, there are some potential problems. In standard C++, two instances of Diagnoser are the same type if and only if they have the same arguments. In this case the argument is a pointer value—in other words, an address. However, two identical string literals appearing in different source locations are not required to have the same address. We could thus find ourselves in the awkward situation that Diagnoser<"X"> and Diagnoser<"X"> are in fact two different and incompatible types! (Note that the type of "X" is char const[2], but it decays to char const* when passed as a template argument.)
+然而，其中有一些问题。标准C++中，当两个Diagnostic实例具有相同的参数时，其类型相同。参数是一个指针值，是一个地址。但出现在不同源位置的两个相同字符串，并不要求具有相同的地址。因此，可能会尴尬的发现，Diagnoser<"X">和Diagnoser<"X">实际上是两种不同且不兼容的类型!(请注意，"X"的类型是char const[2]，但当作为模板参数传递时，会衰变为char const*)
 
-Because of these (and related) considerations, the C++ standard prohibits string literals as arguments to templates. However, some implementations do offer the facility as an extension. They enable this by using the actual string literal contents in the internal representation of the template instance. Although this is clearly feasible, some C++ language commentators feel that a nontype template parameter that can be substituted by a string literal value should be declared differently from one that can be substituted by an address. One possibility would be to capture string literals in a parameter pack of characters. For example:
+由于这些(以及相关的)考虑，C++标准禁止将字符串字面值作为模板的参数。然而，一些实现确实将该工具作为扩展提供。通过在模板实例的内部表示中使用实际的字符串文字内容来实现这一点。尽管是可行的，但一些C++语言评论者认为，可以用字符串字面值替换的非类型模板参数，声明方式应该与可以用地址替换的非类型模板参数不同。一种可能是在字符参数包中捕获字符串字面值，例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<char... msg>
@@ -33,7 +33,7 @@ int main()
 }
 \end{lstlisting}
 
-We should also note an additional technical wrinkle in this issue. Consider the following template declarations, and let’s assume that the language has been extended to accept string literals as template arguments in this case:
+还应该注意到另一个技术问题。考虑下面的模板声明，假设语言已经扩展为接受字符串字面值作为模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* str>
@@ -56,10 +56,9 @@ char const* Bracket<str>::bytes()
 }
 \end{lstlisting}
 
-In the previous code, the two member functions are identical except for their names—a situation that is not that uncommon. Imagine that an implementation would instantiate Bracket<"X"> using a process much like macro expansion: In this case, if the two member functions are instantiated in different translation units, they may return different values. Interestingly, a test of some C++ compilers that currently provide this extension reveals that they do suffer from this surprising behavior.
+前面的代码中，除了名称之外，两个成员函数是相同的——这种情况很常见。想象一下，实现将使用非常类似于宏展开的进程实例化Bracket<"X">:若两个成员函数在不同的翻译单元中实例化，可能返回不同的值。有趣的是，对目前提供此扩展的一些C++编译器的测试显示，确实受到了这种行为的影响。
 
-A related issue is the ability to provide floating-point literals (and simple constant floating-point expressions) as template arguments. For example:
-
+相关的问题是提供浮点字面量(和简单的浮点常量表达式)作为模板参数的能力。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<double Ratio>
@@ -73,9 +72,9 @@ class Converter {
 using InchToMeter = Converter<0.0254>;
 \end{lstlisting}
 
-This too is provided by some C++ implementations and presents no serious technical challenges (unlike the string literal arguments).
+这也由一些C++实现提供，并且不存在严重的技术挑战(不像字符串字面量参数)。
 
-C++11 introduced a notion of a literal class type: a class type that can take constant values computed at compile time (including nontrivial computations through constexpr functions). Once such class types became available, it quickly became desirable to allow them for nontype template parameters. However, problems similar to those of the string literal parameters described above arose. In particular, the “equality” of two class-type values is not a trivial matter, because it is in general determined by operator== definitions. This equality determines if two instantiations are equivalent, but in practice, that equivalence must be checkable by the linker by comparing mangled names. One way out may be an option to mark certain literal classes as having a trivial equality criterion that amounts to pairwise comparing of the scalar members of the class. Only class types with such a trivial equality criterion would then be permitted as nontype template parameter types.
+C++11引入了文字类类型的概念:这种类类型可以在编译时计算的常量值(包括通过constexpr函数进行的复杂计算)。当这种类类型可用，就需要将其用于非类型模板参数。但是，出现了与上面描述的字符串字面量参数类似的问题。两个类类型值的“相等”不简单，因为通常是由operator==确定。这种相等性决定两个实例化是否等价，但在实践中，链接器必须通过比较损坏的名称来检查这种等价性。解决方法可能是选择将某些文字类标记为具有简单的相等标准，相当于对类的标量成员进行比较。只有具有这种简单的相等条件的类类型才允许作为非类型模板参数类型。
 
 
 

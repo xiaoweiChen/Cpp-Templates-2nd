@@ -1,45 +1,45 @@
 
-C++ templates have been evolving almost continuously from their initial design in 1988, through the various standardization milestones in 1998, 2011, 2014, and 2017. It could be argued that templates were at least somewhat related to most major language additions after the original 1998 standard.
+从1988年的最初设计到2003年、2011年、2014年和2017年的各种标准化里程碑，C++模板在不断地发展。可以说，模板在某种程度上与1998年最初的标准之后增加的主要语言有关。
 
-The first edition of this book listed a number of extensions that we might see after the first standard, and several of those became reality:
+第一版列出了在第一个标准之后会看到的一些扩展，其中一些已经成为现实:
 
 
 \begin{itemize}
 \item 
-The angle bracket hack: C++11 removed the need to insert a space between two closing angle brackets.
+尖括号的修改:C++11去掉了在两个尖括号之间插入空格的需要。
 
 \item 
-Default function template arguments: C++11 allows function templates to have default template arguments.
+默认函数模板参数:C++11允许函数模板有默认模板参数。
 
 \item 
-Typedef templates: C++11 introduced alias templates, which are similar.
+typdef模板:C++11引入了类似的别名模板。
 
 \item 
-The list of template arguments of the partial specialization should not be identical (ignoring renaming) to the list of parameters of the primary template
+偏特化的模板参数列表不应与主模板的参数列表相同(忽略重命名)
 
 \item 
-The typeof operator: C++11 introduced the decltype operator, which fills the same role (but uses a different token to avoid a conflict with an existing extension that doesn’t quite meet the needs of the C++ programmers’ community)
+typeof操作符:C++11引入了decltype操作符，其功能相同(因为不能完全满足C++开发者社区的需求，所以使用了不同的标记，以避免与现有的扩展冲突，)
 
 \item 
-Static properties: The first edition anticipated a selection of type traits being supported directly by compilers. This has come to pass, although the interface is expressed using the standard library (which is then implemented using compiler extensions for many of the traits).
+静态属性:第一版预期编译器将直接支持类型特征的选择。这已经实现了，尽管接口是使用标准库来表示(使用编译器扩展来实现多个特性)。
 
 \item 
-Custom instantiation diagnostics: The new keyword static\_assert implements the idea described by std::instantiation\_error in the first edition of this book.
+自定义实例化诊断:新的关键字static\_assert实现了第一版中的std::instantiation\_error。
 
 \item 
-List parameters: This became parameter packs in C++11.
+列表参数:C++11中的参数包。
 
 \item 
-Layout control: C++11’s alignof and alignas cover the needs described in the first edition. Furthermore, the C++17 library added a std::variant template to support discriminated unions.
+布局控制:C++11的alignof和alignas满足了第一版中描述的需求。此外，C++17添加了std::variant模板支持联合结构。
 
 \item 
-Initializer deduction: C++17 added class template argument deduction, which addresses the same issue.
+初始化式推导:C++17增加了类模板参数推导，解决了同样的问题。
 
 \item 
-Function expressions: C++11’s lambda expressions provides exactly this functionality (with a syntax somewhat different from that discussed in the first edition).
+函数表达式:C++11的Lambda表达式提供了这种功能(其语法与第一版中讨论的有所不同)。
 \end{itemize}
 
-Other directions hypothesized in the first edition have not made it into the modern language, but most are still discussed on occasion and we keep their presentation in this volume. Meanwhile, other ideas are emerging and we present some of those as well.
+第一版中提出的其他方向还没有进入现代C++，但大多数仍在进行讨论，我们将它们的呈现在本书中。与此同时，也有其他想法的出现，这里会展示其中的一些。
 
 
 

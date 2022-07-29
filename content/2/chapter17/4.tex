@@ -1,8 +1,8 @@
-Section 21.4 on page 512 describes a technique that allows us to provide a nondefault template argument for a specific parameter without having to specify other template arguments for which a default value is available. Although it is an interesting technique, it is also clear that it results in a fair amount of work for a relatively simple effect. Hence, providing a language mechanism to name template arguments is a natural thought.
+第21.4节描述了一种技术，其允许为特定参数提供非默认模板参数，而不必指定可以使用默认值的其他模板参数。虽然这是一种有趣的技术，但需要大量的工作才能得到相对简单的效果。因此，很自然的会想到需要一种语言机制来命名模板参数。
 
-We should note at this point that a similar extension (sometimes called keyword arguments) was proposed earlier in the C++ standardization process by Roland Hartinger (see Section 6.5.1 of [StroustrupDnE]). Although technically sound, the proposal was ultimately not accepted into the language for various reasons. At this point there is no reason to believe named template arguments will ever make it into the language, but the topic arises regularly in committee discussions.
+这里应该注意到类似的扩展(有时称为关键字参数)是由Roland Hartinger在C++标准化过程中提出的(参见[StroustrupDnE]第6.5.1节)。虽然在技术上合理，但该提议最终没有接受。我们不知道命名模板参数会是否会成为C++的一部分，但是这个话题会在委员会的讨论中经常出现。
 
-However, for the sake of completeness, we mention one syntactic idea that has been discussed:
+完整起见，这里说一个已经讨论过的语法概念:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -21,14 +21,14 @@ void test(MatrixList ml)
 }
 \end{lstlisting}
 
-Here, the period preceding the argument name is used to indicate that we’re referring to a template argument by name. This syntax is similar to the “designated initializer” syntax introduced in the 1999 C standard:
+这里，参数名称前的句点用来表示我们通过名称引用模板参数。这种语法类似于1999年C标准中引入的“指定初始化式”语法:
 
 \begin{lstlisting}[style=styleCXX]
 struct Rectangle { int top, left, width, height; };
 struct Rectangle r = { .width = 10, .height = 10, .top = 0, .left = 0 };
 \end{lstlisting}
 
-Of course, introducing named template arguments means that the template parameter names of a template are now part of the public interface to that template and cannot be freely changed. This could be addressed by a more explicit, opt-in syntax, such as the following:
+当然，引入命名模板参数意味着模板的模板参数名称现在是该模板的公共接口的一部分，不能随意更改。这可以通过更明确的、可选择的语法来解决，例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,

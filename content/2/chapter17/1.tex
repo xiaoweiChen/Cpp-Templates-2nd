@@ -1,27 +1,27 @@
 
-In the first edition of this book, this section suggested that the future might bring two kinds of relaxations to the rules for the use of typename (see Section 13.3.2 on page 228): Allow typename where it was not previously allowed, and make typename optional where a compiler can relatively easily infer that a qualified name with a dependent qualifier must name a type. The former came to pass (typename in C++11 can be used redundantly in many places), but the latter has not.
+第一版中，本节建议将来可能会对typename的使用规则进行两种放宽(请参阅第13.3.2节):以前不允许使用typename的地方，现在可以用typename了，编译器可以相对容易地推导出带有依赖限定符的限定名，所以不必为命名类型使用typename。前者实现了(C++11中的typename冗余使用)，但后者没有。
 
-Recently, however, there has been a renewed call to make typename optional in various common contexts where the expectation of a type specifier is unambiguous:
+最近，在对类型说明符的期望明确的各种类型，可以选用typename:
 
 \begin{itemize}
 \item 
-The return type and parameter types of function and member function declarations in namespace and class scope. Similarly with function and member function templates and with lambda expressions appearing in any scope.
+命名空间和类作用域中的函数，以及成员函数声明的返回类型和参数类型。类似地，函数和成员函数模板，以及出现在作用域中的Lambda表达式。
 
 \item 
-The types of variable, variable template, and static data member declarations. Again, similarly with variable templates.
+变量、变量模板和静态数据成员声明的类型。同样，变量模板也类似。
 
 \item 
-The type after the = token in an alias or alias template declaration.
+alias或alias模板声明中=表示后的类型。
 
 \item 
-The default argument of a type parameter of a template.
+模板的类型参数的默认参数。
 
 \item 
-The type appearing in the angle brackets following a static\_cast, const\_cast, dynamic\_cast, or reinterpret\_cast, construct.
+出现在尖括号中的类型，紧跟在satatic\_cast、const\_cast、dynamic\_cast或reinterpret\_cast之后。
 
 \item 
-The type named in a new expression.
+在new表达式中命名的类型。
 \end{itemize}
 
-Although this is a relatively ad hoc list, it turns out that such a change in the language would allow by far most instances of this use of typename to be dropped, which would make code more compact and more readable.
+尽管这是一个相对特别的列表，但语言中的这种更改允许删除typename，会使代码更紧凑和可读更强。
 

@@ -1,83 +1,83 @@
 
-Let’s categorize and compare both forms of polymorphism.
+先对这两种形式的多态性进行分类和比较。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Terminology}
+\textbf{术语}
 
-Dynamic and static polymorphism provide support for different C++ programming idioms:
+动态和静态多态为不同的C++编程习惯提供了支持:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}For a detailed discussion of polymorphism terminology, see also Sections 6.5 to 6.7 of [CzarneckiEiseneckerGenProg].
+\hspace*{0.75cm}有关多态术语的详细讨论，请参见[CzarneckiEiseneckerGenProg]的第6.5到6.7节。
 \end{tcolorbox}
 
 \begin{itemize}
 \item 
-Polymorphism implemented via inheritance is bounded and dynamic:
+通过继承实现的多态是有界和动态的:
 
 \begin{itemize}
 \item[-]
-Bounded means that the interfaces of the types participating in the polymorphic behavior are predetermined by the design of the common base class (other terms for this concept are invasive and intrusive).
+有界意味着参与多态行为的类型的接口是由公共基类的设计预先确定的(这个概念的其他术语描述是invasive和intrusive)。
 
 \item[-]
-Dynamic means that the binding of the interfaces is done at run time (dynamically).
+动态意味着接口的绑定是在运行时(动态)完成的。
 \end{itemize}
 
 \item 
-Polymorphism implemented via templates is unbounded and static:
+通过模板实现的多态性是无界和静态的:
 
 \begin{itemize}
 \item[-]
-Unbounded means that the interfaces of the types participating in the polymorphic behavior are not predetermined (other terms for this concept are noninvasive and nonintrusive).
+无界意味着参与多态行为的类型的接口不是预先确定的(该概念的其他术语描述是noninvasive和nonintrusive)。
 
 \item[-]
-Static means that the binding of the interfaces is done at compile time (statically).
+静态意味着接口的绑定在编译时完成(静态)。
 \end{itemize}
 \end{itemize}
 
-So, strictly speaking, in C++ parlance, dynamic polymorphism and static polymorphism are shortcuts for bounded dynamic polymorphism and unbounded static polymorphism. In other languages, other combinations exist (e.g., Smalltalk provides unbounded dynamic polymorphism). However, in the context of C++, the more concise terms dynamic polymorphism and static polymorphism do not cause confusion.
+严格地说，在C++语言中，动态多态性和静态多态性是有界动态多态性和无界静态多态性的快捷方式。其他语言中，也存在其他组合(例如，Smalltalk提供了无界的动态多态性)。然而，C++的上下文中，动态多态和静态多态这两个术语不会引起混淆。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Strengths and Weaknesses}
+\textbf{优势与不足}
 
-Dynamic polymorphism in C++ exhibits the following strengths:
-
-\begin{itemize}
-\item 
-Heterogeneous collections are handled elegantly.
-
-\item 
-The executable code size is potentially smaller (because only one polymorphic function is needed, whereas distinct template instances must be generated to handle different types).
-
-\item 
-Code can be entirely compiled; hence no implementation source must be published (distributing template libraries usually requires distribution of the source code of the template implementations).
-\end{itemize}
-
-In contrast, the following can be said about static polymorphism in C++:
+C++中的动态多态性展示了以下优点:
 
 \begin{itemize}
 \item 
-Collections of built-in types are easily implemented. More generally, the interface commonality need not be expressed through a common base class.
+优雅地处理异构集合。
 
 \item 
-Generated code is potentially faster (because no indirection through pointers is needed a priori and nonvirtual functions can be inlined much more often).
+可执行代码的体积更小(只需要一个多态函数，而必须生成不同的模板实例来处理不同的类型)。
 
 \item 
-Concrete types that provide only partial interfaces can still be used if only that part ends up being exercised by the application.
+代码可以完全编译;因此不需要发布实现源(发布模板库通常需要发布模板实现的源代码)。
 \end{itemize}
 
-Static polymorphism is often regarded as more type safe than dynamic polymorphism because all the bindings are checked at compile time. For example, there is little danger of inserting an object of the wrong type in a container instantiated from a template. However, in a container expecting pointers to a common base class, there is a possibility that these pointers unintentionally end up pointing to complete objects of different types.
+C++中的静态多态有这些优点:
 
-In practice, template instantiations can also cause some grief when different semantic assumptions hide behind identical-looking interfaces. For example, surprises can occur when a template that assumes an associative operator + is instantiated for a type that is not associative with respect to that operator. In practice, this kind of semantic mismatch occurs less often with inheritance-based hierarchies, presumably because the interface specification is more explicitly specified.
+\begin{itemize}
+\item 
+内置类型的集合很容易实现，接口的通用性不需要通过公共基类来表示。
+
+\item 
+生成的代码可能更快(因为不需要指针，而且可以更频繁地内联非虚函数)。
+
+\item 
+如果应用程序只执行了部分接口，仍然可以使用只提供部分接口的具体类型。
+\end{itemize}
+
+静态多态性通常认为比动态多态性更类型安全，因为所有绑定都在编译时检查。例如，模板实例化的容器中插入错误类型的对象几乎没有危险。然而，需要指向公共基类的指针的容器中，这些指针有可能无意中指向不同类型的对象。
+
+实践中，不同的语义假设隐藏在相同的接口后面时，模板实例化也会造成一些麻烦。当假定关联操作符+的模板实例化了一个与该操作符无关的类型时，可能会发生意外。这种语义不匹配在基于继承的层次结构中较少发生，可能是因为接口规范更明确地进行了指定。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Combining Both Forms}
+\textbf{两种形式结合使用}
 
-Of course, you could combine both forms of polymorphism. For example, you could derive different kinds of geometric objects from a common base class to be able to handle heterogeneous collections of geometric objects. However, you can still use templates to write code for a certain kind of geometric object.
+当然，可以结合这两种形式的多态性。例如，可以从公共基类派生不同种类的几何对象，以便能够处理几何对象的异构集合。但仍然可以使用模板，为特定类型的几何对象编写代码。
 
-The combination of inheritance and templates is further described in Chapter 21. We will see (among other things) how the virtuality of a member function can be parameterized and how an additional amount of flexibility is afforded to static polymorphism using the inheritance-based curiously recurring template pattern (or CRTP).
+继承和模板的结合将在第21章中进一步介绍，将看到如何将成员函数的虚态参数化，以及如何使用基于继承的奇怪重复模板模式(CRTP)，为静态多态性提供额外的灵活性。
 
 
 

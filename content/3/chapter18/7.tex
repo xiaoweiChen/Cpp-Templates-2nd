@@ -1,11 +1,11 @@
-Container types were a primary motivation for the introduction of templates into the C++ programming language. Prior to templates, polymorphic hierarchies were a popular approach to containers. A popular example was the National Institutes of Health Class Library (NIHCL), which to a large extent translated the container class hierarchy of Smalltalk (see Figure 18.5).
+容器类型是将模板引入C++编程语言的主要动机。模板之前，多态层次结构是容器的一种流行方法。一个例子是国立卫生研究院类库(NIHCL)，在很大程度上转换了Smalltalk的容器类层次结构(见图18.5)。
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter18/images/5.png} \\
-Figure 18.5. Class hierarchy of the NIHCL
+图18.5. NIHCL的类层次结构
 \end{center}
 
-Much like the C++ standard library, the NIHCL supported a rich variety of containers as well as iterators. However, the implementation followed the Smalltalk style of dynamic polymorphism: Iterators used the abstract base class Collection to operate on different types of collections:
+与C++标准库类似，NIHCL支持丰富的容器和迭代器。但实现遵循了Smalltalk的动态多态风格:迭代器使用抽象基类Collection来操作不同类型的集合:
 
 \begin{lstlisting}[style=styleCXX]
 Bag c1;
@@ -16,13 +16,13 @@ Iterator i2(c2);
 ...
 \end{lstlisting}
 
-Unfortunately, the price of this approach was high in terms of both running time and memory usage. Running time was typically orders of magnitude worse than equivalent code using the C++ standard library because most operations ended up requiring a virtual call (whereas in the C++ standard library, many operations are inlined, and no virtual functions are involved in iterator and container interfaces). Furthermore, because (unlike Smalltalk) the interfaces were bounded, built-in types had o be wrapped in larger polymorphic classes (such wrappers were provided by the NIHCL), which in turn could lead to dramatic increases in storage requirements.
+但就运行时间和内存使用量而言，这种方法的代价很高。运行时间通常比使用C++标准库的等效代码差几个数量级，因为大多数操作最终都需要一个虚调用(而在C++标准库中，许多操作都是内联的，迭代器和容器接口中不涉及虚函数)。此外，由于(与Smalltalk不同)接口是有边界的，内置类型必须封装在更大的多态类中(这样的封装器由NIHCL提供)，这反过来可能会导致存储需求的急剧增加。
 
-Even in today’s age of templates, many projects still make suboptimal choices in their approach to polymorphism. Clearly, there are many situations in which dynamic polymorphism is the right choice. Heterogeneous iterations are an example. However, in the same vein, many programming tasks are naturally and efficiently solved using templates, and homogeneous containers are an example of this.
+即使在如今的模板时代，许多项目仍然在多态性的方法上做出次优选择。显然，动态多态性都是正确的选择，异构迭代就是一个例子。同样地，许多编程任务都可以使用模板有效地解决，同构容器就是一个例子。
 
-Static polymorphism lends itself well to code fundamental computing structures. In contrast, the need to choose a common base type implies that a dynamic polymorphic library will normally have to make domain-specific choices. It’s no surprise then that the STL part of the C++ standard library never included polymorphic containers, but it contains a rich set of containers and iterators that use static polymorphism (as demonstrated in Section 18.6 on page 380).
+静态多态可以很好地编写基本计算结构，而选择公共基类型的需要意味着动态多态库通常必须做出特定于领域的选择。因此，C++标准库的STL部分从未包含多态容器也就不足为奇了，但包含了一组使用静态多态的容器和迭代器(如第18.6节所示)。
 
-Medium and large C++ programs typically need to handle both kinds of polymorphism discussed in this chapter. In some situations, it may even be necessary to combine them very intimately. In many cases, the optimal design choices are clear in light of our discussion, but spending some time thinking about long-term, potential evolutions almost always pays off.
+中型和大型C++程序通常需要处理本章讨论的两种多态性。某些情况下，有必要将它们紧密地结合起来。根据我们的讨论，最优的设计选择是明确的，但花一些时间考虑长期的、潜在的回报是值得的。
 
 
 

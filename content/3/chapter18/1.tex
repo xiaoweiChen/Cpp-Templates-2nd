@@ -1,17 +1,17 @@
 
-Historically, C++ started with supporting polymorphism only through the use of inheritance combined with virtual functions.
+因为历史原因，C++一开始只通过结合使用继承和虚函数来支持多态。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Strictly speaking, macros can also be thought of as an early form of static polymorphism. However, they are left out of consideration because they are mostly orthogonal to the other language mechanisms.
+\hspace*{0.75cm}严格地说，宏也可以认为是静态多态性的早期形式。但是，这里不对宏进行讨论，因为它们大多与其他语言机制不相关。
 \end{tcolorbox}
 
-The art of polymorphic design in this context consists of identifying a common set of capabilities among related object types and declaring them as virtual function interfaces in a common base class.
+多态设计的艺术包括在相关对象类型中标识一组公共功能，并将它们声明为公共基类中的虚函数接口。
 
-The poster child for this design approach is an application that manages geometric shapes and allows them to be rendered in some way (e.g., on a screen). In such an application, we might identify an abstract base class (ABC) GeoObj, which declares the common operations and properties applicable to geometric objects. Each concrete class for specific geometric objects then derives from GeoObj (see Figure 18.1):
+这种设计方法的代表是管理几何形状，并允许以某种方式(例如，在屏幕上)呈现的应用程序。这样的应用程序中，可以识别一个抽象基类(ABC)GeoObj，声明了适用于几何对象的常见操作和属性。然后，特定几何对象的每个具体类都派生自GeoObj(见图18.1):
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter18/images/1.png} \\
-Figure 18.1. Polymorphism implemented via inheritance
+图18.1. 通过继承实现的多态性
 \end{center}
 
 \hspace*{\fill} \\ %插入空行
@@ -51,9 +51,9 @@ class Line : public GeoObj {
 ...
 \end{lstlisting}
 
-After creating concrete objects, client code can manipulate these objects through references or pointers to the common base class by using the virtual function dispatch mechanism. Calling a virtual member function through a pointer or reference to a base class subobject results in an invocation of the appropriate member of the specific (“most-derived”) concrete object being referred to.
+创建具体对象后，外部代码可以使用虚拟函数分派机制，通过引用或指向公共基类的指针来操作这些对象。通过指向基类子对象的指针或引用调用虚成员函数，是实际类型中的相应函数。
 
-In our example, the concrete code can be sketched as follows:
+具体代码如下:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -101,21 +101,21 @@ int main()
 }
 \end{lstlisting}
 
-The key polymorphic interface elements are the functions draw() and center\_of\_gravity(). Both are virtual member functions. Our example demonstrates their use in the functions mydraw(), distance(), and drawElems(). The latter functions are expressed using the common base type GeoObj. A consequence of this approach is that it is generally unknown at compile time which version of draw() or center\_of\_gravity() must be called. However, at run time, the complete dynamic type of the objects for which the virtual functions are invoked is accessed to dispatch the function calls.
+关键的多态接口是函数draw()和center\_of\_gravity()，二者都是虚成员函数。示例演示了它们在函数mydraw()、distance()和drawElems()中的用法，后面的函数使用基类型GeoObj中的实现。这种方法的结果是，在编译时通常不知道必须调用哪个版本的draw()或center\_of\_gravity()。但在运行时，将访问虚函数调用的对象的完整动态类型，以调用相应函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}That is, the encoding of polymorphic base class subobjects includes some (mostly hidden) data that enables this run-time dispatch.
+\hspace*{0.75cm}也就是说，多态基类子对象的编码包括一些(大部分是隐藏的)支持运行时分配。
 \end{tcolorbox}
 
-Hence, depending on the actual type of a geometric object, the appropriate operation is performed: If mydraw() is called for a Line object, the expression obj.draw() calls Line::draw(), whereas for a Circle object, the function Circle::draw() is called. Similarly, with distance(), the member functions center\_of\_gravity() appropriate for the argument objects are called.
+因此，根据几何对象的实际类型，会执行相应的操作:如果对Line对象调用mydraw()，则表达式obj.draw()会调用Line::draw()，而对Circle对象调用Circle::draw()函数。类似地，使用distance()，调用适合于参数对象的成员函数center\_of\_gravity()。
 
-Perhaps the most compelling feature of this dynamic polymorphism is the ability to handle heterogeneous collections of objects. drawElems() illustrates this concept: The simple expression
+这种动态多态最引人注目的特性，可能是处理异构对象集合的能力。drawElems()可以很好的说明这个概念：
 
 \begin{lstlisting}[style=styleCXX]
 elems[i]->draw()
 \end{lstlisting}
 
-results in invocations of different member functions, depending on the dynamic type of the element being iterated over.
+上述表达式结果调用不同的成员函数，这取决于迭代元素的动态类型。
 
 
 

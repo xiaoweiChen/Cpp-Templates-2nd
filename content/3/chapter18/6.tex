@@ -1,12 +1,12 @@
-Static polymorphism leads to the concept of generic programming. However, there is no single agreed-on definition of generic programming (just as there is no single agreed-on definition of objectoriented programming). According to [CzarneckiEiseneckerGenProg], definitions go from programming with generic parameters to finding the most abstract representation of efficient algorithms. The book summarizes:
+静态多态性引出了泛型编程的概念。然而，泛型编程没有统一的定义(就像面向对象编程没有统一的定义一样)。根据[CzarneckiEiseneckerGenProg]，定义从使用通用参数编程到寻找最抽象的高效算法表示。这本书总结:
 
-\textit{Generic programming is a subdiscipline of computer science that deals with finding abstract representations of efficient algorithms, data structures, and other software concepts, and with their systematic organization... . Generic programming focuses on representing families of domain concepts. (pp. 169-170)}
+\textit{泛型编程是计算机科学的一个子学科，处理寻找高效算法、数据结构和其他软件概念的抽象表示，以及系统组织... 。泛型编程侧重于表示一系列领域概念。(169 - 170页)}
 
-In the context of C++, generic programming is sometimes defined as programming with templates (whereas object-oriented programming is thought of as programming with virtual functions). In this sense, just about any use of C++ templates could be thought of as an instance of generic programming. However, practitioners often think of generic programming as having an additional essential ingredient: Templates have to be designed in a framework for the purpose of enabling a multitude of useful combinations.
+C++上下文中，泛型编程有时定义为使用模板编程(而面向对象编程认为是使用虚函数编程)，任何C++模板都可以认为是泛型编程的一个实例。然而，专业人员经常认为泛型编程有额外的成分:模板必须在一个框架中设计，以支持多种组合。
 
-By far the most significant contribution in this area is the Standard Template Library (STL), which later was adapted and incorporated into the C++ standard library). The STL is a framework that provides a number of useful operations, called algorithms, for a number of linear data structures for collections of objects, called containers. Both algorithms and containers are templates. However, the key is that the algorithms are not member functions of the containers. Instead, the algorithms are written in a generic way so that they can be used by any container (and linear collection of elements). To do this, the designers of STL identified an abstract concept of iterators that can be provided for any kind of linear collection. Essentially, the collection-specific aspects of container operations have been factored out into the iterators’ functionality.
+目前为止，该领域最重要的贡献是标准模板库(Standard Template Library, STL)，后来并入到C++标准库中。STL是一个框架，为对象集合(称为容器)的许多线性数据结构提供了许多有用的操作(称为算法)。算法和容器都是模板。但是，关键是算法不是容器的成员函数。相反，这些算法以通用的方式编写，因此可以用于任何容器(以及元素的线性集合)。为此，STL的设计者确定了一个抽象的迭代器概念，可以为任何类型的线性集合提供迭代器。本质上，容器操作的集合特定方面已经分解到迭代器的功能中了。
 
-As a consequence, we can implement an operation such as computing the maximum value in a sequence without knowing the details of how values are stored in that sequence:
+因此，可以实现这样的操作，比如：计算序列中的最大值，而不需要知道值如何存储在序列中的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iterator>
@@ -20,7 +20,7 @@ Iterator max_element (Iterator beg, // refers to start of collection
 }
 \end{lstlisting}
 
-Instead of providing all useful operations such as max\_element() by every linear container, the container has to provide only an iterator type to traverse the sequence of values it contains and member functions to create such iterators:
+与为每个线性容器提供所有有用的操作(如max\_element())不同，容器只需要提供一个迭代器类型来遍历所包含的值序列，以及可以创建迭代器的相应成员函数:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -46,7 +46,7 @@ namespace std {
 }
 \end{lstlisting}
 
-Now, we can find the maximum of any collection by calling the generic max\_element() operation with the beginning and end of the collection as arguments (special handling of empty collections is omitted):
+现在，可以通过调用max\_element()操作，以集合的开始和结束为参数来找到集合中的最大值(空集合的特殊处理省略了):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -83,15 +83,15 @@ int main()
 }
 \end{lstlisting}
 
-By parameterizing its operations in terms of these iterators, the STL avoids an explosion in the number of operation definitions. Instead of implementing each operation for every container, we implement the algorithm once so that it can be used for every container. The generic glue is the iterators, which are provided by the containers and used by the algorithms. This works because iterators have a certain interface that is provided by the containers and used by the algorithms. This interface is usually called a concept, which denotes a set of constraints that a template has to fulfill to fit into this framework. In addition, this concept is open for additional operations and data structures.
+通过用这些迭代器参数化其操作，STL避免了操作定义数量的激增。开发者也不再为每个容器实现每个操作，而是只实现一次算法，这样就可以为每个容器使用它。通用的粘合剂是迭代器，这样做是因为迭代器有一个特定的接口，该接口由容器提供，并由算法使用。这个接口通常称为概念，表示模板必须满足的一组约束，以适应这个框架。此外，这个概念对其他操作和数据结构开放。
 
-You’ll recall that we described a concepts language feature earlier in Section 18.4 on page 377 (and in more detail in Appendix E), and indeed, the language feature maps exactly onto the notion here. In fact, the term concept in this context was first introduced by the designers of the STL to formalize their work. Soon thereafter, work commenced to try to make these notions explicit in our templates.
+可能还记得在18.4节之前描述了一个概念语言特性(附录E中有更详细的描述)。实际上，语言特性与这里的概念完全对应。术语概念由STL的设计师首先引入，以形式化他们的工作。此后不久，开始尝试在模板中明确这些概念。
 
-The forthcoming language feature will help us to specify and double check requirements on iterators (since there are different iterator categories, such as forward and bidirectional iterators, multiple corresponding concepts would be involved; see Section E.3.1 on page 744). In today’s C++, however, the concepts are mostly implicit in the specifications of our generic libraries (and the standard C++ library in particular). Some features and techniques (e.g., static\_assert and SFINAE) do permit some amount of automated checking, fortunately.
+即将到来的语言特性将帮助我们指定和检查迭代器的要求(因为有不同的迭代器类别，如前向迭代器和双向迭代器，将涉及多个相应的概念;参见第E.3.1节)。然而，如今的C++中，这些概念大多隐含在泛型库(尤其是标准C++库)的规范中。幸运的是，一些特性和技术(例如，static\_assert和SFINAE)确实允许自动检查。
 
-In principle, functionality such as an STL-like approach could be implemented with dynamic polymorphism. In practice, however, it would be of limited use because the iterator concept is too lightweight compared with the virtual function call mechanism. Adding an interface layer based on virtual functions would most likely slow down our operations by an order of magnitude (or more).
+原则上，类似于STL的方法这样的功能可以通过动态多态性实现。然而，在实践中，其用途有限，因为与虚函数调用机制相比，迭代器的概念过于轻量级。添加基于虚拟函数的接口层很可能会大大降低操作速度(甚至更慢)。
 
-Generic programming is practical precisely because it relies on static polymorphism, which resolves interfaces at compile time. On the other hand, the requirement that the interfaces be resolved at compile time also calls for new design principles that differ in many ways from object-oriented design principles. Many of the most important of these generic design principles are described in the remainder of this book. Additionally, Appendix E delves deeper into generic programming as a development paradigm by describing direct language support for the notion of concepts.
+泛型编程之所以实用，是因为依赖于静态多态性，该多态性在编译时解析接口。另一方面，编译时解析接口的要求也需要新的设计原则，这些原则在许多方面与面向对象的设计原则不同。许多重要的通用设计原则将在本书的其余部分进行描述。此外，附录E通过描述对概念中的概念的直接语言支持，更深入地探讨了泛型编程。
 
 
 

@@ -1,17 +1,17 @@
-The availability of static polymorphism in C++ leads to new ways of implementing classic design patterns. Take, for example, the Bridge pattern, which plays a major role in many C++ programs. One goal of using the Bridge pattern is to switch between different implementations of an interface.
+C++中静态多态性的可用性，带来了实现经典设计模式的新方法。以桥接模式为例，在许多C++程序中扮演着重要的角色。使用桥接模式的一个目标是在接口的不同实现之间切换。
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter18/images/3.png} \\
-Figure 18.3. Bridge pattern implemented using inheritance
+图18.3. 使用继承实现的桥接模式
 \end{center}
 
-According to [DesignPatternsGoF], this is usually done using an interface class that embeds a pointer to refer to the actual implementation and delegating all calls through this pointer (see Figure 18.3).
+根据[DesignPatternsGoF]，通常通过一个接口类来完成，嵌入一个指针来引用实际的实现，并通过这个指针委托所有调用(参见图18.3)。
 
-However, if the type of the implementation is known at compile time, we exploit the power of templates instead (see Figure 18.4). This leads to more type safety (in part, by avoiding pointer conversions) and better performance.
+但若在编译时就知道实现的类型，那么可以利用模板的强大功能(参见图18.4)，带来更好的类型安全性(部分原因是避免了指针转换)和性能。
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter18/images/4.png} \\
-Figure 18.4. Bridge pattern implemented using templates
+图18.4. 使用模板实现的桥接模式
 \end{center}
 
 

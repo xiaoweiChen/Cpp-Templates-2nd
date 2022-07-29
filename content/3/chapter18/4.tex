@@ -1,14 +1,14 @@
-One argument against static polymorphism with templates is that the binding of the interfaces is done by instantiating the corresponding templates. This means that there is no common interface (class) to program against. Instead, any usage of a template simply works if all instantiated code is valid. If it is not, this might lead to hard-to-understand error messages or even cause valid but unintended behavior.
+反对模板静态多态的一个论点是，接口的绑定通过实例化相应的模板来完成，没有公共接口(类)用来编程。如果所有实例化的代码都有效，那么模板的使用就可以工作。若不是，这可能会导致难以理解的错误消息，甚至导致有效但意外的行为。
 
-For this reason, C++ language designers have been working on the ability to explicitly provide (and check) interfaces for template parameters. Such an interface is usually called a concept in C++.  It denotes a set of constraints that template arguments have to fulfill to successfully instantiate a template.
+由于这个原因，C++语言设计人员致力于为模板参数显式提供(和检查)接口的能力。这样的接口在C++中称为概念，表示模板参数必须满足一组约束后，才能成功实例化模板。
 
-Despite many years of work in this area, concepts are still not part of standard C++ as of C++17. Some compilers provide experimental support for such a feature, however, and concepts will likely be part of the next standard after C++17.
+尽管在这个领域做了许多年的工作，但是概念直到C++17，才成为标准C++的一部分。一些编译器提供了对这种特性的实验性支持，但这些概念可能会成为C++17之后标准的一部分。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}GCC 7, for example, provides the option -fconcepts.
+\hspace*{0.75cm}例如，GCC 7提供了-fconcepts选项。
 \end{tcolorbox}
 
-Concepts can be understood as a kind of “interface” for static polymorphism. In our example, this might look as follows:
+概念可以理解为静态多态的一种“接口”。例子中，可能如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -23,9 +23,9 @@ concept GeoObj = requires(T x) {
 };
 \end{lstlisting}
 
-Here, we use the keyword concept to define a concept GeoObj, which constrains a type to have callable members draw() and center\_of\_gravity() with appropriate result types.
+这里，使用关键字概念来定义概念GeoObj，它约束类型具有可调用成员draw()和center\_of\_gravity()，并具有适当的结果类型。
 
-Now, we can rewrite some of our example templates to include a requires clause that constrains the template parameters with the GeoObj concept:
+现在，可以重写一些示例模板，以包含一个require子句，用GeoObj概念约束模板参数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -62,7 +62,7 @@ void drawElems (std::vector<T> const& elems)
 }
 \end{lstlisting}
 
-This approach is still noninvasive with respect to the types that can participate in the (static) polymorphic behavior:
+对于能够参与(静态)多态行为的类型来说，这种方法仍是非侵入性的:
 
 \begin{lstlisting}[style=styleCXX]
 // concrete geometric object class Circle
@@ -75,9 +75,9 @@ class Circle {
 };
 \end{lstlisting}
 
-That is, such types are still defined without any specific base class or requirements clause and can still be fundamental data types or types from independent frameworks.
+这些类型仍然定义在没有特定基类或需求子句的情况下，并且仍然可以是基本数据类型，或来自独立框架的类型。
 
-Appendix E includes a more detailed discussion of concepts for C++, as they are expected for the next C++ standard.
+附录E包含了对C++概念的更详细的讨论，因为这些概念将在下一个C++标准中出现。
 
 
 

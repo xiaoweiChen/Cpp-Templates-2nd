@@ -1,7 +1,7 @@
 
-So far we have equated accumulation with summation. However, we can imagine other kinds of accumulations. For example, we could multiply the sequence of given values. Or, if the values were strings, we could concatenate them. Even finding the maximum value in a sequence could be formulated as an accumulation problem. In all these alternatives, the only accum() operation that needs to change is total += *beg. This operation can be called a policy of our accumulation process.
+我们已经把累加和求和搞定了，我们可以想象其他种类的积累。例如，我们可以将给定值序列相乘。或者，如果值是字符串，可以将它们连接起来。即使在序列中找到最大值，也可以表述为一个积累问题。所有这些替代方案中，唯一需要更改的accum()操作是total += *beg。这个操作可以称为积累过程的策略。
 
-Here is an example of how we could introduce such a policy in our accum() function template:
+下面是如何在accum()函数模板中引入策略的示例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -30,13 +30,13 @@ auto accum (T const* beg, T const* end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-In this version of accum() SumPolicy is a policy class, that is, a class that implements one or more policies for an algorithm through an agreed-upon interface.
+accum()的这个版本中，SumPolicy是一个策略类，也就是说，这个类通过一个接口为一个算法实现一个或多个策略。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} We could generalize this to a policy parameter, which could be a class (as discussed) or a pointer to a function.
+\hspace*{0.75cm}可以将其推广为策略参数，可以是类(如前所述)或指向函数的指针。
 \end{tcolorbox}
 
-SumPolicy could be written as follows:
+SumPolicy可以这样写:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -54,7 +54,7 @@ class SumPolicy {
 #endif // SUMPOLICY_HPP
 \end{lstlisting}
 
-By specifying a different policy to accumulate values, we can compute different things. Consider, for example, the following program, which intends to determine the product of some values:
+通过指定不同的策略来积累值，可以计算不同的东西。看看下面的程序，其打算确定一些值的乘积:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -82,96 +82,96 @@ int main()
 }
 \end{lstlisting}
 
-However, the output of this program isn’t what we would like:
+然而，这个程序的输出并不是我们想要的:
 
 \begin{tcblisting}{commandshell={}}
 the product of the integer values is 0
 \end{tcblisting}
 
-The problem here is caused by our choice of initial value: Although 0 works well for summation, it does not work for multiplication (a zero initial value forces a zero result for accumulated multiplications). This illustrates that different traits and policies may interact, underscoring the importance of careful template design.
+这里的问题是由初值的选择引起的:尽管0适用于求和，但它不适用于乘法(零初值会导致累积乘法的结果为零)。这说明了不同的特征和政策可能会相互影响，强调了设计模板的重要性。
 
-In this case, we may recognize that the initialization of an accumulation loop is a part of the accumulation policy. This policy may or may not make use of the trait zero(). Other alternatives are not to be forgotten: Not everything must be solved with traits and policies. For example, the std::accumulate() function of the C++ standard library takes the initial value as a third (function call) argument.
+可以了解到累积循环的初始化，也是累积策略的一部分。这个策略可能使用特征zero()，也可能不使用。其他替代方案也不能忽略:不是所有问题都必须用特性和策略来解决。例如，C++标准库的std::accumulate()函数将初始值作为第三个(函数调用)参数。
 
 
-\subsubsubsection{19.2.1\hspace{0.2cm}Traits and Policies: What’s the Difference?}
+\subsubsubsection{19.2.1\hspace{0.2cm}特征和策略:有什么不同?}
 
-A reasonable case can be made in support of the fact that policies are just a special case of traits. Conversely, it could be claimed that traits just encode a policy.
+合理的例子可以支持这样一个事实，即策略只是特征的特殊情况。相反，也可以说，特征就是策略的一种编码。
 
-The New Shorter Oxford English Dictionary (see [NewShorterOED]) has this to say:
+《新简明牛津英语词典》(参见[NewShorterOED])是这样说的:
 
 \begin{itemize}
 \item 
-trait n. ... a distinctive feature characterizing a thing
+trait n.…特征:表征一事物的显著特征
 
 \item 
-policy n. ... any course of action adopted as advantageous or expedient
+policy n. …作为有利或权宜之计而采取的行动方针
 \end{itemize}
 
-Based on this, we tend to limit the use of the term policy classes to classes that encode an action of some sort that is largely orthogonal with respect to any other template argument with which it is combined. This is in agreement with Andrei Alexandrescu’s statement in his book Modern C++ Design (see page 8 of [AlexandrescuDesign]):
+基于此，我们倾向于将术语策略类的使用限制为对某种类型的操作进行编码的类，这些操作与其他模板参数基本上是无关的。这与Andrei Alexandrescu在他的《现代C++设计》一书中的观点一致(见[AlexandrescuDesign]第8页):
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Alexandrescu has been the main voice in the world of policy classes, and he has developed a rich set of techniques based on them.
+\hspace*{0.75cm}Alexandrescu一直是策略界的主要声音，他在此基础上开发了一套丰富的技术。
 \end{tcolorbox}
 
-\textit{Policies have much in common with traits but differ in that they put less emphasis on type and more on behavior.}
+\textit{政策与特征有很多共同点，但不同之处在于它们不太强调类型，而更多地强调行为。}
 
-Nathan Myers, who introduced the traits technique, proposed the following more open-ended definition (see [MyersTraits]):
+引入特征技术的Nathan Myers提出了更开放的定义(见[MyersTraits]):
 
-\textit{Traits class: A class used in place of template parameters. As a class, it aggregates useful types and constants; as a template, it provides an avenue for that “extra level of indirection” that solves all software problems.}
+\textit{特征类:用来代替模板参数的类。作为一个类，聚合有用的类型和常量;作为模板，为解决所有软件问题的“额外间接级别”提供了一条途径。}
 
-In general, we therefore tend to use the following (slightly fuzzy) definitions:
-
-\begin{itemize}
-\item 
-Traits represent natural additional properties of a template parameter.
-
-\item 
-Policies represent configurable behavior for generic functions and types (often with some commonly used defaults).
-\end{itemize}
-
-To elaborate further on the possible distinctions between the two concepts, we list the following observations about traits:
+因此，通常我们倾向于使用以下(稍微模糊的)定义:
 
 \begin{itemize}
 \item 
-Traits can be useful as fixed traits (i.e., without being passed through template parameters).
+特征表示模板参数的自然附加属性。
 
 \item 
-Traits parameters usually have very natural default values (which are rarely overridden, or simply cannot be overridden).
-
-\item 
-Traits parameters tend to depend tightly on one or more main parameters.
-
-\item 
-Traits mostly combine types and constants rather than member functions.
-
-\item 
-Traits tend to be collected in traits templates.
+策略表示泛型函数和类型的可配置行为(通常带有一些常用的默认值)。
 \end{itemize}
 
-For policy classes, we make the following observations:
+为了进一步阐述这两个概念之间的区别，我们列出了以下关于特征的观察结果:
 
 \begin{itemize}
 \item 
-Policy classes don’t contribute much if they aren’t passed as template parameters.
+特性可以固化使用(例如，不需要通过模板参数传递)。
 
 \item 
-Policy parameters need not have default values and are often specified explicitly (although many generic components are configured with commonly used default policies).
+特性参数通常有非常自然的默认值(很少重写，或者不能重写)。
 
 \item 
-Policy parameters are mostly orthogonal to other parameters of a template.
+特性参数往往紧密地依赖于一个或多个主要参数。
 
 \item 
-Policy classes mostly combine member functions.
+特征主要组合类型和常量，而不是成员函数。
 
 \item 
-Policies can be collected in plain classes or in class templates.
+特征倾向于在特征模板中进行收集。
 \end{itemize}
 
-However, there is certainly an indistinct line between both terms. For example, the character traits of the C++ standard library also define functional behavior such as comparing, moving, and finding characters. And by replacing these traits, we can define string classes that behave in a caseinsensitive manner (see Section 13.2.15 in [JosuttisStdLib]) while keeping the same character type. Thus, although they are called traits, they have some properties associated with policies.
+对于策略类，我们做了以下观察:
 
-\subsubsubsection{19.2.2\hspace{0.2cm}Member Templates versus Template Template Parameters}
+\begin{itemize}
+\item 
+如果策略类没有作为模板参数传递，那么其作用不大。
 
-To implement an accumulation policy, we chose to express SumPolicy and MultPolicy as ordinary classes with a member template. An alternative consists of designing the policy class interface using class templates, which are then used as template template arguments (see Section 5.7 on page 83 and Section 12.2.3 on page 187). For example, we could rewrite SumPolicy as a template:
+\item 
+策略参数不需要有默认值，通常显式指定(尽管许多通用组件都配置了常用的默认策略)。
+
+\item 
+策略参数大多与模板的其他参数无关。
+
+\item 
+策略类通常组合成员函数。
+
+\item 
+策略可以在普通类或类模板中进行收集。
+\end{itemize}
+
+然而，这两个术语之间肯定有一条模糊的界线。例如，C++标准库的字符特征也定义了函数行为，如比较、移动和查找字符。通过替换这些特征，可以定义不区分大小写的字符串类(参见[JosuttisStdLib]中的13.2.15节)，同时保持相同的字符类型。因此，尽管称为特征，但它们有一些与策略相关的属性。
+
+\subsubsubsection{19.2.2\hspace{0.2cm}成员模板与双重模板参数}
+
+为了实现累积策略，选择将SumPolicy和multipolicy表示为具有成员模板的普通类。另一种方法是使用类模板设计策略类接口，然后将类模板用作模板参数(参见第5.7节和第12.2.3节)。例如，可以将SumPolicy重写为模板:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -191,7 +191,7 @@ class SumPolicy {
 #endif // SUMPOLICY_HPP
 \end{lstlisting}
 
-The interface of Accum can then be adapted to use a template template parameter:
+然后，Accum的接口可以适应使用双重模板参数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -220,26 +220,26 @@ auto accum (T const* beg, T const* end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-The same transformation can be applied to the traits parameter. (Other variations on this theme are possible: For example, instead of explicitly passing the AccT type to the policy type, it may be advantageous to pass the accumulation trait and have the policy determine the type of its result from a traits parameter.)
+同样的变换也可以应用于特征参数(其他变体也是可能的:与其显式地将AccT类型传递给策略类型，不如传递积累特征，并让策略从特征参数确定其结果的类型)。
 
-The major advantage of accessing policy classes through template template parameters is that it makes it easier to have a policy class carry with it some state information (i.e., static data members) with a type that depends on the template parameters. (In our first approach, the static data members would have to be embedded in a member class template.)
+通过双重模板参数访问策略类的主要优点是，使策略类更容易携带一些依赖于模板参数的类型的状态信息(即静态数据成员)。(第一种方法中，静态数据成员必须嵌入到成员类模板中。)
 
-However, a downside of the template template parameter approach is that policy classes must now be written as templates, with the exact set of template parameters defined by our interface. This can make the expression of the traits themselves more verbose and less natural than a simple nontemplate class.
+然而，双重模板参数方法的一个缺点是，现在必须将策略类改写为模板，并使用接口定义的一组精确的模板参数。这可能会使特征本身的表达式比简单的非模板类更冗长、更不自然。
 
-\subsubsubsection{19.2.3\hspace{0.2cm}Combining Multiple Policies and/or Traits}
+\subsubsubsection{19.2.3\hspace{0.2cm}组合多种策略和/或特征}
 
-As our development has shown, traits and policies don’t entirely do away with having multiple template parameters. However, they do reduce their number to something manageable. An interesting question, then, is how to order such multiple parameters.
+特性和策略并没有完全消除多个模板参数，但确实将数量减少到可控的程度。那么，一个有趣的问题是如何排列这些参数。
 
-A simple strategy is to order the parameters according to the increasing likelihood of their default value to be selected. Typically, this would mean that the traits parameters follow the policy parameters because the latter are more often overridden in client code. (The observant reader may have noticed this strategy in our development.) 
+一个简单的策略是，根据参数默认值选择的可能性的增加对参数进行排序。通常，特征参数遵循策略参数，因为后者在外部代码中更经常重写。(细心的读者可能在演示过程中注意到了这个策略。)
 
-If we are willing to add a significant amount of complexity to our code, an alternative exists that essentially allows us to specify the nondefault arguments in any order. Refer to Section 21.4 on page 512 for details.
+如果增加大量的复杂性代码，那么存在一种替代方法，可以任意顺序指定非默认参数。有关详细信息，请参阅第21.4节。
 
-\subsubsubsection{19.2.4\hspace{0.2cm}Accumulation with General Iterators}
+\subsubsubsection{19.2.4\hspace{0.2cm}通用迭代器的累加}
 
-Before we end this introduction to traits and policies, it is   instructive to look at one version of accum() that adds the capability to handle generalized iterators (rather than just pointers), as expected from an industrial-strength generic component. Interestingly, this still allows us to call accum() with pointers because the C++ standard library provides iterator traits. (Traits are everywhere!) Thus, we could have defined our initial version of accum() as follows (ignoring our later refinements):
+结束对特性和策略的介绍之前，有必要看看accum()的另一个版本，它增加了处理通用迭代器(而不仅仅是指针)的功能，这是业界通用组件所期望的。这仍然允许用指针调用accum()，因为C++标准库提供了迭代器特性(特征到处都是!)。因此，可以这样定义accum()的初始版本(忽略后面的改进):
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++11, you have to declare the return type as VT.
+\hspace*{0.75cm}C++11中，必须将返回类型声明为VT。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -266,7 +266,7 @@ auto accum (Iter start, Iter end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-The std::iterator\_traits structure encapsulates all the relevant properties of iterators. Because a partial specialization for pointers exists, these traits are conveniently used with any ordinary pointer types. Here is how a standard library implementation may implement this support:
+std::iterator\_traits结构封装了迭代器的所有相关属性。因为指针的偏特化存在，所以这些特征可以与普通指针类型一起使用。以下是标准库的实现:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -281,7 +281,7 @@ namespace std {
 }
 \end{lstlisting}
 
-However, there is no type for the accumulation of values to which an iterator refers; hence we still need to design our own AccumulationTraits.
+因为没有迭代器所指向值的累积类型，所以仍需要自行设计AccumulationTraits。
 
 
 

@@ -1,13 +1,13 @@
 
-The SFINAE principle (substitution failure is not an error; see Section 8.4 on page 129 and Section 15.7 on page 284) turns potential errors during the formation of invalid types and expressions during template argument deduction (which would cause the program to be ill-formed) into simple deduction failures, allowing overload resolution to select a different candidate. While originally intended to avoid spurious failures with function template overloading, SFINAE also enables remarkable compile-time techniques that can determine if a particular type or expression is valid. This allows us to write traits that determine, for example, whether a type has a specific member, supports a specific operation, or is a class. 
+SFINAE原则(替换失败不为过;参见第8.4节和第15.7节)将模板参数推导过程中无效类型和表达式形成过程中的错误(这会导致程序格式不正确)转化为推导失败，从而允许重载解析选择不同的候选项。虽然SFINAE最初的目的是避免函数模板重载的假失败，但它还支持显著的编译时技术，可以确定特定类型或表达式是否有效。这可以通过编写特征来确定，例如，类型是否具有特定成员、是否支持特定操作或是否为类。
 
-The two main approaches for SFINAE-based traits are to SFINAE out functions overloads and to SFINAE out partial specializations.
+实现基于SFINAE特性的两种主要方法是SFINAE排除函数重载和SFINAE排除偏特化。
 
-\subsubsubsection{19.4.1\hspace{0.2cm}SFINAE Out Function Overloads}
+\subsubsubsection{19.4.1\hspace{0.2cm}SFINAE去除函数重载}
 
-Our first foray into SFINAE-based traits illustrates the basic technology using SFINAE with function overloading to find out whether a type is default constructible, so that you can create objects without any value for initialization. That is, for a given type T, an expression such as T() has to be valid.
+对基于SFINAE的特征的第一次尝试说明，使用带有函数重载的SFINAE来确定类型是否默认可构造的基本技术，这样就可以创建不需要初始化值的对象。对于给定的类型T，像T()这样的表达式必须有效。
 
-A basic implementation can look as follows:
+实现如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -30,33 +30,33 @@ struct IsDefaultConstructibleT {
 };
 \end{lstlisting}
 
-The usual approach to implement a SFINAE-base trait with function overloading is to declare two overloaded function templates named test() with different return types:
+使用函数重载实现基于SFINAE的特征的通常方法是声明两个名为test()的重载函数模板，具有不同的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static char test(void*);
 template<...> static long test(...);
 \end{lstlisting}
 
-The first overload is designed to match only if the requested check succeeds (we will discuss below how that is achieved). The second overload is the fallback:
+第一个重载设计为只在请求的检查成功时匹配(将在下面讨论如何实现这一点)。第二个重载是回退:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The fallback declaration can sometimes be a plain member function declaration instead of a member function template.
+\hspace*{0.75cm}回退声明有时可以是普通成员函数声明，而不是成员函数模板。
 \end{tcolorbox}
 
-It always matches the call, but because it matches “with ellipsis” (i.e., a vararg parameter), any other match would be preferred (see Section C.2 on page 682).
+它总是匹配调用，但是因为它匹配“带有省略号”(即可变参数)，任何其他匹配都将首选(参见C.2节)。
 
-Our “return value” value depends on which overloaded test member is selected:
+“返回值”的值取决于选择了哪个重载test()成员:
 
 \begin{lstlisting}[style=styleCXX]
 static constexpr bool value
 	= IsSameT<decltype(test<...>(nullptr)), char>::value;
 \end{lstlisting}
 
-If the first test() member—whose return type is char—is selected, value will be initialized to isSame<char,char>, which is true. Otherwise, it will be initialized to isSame<long,char>, which is false.
+如果选择了返回类型为char的第一个test()成员，value将初始化为isSame<char,char>，为真。否则，将初始化为isSame<long,char>，该值为false。
 
-Now, we have to deal with the specific properties we want to test. The goal is to make the first test() overload valid if and only if the condition we want to check applies. In this case, we want to find out whether we can default construct an object of the passed type T. To achieve this, we pass T as U and give our first declaration of test() a second unnamed (dummy) template argument initialized with an construct that is valid if and only if the conversion is valid. In this case, we use the expression that can only be valid if an implicit or explicit default constructor exists: U(). The expression is surrounded by decltype to make this a valid expression to initialize a type parameter. The second template parameter cannot be deduced, as no corresponding argument is passed. And we will not provide an explicit template argument for it. Therefore, it will be substituted, and if the substitution fails, according to SFINAE, that declaration of test() will be discarded so that only the fallback declaration will match.
+现在，需要处理想要测试的特定属性。目标是使第一个test()重载，在检查条件适用时有效。本例中，想知道是否可以默认构造一个传递类型T的对象。为了实现这一点，将T传递为U，并为test()的第一个声明提供第二个未命名(虚拟)模板参数，该实参初始化时，且转换有效时，参数有效。使用的表达式只有在隐式或显式默认构造函数存在时，U()才有效。表达式使用decltype包围，使其成为初始化类型参数的有效表达式。不能推导第二个模板参数，因为没有传递相应的参数。不会提供显式的模板参数。因此会进行替换，如果替换失败，根据SFINAE, test()的声明将丢弃，以便匹配回退声明。
 
-Thus, we can use the trait as follows:
+因此，可以这样使用该特征:
 
 \begin{lstlisting}[style=styleCXX]
 IsDefaultConstructibleT<int>::value // yields true
@@ -67,7 +67,7 @@ struct S {
 IsDefaultConstructibleT<S>::value // yields false
 \end{lstlisting}
 
-Note that we can’t use the template parameter T in the first test() directly:
+注意，不能在第一个test()中直接使用模板参数T:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -85,65 +85,63 @@ struct IsDefaultConstructibleT {
 };
 \end{lstlisting}
 
-his doesn’t work, however, because for any T, always, all member functions are substituted, so that for a type that isn’t default constructible, the code fails to compile instead of ignoring the first test() overload. By passing the class template parameter T to a function template parameter U, we create a specific SFINAE context only for the second test() overload.
+这样不行，对于任何T，替换所有成员函数，因此对于不是默认可构造的类型，代码无法编译，而不忽略第一个test()重载。通过将类模板参数T传递给函数模板参数U，仅为第二次test()重载创建了特定的SFINAE。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Alternative Implementation Strategies for SFINAE-based Traits}
+\textbf{基于SFINAE特征的替代实现策略}
 
-SFINAE-based traits have been possible to implement since before the first C++ standard was published in 1998.
+1998年发布第一个C++标准前，基于SFINAE的特性就已经可以实现了。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}However, the SFINAE rules were more limited back then: When substitution of template arguments resulted in a malformed type construct (e.g., T::X where T is int), SFINAE worked as expected, but if it resulted in an invalid expression (e.g., sizeof(f()) where f() returns void), SFINAE did not kick in and an error was issued right away.
+\hspace*{0.75cm}然而，SFINAE规则当时有更多的限制:当替换模板参数导致了一个不规范的类型构造(例如，T::X，其中T是int)， SFINAE按预期工作，但若导致了一个无效的表达式(例如，sizeof(f())，其中f()返回void)，SFINAE不起作用，并立即发出错误信息。
 \end{tcolorbox}
 
-The key to the approach always consisted in declaring two overloaded function templates returning different return types:
+这种方法的关键在于声明两个重载的函数模板，返回不同的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static char test(void*);
 template<...> static long test(...);
 \end{lstlisting}
 
-However, the original published technique
+然而，最初发布的技术使用返回类型的大小来确定选择哪个重载(因为无法使用nullptr和constexpr，所以使用0和enum):
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The first edition of this book was perhaps the first source for this technique.
+\hspace*{0.75cm}本书的第一版可能是这种技术的首个来源。
 \end{tcolorbox}
-
-used the size of the return type to determine which overload was selected (also using 0 and enum, because nullptr and constexpr were not available):
 
 \begin{lstlisting}[style=styleCXX]
 enum { value = sizeof(test<...>(0)) == 1 };
 \end{lstlisting}
 
-On some platforms, it might happen that sizeof(char)==sizeof(long). For example, on digital signal processors (DSP) or old Cray machines, all integral fundamental types could have the same size. As by definition sizeof(char) equals 1, on those machines sizeof(long) and even sizeof(long long) also equal 1.
+某些平台上，sizeof(char)==sizeof(long)可能为真。例如，在数字信号处理器(DSP)或旧的Cray机器上，所有的积分基本类型可以具有相同的大小。根据定义，sizeof(char)等于1，在这些机器上，sizeof(long)甚至sizeof(long long)也等于1。
 
-Given that observation, we want to ensure that the return types of the test() functions have different sizes on all platforms. For example, after defining
+鉴于上述观察结果，希望确保test()函数的返回类型在所有平台上具有不同的大小。例如，定义之后
 
 \begin{lstlisting}[style=styleCXX]
 using Size1T = char;
 using Size2T = struct { char a[2]; };
 \end{lstlisting}
 
-or
+或
 
 \begin{lstlisting}[style=styleCXX]
 using Size1T = char(&)[1];
 using Size2T = char(&)[2];
 \end{lstlisting}
 
-we could define test test() overloads as follows:
+可以这样定义test()的重载:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static Size1T test(void*); // checking test()
 template<...> static Size2T test(...); // fallback
 \end{lstlisting}
 
-Here, we either return a Size1T, which is a single char of size 1, or we return (a structure of) an array of two chars, which has a size of at least 2 on all platforms.
+这里，要么返回Size1T，一个大小为1的单个字符，要么返回(一个结构体)一个包含两个字符的数组，该数组在所有平台上的大小至少为2。
 
-Code using one of these approaches is still commonly found.
+使用其中一种方法的代码仍然很常见。
 
-Note also that the type of the call argument passed to func() doesn’t matter. All that matters is that the passed argument matches the expected type. For example, you could also define to pass the integer 42:
+注意，传递给func()的调用参数的类型并不重要。重要的是传递的参数与期望的类型匹配。例如，可以定义传递整数42:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static Size1T test(int); // checking test()
@@ -154,26 +152,26 @@ enum { value = sizeof(test<...>(42)) == 1 };
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Making SFINAE-based Traits Predicate Traits}
+\textbf{使基于SFINAE的特征成为特征}
 
-As introduced in Section 19.3.3 on page 410, a predicate trait, which returns a Boolean value, should return a value derived from std::true\_type or std::false\_type. This way, we can also solve the problem that on some platforms sizeof(char)==sizeof(long).
+如第19.3.3节所述，一个返回布尔值的谓词特征应该返回一个派生自std::true\_type或std::false\_type的值。这样，也可以解决在某些平台上sizeof(char)与sizeof(long)相同的问题。
 
-For this, we need an indirect definition of IsDefaultConstructibleT. The trait itself should derive from the Type of a helper class, which yields the necessary base class. Fortunately, we can simply provide the corresponding base classes as return types of the test() overloads:
+为此，需要IsDefaultConstructibleT的间接定义。特征本身应该从助手类的Type派生，助手类生成必要的基类。这里，可以简单地提供相应的基类作为test()重载的返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static std::true_type test(void*); // checking test()
 template<...> static std::false_type test(...); // fallback
 \end{lstlisting}
 
-That way, the Type member for the base class simply can be declared as follows:
+这样，基类的Type成员可以声明为:
 
 \begin{lstlisting}[style=styleCXX]
 using Type = decltype(test<FROM>(nullptr));
 \end{lstlisting}
 
-and we no longer need the IsSameT trait.
+并且，不再需要IsSameT特性。
 
-The complete improved implementation of IsDefaultConstructibleT therefore becomes as follows:
+因此，IsDefaultConstructibleT的完整改进实现如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -199,13 +197,13 @@ struct IsDefaultConstructibleT : IsDefaultConstructibleHelper<T>::Type {
 };
 \end{lstlisting}
 
-Now, if the first test() function template is valid, it is the preferred overload, so that the member IsDefaultConstructibleHelper::Type is initialized by its return type std::true\_type. As a consequence, IsConvertibleT<...> derives from std::true\_type.
+现在，若第一个test()函数模板有效，是首选重载，因此成员IsDefaultConstructibleHelper::Type由它的返回类型std::true\_type初始化。因此，IsConvertibleT<…>派生于std::true\_type。
 
-If the first test() function template is not valid, it becomes disabled due to SFINAE, and IsDefaultConstructibleHelper::Type is initialized by the return type of the test() fallback, that is, std::false\_type. The effect is that IsConvertibleT<...> then derives from std::false\_type.
+若第一个test()函数模板无效，会因为SFINAE而禁用，IsDefaultConstructibleHelper::Type由test()回退的返回类型初始化，也就是std::false\_type。结果，IsConvertibleT<…>派生自std::false\_type。
 
-\subsubsubsection{19.4.2\hspace{0.2cm}SFINAE Out Partial Specializations}
+\subsubsubsection{19.4.2\hspace{0.2cm}SFINAE去除偏特化}
 
-The second approach to implement SFINAE-based traits uses partial specialization. Again, we can use the example to find out whether a type T is default constructible:
+实现基于SFINAE的特征的第二种方法使用偏特化。同样，可以使用这个例子来找出T类型是否默认可构造:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -230,22 +228,22 @@ struct IsDefaultConstructibleT<T, VoidT<decltype(T())>> : std::true_type
 };
 \end{lstlisting}
 
-As with the improved version of IsDefaultConstructibleT for predicate traits above, we define the general case to be derived from std::false\_type, because by default a type doesn’t have the member size\_type.
+与上面针对谓词特征的IsDefaultConstructibleT改进版本一样，定义了从std::false\_type派生的一般情况，因为默认情况下类型没有成员size\_type。
 
-The interesting feature here is the second template argument that defaults to the type of a helper VoidT. It enables us to provide partial specializations that use an arbitrary number of compile-time type constructs. 
+这里有趣的特性是第二个模板参数，默认为助手类的VoidT类型，可以使用编译时类型构造的偏特化。
 
-In this case, we need only one construct:
+本例中，只需要一个构造:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(T())
 \end{lstlisting}
 
-to check again whether the default constructor for T is valid. If, for a specific T, the construct is invalid, SFINAE this time causes the whole partial specialization to be discarded, and we fall back to the primary template. Otherwise, the partial specialization is valid and preferred.
+再次检查T的默认构造函数是否有效。如果对于特定的T构造无效，SFINAE会丢弃整个偏特化，返回到主模板。否则，偏特化有效，并且首选。
 
-In C++17, the C++ standard library introduced a type trait std::void\_t<> that corresponds to the type VoidT introduced here. Before C++17, it might be helpful to define it ourselves as above or even in namespace std as follows:
+C++17中，C++标准库引入了一个类型特征std::void\_t<>，对应于这里引入的类型VoidT。C++17前，可以如上面那样自行定义，甚至可以在命名空间std中这样定义:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Defining void\_t inside namespace std is formally invalid: User code is not permitted to add declarations to namespace std. In practice, no current compiler enforces that restriction, nor do they behave unexpectedly (the standard indicates that doing this leads to “undefined behavior,” which allows anything to happen).
+\hspace*{0.75cm}命名空间std中定义void\_t在形式上是无效的:不允许用户在命名空间std添加声明。实践中，当前的编译器没有强制这样的限制，其行为也不会意外(标准指出这样做会导致“未定义的行为”，这允许可以产生任何情况)。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -258,21 +256,21 @@ namespace std {
 #endif
 \end{lstlisting}
 
-Starting with C++14, the C++ standardization committee has recommended that compilers and standard libraries indicate which parts of the standard they have implemented by defining agreed-upon feature macros. This is not a requirement for standard conformance, but implementers typically follow the recommendation to be helpful to their users.
+C++14开始，C++标准化委员会建议编译器和标准库通过定义一致同意的特性宏，来表明它们实现了标准的哪些部分。这不是标准一致性的要求，但是实现者通常会遵循这些建议来帮助其用户进行分辨。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}At the time of this writing, Microsoft Visual C++ is the unfortunate exception.
+\hspace*{0.75cm}撰写本文时，发现Microsoft Visual C++是个不幸的例外。
 \end{tcolorbox}
 
-The macro \_\_cpp\_lib\_void\_t is the macro recommended to indicate that a library implements std::void\_t, and thus our code above is made conditional on it.
+宏\_\_cpp\_lib\_void\_t是用来指示标准库实现std::void\_t的宏，因此上面的代码以它为条件。
 
-Obviously, this way to define a type trait looks more condensed that the first approach to overload function templates. But it requires the ability to formulate the condition inside the declaration of a template parameter. Using a class template with function overloads enables us to use additional helper functions or helper types.
+显然，这种定义类型特征的方法看起来比重载函数模板的第一种方法更简洁，但需要在模板参数声明中明确条件的能力。使用带有函数重载的类模板，使我们能够使用助手函数或类型。
 
-\subsubsubsection{19.4.3\hspace{0.2cm}Using Generic Lambdas for SFINAE}
+\subsubsubsection{19.4.3\hspace{0.2cm}SFINAE使用Lambda}
 
-Whichever technique we use, some boilerplate code is always needed to define traits: overloading and calling two test() member functions or implementing multiple partial specializations. Next, we will show how in C++17, we can minimize this boilerplate by specifying the condition to be checked in a generic lambda.
+无论使用哪种技术，总是需要一些样板代码来定义特征:重载和调用两个test()成员函数或实现多个偏特化。接下来，将展示在C++17中如何通过在泛型Lambda中指定要检查的条件，来最小化这个样板代码。
 
-To start with, we introduce a tool constructed from two nested generic lambda expressions:
+首先，引入一个由两个嵌套的泛型Lambda表达式构造的工具:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -314,9 +312,9 @@ template<typename T>
 T valueT(TypeT<T>); // no definition needed
 \end{lstlisting}
 
-Let’s start with the definition of isValid: It is a constexpr variable whose type is a lambda’s closure type. The declaration must necessarily use a placeholder type (auto in our code) because C++ has no way to express closure types directly. Prior to C++17, lambda expressions could not appear in constant-expressions, which is why this code is only valid in C++17. Since isValid has a closure type, it can be invoked (i.e., called), but the item that it returns is itself an object of a lambda closure type, produced by the inner lambda expression.
+从isValid的定义开始:是一个constexpr变量，其类型是Lambda闭包类型。声明必须使用占位符类型(代码中是auto)，因为C++没有办法直接表示闭包类型。C++17之前，Lambda表达式不能出现在常量表达式中，这就是为什么这段代码只在C++17中有效。因为isValid有一个闭包类型，所以可以调用。但是返回的本身是Lambda闭包类型的对象，其由内部的Lambda表达式产生。
 
-Before delving into the details of that inner lambda expression, let’s examine a typical use of isValid:
+深入研究内部Lambda表达式的细节之前，先了解一下isValid的用法:
 
 \begin{lstlisting}[style=styleCXX]
 constexpr auto isDefaultConstructible
@@ -324,15 +322,15 @@ constexpr auto isDefaultConstructible
 		});
 \end{lstlisting}
 
-We already know that isDefaultConstructible has a lambda closure type and, as the name suggests, it is a function object that checks the trait of a type being default-constructible (we’ll see why in what follows). In other words, isValid is a traits factory: A component that generates traits checking objects from its argument.
+我们已经知道isDefaultConstructible有一个Lambda闭包类型，它是一个检查类型是否为默认构造的函数对象(将在后面的内容中看到原因)。换句话说，isValid是一个特征工厂:根据参数生成特征检查对象的组件。
 
-The type helper variable template allows us to represent a type as a value. A value x obtained that way can be turned back into the original type with decltype(valueT(x)),
+类型助手变量模板允许将类型表示为值。通过这种方式获得的值x可以通过decltype(valueT(x))返回原始类型，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This very simple pair of helper templates is a fundamental technique that lies at the heart of advanced libraries such as Boost.Hana!
+\hspace*{0.75cm}这对简单的助手模板是一种基本技术，其位于Boost.Hana中!
 \end{tcolorbox}
 
-and that’s exactly what is done in the lambda passed to isValid above. If that extracted type cannot be defaultconstructed, decltype(valueT(x))() is invalid, and we will either get a compiler error, or an associated declaration will be “SFINAE’d out” (and the latter effect is what we’ll achieve thanks to the details of the definition of isValid).
+这正是在上面传递给isValid的Lambda函数中所做的。如果提取的类型不能默认构造，那么decltype(valueT(x))()就无效，要么会得到一个编译错误，要么相关的声明会进行SFINAE(由于isValid定义的细节，我们将实现后一种效果)。
 
 \begin{lstlisting}[style=styleCXX]
 isDefaultConstructible can be used as follows:
@@ -340,10 +338,10 @@ isDefaultConstructible(type<int>) // true (int is default-constructible)
 isDefaultConstructible(type<int&>) // false (references are not default-constructible)
 \end{lstlisting}
 
-To see how all the pieces work together, consider what the inner lambda expression in isValid becomes with isValid’s parameter f bound to the generic lambda argument specified in the definition of isDefaultConstructible. By performing the substitution in isValid’s definition, we get the equivalent of:
+要查看所有部分是如何工作的，考虑isValid中的内部Lambda表达式的变化，isValid的参数f绑定到isDefaultConstructible定义中指定的泛型Lambda参数。通过在isValid的定义中执行替换，从而得到了等价物:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This code is not valid C++ because a lambda expression cannot appear directly in a decltype operand for compiler-technical reasons, but the meaning is clear.
+\hspace*{0.75cm}这段代码在C++中是无效的，因为出于编译技术的原因，Lambda表达式不能直接出现在decltype操作数中，但其含义明确。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -358,15 +356,15 @@ constexpr auto isDefaultConstructible
 };
 \end{lstlisting}
 
-If we look back at the first declaration of isValidImpl() above, we note that it includes a default template argument of the form
+若回头看看上面isvalidmpl()的第一个声明，就会注意到包含了默认模板参数列表
 
 \begin{lstlisting}[style=styleCXX]
 decltype(std::declval<F>()(std::declval<Args&&>()...))>
 \end{lstlisting}
 
-which attempts to invoke a value of the type of its first template argument, which is the closure type of the lambda in the definition of isDefaultConstructible, with values of the types of the arguments (decltype(args)\&\&...) passed to isDefaultConstructible. As there is only one parameter x in the lambda, args must expand to only one argument; in our static\_assert examples above, that argument has type TypeT<int> or TypeT<int\&>. In the TypeT<int\&> case, decltype(valueT(x)) is int\& which makes decltype(valueT(x))() invalid, and thus the substitution of the default template argument in the first declaration of isValidImpl() fails and is SFINAE’d out. That leaves just the second declaration (which would otherwise be a lesser match), which produces a false\_type value. Overall, isDefaultConstructible produces false\_type when type<int\&> is passed. If instead type<int> is passed, the substitution does not fail, and the first declaration of isValidImpl() is selected, producing a true\_type value. Recall that for SFINAE to work, substitutions have to happen in the immediate context of the substituted templates. In this case, the substituted templates are the first declaration of isValidImpl and the call operator of the generic lambda passed to isValid. Therefore, the construct to be tested has to appear in the return type of that lambda, not in its body!
+试图调用第一个模板参数类型的值，该参数是isDefaultConstructible定义中Lambda的闭包类型，并将参数类型的值(decltype(args)\&\&…)传递给isDefaultConstructible。由于Lambda中只有一个参数x, args的扩展只能有一个参数;上面的static\_assert示例中，该参数的类型为TypeT<int>或TypeT<int\&>。在TypeT<int\&>情况下，decltype(valueT(x))是int\&这使得decltype(valueT(x))()无效，因此在isValidImpl()的第一个声明中对默认模板参数的替换失败，并通过SFINAE去除。所以只剩下第二个声明(否则将是一个较小的匹配)，其产生一个false\_type值。也就是，isDefaultConstructible在传递type<int\&>时产生false\_type。若传递了type<int>，替换不会失败，并且选择isValidImpl()的第一个声明，产生一个true\_type类型的值。要使SFINAE工作，替换必须在要替换模板的直接上下文中发生。要替换的模板是sValidImpl的第一个声明和传递给isValid的泛型Lambda的调用操作符。因此，要测试的构造必须出现在Lambda的返回类型中，而不是其主体中!
 
-Our isDefaultConstructible trait is a little different from previous traits implementations in that it requires function-style invocation instead of specifying template arguments. That is arguably a more readable notation, but the prior style can be obtained also:
+isDefaultConstructible特征与以前的特征实现有一点不同，因为它需要函数式调用，而不是指定模板参数。可以说是一种可读性更强的表示法，使用之前的方式可以得到:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -374,9 +372,9 @@ using IsDefaultConstructibleT
 	= decltype(isDefaultConstructible(std::declval<T>()));
 \end{lstlisting}
 
-Since this is a traditional template declaration, however, it can only appear in namespace scope, whereas the definition of isDefaultConstructible could conceivably have been introduced in block scope.
+然而，由于这是一个传统的模板声明，只能出现在名称空间作用域中，而isDefaultConstructible的定义可以在块作用域中引入。
 
-So far, this technique might not seem compelling because both the expressions involved in the implementation and the style of use are more complex than the previous techniques. However, once isValid is in place and understood, many traits can be implement with just one declaration. For example, testing for access to a member named first, is rather clean (see Section 19.6.4 on page 438 for the complete example):
+这种技术蒙圈似乎并不引人注目，因为实现中涉及的表达式和使用风格都比以前的技术更复杂。然而，当isValid就位并理解，许多特征就可以通过一个声明实现。例如，测试是否访问名为first的成员，可以相当干净(见第19.6.4节的完整示例):
 
 \begin{lstlisting}[style=styleCXX]
 constexpr auto hasFirst
@@ -384,11 +382,11 @@ constexpr auto hasFirst
 	});
 \end{lstlisting}
 
-\subsubsubsection{19.4.4\hspace{0.2cm}SFINAE-Friendly Traits}
+\subsubsubsection{19.4.4\hspace{0.2cm}SFINAE友好的特征}
 
-In general, a type trait should be able to answer a particular query without causing the program to become ill-formed. SFINAE-based traits address this problem by carefully trapping potential problems within a SFINAE context, turning those would-be errors into negative results.
+类型特征能够回应特定的查询，而不会导致程序病态。基于SFINAE的特征通过SFINAE捕捉来解决这个问题，将这些错误转化为负面结果。
 
-However, some traits presented thus far (such as the PlusResultT trait described in Section 19.3.4 on page 413) do not behave well in the presence of errors. Recall the definition of PlusResultT from that section:
+然而，目前出现的一些特征(如第19.3.4节中描述的PlusResultT特征)在出现错误时表现不佳。回想一下该节中对PlusResultT的定义:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -405,10 +403,10 @@ template<typename T1, typename T2>
 using PlusResult = typename PlusResultT<T1, T2>::Type;
 \end{lstlisting}
 
-In this definition, the + is used in a context that is not protected by SFINAE. Therefore, if a program attempts to evaluate PlusResultT for types that do not have a suitable + operator, the evaluation of PlusResultT itself will cause the program to become ill-formed, as in the following attempt to declare the return type of adding arrays of unrelated types A and B:
+这个定义中，加法用于SFINAE不保护的上下文中。因此，若程序试图对没有合适加法操作符的类型计算PlusResultT，对PlusResultT本身的计算将导致程序格式不正确，如下尝试声明不相关类型A和B的添加数组的返回类型:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}For simplicity, the return value just uses PlusResultT<T1,T2>::Type. In practice, the return type should also be computed using RemoveReferenceT<> and RemoveCVT<> to avoid that references are returned.
+\hspace*{0.75cm}简单起见，返回值只使用PlusResultT<T1,T2>::Type。实践中，还应该使用RemoveReferenceT<>和RemoveCVT<>来计算返回类型，以避免返回引用。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -423,7 +421,7 @@ Array<typename PlusResultT<T1, T2>::Type>
 operator+ (Array<T1> const&, Array<T2> const&);
 \end{lstlisting}
 
-Clearly, using PlusResultT<> here will lead to an error if no corresponding operator + is defined for the array element.
+若没有为数组元素定义相应的加法操作符，这里使用PlusResultT<>将导致错误。
 
 \begin{lstlisting}[style=styleCXX]
 class A {
@@ -436,9 +434,9 @@ void addAB(Array<A> arrayA, Array<B> arrayB) {
 }
 \end{lstlisting}
 
-The practical problem is not that this failure occurs with code that is clearly ill-formed like this (there is no way to add an array of A to an array of B) but that it occurs during template argument deduction for operator+, deep in the instantiation of  PlusResultT<A,B>.
+实际的问题不在于这种失败发生在明显格式不正确的代码中(没有办法将A数组添加到B数组中)，而是发生在对加法操作无的模板参数推导期间，PlusResultT<A,B>的实例化。
 
-This has a remarkable consequence: It means that the program may fail to compile even if we add a specific overload to adding A and B arrays, because C++ does not specify whether the types in a function template are actually instantiated if another overload would be better:
+这产生了一个后果:即使添加A和B数组时，也添加了特定的重载，程序也可能无法编译，因为C++没有指定若另一个重载会更好，函数模板中的类型是否可以实例化:
 
 \begin{lstlisting}[style=styleCXX]
 // declare generic + for arrays of different element types:
@@ -455,10 +453,9 @@ void addAB(Array<A> const& arrayA, Array<B> const& arrayB) {
 }
 \end{lstlisting}
 
-If the compiler can determine that the second declaration of operator+ is a better match without performing deduction and substitution on the first (template) declaration of operator+, it will accept
-this code.
+如果编译器不需要对加法操作符的第一个(模板)声明执行推导和替换，就能确定加法操作符的第二个声明是更好的匹配。
 
-However, while deducing and substituting a function template candidate, anything that happens during the instantiation of the definition of a class template is not part of the immediate context of that function template substitution, and SFINAE does not protect us from attempts to form invalid types or expressions there. Instead of just discarding the function template candidate, an error is issued right away because we try to call operator+ for two elements of types A and B inside PlusResultT<>:
+然而，在推导和替换函数模板候选时，类模板定义实例化期间发生的事情都不是函数模板替换的一部分，SFINAE不能避免在那里形成无效类型或表达式的尝试。不是仅仅丢弃函数模板候选，而是立即发出一个错误，因为我们试图对PlusResultT<>中的A和B类型的两个元素使用加法操作符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -467,9 +464,9 @@ struct PlusResultT {
 };
 \end{lstlisting}
 
-To solve this problem, we have to make the PlusResultT SFINAE-friendly, which means to make it more resilient by giving it a suitable definition even when its decltype expression is ill-formed.
+为了解决这个问题，必须使PlusResultT对SFINAE友好，通过给它一个合适的定义使它更有弹性，即使decltype表达式是病态的。
 
-Following the example of HasLessT described in the previous section, we define a HasPlusT trait that allows us to detect whether there is a suitable + operation for the given types:
+按照上一节描述的HasLessT的例子，我们定义了一个HasPlusT trait，其可以检测给定类型是否有合适的加法操作:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -493,9 +490,9 @@ struct HasPlusT<T1, T2, std::void_t<decltype(std::declval<T1>()
 };
 \end{lstlisting}
 
-If it yields a true result, PlusResultT can use the existing implementation. Otherwise, PlusResultT needs a safe default. The best default for a trait that has no meaningful result for a set of template arguments is to not provide any member Type at all. That way, if the trait is used within a SFINAE context—such as the return type of the array operator+ template above—the missing member Type will make template argument deduction fail, which is precisely the behavior desired for the array operator+ template.
+如果产生结果，PlusResultT可以使用现有的实现。否则，PlusResultT需要一个安全的默认值。对于一组模板参数没有任何意义的结果特征，最好的默认值是不提供成员Type。这样，如果特征在SFINAE中使用——比如上面数组加法操作符模板的返回类型——缺失的成员Type将导致模板参数推导失败，这正是数组加法操作符模板所期望的行为。
 
-The following implementation of PlusResultT provides this behavior:
+下面的PlusResultT实现了这种行为:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -513,23 +510,23 @@ struct PlusResultT<T1, T2, false> { // partial specialization, used otherwise
 };
 \end{lstlisting}
 
-In this version of PlusResultT, we add a template parameter with a default argument that determines if the first two parameters support addition as determined by our HasPlusT trait above. We then partially specialize PlusResultT for false values of that extra parameter, and our partial specialization definition has no members at all, avoiding the problems we described. For cases where addition is supported, the default argument evaluates to true and the primary template is selected, with our existing definition of the Type member. Thus, we fulfill the contract that PlusResultT provide the result type only if in fact the + operation is well-formed. (Note that the added template parameter should never have an explicit template argument.)
+这个版本的PlusResultT中，我们添加了一个模板参数，该参数带有一个默认参数，用于确定前两个参数是否像上面的HasPlusT特征所确定的那样支持加法。然后，偏特化PlusResultT获取额外参数的假值，并且偏特化定义没有成员，从而避免了所提到的问题。对于支持加法的情况，默认参数的计算结果为true，并使用现有的Type成员定义选择主模板。因此，我们践行了约定，即PlusResultT只在加法操作定义良好的情况下，才提供结果类型。(注意，添加的参数永远不应该有显式的模板参数。)
 
-Consider again the addition of Array<A> and Array<B>: With our latest implementation of the PlusResultT template, the instantiation of  PlusResultT<A,B> will not have a Type member, because A and B values are not addable. Therefore, the result type of the array operator+ template is invalid, and SFINAE will eliminate the function template from consideration. The overloaded operator+ that is specific to Array<A> and Array<B> will therefore be chosen.
+再次考虑添加Array<A>和Array<B>的情况。在最新的PlusResultT模板实现中，PlusResultT<A,B>的实例化不会有Type成员，因为A和B的值不可添加。因此，数组加法操作符模板的结果类型无效，SFINAE将从考虑中剔除函数模板。因此，将选择特定于Array<A>和Array<B>的重载加法操作符。
 
-As a general design principle, a trait template should never fail at instantiation time if given reasonable template arguments as inputs. And the general approach is often to perform the corresponding check twice:
+作为一个通用的设计原则，若给出合理的模板参数作为输入，特征模板应该不会在实例化时失败。而一般的方法通常会进行两次检查:
 
 \begin{itemize}
 \item
-Once to find out whether the operation is valid
+减法操作是否有效
 
 \item
-Once to to compute its result
+检查计算结果
 \end{itemize}
 
-We saw that already with PlusResultT, where we call HasPlusT<> to find out whether the call of operator+ in PlusResultImpl<> is valid.
+已经在PlusResultT中看到了，通过调用HasPlusT<>来确定在PlusResultImpl<>中加法操作符的调用是否有效。
 
-Let’s apply this principle to ElementT as introduced in Section 19.3.1 on page 401: It produces an element type from a container type. Again, since the answer relies on a (container) type having a member type value\_type, the primary template should attempt to define the member Type only when the container type has such a value\_type member:
+将这一原则应用到19.3.1节介绍的ElementT:从容器类型生成元素类型。同样，因为答案依赖于(容器)类型，其有一个成员类型value\_type，所以只有当容器类型有这样一个value\_type成员时，主模板才尝试定义成员类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename C, bool = HasMemberT_value_type<C>::value>
@@ -542,7 +539,7 @@ struct ElementT<C, false> {
 };
 \end{lstlisting}
 
-A third example of making traits SFINAE-friendly is shown Section 19.7.2 on page 444, where IsNothrowMoveConstructibleT first has to check whether a move constructor exists before checking whether it is declared with noexcept.
+使特征对SFINAE友好的第三个例子在第19.7.2节，其中IsNothrowMoveConstructibleT首先必须检查移动构造函数是否存在，然后检查其是否使用noexcept声明。
 
 
 

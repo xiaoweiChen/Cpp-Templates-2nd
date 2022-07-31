@@ -1,4 +1,4 @@
-Details matter. And for that reason, the general approach for SFINAE-based traits might become more complicated in practice. Let’s illustrate this by defining a trait that can determine whether a given type is convertible to another given type—for example, if we expect a certain base class or one of its derived classes. The IsConvertibleT trait yields whether we can convert a passed first type to a passed second type:
+由于细节原因，基于SFINAE特征的一般方法在实践中可能会变得复杂。可以通过定义一个特征来说明这一点，该特征可以确定类型是否可以转换——若期望的是某个基类或其派生类。IsConvertibleT特征决定是否可以将传递的第一个类型转换为传递的第二个类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -33,7 +33,7 @@ template<typename FROM, typename TO>
 constexpr bool isConvertible = IsConvertibleT<FROM, TO>::value;
 \end{lstlisting}
 
-Here, we use the approach with function overloading, as introduced in Section 19.4.1 on page 416. That is, inside a helper class we declare two overloaded function templates named test() with different return types and declare a Type member for the base class of the resulting trait:
+这里，使用函数重载的方法，如第19.4.1节那样。在助手类内部，声明了两个名为test()的重载函数模板，其具有不同的返回类型，并为结果特征的基类声明了一个Type成员:
 
 \begin{lstlisting}[style=styleCXX]
 template<...> static std::true_type test(void*);
@@ -46,9 +46,9 @@ struct IsConvertibleT : IsConvertibleHelper<FROM, TO>::Type {
 };
 \end{lstlisting}
 
-As usual, the first test() overload is designed to match only if the requested check succeeds, while the second overload is the fallback. Thus, the goal is to make the first test() overload valid if and only if type FROM converts to type TO. To achieve this, again we give our first declaration of test a dummy (unnamed) template argument initialized with a construct that is valid if and only if the conversion is valid. This template parameter cannot be deduced, and we will not provide an explicit template argument for it. Therefore, it will be substituted, and if the substitution fails, that declaration of test() will be discarded.
+与往常一样，第一个test()重载设计为在检查成功时匹配，而第二个重载是回退。因此，目标是使第一个test()重载在当类型FROM转换为类型TO时有效。为了实现这一点，再次给出test的第一个声明，一个虚拟的(未命名的)模板参数初始化使用了构造，当转换有效时该构造才有效。这个模板参数不能推导，也不会提供显式的模板参数。因此，参数将进行替换，若替换失败，将丢弃test()的声明。
 
-Again, note that the following doesn’t work:
+注意，下面的操作是无效的:
 
 \begin{lstlisting}[style=styleCXX]
 static void aux(TO);
@@ -56,9 +56,9 @@ template<typename = decltype(aux(std::declval<FROM>()))>
 	static char test(void*);
 \end{lstlisting}
 
-Here, FROM and TO are completely determined when this member function template is parsed, and therefore a pair of types for which the conversion is not valid (e.g., double* and int*) will trigger an error right away, before any call to test() (and therefore outside any SFINAE context).
+这里，当解析成员函数模时，FROM和TO是确定的，因此一对转换无效的类型(例如，double*和int*)将在调用test()前立即触发错误(因此在SFINAE之外)。
 
-For that reason, we introduce F as a specific member function template parameter
+因此，引入F作为一个特定的成员函数模板参数
 
 \begin{lstlisting}[style=styleCXX]
 static void aux(TO);
@@ -66,16 +66,16 @@ template<typename F, typename = decltype(aux(std::declval<F>()))>
 	static char test(void*);
 \end{lstlisting}
 
-and provide the FROM type as an explicit template argument in the call to test() that appears in the initialization of value:
+并在调用test()时显式地提供FROM类型作为模板参数，该参数出现在value的初始化中:
 
 \begin{lstlisting}[style=styleCXX]
 static constexpr bool value
 	= isSame<decltype(test<FROM>(nullptr)), char>;
 \end{lstlisting}
 
-Note how std::declval, introduced in Section 19.3.4 on page 415, is used to produce a value without calling any constructor. If that value is convertible to TO, the call to aux() is valid, and this declaration of test() matches. Otherwise, a SFINAE failure occurs and only the fallback declaration will match.
+如何使用std::declval来生成一个值，而不使用构造函数？若该值可转换为TO，则对aux()的调用有效，并且test()的声明匹配。否则，SFINAE将失败，并且只匹配回退声明。
 
-As a result, we can use the trait as follows:
+因此，可以这样使用该特征:
 
 \begin{lstlisting}[style=styleCXX]
 IsConvertibleT<int, int>::value // yields true
@@ -88,20 +88,20 @@ IsConvertibleT<std::string, char const*>::value // yields false
 \noindent
 \textbf{Handling Special Cases}
 
-Three cases are not yet handled correctly by IsConvertibleT:
+IsConvertibleT还未正确处理的三种情况:
 
 \begin{enumerate}
 \item
-Conversions to array types should always yield false, but in our code, the parameter of type TO in the declaration of aux() will just decay to a pointer type and therefore enable a “true” result for some FROM types.
+向数组类型的转换应该生成false，但在代码中，aux()声明中的TO类型参数会衰变为指针类型，因此对某些FROM类型启用“true”。
 
 \item
-Conversions to function types should always yield false, but just as with the array case, our implementation just treats them as the decayed type.
+函数类型的转换应该生成false，但就像数组一样，实现只将它们视为衰变类型。
 
 \item
-Conversion to (const/volatile-qualified) void types should yield true. Unfortunately, our implementation above doesn’t even successfully instantiate the case where TO is a void type because parameter types cannot have type void (and aux() is declared with such a parameter).
+转换为(const/volatile限定的)void类型应该生成true。因为参数类型不能是void类型(而且aux()是用这样参数参声明的)，所以上面的实现没有成功实例化TO是void类型的情况。
 \end{enumerate}
 
-For all these cases, we’ll need additional partial specializations. However, adding such specializations for every possible combination of const and volatile qualifiers quickly becomes unwieldy. Instead, we can add an additional template parameter to our helper class template as follows:
+对于所有这些情况，需要额外的偏特化。为每一种可能的const和volatile限定符组合添加这样的特化其实很难。不过，可以向助手类模板添加额外的模板参数，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename FROM, typename TO, bool = IsVoidT<TO>::value
@@ -119,11 +119,11 @@ struct IsConvertibleHelper<FROM,TO,false> {
 };
 \end{lstlisting}
 
-The extra Boolean template parameter ensures that for all these special cases the implementation of the primary helper trait is used. It yields false\_type if we convert to arrays or functions (because then IsVoidT<TO> is false) or if FROM is void and TO is not, but for two void types it will produce false\_type. All other cases produce a false argument for the third parameter and therefore pick up the partial specialization, which corresponds to the implementation we already discussed.
+额外的布尔模板参数，对所有这些特殊情况使用主助手特征的实现。如果转换为数组或函数(因为IsVoidT<TO>是假的)，或者FROM是void而TO不是，则生成false\_type；对于两个void类型，也将生成false\_type。其他情况都为第三个参数产生false参数，因此采用偏特化，这与已经讨论过的实现相对应。
 
-See Section 19.8.2 on page 453 for a discussion of how to implement IsArrayT and Section 19.8.3 on page 454 for a discussion of how to implement IsFunctionT.
+请参阅19.8.2节和19.8.3节来讨论如何实现IsArrayT。
 
-The C++ standard library provides a corresponding type trait std::is\_convertible<>, which is described in Section D.3.3 on page 727.
+C++标准库提供了相应的类型特征std::is\_convertible<>，在第D.3.3节中有描述。
 
 
 

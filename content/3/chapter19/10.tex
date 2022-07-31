@@ -1,24 +1,23 @@
-With C++11, type traits became an intrinsic part of the C++ standard library. They comprise more or less all type functions and type traits discussed in this chapter. However, for some of them, such as the trivial operation detection traits and as discussed std::is\_union, there are no known inlanguage solutions. Rather, the compiler provides intrinsic support for those traits. Also, compilers start to support traits even if there are in-language solutions to shorten compile time. 
+C++11中，类型特征成为C++标准库的一部分，或多或少包含了本章讨论的所有类型函数和类型特征。但对于其中的一些，比如操作检测特征和std::is\_union，没有已知的语言解决方案。相反，编译器需要为这些特性提供了内在的支持。此外，因为有缩短编译时间的解决方案，所以编译器也开始支持特征了。
 
-For this reason, if you need type traits, we recommend that you use the ones from the C++ standard library whenever available. They are all described in detail in Appendix D.
+因此，若需要类型特征，建议在可用的情况下使用C++标准库中的类型特征。它们在附录D中都有详细的描述。
 
-Note that (as discussed) some traits have potentially surprising behavior (at least for the naive programmer). In addition to the general hints we give in Section 11.2.1 on page 164 and Section D.1.2 on page 700, also consider the specific descriptions we provide in Appendix D.
+请注意(如前所述)，有些特征具有潜在的诡异行为(至少对于菜鸟开发者来说)。除了在的11.2.1节和D.1.2节中给出的一般性提示外，也要考虑在附录D中提供的具体描述。
 
-The C++ standard library also defines some policy and property traits:
+C++标准库还定义了一些策略和属性特征:
 
 \begin{itemize}
 \item 
-The class template std::char\_traits is used as a policy traits parameter by the string and I/O stream classes.
+类模板std::char\_traits可以作为字符串和I/O流类的策略特征参数。
 
 \item 
-To adapt algorithms easily to the kind of standard iterators for which they are used, a very simple std::iterator\_traits property traits template is provided (and used in standard library
-interfaces).
+为了使算法易于所使用的标准迭代器类型，提供了一个非常简单的std::iterator\_traits属性特性模板(并在标准库接口中使用)。
 
 \item 
-The template std::numeric\_limits can also be useful as a property traits template.
+模板std::numeric\_limits可以用作属性特征模板。
 
 \item 
-Lastly, memory allocation for the standard container types is handled using policy traits classes. Since C++98, the template std::allocator is provided as the standard component for this purpose. With C++11, the template std::allocator\_traits was added to be able to change the policy/behavior of allocators (switching between the classical behavior and scoped allocators; the latter could not be accommodated within the pre-C++11 framework).
+最后，标准容器类型的内存分配使用策略特征类处理。自C++98以来，模板std::allocator作为标准组件提供。C++11中，添加了模板std::allocator\_traits以能够改变分配器的策略/行为(可在经典行为和作用域分配器之间切换;后者无法在C++11之前的框架中使用)。
 \end{itemize}
 
 

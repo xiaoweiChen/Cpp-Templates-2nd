@@ -1,9 +1,9 @@
 
-Let’s finally introduce and discuss some other approaches to define traits.
+最后，介绍并讨论一些定义特征的其他方法。
 
 \subsubsubsection{19.7.1\hspace{0.2cm}If-Then-Else}
 
-In the previous section, the final definition of the PlusResultT trait had a completely different implementation depending on the result of another type trait, HasPlusT. We can formulate this ifthen-else behavior with a special type template IfThenElse that takes a Boolean nontype template parameter to select one of two type parameters:
+上一节中，根据另一种类型特征HasPlusT的结果，PlusResultT特征的最终定义是一个完全不同的实现。可以用一个特殊的类型模板IfThenElse来表达这个if-else行为，其接受一个布尔型非类型模板参数，以从两个类型参数中选择一个:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -31,7 +31,7 @@ using IfThenElse = typename IfThenElseT<COND, TrueType, FalseType>::Type;
 #endif // IFTHENELSE_HPP
 \end{lstlisting}
 
-The following example demonstrates an application of this template by defining a type function that determines the lowest-ranked integer type for a given value:
+下面的示例通过定义一个类型函数来确定给定值的最低整数类型，来演示此模板的应用:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -57,7 +57,7 @@ struct SmallestIntT {
 };
 \end{lstlisting}
 
-Note that, unlike a normal C++ if-then-else statement, the template arguments for both the “then” and “else” branches are evaluated before the selection is made, so neither branch may contain ill-formed code, or the program is likely to be ill-formed. Consider, for example, a trait that yields the corresponding unsigned type for a given signed type. There is a standard trait, std::make\_unsigned, which does this conversion, but it requires that the passed type is a signed integral type and no bool; otherwise its use results in undefined behavior (see Section D.4 on page 729). So it might be a good idea to implement a trait that yields the corresponding unsigned type if this is possible and the passed type otherwise (thus, avoiding undefined behavior if an inappropriate type is given). The naive implementation does not work:
+注意，与普通C++的if-then-else不同，"then"和"else"分支的模板参数都是在选择前求值的，因此两个分支都不可能包含格式错误的代码，或者程序可能格式错误。考虑一个特征，为给定的有符号类型生成相应的无符号类型。有一个标准特征std::make\_unsigned，可以执行这个转换，但是要求传递的类型必须是有符号的整型，并且不能是bool类型;否则，将导致未定义的行为(参见第D.4节)。可以实现特征来产生相应的无符号类型，否则直接传递的类型(若给出了不恰当的类型，就可以避免了未定义行为)可能是一个好主意。简单的实现不起任何作用:
 
 \begin{lstlisting}[style=styleCXX]
 // ERROR: undefined behavior if T is bool or no integral type:
@@ -70,13 +70,13 @@ struct UnsignedT {
 };
 \end{lstlisting}
 
-The instantiation of UnsignedT<bool> is still undefined behavior, because the compiler will still attempt to form the type from
+UnsignedT<bool>的实例化仍具有未定义行为，因为编译器仍然会试图对这个类型进行转换
 
 \begin{lstlisting}[style=styleCXX]
 typename std::make_unsigned<T>::type
 \end{lstlisting}
 
-To address this problem, we need to add an additional level of indirection, so that the IfThenElse arguments are themselves uses of type functions that wrap the result:
+为了解决这个问题，需要添加额外的间接层，以便将IfThenElse参数本身作为封装结果的类型函数使用:
 
 \begin{lstlisting}[style=styleCXX]
 // yield T when using member Type:
@@ -101,9 +101,9 @@ struct UnsignedT {
 };
 \end{lstlisting}
 
-In this definition of UnsignedT, the type arguments to IfThenElse are both instances of type functions themselves. However, the type functions are not actually evaluated before IfThenElse selects one. Instead, IfThenElse selects the type function instance (of either MakeUnsignedT or IdentityT). The ::Type then evaluates the selected type function instance to produce Type.
+UnsignedT这个定义中，IfThenElse的类型参数都是类型函数本身的实例。但在IfThenElse选择一个类型函数前，类型函数不会进行实际计算。相反，IfThenElse选择类型函数实例(MakeUnsignedT或IdentityT)。然后，::Type计算选定的Type函数实例以生成Type。
 
-It is worth emphasizing here that this relies entirely on the fact that the not-selected wrapper type in the IfThenElse construct is never fully instantiated. In particular, the following does not work:
+这完全依赖于IfThenElse构造中，未选择的包装器类型从未完全实例化。特别地，以下代码无效:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -116,18 +116,18 @@ struct UnsignedT {
 };
 \end{lstlisting}
 
-Instead, we have to apply the ::Type for MakeUnsignedT<T> later, which means that we need the IdentityT helper to also apply ::Type later for T in the else branch.
+必须在以后为MakeUnsignedT<T>添加::Type，还需要IdentityT助手在else分支中为T添加::Type。
 
-This also means that we cannot use something like
+所以，不能使用类似的东西
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 	using Identity = typename IdentityT<T>::Type;
 \end{lstlisting}
 
-in this context. We can declare such an alias template, and it may be useful elsewhere, but we cannot make effective use of it in the definition of IfThenElse because any use of Identity<T> immediately causes the full instantiation of IdentityT<T> to retrieve its Type member.
+可以声明这样一个别名模板，可能在其他地方有用，但是不能在IfThenElse的定义中使用。因为Identity<T>会立即导致IdentityT<T>的完整实例化，从而会检测其Type成员。
 
-The IfThenElseT template is available in the C++ standard library as std::conditional<> (see Section D.5 on page 732). With it, the UnsignedT trait would be defined as follows:
+IfThenElseT模板在C++标准库中可用，格式为std::conditional<>(参见第D.5节)。这样，UnsignedT特征将有如下定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -141,9 +141,9 @@ struct UnsignedT {
 };
 \end{lstlisting}
 
-\subsubsubsection{19.7.2\hspace{0.2cm}Detecting Nonthrowing Operations}
+\subsubsubsection{19.7.2\hspace{0.2cm}检测非抛出操作}
 
-It is occasionally useful to determine whether a particular operation can throw an exception. For example, a move constructor should be marked noexcept, indicating that it does not throw exceptions, whenever possible. However, whether a move constructor for a particular class throws exceptions or not often depends on whether the move constructors of its members and bases throw. For example, consider the move constructor for a simple class template Pair:
+确定某个特定操作是否会引发异常有时是有用的。例如，移动构造函数应该标记为noexcept，表明在任何情况下都不会抛出异常。然而，特定类的移动构造函数是否抛出异常，通常取决于其成员和基类的移动构造函数是否抛出异常。考虑一个简单的类模板Pair的移动构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -158,7 +158,7 @@ class Pair {
 };
 \end{lstlisting}
 
-Pair’s move constructor can throw exceptions when the move operations of either T1 or T2 can throw. Given a trait IsNothrowMoveConstructibleT, we can express this property by using a computed noexcept exception specification in Pair’s move constructor. For example:
+当T1或T2的移动操作可以抛出异常时，Pair的移动构造函数可以抛出异常。给定一个特征IsNothrowMoveConstructibleT，可以通过在Pair的移动构造函数中使用计算出来的noexcept异常规范来表示这个属性。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Pair(Pair&& other) noexcept(IsNothrowMoveConstructibleT<T1>::value &&
@@ -168,7 +168,7 @@ second(std::forward<T2>(other.second))
 { }
 \end{lstlisting}
 
-All that remains is to implement the IsNothrowMoveConstructibleT trait. We can directly implement this trait using the noexcept operator, which determines whether a given expression is guaranteed to be nonthrowing:
+剩下的工作就是实现IsNothrowMoveConstructibleT特征。可以使用noexcept操作符直接实现此特征，确定给定表达式是否保证不抛出异常:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -184,13 +184,13 @@ struct IsNothrowMoveConstructibleT
 };
 \end{lstlisting}
 
-Here, the operator version of noexcept is used, which determines whether an expression is nonthrowing. Because the result is a Boolean value, we can pass it directly to define the base class, std::bool\_constant<>, which is used to define std::true\_type and std::false\_type (see Section 19.3.3 on page 411).
+这里使用了操作符版本的noexcept，用于确定表达式是否不抛出异常。因为结果是一个布尔值，可以直接传递它来定义基类std::bool\_constant<>，可用于定义std::true\_type和std::false\_type(参见19.3.3节)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} In C++11 and C++14, we have to specify the base class as std::integral\_constant<bool,...> instead of std::bool\_constant<...>.
+\hspace*{0.75cm}C++11和C++14中，必须将基类指定为std::integral\_constant<bool,…>，而非std::bool\_constant<…>。
 \end{tcolorbox}
 
-However, this implementation should be improved because it is not SFINAE-friendly (see Section 19.4.4 on page 424): If the trait is instantiated with a type that does not have a usable move or copy constructor—making the expression T(std::declval<T\&\&>()) invalid—the entire program is ill-formed:
+因为不是SFINAE友好的(参见19.4.4节)，所以这个实现应该改进:如果特征实例化的类型没有可用的移动或复制构造函数——使得表达式T(std::declval<T\&\&>())无效——整个程序是病态的:
 
 \begin{lstlisting}[style=styleCXX]
 lass E {
@@ -201,9 +201,9 @@ lass E {
 std::cout << IsNothrowMoveConstructibleT<E>::value; // compile-time ERROR
 \end{lstlisting}
 
-Instead of aborting the compilation, the type trait should yield a value of false.
+类型特征应该产生一个false值，而不是终止编译。
 
-As discussed in Section 19.4.4 on page 424, we have to check whether the expression computing the result is valid before it is evaluated. Here, we have to find out whether move construction is valid before checking whether it is noexcept. Thus, we revise the first version of the trait by adding a template parameter that defaults to void and a partial that uses std::void\_t for that parameter with an argument that is valid only if move construction is valid:
+必须在计算结果的表达式求值之前检查其是否有效。这里，要先弄清楚移动构造是否有效，然后再检查是否有例外。因此，修改了特征的第一个版本，添加了一个默认为void的模板参数参和一个使用std::void\_t的局部参数，该参数只有当移动构造有效时才有效:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -227,15 +227,15 @@ struct IsNothrowMoveConstructibleT
 };
 \end{lstlisting}
 
-If the substitution of std::void\_t<...> in the partial specialization is valid, that specialization is selected, and the noexcept(...) expression in the base class specifier can safely be evaluated. Otherwise, the partial specialization is discarded without instantiating it, and the primary template is instantiated instead (producing a std::false\_type result.
+若替换偏特化中的std::void\_t<…>有效，特化版本匹配，基类说明符中的noexcept(…)表达式可以安全地求值。否则，非实例化偏特化就会丢弃，而会实例化主模板(产生std::false\_type结果)。
 
-Note that there is no way to check whether a move constructor throws without being able to call it directly. That is, it is not enough that the move constructor is public and not deleted, it also requires that the corresponding type is no abstract class (references or pointers to abstract classes work fine). For this reason, the type trait is named IsNothrowMoveConstructible instead of HasNothrowMoveConstructor. For anything else, we’d need compiler support. 
+若不能直接调用移动构造函数，就无法检查是否会抛出异常。移动构造函数是public，且不删除是不够的，还要求对应的类型不是抽象类(对抽象类的引用或指针都可以)。所以，类型特征命名为IsNothrowMoveConstructible，而不是HasNothrowMoveConstructor。对于其他情况，我们都需要编译器的支持。 
 
-The C++ standard library provides a corresponding type trait std::is\_move\_constructible<>, which is described in Section D.3.2 on page 721.
+C++标准库提供了相应的类型特征std::is\_move\_constructible<>，在第D.3.2节中描述。
 
-\subsubsubsection{19.7.3\hspace{0.2cm}Traits Convenience}
+\subsubsubsection{19.7.3\hspace{0.2cm}特征的便利性}
 
-One common complaint with type traits is their relative verbosity, because each use of a type trait typically requires a trailing ::Type and, in a dependent context, a leading typename keyword, both of which are boilerplate. When multiple type traits are composed, this can force some awkward formatting, as in our running example of the array operator+, if we would implement it correctly, ensuring that no constant or reference type is returned:
+对于类型特征的常见抱怨是它们非常冗长，因为类型特征的每次使用通常需要尾随::type，并在上下文中需要前置typename关键字，两者都是样板。当组合多个类型特征时，这可能会导致一些尴尬的格式化，比如在运行的数组加法操作符的例子中，若正确地实现它，确保没有返回常量或引用类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -249,13 +249,13 @@ Array<
 operator+ (Array<T1> const&, Array<T2> const&);
 \end{lstlisting}
 
-By using alias templates and variable templates, we can make the usage of the traits, yielding types or values respectively more convenient. However, note that in some contexts these shortcuts are not usable, and we have to use the original class template instead. We already discussed one such situation in our MemberPointerToIntT example, but a more general discussion follows.
+通过使用别名模板和变量模板，可以更方便地使用特征，分别生成类型或值。但请注意，这些快捷方式有时可能不可用的，这时必须使用原始的类模板。我们已经在MemberPointerToIntT示例中讨论过这样的情况，但接下来将进行更通用的讨论。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Alias Templates and Traits}
+\textbf{别名模板和特征}
 
-As introduced in Section 2.8 on page 39, alias templates offer a way to reduce verbosity. Rather than expressing a type trait as a class template with a type member Type, we can use an alias template directly. For example, the following three alias templates wrap the type traits used above:
+别名模板提供了一种减少代码冗长的方法。可以直接使用别名模板，而不是将类型特征表示为具有类型成员type的类模板。例如，以下三个别名模板包装了上面使用的类型特征:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -268,7 +268,7 @@ template<typename T1, typename T2>
 using PlusResult = typename PlusResultT<T1, T2>::Type;
 \end{lstlisting}
 
-Given these alias templates, we can simplify our operator+ declaration down to
+有了这些别名模板，可以将加法操作符简化为
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -276,34 +276,34 @@ Array<RemoveCV<RemoveReference<PlusResultT<T1, T2>>>>
 operator+ (Array<T1> const&, Array<T2> const&);
 \end{lstlisting}
 
-This second version is clearly shorter and makes the composition of the traits more obvious. Such improvements make alias templates more suitable for some uses of type traits.
+第二个版本显然更短，使特征的组成更明显。这样的改进使别名模板更适合于类型特征的某些使用。
 
-However, there are downsides to using alias templates for type traits:
+然而，对类型特征使用别名模板也有缺点:
 
 \begin{enumerate}
 \item
-Alias templates cannot be specialized (as noted in Section 16.3 on page 338), and since many of the techniques for writing traits depend on specialization, an alias template will likely need to redirect to a class template anyway.
+别名模板不能特化(如第16.3节所述)，由于许多写入特征的技术都依赖特化，别名模板无论如何都需要重定向到类模板。
 
 \item 
-Some traits are meant to be specialized by users, such as a trait that describes whether a particular addition operation is commutative, and it can be confusing to specialize the class template when most uses involve the alias template.
+有些特征是由用户特化的，例如描述特定加法操作是否可交换的特征，当大多数使用涉及别名模板时，特化类模板可能会令人困惑。
 
 \item
-The use of an alias template will always instantiate the type (e.g., the underlying class template specialization), which makes it harder to avoid instantiating traits that don’t make sense for a given type (as discussed in Section 19.7.1 on page 440).
+别名模板的使用总是会实例化该类型(例如，底层的类模板特化)，这使得避免实例化对给定类型没有意义的特征变得更加困难(如19.7.1节所讨论的)。
 \end{enumerate}
 
-Another way to express this last point, is that alias templates cannot be used with metafunction forwarding (see Section 19.3.2 on page 404).
+最后一点的另一种表达方式是，别名模板不能与元函数转发一起使用(参见19.3.2节)。
 
-Because the use of alias templates for type traits has both positive and negative aspects, we recommend using them as we have in this section and as it is done in the C++ standard library: Provide both class templates with a specific naming convention (we have chosen the T suffix and the Type type member) and alias templates with a slightly different naming convention (we dropped the T suffix), and have each alias template defined in terms of the underlying class template. This way, we can use alias templates wherever they provide clearer code, but fall back to class templates for more advanced uses.
+因为为类型特征使用别名模板既有积极的一面，也有消极的一面，所以建议像本节中，以及在C++标准库中那样使用它们:为两个类模板提供特定的命名约定(我们选择了T后缀和type类型成员)，为别名模板提供略有不同的命名约定(我们去掉了T后缀)，并根据底层类模板定义每个别名模板。通过这种方式，可以通过别名模板提供更清晰代码，但为了更高级的使用，也可以返回到类模板。
 
-Note that for historical reasons, the C++ standard library has a different convention. The type traits class templates yield a type in type and have no specific suffix (many were introduced in C++11). Corresponding alias templates (that produce the type directly) started being introduced in C++14, and were given a \_t suffix, since the unsuffixed name was already standardized (see Section D.1 on page 697).
+由于历史原因，C++标准库有不同的约定。类型特征类模板产生类型中的类型，并且没有特定的后缀(很多是在C++11中引入的)。因为没有后缀的名称已经标准化(参见D.1节)，相应的别名模板(直接产生类型)在C++14中引入，并赋予了\_t后缀。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Variable Templates and Traits}
+\textbf{可变参模板和特征}
 
-Traits returning a value require a trailing ::value (or similar member selection) to produce the result of the trait. In this case, constexpr variable templates (introduced in Section 5.6 on page 80) offer a way to reduce this verbosity.
+返回值的特征需要添加::value(或类似的成员选择)来产生特征的结果。constexpr变量模板(在第5.6节中介绍)提供了一种减少这种冗长的方法。
 
-For example, the following variable templates wrap the IsSameT trait defined in Section 19.3.3 on page 410 and the IsConvertibleT trait defined in Section 19.5 on page 428:
+例如，下面的变量模板包装了第19.3.3节定义的IsSameT特征和第19.5节定义的IsConvertibleT特征:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
@@ -313,22 +313,22 @@ template<typename FROM, typename TO>
 	constexpr bool IsConvertible = IsConvertibleT<FROM, TO>::value;
 \end{lstlisting}
 
-Now we can simply write
+现在，可以将代码简化为
 
 \begin{lstlisting}[style=styleCXX]
 if (IsSame<T,int> || IsConvertible<T,char>) ...
 \end{lstlisting}
 
-instead of
+从而替代原始的使用方式
 
 \begin{lstlisting}[style=styleCXX]
 if (IsSameT<T,int>::value || IsConvertibleT<T,char>::value) ...
 \end{lstlisting}
 
-Again, for historical reasons, the C++ standard library has a different convention. The traits class templates producing a result in value have no specific suffix, and many of them were introduced in the C++11 standard. The corresponding variable templates that directly produce the resulting value were introduced in C++17 with a \_v suffix (see Section D.1 on page 697).
+由于历史原因，C++标准库有不同的约定。产生值结果的特征类模板没有特定的后缀，它们中的许多在C++11标准中引入。直接产生结果值的相应变量模板在C++17中使用了\_v后缀(参见D.1节)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The C++ standardization committee is further bound by a long-standing tradition that all standard names consist of lowercase characters and optional underscores to separate them. That is, a name like isSame or IsSame is unlikely to ever be seriously considered for standardization (except for concepts, where this spelling style will be used).
+\hspace*{0.75cm}C++标准化委员会受到长期存在的传统约束，即所有标准名称都由小写字符和可选的下划线分隔。也就是说，像isSame或isSame这样的名称不太可能加入标准中(使用这种拼写风格的概念除外)。
 \end{tcolorbox}
 
 

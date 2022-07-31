@@ -1,17 +1,17 @@
 
-So far, our examples of traits templates have been used to determine properties of template parameters: what sort of type they represent, the result type of an operator applied to values of that type, and so forth. Such traits are called property traits.
+特征模板示例已经用于确定模板参数的属性:表示什么类型，应用于该类型值的操作符的结果类型等。这样的特征称为属性特征。
 
-In contrast, some traits define how some types should be treated. We call them policy traits. This is reminiscent of the previously discussed concept of policy classes (and we already pointed out that the distinction between traits and policies is not entirely clear), but policy traits tend to be unique properties associated with a template parameter (whereas policy classes are usually independent of other template parameters).
+一些特征定义了某些类型应该如何对待，称之为策略特征。这让人想起了前面讨论的策略类的概念(特征和策略之间的区别并不完全清晰)，但是策略特征往往是与模板参数相关联的唯一属性(而策略类通常独立于其他模板参数)。
 
-Although property traits can often be implemented as type functions, policy traits usually encapsulate the policy in member functions. To illustrate this notion, let’s look at a type function that defines a policy for passing read-only parameters.
+虽然属性特征通常可以作为类型函数实现，但策略特征通常将策略封装在成员函数中。为了说明，让我们来看一个类型函数，它定义了传递只读参数的策略。
 
-\subsubsubsection{19.9.1\hspace{0.2cm}Read-Only Parameter Types}
+\subsubsubsection{19.9.1\hspace{0.2cm}只读参数类型}
 
-In C and C++, function call arguments are passed by value by default. This means that the values of the arguments computed by the caller are copied to locations controlled by the callee. Most programmers know that this can be costly for large structures and that for such structures it is appropriate to pass the arguments by reference-to-const (or by pointer-to-const in C). For smaller structures, the picture is not always clear, and the best mechanism from a performance point of view depends on the exact architecture for which the code is being written. This is not so critical in most cases, but sometimes even the small structures must be handled with care.
+C和C++中，函数调用参数默认按值传递。调用方计算的参数值可复制到被调用方控制的位置。大多数程序员都知道，对于大型结构来说，这样做的代价会很高，而且对于这样的结构来说，可以通过指向const的引用(或C中指向const的指针)传递参数。对于较小的结构，从性能角度来看，最好的机制取决于所编写代码的架构。大多数情况下，这并不是那么重要，但有时即使是很小的结构也必须谨慎处理。
 
-With templates, of course, things get a little more delicate: We don’t know a priori how large the type substituted for the template parameter will be. Furthermore, the decision doesn’t depend just on size: A small structure may come with an expensive copy constructor that would still justify passing read-only parameters by reference-to-const.
+对于模板，事情变得更加微妙:事先不知道替换的模板参数类型有多大。此外，这个决定不仅取决于大小:小的结构可能会附带一个昂贵的复制构造函数，它仍然可以通过引用到const来验证传递只读参数。
 
-As hinted at earlier, this problem is conveniently handled using a policy traits template that is a type function: The function maps an intended argument type T onto the optimal parameter type T or T const\&. As a first approximation, the primary template can use by-value passing for types no larger than two pointers and by reference-to-const for everything else:
+这个问题可以通过一个策略特征模板处理，该模板是一个类型函数:该函数将预期的参数类型T映射到最优参数类型T或T const\&。作为第一个近似，主模板可以对不超过两个指针的类型使用按值传递，对其他类型使用引用const传递:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -22,7 +22,7 @@ struct RParam {
 };
 \end{lstlisting}
 
-On the other hand, container types for which sizeof returns a small value may involve expensive copy constructors, so we may need many specializations and partial specializations, such as the following:
+另一方面，对于sizeof返回小值的容器类型，可能会涉及昂贵的复制构造函数，因此可能需要许多特化和偏特化，例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -31,13 +31,13 @@ struct RParam<Array<T>> {
 };
 \end{lstlisting}
 
-Because such types are common in C++, it may be safer to mark only small types with trivial copy and move constructors as by value types
+因为这类类型在C++中很常见，所以只使用简单的复制和移动构造函数作为值类型来标记小类型可能会更安全
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}A copy or move constructor is called trivial if, in effect, a call to it can be replaced by a simple copy of the underlying bytes.
+\hspace*{0.75cm}如果对复制或移动构造函数的调用实际上可以用底层字节的简单复制来替换，则将其称trivial。
 \end{tcolorbox}
 
-and then selectively add other class types when performance considerations dictate it (the std::is\_trivially\_copy\_constructible and std::is\_trivially\_move\_constructible type traits are part of the C++ standard library).
+然后有选择地添加其他类类型(std::is\_trivially\_copy\_constructible和std::is\_trivially\ move\ constructible类型特征是C++标准库的一部分)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -62,7 +62,7 @@ struct RParam {
 #endif // RPARAM_HPP
 \end{lstlisting}
 
-Either way, the policy can now be centralized in the traits template definition, and clients can exploit it to good effect. For example, let’s suppose we have two classes, with one class specifying that calling by value is better for read-only arguments:
+无论采用哪种方式，策略现在都可以集中在特征模板定义中，外部可以很好地利用它。假设有两个类，其中一个类指定通过值调用更适合只读参数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -97,7 +97,7 @@ class RParam<MyClass2> {
 };
 \end{lstlisting}
 
-Now, we can declare functions that use RParam<> for read-only arguments and call these functions:
+现在，可以声明使用RParam<>作为只读参数的函数，并调用这些函数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -122,9 +122,9 @@ int main()
 }
 \end{lstlisting}
 
-Unfortunately, there are some significant downsides to using RParam. First, the function declaration is significantly messier. Second, and perhaps more objectionable, is the fact that a function like foo() cannot be called with argument deduction because the template parameter appears only in the qualifiers of the function parameters. Call sites must therefore specify explicit template arguments.
+使用RParam有一些明显的缺点。首先，函数声明明显更混乱。其次，不能用参数推导调用foo()这样的函数，因为模板参数只出现在函数参数的限定符中。因此，调用站点必须明确指定模板参数。
 
-An unwieldy workaround for this option is the use of an inline wrapper function template that provides perfect forwarding (Section 15.6.3 on page 280), but it assumes the inline function will be elided by the compiler. For example:
+这个选项的一个笨拙的解决方法是使用内联包装器函数模板，它提供完美的转发功能(第15.6.3节)，但其假定编译器会省略内联函数。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent

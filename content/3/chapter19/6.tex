@@ -1,10 +1,9 @@
 
-Another foray into SFINAE-based traits involves creating a trait (or, rather, a set of traits) that can
-determine whether a given type T has a member of a given name X (a type or a nontype member).
+基于SFINAE的特征的另一个尝试涉及创建一个特征(或者更确切地说，一组特征)，可以确定给定的类型T是否具有给定名称X的成员(类型成员还是非类型成员)。
 
-\subsubsubsection{19.6.1\hspace{0.2cm}Detecting Member Types}
+\subsubsubsection{19.6.1\hspace{0.2cm}检测成员类型}
 
-Let’s first define a trait that can determine whether a given type T has a member type size\_type:
+首先定义一个特征，可以确定给定类型T是否有成员类型size\_type:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -28,19 +27,19 @@ struct HasSizeTypeT<T, VoidT<typename T::size_type>> : std::true_type
 };
 \end{lstlisting}
 
-Here, we use the approach to SFINAE out partial specializations introduced in Section 19.4.2 on page 420.
+使用SFINAE的方法剔除了偏特化。
 
-As usual for predicate traits, we define the general case to be derived from std::false\_type, because by default a type doesn’t have the member size\_type.
+与通常的谓词特征一样，定义从std::false\_type派生出一般情况，因为默认情况下类型没有成员size\_type。
 
-In this case, we only need one construct:
+本例中，只需要一个构造:
 
 \begin{lstlisting}[style=styleCXX]
 typename T::size_type
 \end{lstlisting}
 
-This construct is valid if and only if type T has a member type size\_type, which is exactly what we are trying to determine. If, for a specific T, the construct is invalid (i.e., type T has no member type size\_type), SFINAE causes the partial specialization to be discarded, and we fall back to the primary template. Otherwise, the partial specialization is valid and preferred.
+当类型T具有成员类型size\_type时，该构造有效，这是我们试图确定的。如果对于特定的T，构造无效(类型T没有成员类型size\_type)， SFINAE会丢弃偏特化，会返回到主模板。否则，偏特化有效，并且是首选。
 
-We can use the trait as follows:
+可以这样使用这个特征:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << HasSizeTypeT<int>::value; // false
@@ -50,13 +49,13 @@ struct CX {
 std::cout << HasSizeType<CX>::value; // true
 \end{lstlisting}
 
-Note that if the member type size\_type is private, HasSizeTypeT yields false because our traits templates have no special access to their argument type, and therefore typename T::size\_type is invalid (i.e., triggers SFINAE). In other words, the trait tests whether we have an accessible member type size\_type.
+若成员类型size\_type私有，HasSizeTypeT会产生false，因为特征模板没有对参数类型的特殊访问，因此typename T::size\_type无效(即，触发SFINAE)。换句话说，特征会测试是否有可访问的成员类型size\_type。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Dealing with Reference Types}
+\textbf{处理引用类型}
 
-As programmers, we are familiar with the surprises that can arise “on the edges” of the domains we consider. With a traits template like HasSizeTypeT, interesting issues can arise with reference types. For example, while the following works fine:
+作为开发者，我们在考虑领域“边缘”可能会出现的问题。对于像HasSizeTypeT这样的特征模板，引用类型可能会产生一些问题。例如，下面的代码工作很好:
 
 \begin{lstlisting}[style=styleCXX]
 struct CXR {
@@ -65,14 +64,14 @@ struct CXR {
 std::cout << HasSizeTypeT<CXR>::value; // OK: prints true
 \end{lstlisting}
 
-the following fails:
+以下代码会失败:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << HasSizeTypeT<CX&>::value; // OOPS: prints false
 std::cout << HasSizeTypeT<CXR&>::value; // OOPS: prints false
 \end{lstlisting}
 
-and that is potentially surprising. It is true that a reference type has not members per se, but whenever we use references, the resulting expressions have the underlying type, and so perhaps it would be preferable to consider the underlying type in that case. Here, that could be achieved by using our earlier RemoveReference trait in the partial specialization of HasSizeTypeT:
+这就很神奇。确实，引用类型本身没有成员，但每当使用引用时，得到的表达式都有底层类型，因此考虑底层类型可能会更好。可以通过在HasSizeTypeT的偏特化中使用之前的RemoveReference特征来实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -83,9 +82,9 @@ struct HasSizeTypeT<T, VoidT<RemoveReference<T>::size_type>>
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Injected Class Names}
+\textbf{注入的类名}
 
-It’s also worth noting that our traits technique to detect member types will also produce a true value for injected class names (see Section 13.2.3 on page 221). For example:
+用来检测成员类型的特征也会为注入的类名生成一个真实值(参见第13.2.3节)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 struct size_type {
@@ -98,21 +97,21 @@ static_assert(HasSizeTypeT<Sizeable>::value,
 			"Compiler bug: Injected class name missing");
 \end{lstlisting}
 
-The latter static assertion succeeds because size\_type introduces its own name as a member type, and that name is inherited. If it didn’t succeed, we would have found a defect in the compiler.
+因为size\_type引入自己的名称作为成员类型，并且继承该名称，所以后一个静态断言成功。如果没有成功，这就是编译器的一个缺陷。
 
-\subsubsubsection{19.6.2\hspace{0.2cm}Detecting Arbitrary Member Types}
+\subsubsubsection{19.6.2\hspace{0.2cm}检测成员类型}
 
-Defining a trait such as HasSizeTypeT raises the question of how to parameterize the trait to be able to check for any member type name.
+定义像HasSizeTypeT这样的特征会引发一个问题，即如何将特征参数化，以便能够检查成员类型名。
 
-Unfortunately, this can currently be achieved only via macros, because there is no language mechanism to describe a “potential” name.
+目前只能通过宏来实现，因为没有语言机制来描述“这种”名称。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}At the time of this writing, the C++ standardization committee is exploring ways to “reflect” various program entities (like class types and their members) in ways that the program can explore. See Section 17.9 on page 363.
+\hspace*{0.75cm}在撰写本文时，C++标准化委员会正在探索以程序可以探索的方式“反映”各种程序实体(如类类型及其成员)的方法。参见第17.9节。
 \end{tcolorbox}
 
-The closest we can get for the moment without using macros is to use generic lambdas, as illustrated in Section 19.6.4 on page 438. 
+目前，在不使用宏的情况下，得到的最接近的结果是使用泛型Lambda，如第19.6.4节所示。
 
-The following macro would work:
+宏的例子:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -129,7 +128,7 @@ struct HasTypeT_##MemType<T, std::void_t<typename T::MemType>> \
 ✝ 
 \end{lstlisting}
 
-Each use of DEFINE\_HAS\_TYPE(MemberType) defines a new HasTypeT\_MemberType trait. For example, we can use it to detect whether a type has a value\_type or a char\_type member type as follows:
+每次使用DEFINE\_HAS\_TYPE(MemberType)都会定义一个新的HasTypeT\_MemberType特征。可以使用它来检测类型是否有value\_type或char\_type成员类型，如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -155,9 +154,9 @@ int main()
 }
 \end{lstlisting}
 
-\subsubsubsection{19.6.3\hspace{0.2cm}Detecting Nontype Members}
+\subsubsubsection{19.6.3\hspace{0.2cm}检测非类型成员}
 
-We can modify the trait to also check for data members and (single) member functions:
+可以修改特征来检查数据成员和(单个)成员函数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -174,23 +173,23 @@ struct HasMemberT_##Member<T, std::void_t<decltype(&T::Member)>> \
 : std::true_type { } // ; intentionally skipped
 \end{lstlisting}
 
-Here, we use SFINAE to disable the partial specialization when \&T::Member is not valid. For that construct to be valid, the following must be true:
+当\&T::Member无效时，使用SFINAE禁用偏特化。要使该结构有效，以下条件必须为真:
 
 \begin{itemize}
 \item
-Member must unambiguously identify a member of T (e.g., it cannot be an overloaded member function name, or the name of multiple inherited members of the same name),
+成员必须明确地标识T的成员(例如，不能是重载的成员函数名，或同名的多个继承成员的名称)，
 
 \item
-The member must be accessible,
+成员必须可访问，
 
 \item
-The member must be a nontype, nonenumerator member (otherwise the prefix \& would be invalid), and
+成员必须是非类型、非枚举成员(否则前缀\&将无效)，
 
 \item
-If T::Member is a static data member, its type must not provide an operator\& that makes \&T::Member invalid (e.g., by making that operator inaccessible).
+若T::Member是静态数据成员，其类型不能提供使\&T::Member无效的操作符\&(例如，使该操作符不可访问)。
 \end{itemize}
 
-We can use the template as follows:
+可以这样使用模板:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -216,22 +215,22 @@ int main()
 }
 \end{lstlisting}
 
-It would not be difficult to modify the partial specialization to exclude cases where \&T::Member is not a pointer-to-member type (which amounts to excluding static data members). Similarly, a pointerto-member function could be excluded or required to limit the trait to data members or member functions.
+修改偏特化，以排除\&T::Member不是指向成员类型指针，这并不困难(相当于排除静态数据成员)。类似地，可以排除或要求使用指针成员函数来将特征限制为数据成员或成员函数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Detecting Member Functions}
+\textbf{检测成员函数}
 
-Note that the HasMember trait only checks whether a single member with the corresponding name exists. The trait also will fail if two members exists, which might happen if we check for overloaded member functions. For example:
+注意，HasMember特征只检查是否存在一个具有相应名称的成员。如果存在两个成员，特征也会失败，如果检查重载的成员函数，就可能发生这种情况。例如:
 
 \begin{lstlisting}[style=styleCXX]
 DEFINE_HAS_MEMBER(begin);
 std::cout << HasMemberT_begin<std::vector<int>>::value; // false
 \end{lstlisting}
 
-However, as explained in Section 8.4.1 on page 133, the SFINAE principle protects against attempts to create both invalid types and expressions in a function template declaration, allowing the overloading technique above to extend to testing whether arbitrary expressions are well-formed.
+然而，SFINAE原则防止在函数模板声明中同时，创建无效类型和表达式，允许上面的重载扩展到测试表达式是否定义良好。
 
-That is, we can simply check whether we can call a function of interest in a specific way and that can succeed even if the function is overloaded. As with the IsConvertibleT trait in Section 19.5 on page 428, the trick is to formulate the expression that checks whether we can call begin() inside a decltype expression for the default value of an additional function template parameter:
+检查是否可以以特定的方式调用感兴趣的函数，并且即使函数重载也能成功调用。与第19.5节中的IsConvertibleT特征一样，技巧在于构造表达式来检查是否可以在decltype表达式中调用begin()来获取函数模板参数的默认值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -252,23 +251,23 @@ struct HasBeginT<T, std::void_t<decltype(std::declval<T>().begin())>>
 };
 \end{lstlisting}
 
-Here, we use
+这里，我们使用
 
 \begin{lstlisting}[style=styleCXX]
 decltype(std::declval<T>().begin())
 \end{lstlisting}
 
-to test whether, given a value/object of type T (using std::declval to avoid any constructor being required), calling a member begin() is valid.
+测试给定一个T类型的值/对象(使用std::declval来避免使用构造函数)，调用成员begin()是否有效。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Except that decltype(call-expression) does not require a nonreference, non-void return type to be complete, unlike call expressions in other contexts. Using decltype(std::declval<T>().begin(), 0) instead does add the requirement that the return type of the call is complete, because the returned value is no longer the result of the decltype operand.
+\hspace*{0.75cm}除了decltype(调用表达式)不需要一个非引用、非void的返回类型作为完整的返回类型，这与其他表达式不同。而使用decltype(std::declval<T>().begin(), 0)，因为返回的值不再是decltype操作数的结果，所以要求调用的返回类型完整。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Detecting Other Expressions}
+\textbf{检测其他表达式}
 
-We can use the technique above for other kinds of expressions and even combine multiple expressions. For example, we can test whether, given types T1 and T2, there is a suitable < operator defined for values of these types:
+可以将上述技术用于其他类型的表达式，甚至组合多个表达式。例如，可以测试给定类型T1和T2，是否为这些类型的值定义了小于操作符:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -292,19 +291,19 @@ struct HasLessT<T1, T2, std::void_t<decltype(std::declval<T1>()
 };
 \end{lstlisting}
 
-As always, the challenge is to define a valid expression for the condition to check and use decltype to place it in a SFINAE context, where it will cause a fallback to the primary template if the expression isn’t valid:
+这里的挑战在于为条件检查定义一个有效的表达式，并使用decltype将其放置在SFINAE中，如果表达式无效，则会导致回退到主模板:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(std::declval<T1>() < std::declval<T2>())
 \end{lstlisting}
 
-Traits that detect valid expressions in this manner are fairly robust: They will evaluate true only when the expression is well-formed and will correctly return false when the < operator is ambiguous, deleted, or inaccessible.
+以这种方式检测有效表达式的特征相当健壮:当表达式定义良好时，才会计算为true，当小于操作符不明确、删除或不可访问时，会正确地返回false。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Prior to C++11’s expansion of SFINAE to cover arbitrary invalid expressions, the techniques for detecting the validity of specific expressions centered on introducing a new overload for the function being tested (e.g., <) that had an overly permissive signature and a strangely sized return type to behave as a fallback case. However, such approaches were prone to ambiguities and caused errors due to access control violations.
+\hspace*{0.75cm}C++11扩展SFINAE以覆盖无效表达式前，检测特定表达式有效性的技术集中于为测试函数引入新的重载(例如，小于操作符)，该重载具有过于宽松的签名和一个大小怪异的返回类型，以作为一个备用案例。然而，这种方法容易产生歧义，并会由于违反访问控制，而导致错误。
 \end{tcolorbox}
 
-We can use the trait as follows:
+可以这样使用这个特征:
 
 \begin{lstlisting}[style=styleCXX]
 HasLessT<int, char>::value // yields true
@@ -314,7 +313,7 @@ HasLessT<std::string, char*>::value // yields true
 HasLessT<std::complex<double>, std::complex<double>>::value // yields false
 \end{lstlisting}
 
-As introduced in Section 2.3.1 on page 30, we can use this trait to require that a template parameter T supports operator <:
+可以使用这个特征要求模板形参T支持小于操作符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -326,7 +325,7 @@ class C
 };
 \end{lstlisting}
 
-Note that, due to the nature of std::void\_t, we can combine multiple constraints in a trait:
+由于std::void\_t的性质，可以在一个特征中组合多个约束:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -351,13 +350,13 @@ struct HasVariousT<T, std::void_t<decltype(std::declval<T>().begin()),
 };
 \end{lstlisting}
 
-Traits that detect the validity of a specific syntax are quite powerful, allowing a template to customize its behavior based on the presence or absence of a particular operation. These traits will be used again both as part of the definition of SFINAE-friendly traits (Section 19.4.4 on page 424) and to aid in overloading based on type properties (Chapter 20).
+检测特定语法有效性的特性非常强大，允许模板根据特定操作的存在或不存在来定制行为。这些特征将再次作为SFINAE友好特征的一部分(第19.4.4节)和协助基于类型属性的重载(第20章)。
 
-\subsubsubsection{19.6.4\hspace{0.2cm}Using Generic Lambdas to Detect Members}
+\subsubsubsection{19.6.4\hspace{0.2cm}使用泛型Lambdas检测成员}
 
-The isValid lambda, introduced in Section 19.4.3 on page 421, provides a more compact technique to define traits that check for members, helping is to avoid the use of macros to handle members if arbitrary names.
+在第19.4.3节中介绍的isValid Lambda提供了一种更紧凑的技术来检查成员的特征，有助于避免使用宏来处理成员名称。
 
-The following example illustrates how to define traits checking whether a data or type member such as first or size\_type exists or whether operator< is defined for two objects of different types:
+下面的例子说明了如何定义特征，检查数据成员或类型成员(如first或size\_type)是否存在，或者是否为两个不同类型的对象定义了小于操作符:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -407,9 +406,9 @@ int main()
 }
 \end{lstlisting}
 
-Note again that hasSizeType uses std::decay to remove the references from the passed x because you can’t access a type member from a reference. If you skip that, the traits will always yield false because the second overload of isValidImpl<>() is used.
+因为不能从引用中访问类型成员，所以hasSizeType使用std::decay从传递的x中移除了引用。如果跳过该步骤，因为使用了isValidImpl<>()的第二次重载，所以特征将总生成false。
 
-To be able to use the common generic syntax, taking types as template parameters, we can again define additional helpers. For example:
+为了能够使用通用泛型语法，将类型作为模板参数，可以再次定义额外的协助程序。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -460,20 +459,20 @@ int main()
 }
 \end{lstlisting}
 
-Now
+现在
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 using HasFirstT = decltype(hasFirst(std::declval<T>()));
 \end{lstlisting}
 
-allows us to call
+允许调用
 
 \begin{lstlisting}[style=styleCXX]
 HasFirstT<std::pair<int,int>>::value
 \end{lstlisting}
 
-which results in the call of hasFirst for a pair of two ints, which is evaluated as described above.
+将调用hasFirst来获取一对两个整型数，其计算方法如上所述。
 
 
 

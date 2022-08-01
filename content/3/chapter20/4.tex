@@ -1,5 +1,5 @@
 
-Class template partial specializations can be used to provide alternate, specialized implementations of a class template for specific template arguments, much like we used overloading for function templates. And, like overloaded function templates, it can make sense to differentiate those partial specializations based on properties of the template arguments. Consider a generic Dictionary class template with key and value types as its template parameters. A simple (but inefficient) Dictionary can be implemented so long as the key type provides just an equality operator:
+类模板偏特化可用于为特定模板参数提供类模板的特化实现，就像我们为函数模板使用重载一样。而且，与重载函数模板一样，可以根据模板参数的属性区分偏特化。考虑使用键值类型作为模板参数的泛型Dictionary类模板。只要键类型只提供相等操作符，就可以实现一个简单(但效率低)的Dictionary:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Key, typename Value>
@@ -25,11 +25,11 @@ class Dictionary
 };
 \end{lstlisting}
 
-If the key type supports a < operator, we can provide a more efficient implementation based on the standard library’s map container. Similarly, if the key type supports hashing operations, we can provide an even more efficient implementation based on the standard library’s unordered\_map.
+如果键类型支持小于操作符，则可以基于标准库的map容器提供更有效的实现。类似地，若键类型支持哈希操作，可以使用标准库的unordered\_map。
 
-\subsubsubsection{20.4.1\hspace{0.2cm}Enabling/Disabling Class Templates}
+\subsubsubsection{20.4.1\hspace{0.2cm}启用/禁用类模板}
 
-The way to enable/disable different implementations of class templates is to use enabled/disabled partial specializations of class templates. To use EnableIf with class template partial specializations, we first introduce an unnamed, defaulted template parameter to Dictionary:
+启用/禁用类模板的不同实现的方法是使用启用/禁用类模板的偏专门化。要在类模板偏特化中使用EnableIf，首先向Dictionary引入一个未命名的默认模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Key, typename Value, typename = void>
@@ -39,7 +39,7 @@ class Dictionary
 };
 \end{lstlisting}
 
-This new template parameter serves as an anchor for EnableIf, which now can be embedded in the template argument list of the partial specialization for the map version of the Dictionary:
+这个新的模板参数作为EnableIf的锚，可以嵌入到Dictionary的map版本的偏特化模板参数列表中:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Key, typename Value>
@@ -56,7 +56,7 @@ class Dictionary<Key, Value,
 };
 \end{lstlisting}
 
-Unlike with overloaded function templates, we don’t need to disable any condition on the primary template, because any partial specialization takes precedence over the primary template. However, when we add another implementation for keys with a hashing operation, we need to ensure that the conditions on the partial specializations are mutually exclusive:
+与重载函数模板不同，这里不需要在主模板上禁用条件，因为偏特化都优先于主模板。然而，当使用哈希操作添加另一个键实现时，需要确保偏特化条件互斥:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Key, typename Value, typename = void>
@@ -86,9 +86,9 @@ EnableIf<HasHash<Key>>>
 };
 \end{lstlisting}
 
-\subsubsubsection{20.4.2\hspace{0.2cm}Tag Dispatching for Class Templates}
+\subsubsubsection{20.4.2\hspace{0.2cm}类模板的标签调度}
 
-Tag dispatching, too, can be used to select among class template partial specializations. To illustrate, we define a function object type Advance<Iterator> akin to the advanceIter() algorithm used in earlier sections, which advances an iterator by some number of steps. We provide both the general implementation (for input iterators) as well as specialized implementations for bidirectional and random access iterators, relying on an auxiliary trait BestMatchInSet (described below) to pick the best match for the iterator’s category tag:
+标签调度也可以用于在类模板偏特化之间进行选择。为了说明这一点，我们定义了一个函数对象类型Advance<Iterator>，类似于前面章节中使用的advanceIter()算法，将迭代器向前推进若干步。我们提供了通用实现(用于输入迭代器)，以及双向和随机访问迭代器的专用实现，依赖于一个辅助特征BestMatchInSet(如下所述)来为迭代器的类别标签选择最佳匹配:
 
 \begin{lstlisting}[style=styleCXX]
 // primary template (intentionally undefined):
@@ -157,7 +157,7 @@ class Advance<Iterator, std::random_access_iterator_tag>
 }
 \end{lstlisting}
 
-This formulation is quite similar to that of tag dispatching for function templates. However, the challenge is in writing the trait BestMatchInSet, which intends to determine which is the most closely matching tag (of the input, bidirectional, and random access iterator tags) for the given iterator. In essence, this trait is intended to tell us which of the following overloads would be picked given a value of the iterator’s category tag and to report its parameter type:
+表达式与函数模板的标签调度非常相似。然而，问题在于编写特征BestMatchInSet，该特征要确定给定迭代器的(输入、双向和随机访问迭代器标签)最匹配的标签。这个特征说明，给定迭代器的category标签的值，将选择下列哪个重载，并报告其参数类型:
 
 \begin{lstlisting}[style=styleCXX]
 void f(std::input_iterator_tag);
@@ -165,7 +165,7 @@ void f(std::bidirectional_iterator_tag);
 void f(std::random_access_iterator_tag);
 \end{lstlisting}
 
-The easiest way to emulate overload resolution is to actually use overload resolution, as follows:
+模拟重载解析最简单的方法是使用重载解析，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 // construct a set of match() overloads for the types in Types...:
@@ -195,19 +195,19 @@ template<typename T, typename... Types>
 using BestMatchInSet = typename BestMatchInSetT<T, Types...>::Type;
 \end{lstlisting}
 
-The MatchOverloads template uses recursive inheritance to declare a match() function with each type in the input set of Types. Each instantiation of the recursive MatchOverloads partial specialization introduces a new match() function for the next type in the list. It then employs a using declaration to pull in the match() function(s) defined in its base class, which handles the remaining types in the list. When applied recursively, the result is a complete set of match() overloads corresponding to the given types, each of which returns its parameter type. The BestMatchInSetT template then passes a T object to this set of overloaded match() functions and produces the return type of the selected (best) match() function.
+MatchOverloads模板使用递归继承来为Types输入集中的每个类型声明一个match()函数。递归match重载偏特化的每次实例化，都会为列表中的下一个类型引入一个新的match()函数。然后，使用using声明引入在其基类中定义的match()函数，该函数处理列表中的其余类型。当应用递归时，结果是一组对应于给定类型的match()重载，每个重载返回其参数类型。BestMatchInSetT模板然后将一个T对象传递给这组重载match()函数，并生成所选(最佳)match()函数的返回类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++17, one can eliminate the recursion with pack expansions in the base class list and in a using declaration (Section 4.4.5 on page 65). We demonstrate this technique in Section 26.4 on page 611.
+\hspace*{0.75cm}C++17中，可以在基类列表和using声明中使用包扩展来消除递归(第4.4.5节)。将在第26.4节演示这种技术。
 \end{tcolorbox}
 
-If none of the functions matches, the voidreturning basis case (which uses an ellipsis to capture any argument) indicates failure.
+如果两个函数都不匹配，则返回void(使用省略号来捕获参数)表示失败。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}It would be slightly better to provide no result in the case of failure, to make this a SFINAE-friendly trait (see Section 19.4.4 on page 424). Moreover, a robust implementation would wrap the return type in something like Identity, because there are some types—such as array and function types—that can be parameter types but not return types. We omit these improvements for the sake of brevity and readability.
+\hspace*{0.75cm}失败的情况下，不提供结果会更好一些，使其成为SFINAE友好特征(参见第19.4.4节)。此外，健壮的实现将返回类型包装在类似Identity的东西中，因为有些类型(如数组和函数类型)可以是参数类型，但不能是返回类型。为了简洁和可读性，省略了这些改进。
 \end{tcolorbox}
 
-To summarize, BestMatchInSetT translates a function-overloading result into a trait and makes it relatively easy to use tag dispatching to select among class template partial specializations.
+总而言之，BestMatchInSetT将函数重载结果转换为特征，并使标签调度在类模板偏特化间的选择，变得相对容易。
 
 
 

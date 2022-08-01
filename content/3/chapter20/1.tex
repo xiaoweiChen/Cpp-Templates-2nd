@@ -1,5 +1,5 @@
 
-One of the common motivations behind overloading of function templates is to provide more specialized versions of an algorithm based on knowledge of the types involved. Consider a simple swap() operation to exchange two values:
+函数模板重载的一个常见动机是，基于所涉及的类型知识提供算法的更特化版本。使用简单的swap()来交换两个值:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -11,7 +11,7 @@ void swap(T& x, T& y)
 }
 \end{lstlisting}
 
-This implementation involves three copy operations. For some types, however, we can provide a more efficient swap() operation, such as for an Array<T> that stores its data as a pointer to the array contents and a length:
+这个实现涉及三个复制操作。对于某些类型，可以提供更有效的swap()操作，例如Array<T>将其数据存储为指向数组内容和长度的指针:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -22,19 +22,19 @@ void swap(Array<T>& x, Array<T>& y)
 }
 \end{lstlisting}
 
-Both implementations of swap() will correctly exchange the contents of two Array<T> objects. However, the latter implementation is more efficient, because it makes use of additional properties of an Array<T> (specifically, knowledge of ptr and len and their respective roles) that are not available for an arbitrary type.
+swap()的两个实现都将交换两个Array<T>对象的内容。但是，后一种实现更高效，因为它使用了Array<T>的属性(特别是ptr和len及其各种成员)，而这些属性对于其他类型不可用。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}An better option for swap(), specifically, is to use std::move() to avoid copies in the primary template. However, the alternative presented here is more broadly applicable.
+\hspace*{0.75cm}swap()的一个更好的选择是使用std::move()来避免在主模板中进行复制。然而，这里提出的替代方案适用范围更广。
 \end{tcolorbox}
 
-The latter function template is therefore (conceptually) more specialized than the former, because it performs the same operation for a subset of the types accepted by the former function template. Fortunately, the second function template is also more specialized based on the partial ordering rules for function templates (see Section 16.2.2 on page 330), so the compiler will pick the more specialized (and, therefore, more efficient) function template when it is applicable (i.e., for Array<T> arguments) and fall back to the more general (potentially less efficient) algorithm when the more specialized version is not applicable.
+因此，后一个函数模板(在概念上)比前一个更特化，因为前一个函数模板接受的类型子集执行相同的操作。基于函数模板的部分排序规则，第二个函数模板也更加特化了(参见16.2.2节)，因此编译器将选择更特化(因此更高效)的函数模板(例如，Array<T>参数)，而当更特化的版本不适用时，会回退到更通用(可能更低效)的算法。
 
-The design and optimization approach of introducing more specialized variants of a generic algorithm is called algorithm specialization. The more specialized variants apply to a subset of the valid inputs for the generic algorithm, identifying this subset based on the specific types or properties of the types, and are typically more efficient than the most general implementation of that generic algorithm.
+为通用算法引入更特化的设计和优化方法称为算法特化。更特化的版本应用于泛型算法的有效输入子集，根据特定的类型或类型的属性可以识别这个子集，其通常比泛型算法的一般实现更有效。
 
-Crucial to the implementation of algorithm specialization is the property that the more specialized variants are automatically selected when they are applicable, without the caller having to be aware that those variants even exist. In our swap() example, this was accomplished by overloading the (conceptually) more specialized function template (the second swap()) with the most general function template (the first swap()), and ensuring that the more specialized function template was also more specialized based on C++’s partial ordering rules.
+对于实现算法特化至关重要的是，当有更特化的变量适用时，调用者无需了解这些变量的存在就会自动选择它们。在swap()示例中，这是通过使用通用的函数模板(第一个swap())重载(概念上)更特化的函数模板(第二个swap())来实现的，并确保更特化的函数模板根据C++的部分排序规则也更特化。
 
-Not all conceptually more specialized algorithm variants can be directly translated into function templates that provide the right partial ordering behavior. For our next example, consider the advanceIter() function (similar to std::advance() from the C++ standard library), which moves an iterator x forward by n steps. This general algorithm can operate on any input iterator:
+并不是所有概念上更特化的算法版本，都可以直接转换为提供正确的部分排序行为的函数模板。对于下一个示例，advanceIter()函数(类似于C++标准库中的std::advance())，将迭代器x向前移动n步。这个通用算法可以操作任何输入迭代器:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename InputIterator, typename Distance>
@@ -47,7 +47,7 @@ void advanceIter(InputIterator& x, Distance n)
 }
 \end{lstlisting}
 
-For a certain class of iterators—those that provide random access operations—we can provide a more efficient implementation:
+对于提供随机访问操作的特定迭代器类，可以提供更高效的实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename RandomAccessIterator, typename Distance>
@@ -56,7 +56,7 @@ void advanceIter(RandomAccessIterator& x, Distance n) {
 }
 \end{lstlisting}
 
-Unfortunately, defining both of these function templates will result in a compiler error, because—as noted in the introduction—function templates that differ only based on their template parameter names are not overloadable. The remainder of this chapter will discuss techniques that emulate the desired effect of overloading these function templates.
+定义这两个函数模板将导致编译器报错，因为仅根据模板参数名称，而不同的函数模板不可重载。本章的其余部分将讨论模拟重载这些函数模板所需的技术。
 
 
 

@@ -1,8 +1,8 @@
-The essence of the EnableIf technique is to enable a particular template or partial specialization only when the template arguments meet some specific criteria. For example, the most efficient form of the advanceIter() algorithm checks that the iterator argument’s category is convertible to std::random\_access\_iterator\_tag, which implies that the  various random-access iterator operations will be available to the algorithm.
+EnableIf本质是只在模板参数满足某些特定条件时，启用特化或偏特化模板。例如，advanceIter()算法有效的形式是检查迭代器参数类别是否可转换为std::random\_access\_iterator\_tag，从而算法可用于各种随机访问迭代器。
 
-What if we took this notion to the extreme and encoded every operation that the template performs on its template arguments as part of the EnableIf condition? The instantiation of such a template could never fail, because template arguments that do not provide the required operations would cause a deduction failure (via EnableIf) rather than allowing the instantiation to proceed. We refer to such templates as “instantiation-safe” templates and sketch the implementation of such templates here.
+如果把这个概念发挥到极致，模板对其模板参数执行的每个操作都编码为EnableIf条件的一部分，会怎么样呢?这样，模板实例化永远不会失败，因为不提供所需操作的模板参数推导将失败(通过EnableIf)，而不是允许实例化继续进行。我们将这种模板称为“实例化安全”模板，并在这里介绍这种模板的实现。
 
-We start with a very basic template, min(), which computes the minimum of two values. We would typically implement such as a template as follows:
+我们从一个非常基本的模板min()开始，计算两个值的最小值。通常会这样实现一个模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -15,7 +15,7 @@ T const& min(T const& x, T const& y)
 }
 \end{lstlisting}
 
-This template requires the type T to have a < operator able to compare two T values (specifically, two T const lvalues) and then implicitly convert the result of that comparison to bool for use in the if statement. A trait that checks for the < operator and computes its result type is analogous to the SFINAE-friendly PlusResultT trait discussed in Section 19.4.4 on page 424, but we show the LessResultT trait here for convenience:
+该模板要求类型T具有能够使用小于操作符比较两个T值(特别是两个T const左值)，然后隐式地将比较结果转换为bool，以便在if语句中使用。检查小于操作符并计算结果类型的特征类似于在第19.4.4节讨论的SFINAE友好的PlusResultT特征，但为了方便起见，在这里先展示一下LessResultT特征:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -54,7 +54,7 @@ template<typename T1, typename T2>
 using LessResult = typename LessResultT<T1, T2>::Type;
 \end{lstlisting}
 
-This trait can then be composed with the IsConvertible trait to make min() instantiation-safe:
+这个特征可以和IsConvertible特征组合在一起，使min()实例化安全:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -75,7 +75,7 @@ min(T const& x, T const& y)
 }
 \end{lstlisting}
 
-It is instructive to try to call this min() function with various types with different < operators (or missing the operator entirely), as in the following example:
+尝试使用不同类型的小于操作符(或完全忽略操作符)来调用这个min()函数有指导意义，如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -130,7 +130,7 @@ int main()
 }
 \end{lstlisting}
 
-When compiling this program, notice that while there are errors for four of the different min() calls—for X3, X4, X6, and X7—the errors do not come from the body of min(), as they would have with the non-instantiation-safe variant. Rather, they complain that there is no suitable min() function, because the only option has been eliminated by SFINAE. Clang produces the following diagnostic:
+编译时虽然对X3、X4、X6和X7的4个不同min()调用存在错误，但这些错误并不来自min()的主体。相反，而是抱怨没有合适的min()函数，因为SFINAE已经取消了匹配的选项。Clang产生以下诊断:
 
 \begin{tcblisting}{commandshell={}}
 min.cpp:41:3: error: no matching function for call to ’min’
@@ -142,17 +142,17 @@ min(X3(), X3()); // ERROR: X3 cannot be passed to min
 min(T const& x, T const& y)
 \end{tcblisting}
 
-Thus, the EnableIf is only allowing instantiation for those template arguments that meet the requirements of the template (X1, X2, and X5), so we never get an error from the body of min(). Moreover, if we had some other overload of min() that might work for these types, overload resolution could have selected one of those instead of failing.
+因此，EnableIf只允许实例化那些满足模板要求的模板参数(X1, X2，和X5)，所以从min()函数体中不会得到错误。此外，如果有一些可能适用于这些类型的min()的其他重载，重载解析可以选择其中一个。
 
-The last type in our example, X7, illustrates some of the subtleties of implementing instantiationsafe templates. In particular, if X7 is passed to the non-instantiation-safe min(), instantiation will succeed. However, the instantiation-safe min() rejects it because BoolLike is not implicitly convertible to bool. The distinction here is particularly subtle: An explicit conversion to bool can be used implicitly in certain contexts, including in Boolean conditions for control-flow statements (if, while, for, and do), the built-in !, \&\&, and || operators, and the ternary operator ?:. In these contexts, the value is said to be contextually converted to bool.
+示例中的最后一个类型X7，演示了实现实例化安全模板的一些微妙之处。特别是，若将X7传递给非实例化安全的min()，则实例化成功。然而，实例化安全的min()不能使用，因为BoolLike不能隐式转换为bool。这里的区别特别微妙:显式转换为bool可以在某些上下文中隐式使用，包括控制流语句的布尔条件(if、while、for和do)、内置的!、\&\&和||操作符以及三元操作符?:。这些上下文中，该值可以转换为bool。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++11 introduced the notion of contextual conversion to bool along with explicit conversion operators. Together, they replace uses of the “safe bool” idiom ([KarlssonSafeBool]), which typically involves an (implicit) user-defined conversion to a pointer-to-data member. The pointer-to-data member is used because it can be treated as a bool value but doesn’t have other, unwanted conversions, such as bool being promoted to int as part of arithmetic operations. For example, BoolConvertible() + 5 is (unfortunately) well-formed code.
+\hspace*{0.75cm}C++11引入了到bool的上下文转换概念，以及显式转换操作符。它们取代了“安全bool”的习惯用法([KarlssonSafeBool])，这通常涉及到(隐式)用户定义的到指针到数据的转换。使用指向数据的指针是因为可以视为bool值，而不需要其他多余的转换，例如bool作为算术操作的一部分可以提升为int。BoolConvertible() + 5(不幸的是)是定义良好的代码。
 \end{tcolorbox}
 
-However, our insistence on having a general, implicit conversion to bool has the effect that our instantiation-safe template is overconstrained; that is, its specified requirements (in the EnableIf) are stronger than its actual requirements (what the template needs to instantiate properly). If, on the other hand, we had entirely forgotten the conversion-to-bool requirement, our min() template would have been underconstrained, and it would have allowed some template arguments that could cause an instantiation failure (such as X6).
+然而，我们坚持使用一般的、隐式的bool转换，结果导致实例化安全模板过度约束;它指定的需求(在EnableIf中)比实际需求(模板需要正确实例化的东西)更强。另一方面，如果完全忘记了转换到bool的要求，min()模板就会约束不足，会允许一些可能导致实例化失败的模板参数参与实例化(例如X6)。
 
-To fix the instantiation-safe min(), we need a trait to determine whether a type T is contextually convertible to bool. The control-flow statements are not helpful in defining this trait, because statements cannot occur within a SFINAE context, nor are the logical operations, which can be overloaded for an arbitrary type. Fortunately, the ternary operator ?: is an expression and is not overloadable, so it can be exploited to test whether a type is contextually convertible to bool:
+为了修复实例化安全的min()，需要特征来确定类型T是否在上下文中可转换为bool。控制流语句对定义特征没有帮助，因为语句不能在SFINAE中出现，逻辑操作也不能，可以为任意类型重载逻辑操作。三元操作符?:是一个表达式，并且没有重载，因此可以使用它来测试类型是否在上下文条件下可以转换为bool类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -177,7 +177,7 @@ template<typename T>
 constexpr bool IsContextualBool = IsContextualBoolT<T>::value;
 \end{lstlisting}
 
-With this new trait, we can provide an instantiation-safe min() with the correct set of requirements in the EnableIf:
+有了这个新特征，可以在EnableIf中提供一个实例化安全的min()，其包含正确的需求集:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -198,7 +198,7 @@ min(T const& x, T const& y)
 }
 \end{lstlisting}
 
-The techniques used here to make min() instantiation-safe can be extended to describe requirements for nontrivial templates by composing various requirement checks into traits that describe some class of types, such as forward iterators, and combining those traits within EnableIf. Doing so has the advantages of both better overloading behavior and the elimination of the error “novel” that compilers tend to produce while printing errors deep within a nested template instantiation. On the other hand, the error messages provided tend to lack specificity regarding which particular operation failed. Moreover, as we have shown with our small min() example, accurately determining and encoding the exact requirements of the template can be a daunting task. We explore debugging techniques that make use of these traits in Section 28.2 on page 654.
+这里用于使min()实例化安全的技术，可以扩展为描述非简单模板的需求，方法是将各种需求检查组合到描述某些类型类的特征中，比如前向迭代器，并在EnableIf中组合这些特征。这样做有两个好处，一是可以更好地重载行为，二是可以消除编译器在嵌套模板实例化中深入输出错误时，产生新奇的错误。另一方面，提供的错误消息往往缺乏关于哪个特定操作失败的特性。此外，正如用min()这个小例子所展示的那样，准确地确定和编码模板的需求，可能是一项令人生畏的任务。我们将在28.2节中探讨利用这些特性进行调试的方法。
 
 
 

@@ -1,10 +1,10 @@
-The C++ standard library provides iterator tags for input, output, forward, bidirectional, and randomaccess iterator tags, which we have used in our presentation. These iterator tags are part of the standard iterator traits (std::iterator\_traits) and the requirements placed on iterators, so they can be safely used for tag dispatching purposes.
+C++标准库为输入、输出、前向、双向和随机访问迭代器标签提供了迭代器标签，在本文中已经使用了这些标签。这些迭代器标签是标准迭代器特征(std::iterator\_traits)和放置在迭代器上的要求的一部分，所以可以安全地用于标签调度。
 
-The C++11 standard library std::enable\_if class template provides the same behavior as the EnableIfT class template presented here. The only difference is that the standard uses a lowercase member type named type rather than our uppercase Type.
+C++11标准库std::enable\_if类模板提供了与EnableIfT类模板相同的功能。唯一的区别是标准使用了名为type的小写成员类型，而不是大写类型。
 
-Algorithm specialization is used in a number of places in the C++ standard library. For example, both the std::advance() and std::distance() have several variants based on the iterator category of their iterator arguments. Most standard library implementations tend to use tag dispatching, although, more recently, some have adopted std::enable\_if to implement this algorithm specialization. Moreover, a number of C++ standard library implementations also use these techniques internally to implement algorithm specialization for various standard algorithms. For example, std::copy() can be specialized to call std::memcpy() or std::memmove() when the iterators refer to contiguous memory and their value types have trivial copy-assignment operators. Similarly, std::fill() can be optimized to call std::memset(), and various algorithms can avoid calling destructors when a type is known to have a trivial destructor. These algorithm specializations are not mandated by the C++ standard in the same way that they are for std::advance() or std::distance(), but implementers have chosen to provide them for efficiency reasons.
+C++标准库的很多地方都使用了特化算法。例如，std::advance()和std::distance()都有几个基于其迭代器参数类别的版本。尽管最近一些已经采用std::enable\_if来实现这种特化算法，但大多数标准库实现倾向于使用标签调度。此外，许多C++标准库实现也在内部使用这些技术来实现各种标准算法的特化算法。例如，std::copy()可以特化来实现std::memcpy()或std::memmove()，当迭代器指向连续的内存并且它们的值类型有普通的复制赋值操作符时。类似地，可以对std::fill()进行优化，以实现std::memset()，并且当已知类型具有普通析构函数时，各种算法可以避免调用析构函数。这些特化算法不像std::advance()或std::distance()那样由C++标准强制规定，但是实现者出于效率的原因会有选择的进行提供。
 
-As introduced in Section 8.4 on page 131, the C++ standard library also hints strongly at the required use of std::enable\_if<> or similar SFINAE-based techniques in its requirements. For example, std::vector has a constructor template to allow a vector to be built from an iterator sequence:
+正如在第8.4节中介绍的那样，C++标准库还在其要求中使用std::enable\_if<>或类似的基于SFINAE的技术。例如，std::vector有一个构造函数模板，允许从迭代器序列构建vector:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename InputIterator>
@@ -12,7 +12,7 @@ vector(InputIterator first, InputIterator second,
 		allocator_type const& alloc = allocator_type());
 \end{lstlisting}
 
-with the requirement that “if the constructor is called with a type InputIterator that does not qualify as an input iterator, then the constructor shall not participate in overload resolution” (see 23.2.3 paragraph 14 of [C++11]). This phrasing is vague enough to allow the most efficient techniques of the day to be used for the implementation, but at the time it was added to the standard, the use of std::enable\_if<> was envisioned.
+要求“如果构造函数调用的，是不符合输入迭代器条件的InputIterator类型，那么构造函数将不参与重载解析”(参见[C++11]23.2.3第14段)。这个措辞足够模糊，可以使用当时最有效的技术来实现它，在将它添加到标准中时，应该会使用std::enable\_if<>实现。
 
 
 

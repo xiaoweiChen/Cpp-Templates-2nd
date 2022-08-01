@@ -1,5 +1,5 @@
 
-Another pattern is the Curiously Recurring Template Pattern (CRTP). This oddly named pattern refers to a general class of techniques that consists of passing a derived class as a template argument to one of its own base classes. In its simplest form, C++ code for such a pattern looks as follows:
+另一个模式是奇异递归模板模式(CRTP)。这个命名奇怪的模式指的是一中通用的技术类，包括将一个派生类作为模板参数传递给自己的基类。这种模式最简单的C++代码如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Derived>
@@ -12,7 +12,7 @@ class Curious : public CuriousBase<Curious> {
 };
 \end{lstlisting}
 
-Our first outline of CRTP shows a nondependent base class: The class Curious is not a template and is therefore immune to some of the name visibility issues of dependent base classes. However, this is not an intrinsic characteristic of CRTP. Indeed, we could just as well have used the following alternative outline:
+CRTP的第一个概要展示了一个非依赖性基类:类Curious不是模板，因此不受依赖基类的一些名称可见性问题的影响。然而，这并不是CRTP的内在特征。完全可以使用以下备选方式:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Derived>
@@ -26,9 +26,9 @@ class CuriousTemplate : public CuriousBase<CuriousTemplate<T>> {
 };
 \end{lstlisting}
 
-By passing the derived class down to its base class via a template parameter, the base class can customize its own behavior to the derived class without requiring the use of virtual functions. This makes CRTP useful to factor out implementations that can only be member functions (e.g., constructor, destructors, and subscript operators) or are dependent on the derived class’s identity.
+通过模板参数将派生类向下传递给基类，基类可以自定义派生类的行为，而不需要使用虚函数。这使得CRTP可以分解出只能是成员函数(例如，构造函数、析构函数和下标操作符)或依赖于派生类标识的实现。
 
-A simple application of CRTP consists of keeping track of how many objects of a certain class type were created. This is easily achieved by incrementing an integral static data member in every constructor and decrementing it in the destructor. However, having to provide such code in every class is tedious, and implementing this functionality via a single (non-CRTP) base class would confuse the object counts for different derived classes. Instead, we can write the following template:
+CRTP简单应用包括跟踪创建了多少特定类类型的对象，这很容易通过在每个构造函数中递增一个整型静态数据成员，并在析构函数中递减来实现。但是，必须在每个类中提供这样的代码就很烦，并且通过单个(非CRTP)基类实现此功能会混淆不同派生类的对象计数。不过，可以这些编写模板:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -69,7 +69,7 @@ class ObjectCounter {
 };
 \end{lstlisting}
 
-Note that we use inline to be able to define and initialize the count member inside the class structure. Before C++17, we had to define it outside the class template:
+注意，使用内联是为了能够在类结构内部定义和初始化count成员。C++17前，必须在类模板外定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename CountedType>
@@ -84,7 +84,7 @@ template<typename CountedType>
 std::size_t ObjectCounter<CountedType>::count = 0;
 \end{lstlisting}
 
-If we want to count the number of live (i.e., not yet destroyed) objects for a certain class type, it suffices to derive the class from the ObjectCounter template. For example, we can define and use a counted string class along the following lines:
+如果想计算某个类类型的活(即未销毁)对象的数量，从ObjectCounter模板派生类就足够了。例如，可以这样定义和使用一个经过计数的字符串类:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -109,18 +109,17 @@ int main()
 }
 \end{lstlisting}
 
-\subsubsubsection{21.2.1\hspace{0.2cm}The Barton-Nackman Trick}
+\subsubsubsection{21.2.1\hspace{0.2cm}Barton-Nackman技巧(友元工厂)}
 
-In 1994, John J. Barton and Lee R. Nackman presented a template technique that they called restricted 
-template expansion (see [BartonNackman]). The technique was motivated in part by the fact that—at the time—function template overloading was severely limited
+1994年，John J. Barton和Lee R. Nackman提出了一种模板技术，他们称之为限制模板展开(参见[BartonNackman])。这种技术的部分动机是由于函数模板的重载在当时非常受限
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}It may be worthwhile to read Section 16.2 on page 326 to understand how function template overloading works in modern C++.
+\hspace*{0.75cm}为了了解函数模板重载在现代C++中的工作原理，有必要阅读第16.2节。
 \end{tcolorbox}
 
-and namespaces were not available in most compilers.
+并且在大多数编译器中无法使用命名空间。
 
-To illustrate this, suppose we have a class template Array for which we want to define the equality operator ==. One possibility is to declare the operator as a member of the class template, but this is not good practice because the first argument (binding to the this pointer) is subject to conversion rules that differ from the second argument. Because operator == is meant to be symmetrical with respect to its arguments, it is preferable to declare it as a namespace scope function. An outline of a natural approach to its implementation may look like the following:
+为了说明这一点，假设一个类模板Array，希望为其定义相等operator==。一种可能是将操作符声明为类模板的成员，但这不是很好的实践方式，因为第一个参数(绑定到this指针)要遵守与第二个参数不同的转换规则。因为operator==相对于参数对称，所以最好将其声明为命名空间作用域的函数。其实现方法大致如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -136,7 +135,7 @@ bool operator== (Array<T> const& a, Array<T> const& b)
 }
 \end{lstlisting}
 
-However, if function templates cannot be overloaded, this presents a problem: No other operator == template can be declared in that scope, and yet it is likely that such a template would be needed for other class templates. Barton and Nackman resolved this problem by defining the operator in the class as a normal friend function:
+但若函数模板不能重载，就会出现一个问题:不能在该作用域中声明其他operator==模板，而其他类模板很可能需要这样的模板。Barton和Nackman将类中的操作符定义为普通友元函数，解决了这个问题:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -151,17 +150,17 @@ class Array {
 };
 \end{lstlisting}
 
-Suppose this version of Array is instantiated for type float. The friend operator function is then declared as a result of that instantiation, but note that this function itself is not an instantiation of a function template. It is a normal nontemplate function that gets injected in the global scope as a side effect of the instantiation process. Because it is a nontemplate function, it could be overloaded with other declarations of operator == even before overloading of function templates was added to the language. Barton and Nackman called this restricted template expansion because it avoided the use of a template operator==(T, T) that applied to all types T (in other words, unrestricted expansion).
+假设这个版本的Array实例化为float类型。然后，友元操作符函数声明为该实例化的结果，但该函数本身不是函数模板的实例化，其只是一个普通的非模板函数，作为实例化过程的副作用注入到全局作用域中。因为它是非模板函数，所以即使在向语言中添加函数模板重载之前，也可以使用operator==的其他声明重载。Barton和Nackman将此称为限制模板展开，因为它避免使用适用于所有类型T(换句话说，不受限制的展开)的模板operator==(T, T)。
 
-Because
+因为
 
 \begin{lstlisting}[style=styleCXX]
 operator== (Array<T> const&, Array<T> const&)
 \end{lstlisting}
 
-is defined inside a class definition, it is implicitly considered to be an inline function, and we therefore decided to delegate the implementation to a static member function areEqual, which doesn’t need to be inline.
+是在类定义内部定义的，其隐式地认为是一个内联函数，因此我们决定将实现委托给一个不需要内联的静态成员函数areEqual。
 
-Name lookup for friend function definitions has changed since 1994, so the Barton-Nackman trick is not as useful in standard C++. At the time of its invention, friend declarations would be visible in the enclosing scope of a class template when that template was instantiated via a process called friend name injection. Standard C++ instead finds friend function declarations via argumentdependent lookup (see Section 13.2.2 on page 220 for the specific details). This means that at least one of the arguments of the function call must already have the class containing the friend function as an associated class. The friend function would not be found if the arguments were of an unrelated class type that could be converted to the class containing the friend. For example:
+自1994年以来，友元函数定义的名称查找已经发生了变化，因此Barton-Nackman技巧在标准C++中并不那么有用。在它发明的时候，友元声明在类模板的外围作用域中可见，这个模板是通过一个名为友元名称注入的过程进行实例化。标准C++通过依赖于参数的查找来查找友元函数声明(具体细节请参阅第13.2.2节)，从而函数调用的至少一个参数，必须已含友元函数作为关联类的类。如果参数类的类型不相关，可以转换为包含友元的类，则无法找到友元函数。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -190,19 +189,19 @@ int main()
 }
 \end{lstlisting}
 
-Here, the call foo(w) is valid because the function foo() is a friend declared in Wrapper<S> which is a class associated with the argument w.
+这里，foo(w)是有效的，因为函数foo()是在Wrapper<S>中声明的友元，它是一个与参数w相关联的类。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that S is also a class associated with w because it is a template argument for the type of w. The specific rules for ADL are discussed in Section 13.2.1 on page 219.
+\hspace*{0.75cm}注意，S也是一个与w相关的类，因为它是w类型的模板参数。ADL的具体规则在第13.2.1节中讨论。
 \end{tcolorbox}
 
-However, in the call foo(s), the friend declaration of function foo(Wrapper<S> const\&) is not visible because the class Wrapper<S> in which it is defined is not associated with the argument s of type S. Hence, even though there is a valid implicit conversion from type S to type Wrapper<S> (through the constructor of Wrapper<S>), this conversion is never considered because the candidate function foo() is not found in the first place. At the time Barton and Nackman invented their trick, friend name injection would have made the friend foo() visible and the call foo(s) would succeed.
+然而，在调用foo(s)中，因为定义它的类Wrapper<S>与类型S的参数s不相关，所以函数foo(Wrapper<S> const\&)的友元声明不可见。因此，即使存在有效的从类型s到类型Wrapper<S>的隐式转换(通过Wrapper<S>的构造函数)，因为候选函数foo()在第一个地方没有找到，所以这种转换从未进行考虑。在Barton和Nackman发明他们的技巧时，友元名称注入将使友元函数foo()可见，并且调用foo(s)会成功。
 
-In modern C++, the only advantages to defining a friend function in a class template over simply defining an ordinary function template are syntactic: friend function definitions have access to the private and protected members of their enclosing class and don’t need to restate all of the template parameters of enclosing class templates. However, friend function definitions can be useful when combined with the Curiously Recurring Template Pattern (CRTP), as illustrated in the operator implementations described in the following section.
+现代C++中，在类模板中定义友元函数比简单地定义普通函数模板的优势是语法:友元函数定义可以访问其外围类的私有和受保护成员，并且不需要重述外围类模板的所有模板参数。但是，友元函数定义在与CRPT结合使用时可能会更好用，如下面一节描述的操作符实现所示。
 
-\subsubsubsection{21.2.2\hspace{0.2cm}Operator Implementations}
+\subsubsubsection{21.2.2\hspace{0.2cm}操作符的实现}
 
-When implementing a class that provides overloaded operators, it is common to provide overloads for a number of different (but related) operators. For example, a class that implements the equality operator (==) will likely also implement the inequality operator (!=), and a class that implements the less-than operator (<) will likely implement the other relational operators as well (>, <=, >=). In many cases, the definition of only one of these operators is actually interesting, while the others can simply be defined in terms of that one operator. For example, the inequality operator for a class X is likely to be defined in terms of the equality operator:
+实现提供重载操作符的类时，通常会为许多不同(但相关)的操作符提供重载。例如，实现相等操作符(==)的类可能还会实现不等操作符(!=)，而实现小于操作符(<)的类，也可能实现其他关系操作符(>，<=，>=)。这些操作符中只有一个的定义是有趣的，而其他操作符可以简单地用这个操作符定义。例如，类X的不等操作符可能定义为相等操作符:
 
 \begin{lstlisting}[style=styleCXX]
 bool operator!= (X const& x1, X const& x2) {
@@ -210,7 +209,7 @@ bool operator!= (X const& x1, X const& x2) {
 }
 \end{lstlisting}
 
-Given the large number of types with similar definitions of !=, it is tempting to generalize this into a template:
+考虑到有大量具有类似!=定义的类型，很容易将其推广到模板中:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -219,9 +218,9 @@ bool operator!= (T const& x1, T const& x2) {
 }
 \end{lstlisting}
 
-In fact, the C++ standard library contains similar such definitions as part of the <utility> header. However, these definitions (for !=, >, <=, and >=) were relegated to the namespace std::rel\_ops during standardization, when it was determined that they caused problems when made available in namespace std. Indeed, having these definitions visible makes it appear that any type has an != operator (which may fail to instantiate), and that operator will always be an exact match for both of its arguments. While the first problem can be overcome through the use of SFINAE techniques (see Section 19.4 on page 416), such that this != definition will only be instantiated for types with a suitable == operator, the second problem remains: The general !=  definition above will be preferred over user-provided definitions that require, for example, a derived-to-base conversion, which may come as a surprise.
+C++标准库中也包含类似的定义，作为<utility>头文件的一部分。然而，当确定它们在命名空间std中可用时会导致问题时，这些定义(对于!=、>、<=和>=)在标准化期间降级到命名空间std::rel\_ops中。实际上，让这些定义可见会使类型看起来都有一个!=操作符(可能无法实例化)，并且该操作符对其两个参数总是精确匹配。虽然第一个问题可以通过使用SFINAE技术(请参阅第19.4节)来克服，这样!=定义将只对具有适当的==操作符的类型进行实例化，但第二个问题仍然存在:上面的!=定义将优于用户提供的定义，这些定义需要进行派生到基的转换，这就很诡异了。
 
-An alternative formulation of these operator templates based on CRTP allows classes to opt in to the general operator definitions, providing the benefits of increased code reuse without the side effects of an overly general operator:
+基于CRTP的这些操作符模板的另一种表达方式允许类选择通用操作符定义，提供了增加代码重用的优势，而没有过度通用操作符的副作用:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -251,15 +250,15 @@ int main()
 }
 \end{lstlisting}
 
-Here, we have combined CRTP with the Barton-Nackman trick. EqualityComparable<> uses CRTP to provide an operator!= for its derived class based on the derived class’s definition of operator==. It actually provides that definition via a friend function definition (the Barton-Nackman trick), which gives the two parameters to operator!= equal behavior for conversions.
+这里，结合了CRTP和Barton-Nackman技巧!EqualityComparable<>使用CRTP提供一个操作符!根据派生类对operator==的定义，为其指定派生类。实际上，通过友元函数定义(Barton-Nackman技巧)提供了该定义，将两个参数提供给operator!=转换的等价行为。
 
-CRTP can be useful when factoring behavior into a base class while retaining the identity of the eventual derived class. Along with the Barton-Nackman trick, CRTP can provide general definitions for a number of operators based on a few canonical operators. These properties have made CRTP with the Barton-Nackman trick a favorite technique for authors of C++ template libraries.
+当将行为分解到基类中同时，保留最终派生类的标识时，CRTP可能很有用。除了Barton-Nackman技巧之外，CRTP还可以基于一些规范操作符提供一些操作符的一般定义。这些特性使使用Barton-Nackman技巧的CRTP成为C++模板库作者最喜欢的技术之一。
 
-\subsubsubsection{21.2.3\hspace{0.2cm}Facades}
+\subsubsubsection{21.2.3\hspace{0.2cm}门面模式}
 
-The use of CRTP and the Barton-Nackman trick to define some operators is a convenient shortcut. We can take this idea further, such that the CRTP base class defines most or all of the public interface of a class in terms of a much smaller (but easier to implement) interface exposed by the CRTP derived class. This pattern, called the facade pattern, is particularly useful when defining new types that need to meet the requirements of some existing interface—numeric types, iterators, containers, and so on.
+使用CRTP和Barton-Nackman技巧来定义一些操作符是一种方便的快捷方式。可以进一步采用这种思想，这样CRTP基类就可以用CRTP派生类公开的一个小得多(但更容易实现)的接口来定义类的大部分或所有公共接口。这种模式称为门面模式，定义需要满足某些现有接口数字类型、迭代器、容器等要求的新类型时特别有用。
 
-To illustrate the facade pattern, we will implement a facade for iterators, which drastically simplifies the process of writing an iterator that conforms to the requirements of the standard library. The required interface for an iterator type (particularly a random access iterator) is quite large. The following skeleton for class template IteratorFacade demonstrates the requirements for an iterator interface:
+为了说明门面模式，我们将为迭代器实现一个门面模式，这将大大简化编写符合标准库要求的迭代器的过程。迭代器类型(特别是随机访问迭代器)所需的接口相当大。下面是类模板IteratorFacade的框架，演示了迭代器接口的需求:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -301,41 +300,41 @@ class IteratorFacade
 };
 \end{lstlisting}
 
-We’ve omitted some declarations for brevity, but even implementing every one of those listed for every new iterator is quite a chore. Fortunately, that interface can be distilled into a few core operations:
+简洁起见，省略了一些声明，即使实现每个新迭代器列出的所有声明，也会相当繁琐。幸运的是，该接口可以总结为几个核心操作:
 
 \begin{itemize}
 \item 
-For all iterators:
+对于所有迭代器:
 \begin{itemize}
 \item [-]
-dereference(): Access the value to which the iterator refers (typically used via operators * and ->).
+dereference():访问迭代器指向的值(通常通过操作符*和->使用)。
 
 \item [-]
-increment(): Move the iterator to refer to the next item in the sequence.
+increment():移动迭代器指向序列中的下一项。
 
 \item [-]
-equals(): Determine whether two iterators refer to the same item in a sequence.
+equals():确定两个迭代器是否指向序列中的同一项。
 \end{itemize}
 
 \item 
-For bidirectional iterators:
+双向迭代器:
 \begin{itemize}
 \item [-]
-decrement(): Move the iterator to refer to the previous item in the list.
+decrement():移动迭代器以指向列表中的前一项。
 \end{itemize}
 
 \item 
-For random-access iterators:
+随机访问迭代器:
 \begin{itemize}
 \item [-]
-advance(): Move the iterator n steps forward (or backward).
+advance():将迭代器向前(或向后)移动n步。
 
 \item [-]
-measureDistance(): Determine the number of steps to get from one iterator to another in the sequence.
+measureDistance():确定序列中从一个迭代器到另一个迭代器的步数。
 \end{itemize}
 \end{itemize}
 
-The role of the facade is to adapt a type that implements only those core operations to provide the full iterator interface. The implementation IteratorFacade mostly involves mapping the iterator syntax to the minimal interface. In the following examples, we use the member functions asDerived() to access the CRTP derived class:
+门面的作用是调整一个只实现那些核心操作的类型，以提供完整的迭代器接口。IteratorFacade的实现主要涉及将迭代器语法映射到最小的接口。下面的例子中，使用成员函数asDerived()来访问CRTP派生类:
 
 \begin{lstlisting}[style=styleCXX]
 Derived& asDerived() { return *static_cast<Derived*>(this); }
@@ -344,13 +343,13 @@ Derived const& asDerived() const {
 }
 \end{lstlisting}
 
-Given that definition, the implementation of much of the facade is straightforward.
+根据该定义，门面的大部分实现都很简单。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}To simplify the presentation, we ignore the presence of proxy iterators, whose dereference operation does not return a true reference. A complete implementation of an iterator facade, such as the one in [BoostIterator], would adjust the result types of operator -> and operator[] to account for proxies.
+\hspace*{0.75cm}为了简化表示，忽略代理迭代器的存在，因为代理迭代器的解引用操作不会返回真正的引用。迭代器外观的完整实现(如[BoostIterator]中的实现)将调整操作符的结果类型\texttt{—>}和操作符[]以考虑代理。
 \end{tcolorbox}
 
-We only illustrate the definitions for some of the input iterator requirements; the others follow similarly.
+这里，只举例说明输入迭代器的一些要求的定义，其他迭代器也相同。
 
 \begin{lstlisting}[style=styleCXX]
 reference operator*() const {

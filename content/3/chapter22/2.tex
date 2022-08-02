@@ -1,24 +1,24 @@
-The std::function<> type is effectively a generalized form of a C++ function pointer, providing the same fundamental operations:
+std::function<>类型实际上是C++函数指针的泛化形式，提供了相同的基本操作:
 
 \begin{itemize}
 \item 
-It can be used to invoke a function without the caller knowing anything about the function itself.
+可以用于调用函数，而调用者不需要知道函数本身的信息。
 
 \item 
-It can be copied, moved, and assigned.
-
-
-\item 
-It can be initialized or assigned from another function (with a compatible signature).
+可以复制、移动和赋值。
 
 
 \item 
-It has a “null” state that indicates when no function is bound to it.
+可以从另一个函数(带有兼容的签名)初始化或赋值。
+
+
+\item 
+有一个“空”状态，表示没有函数已绑定。
 \end{itemize}
 
-However, unlike a C++ function pointer, a std::function<> can also store a lambda or any other function object with a suitable operator(), all of which may have different types.
+然而，与C++函数指针不同的是，std::function<>还可以使用合适的函数操作符存储Lambda或其他函数对象，所有这些操作符都可能具有不同的类型。
 
-In the remainder of this chapter, we will build our own generalized function pointer class template, FunctionPtr, to provide these same core operations and capabilities and that can be used in place of std::function:
+本节的剩余部分，我们将构建自己的通用函数指针类模板，FunctionPtr，来提供这些核心操作和功能，并用来替代std::function:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -58,7 +58,7 @@ int main()
 }
 \end{lstlisting}
 
-The interface to FunctionPtr is fairly straightforward, providing construction, copy, move, destruction, initialization, and assignment from arbitrary function objects and invocation of the underlying function object. The most interesting part of the interface is how it is described entirely within a class template partial specialization, which serves to break the template argument (a function type) into its component pieces (result and argument types):
+FunctionPtr的接口相当简单，提供函数对象的构造、复制、移动、销毁、初始化和赋值，以及底层函数对象的调用。该接口最有趣的部分是如何在类模板偏特化中进行描述，其将模板参数(一个函数类型)分解为其组件(结果类型和参数类型):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -124,7 +124,7 @@ class FunctionPtr<R(Args...)>
 };
 \end{lstlisting}
 
-The implementation contains a single nonstatic member variable, bridge, which will be responsible for both storage and manipulation of the stored function object. Ownership of this pointer is tied to the FunctionPtr object, so most of the implementation provided merely manages this pointer. The unimplemented functions contain the interesting parts of the implementation and is described in the following subsections.
+该实现包含一个非静态成员变量bridge，负责存储和操作存储的函数对象。这个指针的所有权与FunctionPtr对象绑定，因此大多数实现仅去管理这个指针。未实现的函数包含实现中有趣的部分，将在下面的小节中进行描述。
 
 
 

@@ -1,5 +1,5 @@
 
-Function objects are useful for providing customizable behavior to templates. For example, the following function template enumerates integer values from 0 up to some value, providing each value to the given function object f:
+函数对象对于为模板提供可定制的行为非常有用。例如，下面的函数模板枚举从0到某个值的整数值，并将每个值提供给给定的函数对象f:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -39,9 +39,9 @@ int main()
 }
 \end{lstlisting}
 
-The forUpTo() function template can be used with any function object, including a lambda, function pointer, or any class that either implements a suitable operator() or a conversion to a function pointer or reference, and each use of forUpTo() will likely produce a different instantiation of the function template. Our example function template is fairly small, but if the template were large, it is possible that these instantiations could increase code size.
+forUpTo()函数模板可以与函数对象一起使用，包括Lambda、函数指针、函数操作符或转换为函数指针/引用的类，每次使用forUpTo()都可能产生不同的实例化。我们的示例函数模板非常小，但是如果模板很大，这些实例化可能会增加代码的大小。
 
-One approach to limit this increase in code size is to turn the function template into a nontemplate, which needs no instantiation. For example, we might attempt to do this with a function pointer:
+限制代码大小增加的一种方法是将函数模板转换为不需要实例化的非模板。例如，可以尝试使用函数指针:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -56,7 +56,7 @@ void forUpTo(int n, void (*f)(int))
 }
 \end{lstlisting}
 
-However, while this implementation will work when passed printInt(), it will produce an error when passed the lambda:
+然而，虽然这个实现在传递printInt()时正常工作，但在传递Lambda时将产生错误:
 
 \begin{lstlisting}[style=styleCXX]
 forUpTo(5,
@@ -68,7 +68,7 @@ forUpTo(5,
 		});
 \end{lstlisting}
 
-The standard library’s class template std::function<> permits an alternative formulation of forUpTo():
+标准库的类模板std::function<>允许使用forUpTo()的替代表达式:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -84,9 +84,9 @@ void forUpTo(int n, std::function<void(int)> f)
 }
 \end{lstlisting}
 
-The template argument to std::function<> is a function type that describes the parameter types the function object will receive and the return type that it should produce, much like a function pointer describes the parameter and result types.
+std::function<>的模板参数是一个函数类型，描述了函数对象将接收的参数类型和应该产生的返回类型，就像函数指针描述参数和结果类型一样。
 
-This formulation of forUpTo() provides some aspects of static polymorphism—the ability to work with an unbounded set of types including function pointers, lambdas, and arbitrary classes with a suitable operator()—while itself remaining a nontemplate function with a single implementation. It does so using a technique called type erasure, which bridges the gap between static and dynamic polymorphism.
+forUpTo()提供了静态多态的一些方面——使用合适的函数操作符处理一组无界类型的能力，包括函数指针、Lambda和类——而其本身仍然是非模板函数，只有一个实现。其使用一种称为类型擦除的技术来实现这一点，这种技术弥合了静态和动态多态之间的差异。
 
 
 

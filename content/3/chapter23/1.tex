@@ -1,15 +1,15 @@
 
-C++ metaprogramming techniques evolved over time (the Afternotes at the end of this chapter survey some milestones in this area). Let’s discuss and categorize the various approaches to metaprogramming that are in common use in modern C++.
+C++元编程技术随着时间的推移而发展(本章末尾的附注回顾了这一领域的里程碑)。让我们讨论并分类现代C++中常用的各种元编程方法。
 
-\subsubsubsection{23.1.1\hspace{0.2cm}Value Metaprogramming}
+\subsubsubsection{23.1.1\hspace{0.2cm}值元编程}
 
-In the first edition of this book, we were limited to the features introduced in the original C++ standard (published in 1998, with minor corrections in 2003). In that world, composing simple compile-time (“meta-”) computations was a minor challenge. We therefore devoted a good chunk of this chapter to doing just that; one fairly advanced example computed the square root of an integer value at compile time using recursive template instantiations. As introduced in Section 8.2 on page 125, C++11 and, especially, C++14 removed most of that challenge with the introduction of constexpr functions.
+本书的第一版中，我们限制在最初的C++标准中引入的特性上(1998年发布，2003年进行了很小的修改)。那个世界里，编写简单的编译时(“元”)计算是一个挑战。因此，我们在本章中花了大量的时间来研究这个问题;一个相当高级的示例，在编译时使用递归模板实例化计算整数值的平方根。正如8.2节中介绍的，在C++11中，尤其是C++14，通过引入constexpr函数，降低了挑战的难度。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The C++11 constexpr capabilities were sufficient to solve many common challenges, but the programming model was not always pleasant (e.g., no loop statements were available, so iterative computation had to exploit recursive function calls; see Section 23.2 on page 537). C++14 enabled loop statements and various other constructs.
+\hspace*{0.75cm}C++11的constexpr功能足以解决许多常见的挑战，但编程模型并不总是令人满意的(例如，没有循环语句，所以迭代计算必须利用递归函数调用;参见23.2节)。C++14启用了循环语句和其他构造方式。
 \end{tcolorbox}
 
-For example, since C++14, a compile-time function to compute a square root is easily written as follows:
+例如，C++14后，计算平方根的编译时函数很容易写成这样:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -43,7 +43,7 @@ constexpr T sqrt(T x)
 }
 \end{lstlisting}
 
-This algorithm searches for the answer by repeatedly halving an interval known to contain the square root of x (the roots of 0 and 1 are treated as special cases to keep the convergence criterion simple). This sqrt() function can be evaluated at compile or run time:
+该算法通过对已知包含x平方根的区间反复二分来寻找答案(根号0和1被视为特殊情况，以保持收敛准则简单)。这个sqrt()函数可以在编译或运行时求值:
 
 \begin{lstlisting}[style=styleCXX]
 static_assert(sqrt(25) == 5, ""); // OK (evaluated at compile time)
@@ -54,15 +54,15 @@ long long l = 53478;
 std::cout << sqrt(l) << ’\n’; // prints 231 (evaluated at run time)
 \end{lstlisting}
 
-This function’s implementation may not be the most efficient at run time (where exploiting peculiarities of the machine often pays off), but because it is meant to perform compile-time computations, absolute efficiency is less important than portability. Note that no advanced “template magic” is in sight in that square root example, only the usual template argument deduction for a function template. The code is “plain C++” and is not particularly challenging to read.
+这个函数的实现在运行时可能不是最高效的(在运行时利用机器的特性通常会有很好的回报)，但因为是来执行编译时计算的，所以绝对效率不如可移植性重要。注意，在这个平方根示例中没有看到高级的“魔术模板”，只有函数模板的常见模板参数推导。代码是“普通的C++”，读起来并不困难。
 
-Value metaprogramming (i.e., programming the computation of compile-time values) as we did above is occasionally quite useful, but there are two additional kinds of metaprogramming that can be performed with modern C++ (say, C++14 and C++17): type metaprogramming and hybrid metaprogramming.
+上面所做的值元编程(即对编译时值的计算进行编程)有时非常有用，但还有两种额外的元编程可以用现代C++执行(比如C++14和C++17):类型元编程和混合元编程。
 
-\subsubsubsection{23.1.2\hspace{0.2cm}Type Metaprogramming}
+\subsubsubsection{23.1.2\hspace{0.2cm}类型元编程}
 
-We already encountered a form of type computation in our discussion of certain traits templates in Chapter 19, which take a type as input and produce a new type from it. For example, our RemoveReferenceT class template computes the underlying type of a reference type. However, the examples we developed in Chapter 19 computed only fairly elementary type operations. By relying on recursive template instantiation—a mainstay of template-based metaprogramming—we can perform type computations that are considerably more complex.
+第19章讨论某些特征模板时，已经遇到了一种类型计算的形式，其以一个类型作为输入，并由此产生一个新类型。例如，RemoveReferenceT类模板计算引用类型的基础类型，但在第19章中开发的示例只计算了相当基本的类型操作。通过依赖递归模板实例化(基于模板的元编程的支柱)，可以执行相当复杂的类型计算。
 
-Consider the following small example:
+看看下面的例子:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -88,7 +88,11 @@ template<typename T>
 using RemoveAllExtents = typename RemoveAllExtentsT<T>::Type;
 \end{lstlisting}
 
-Here, RemoveAllExtents is a type metafunction (i.e., a computational device that produces a result type) that will remove an arbitrary number of top-level “array layers” from a type.2 You can use it as follows:
+这里，RemoveAllExtents是一个类型元函数(即生成结果类型的计算设备)，将从类型中移除任意数量的顶层“数组层”，可以这样使用它:
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}C++标准库提供了相应的类型特征std::remove\_all\_extents。详见第D.4节。
+\end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
 RemoveAllExtents<int[]> // yields int
@@ -97,15 +101,15 @@ RemoveAllExtents<int[][10]> // yields int
 RemoveAllExtents<int(*)[5]> // yields int(*)[5]
 \end{lstlisting}
 
-The metafunction performs its task by having the partial specialization that matches the top-level array case recursively “invoke” the metafunction itself.
+元函数通过让匹配顶层数组情况的偏特化递归地“调用”元函数本身来执行其任务。
 
-Computing with values would be very limited if all that was available to us were scalar values. Fortunately, just about any programming language has at least one container of values construct that greatly magnifies the power of that language (and most languages have a variety of container kinds, such as arrays/vectors, hash tables, etc.). The same is true of type metaprogramming: Adding a “container of types” construct greatly increases the applicability of the discipline. Fortunately, modern C++ includes mechanisms that enable the development of such a container. Chapter 24 develops a Typelist<...> class template, which is exactly such a container of types, in great detail.
+如果能够使用的值都是标量值，那么使用值进行计算将非常有限。不过，编程语言都有一个值容器构造，可以增强该语言的能力(而且大多数语言都有各种容器类型，如数组/向量、哈希表等)。类型元编程也是如此:添加“类型容器”构造大大增加了规程的适用性。现代C++包含了支持开发这种容器的机制。第24章开发了一个Typelist<…>类模板，其正是这样一个类型容器。
 
-\subsubsubsection{23.1.3\hspace{0.2cm}Hybrid Metaprogramming}
+\subsubsubsection{23.1.3\hspace{0.2cm}混合元编程}
 
-With value metaprogramming and type metaprogramming we can compute values and types at compile time. Ultimately, however, we’re interested in run-time effects, so we use these metaprograms in run time code in places where types and constants are expected. Metaprogramming can do more than that, however: We can programmatically assemble at compile time bits of code with a run-time effect. We call that hybrid metaprogramming.
+通过值和类型元编程，可以在编译时计算值和类型。但是，我们最终对运行时效果感兴趣，所以在需要类型和常量的地方在运行时代码中使用元编程。然而，元编程可以做的不止这些:可以在编译时以编程方式汇编代码位，并具有运行时效果。我们称之为混合元编程。
 
-To illustrate this principle, let’s start with a simple example: computing the dot-product of two std::array values. Recall that std::array is a fixed-length container template declared as follows:
+为了说明这一原理，先从一个简单的例子开始:计算两个std::array值的点积。回想一下，std::array是一个固定长度的容器模板，声明如下:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -113,7 +117,7 @@ namespace std {
 }
 \end{lstlisting}
 
-where N is the number of elements (of type T) in the array. Given two objects of the same array type, their dot-product can be computed as follows:
+其中N是数组中类型为T的元素个数。给定两个相同数组类型的对象，其点积可以这样计算:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t N>
@@ -127,7 +131,7 @@ auto dotProduct(std::array<T, N> const& x, std::array<T, N> const& y)
 }
 \end{lstlisting}
 
-A straightforward compilation of the for-loop will produce branching instructions that on some machines may cause some overhead compared to a straight-line execution of
+直接编译for循环将产生分支指令，与直线执行相比，在某些机器上可能会造成一些开销
 
 \begin{lstlisting}[style=styleCXX]
 result += x[0]*y[0];
@@ -137,10 +141,10 @@ result += x[3]*y[3];
 ...
 \end{lstlisting}
 
-Fortunately, modern compilers will optimize the loop into whichever form is most efficient for the target platform. For the sake of discussion, however, let’s rewrite our dotProduct() implementation in a way that avoids the loop:
+现代编译器会将循环优化为对目标平台最有效的形式。然而，为了便于讨论，可以以一种避免循环的方式重写dotProduct()实现:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This is known as loop unrolling. We generally recommend against explicitly unrolling loops in portable code since the details that determine the best unrolling strategy depend highly on the target platform and the loop body; the compiler usually does a much better job of taking those considerations into account.
+\hspace*{0.75cm}这称为循环展开。我们通常不建议在可移植代码中显式展开循环，因为决定最佳展开策略的细节高度依赖于目标平台和循环体;编译器通常会更好地考虑这些因素。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -167,21 +171,21 @@ auto dotProduct(std::array<T, N> const& x,
 }
 \end{lstlisting}
 
-This new implementation delegates the work to a class template DotProductT. That enables us to use recursive template instantiation with class template partial specialization to end the recursion. Note how each instantiation of DotProductT produces the sum of one term of the dot-product and the dot-product of the remaining components of the array. For values of type std::array<T,N> there will therefore be N instances of the primary template and one instance of the terminating partial specialization. For this to be efficient, it is critical that the compiler inlines every invocation of the static member functions result(). Fortunately, that is generally true when even a moderate level of compiler optimizations is enabled.
+这个新实现将工作委托给一个类模板DotProductT。这使我们能够使用递归模板实例化和类模板偏特化来结束递归。请注意DotProductT的每次实例化如何产生一项的点积和数组其他组件的点积。对于类型std::array<T，N>，因此将有N个主模板实例和一个终止偏特化的实例。为了提高效率，编译器必须每次调用内联静态成员函数result()。不过，即使启用了中等级别的编译器优化，这也是正确的。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}We specify the inline keyword explicitly here because some compilers (notably Clang) take this as hint to try a little harder to inline calls. From a language point of view, these functions are implicitly inline because they are defined in the body of their enclosing class.
+\hspace*{0.75cm}我们在这里显式地指定inline关键字，是因为一些编译器(尤其是Clang)将此作为提示，以尝试更努力地进行内联调用。从语言的角度来看，这些函数是隐式内联的，因为它们是在其外围类的体中定义的。
 \end{tcolorbox}
 
-The central observation about this code is that it blends a compile-time computation (achieved here through recursive template instantiation) that determines the overall structure of the code with a run-time computation (calling result()) that determines the specific run-time effect.
+这段代码的主要特点是，混合了确定代码整体结构的编译时计算(这里通过递归模板实例化实现)和确定特定运行时效果的运行时计算(调用result())。
 
-We mentioned earlier that type metaprogramming is greatly enhanced by the availability of a “container of types.” We’ve already seen that in hybrid metaprogramming a fixed-length array type can be useful. Nonetheless, the true “hero container” of hybrid metaprogramming is the tuple. A tuple is a sequence of values, each with a selectable type. The C++ standard library includes a std::tuple class template that supports that notion. For example,
+前面提到过，由于“类型容器”的可用性，类型元编程得到了极大的增强。在混合元编程中，固定长度的数组类型很有用。尽管如此，混合元编程真正的“英雄容器”是元组。元组是一个值序列，每个值都有一个可选择的类型。C++标准库包含一个支持该概念的std::tuple类模板。例如,
 
 \begin{lstlisting}[style=styleCXX]
 std::tuple<int, std::string, bool> tVal{42, "Answer", true};
 \end{lstlisting}
 
-defines a variable tVal that aggregates three values of types int, std::string, and bool (in that specific order). Because of the tremendous importance of tuple-like containers for modern C++ programming, we develop one in detail in Chapter 25. The type of tVal above is very similar to a simple struct type like:
+定义了一个变量tVal，它聚合了三个类型的值:int, std::string和bool(按照特定的顺序)。由于类元组容器在现代C++编程中的重要性，我们将在第25章中详细开发一个容器。上面的tVal类型非常类似于一个简单的结构类型:
 
 \begin{lstlisting}[style=styleCXX]
 struct MyTriple {
@@ -191,15 +195,15 @@ struct MyTriple {
 };
 \end{lstlisting}
 
-Given that in std::array and std::tuple we have flexible counterparts to array types and (simple) struct types, it is natural to wonder whether a counterpart to simple union types would also be useful for hybrid computation. The answer is “yes.” The C++ standard library introduced a std::variant template for this purpose in C++17, and we develop a similar component in Chapter 26. 
+鉴于在std::array和std::tuple中，有数组类型和(简单)结构类型的灵活对应，很自然地想知道简单联合类型的对应是否也对混合计算有用：答案是肯定的。C++标准库在C++17中为此引入了std::variant模板，我们在第26章开发了一个类似的组件。
 
-Because std::tuple and std::variant, like struct types, are heterogeneous types, hybrid metaprogramming that uses such types is sometimes called heterogeneous metaprogramming.
+因为与struct类型一样，std::tuple和std::variant都是异构类型，因此使用此类类型的混合元编程有时也称为异构元编程。
 
-\subsubsubsection{23.1.4\hspace{0.2cm}Hybrid Metaprogramming for Unit Types}
+\subsubsubsection{23.1.4\hspace{0.2cm}单元类型的混合元编程}
 
-Another example demonstrating the power of hybrid computing is libraries that are able to compute results of values of different unit types. The value computation is performed at run time, but the computation of the resulting units it determined at compile time.
+另一个展示混合计算能力的例子是库，能够计算不同单元类型的值的结果。值计算在运行时执行，但结果元计算在编译时确定。
 
-Let’s illustrate this with a highly simplified example. We are going to keep track of units in terms of their ratio (fraction) of a principal unit. For example, if the principal unit for time is a second, a millisecond is represented with ratio 1/1000 and a minute with ratio 60/1. The key, then, is to define a ratio type where each value has its own type:
+让我们用一个高度简化的例子来说明这一点，用它们占主单位的比例(分数)来表示单位。例如，时间的主要单位是秒，则毫秒用比例1/1000表示，分钟用比例60/1表示。关键在于定义一个比率类型，其中每个值都有自己的类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -213,7 +217,7 @@ struct Ratio {
 };
 \end{lstlisting}
 
-Now we can define compile-time computations such as adding two units:
+现在我们可以定义编译时计算，比如添加两个单元:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -235,7 +239,7 @@ template<typename R1, typename R2>
 using RatioAdd = typename RatioAddImpl<R1, R2>::Type;
 \end{lstlisting}
 
-This allows us to compute the sum of two ratios at compile time:
+这允许我们在编译时计算两个比率的总和:
 
 \begin{lstlisting}[style=styleCXX]
 using R1 = Ratio<1,1000>;
@@ -247,7 +251,7 @@ using RA = RatioAdd<Ratio<2,3>,Ratio<5,7>>; // RA has type Ratio<29,21>
 std::cout << RA::num << ’/’ << RA::den << ’\n’; // prints 29/21
 \end{lstlisting}
 
-We can now define a class template for durations, parameterized with an arbitrary value type and a unit type that is an instance of Ratio<>:
+现在可以为duration定义一个类模板，参数化为任意值类型和一个单位类型，该单位类型是Ratio<>的实例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -271,7 +275,7 @@ class Duration {
 };
 \end{lstlisting}
 
-The interesting part is the definition of an operator+ to add two Durations:
+有趣的是定义了一个加法操作符来加和两个duration:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -293,7 +297,7 @@ auto constexpr operator+(Duration<T1, U1> const& lhs,
 }
 \end{lstlisting}
 
-We allow the arguments to have different unit types, U1 and U2. And we use these unit types to compute the resulting duration to have a unit type that is the corresponding unit fraction (a fraction where the numerator is 1). With all that in place, we can compile the following code:
+允许参数有不同的单位类型，U1和U2。使用这些单位类型来计算结果持续时间，从而得到一个对应的单位分数(分子为1的分数)的单位类型。有了所有这些，可以编译以下代码:
 
 \begin{lstlisting}[style=styleCXX]
 int x = 42;
@@ -305,9 +309,9 @@ auto c = a + b; // computes resulting unit type 1/3000 seconds
 				// and generates run-time code for c = a*3 + b*2000
 \end{lstlisting}
 
-The key “hybrid” effect is that for the sum c the compiler determines the resulting unit type Ratio<1,3000> at compile time and generates code to compute at run time the resulting value, which is adjusted for the resulting unit type.
+关键的“混合”效果是，对于sum c，编译器在编译时确定结果单元类型Ratio<1,3000>，并生成代码在运行时计算结果值，该值会根据结果单元类型进行调整。
 
-Because the value type is a template parameter, we can use class Duration with value types other than int or even use heterogeneous value types (as long as adding the values of these types is defined):
+因为值类型是模板参数，所以可以将Duration类用于int以外的值类型，甚至可以使用异构值类型(只要定义了这些类型的值如何相加):
 
 \begin{lstlisting}[style=styleCXX]
 auto d = Duration<double, Ratio<1,3>>(7.5); // 7.5 1/3 seconds
@@ -317,9 +321,9 @@ auto f = d + e; // computes resulting unit type 1/3 seconds
 				// and generates code for f = d + e*3
 \end{lstlisting}
 
-In addition, the compiler can even perform the value computation at compile-time if the values are known at compile time, because operator+ for durations is constexpr.
+此外，如果值在编译时已知，编译器甚至可以在编译时执行值计算，因为持续时间的operator+是constexpr。
 
-The C++ standard library class template std::chrono uses this approach with several refinements, such as using predefined units (e.g., std::chrono::milliseconds), supporting duration literals (e.g., 10ms), and dealing with overflow.
+C++标准库类模板std::chrono使用了这种方法，并进行了一些改进，例如使用预定义的单元(例如，std::chrono::milliseconds)，支持字面时间段(例如，10ms)，以及如何处理溢出。
 
 
 

@@ -1,4 +1,4 @@
-The FunctorBridge class template is responsible for the ownership and manipulation of the underlying function object. It is implemented as an abstract base class, forming the foundation for the dynamic polymorphism of FunctionPtr:
+FunctorBridge类模板负责底层函数对象的所有权和操作。其实现为一个抽象基类，是FunctionPtr动态多态性的基础:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -15,13 +15,13 @@ class FunctorBridge
 };
 \end{lstlisting}
 
-FunctorBridge provides the essential operations needed to manipulate a stored function object through virtual functions: a destructor, a clone() operation to perform copies, and an invoke. operation to call the underlying function object. Don’t forget to define clone() and invoke() to be const member functions.
+FunctorBridge提供了通过虚函数操作存储函数对象所需的基本操作:析构函数、执行复制的clone()操作和调用。操作调用基础函数对象。不要忘记将clone()和invoke()定义为const成员函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Making invoke() const is a safety belt against invoking non-const operator() overloads through const FunctionPtr objects, which would violate the expectations of programmers.
+\hspace*{0.75cm}将invoke()设为const是防止通过const函数ptr对象调用非const操作符()重载的一种安全措施，这将违背开发者的预期。
 \end{tcolorbox}
 
-Using these virtual functions, we can implement FunctionPtr’s copy constructor and function call operator:
+使用这些虚函数，可以实现FunctionPtr的复制构造函数和函数调用操作符:
 
 \hspace*{\fill} \\ %插入空行
 \noindent

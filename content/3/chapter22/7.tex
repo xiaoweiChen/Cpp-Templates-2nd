@@ -1,6 +1,6 @@
-Kevlin Henney popularized type erasure in C++ with the introduction of the any type [HenneyValuedConversions], which later became a popular Boost library [BoostAny] and part of the C++ standard library with C++17. The technique was refined somewhat in the Boost.Function library [BoostFunction], which applied various performance and code-size optimizations and eventually became std::function<>. However, each of the early libraries addressed only a single set of operations: any was a simple value type with only a copy and a cast operation; function added invocation to that.
+Kevlin Henney在C++中推广了类型擦除，引入了any类型[HenneyValuedConversions]，该类型后来成为Boost库[BoostAny]，并在C++17中成为C++标准库的一部分。在Boost.Function[BoostFunction]中对该技术进行了一些改进，其应用了各种性能和代码量优化，最终成为std::function<>。然而，每一个早期库只处理一组操作:any是一个简单的值类型，只有一个复制和强制转换操作;函数添加了调用。
 
-Later efforts, such as the Boost.TypeErasure library [BoostTypeErasure] and Adobe’s Poly library [AdobePoly], apply template metaprogramming techniques to allow users to form a type-erased value with some specified list of capabilities. For example, the following type (constructed using the Boost.TypeErasure library) handles copy construction, a typeid-like operation, and output streaming for printing:
+之后的工作，比如Boost.TypeErasure库[BoostTypeErasure]和Adobe的Poly库[AdobePoly]，使用模板元编程技术，允许用户形成一个具有特定功能列表的类型擦除值。例如，下面的类型(使用Boost.TypeErasure库)处理复制构造、类类型操作和打印输出流:
 
 \begin{lstlisting}[style=styleCXX]
 using AnyPrintable = any<mpl::vector<copy_constructible<>,

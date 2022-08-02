@@ -1,4 +1,4 @@
-Each instance of FunctorBridge is an abstract class, so its derived classes are responsible for providing actual implementations of its virtual functions. To support the complete range of potential function objects—an unbounded set—we would need an unbounded number of derived classes. Fortunately, we can accomplish this by parameterizing the derived class on the type of the function object it stores:
+FunctorBridge的每个实例都是抽象类，因此其派生类负责提供虚函数的实现。为了支持潜在函数对象的完整范围(一个无界集合)，需要无界的派生类。可以通过对派生类存储的函数对象类型，进行参数化来实现这一点:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -21,7 +21,7 @@ class SpecificFunctorBridge : public FunctorBridge<R, Args...> {
 };
 \end{lstlisting}
 
-Each instance of SpecificFunctorBridge stores a copy of the function object (whose type is Functor), which can be invoked, copied (by cloning the SpecificFunctorBridge), or destroyed (implicitly in the destructor). SpecificFunctorBridge instances are created whenever a FunctionPtr is initialized to a new function object, completing the FunctionPtr example:
+每个SpecificFunctorBridge实例存储一个函数对象的副本(类型是Functor)，可以调用、复制或销毁(析构函数中隐式进行)。当一个FunctionPtr初始化为新的函数对象时，特定的functorbridge实例将创建，完成FunctionPtr示例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -38,15 +38,15 @@ FunctionPtr<R(Args...)>::FunctionPtr(F&& f)
 }
 \end{lstlisting}
 
-Note that while the FunctionPtr constructor itself is templated on the function object type F, that type is known only to the particular specialization of SpecificFunctorBridge (described by the Bridge type alias). Once the newly allocated Bridge instance is assigned to the data member bridge, the extra information about the specific type F is lost due to the derived-to-based conversion from Bridge * to FunctorBridge<R, Args...> *.
+注意，虽然FunctionPtr构造函数在函数对象类型F上模板化的，但该类型只有特定的SpecificFunctorBridge特化才知晓(由Bridge类型别名描述)。当为新Bridge实例分配数据成员bridge，因为类型从Bridge *到FunctorBridge<R, Args...> *，所以关于特定类型F的信息将丢失。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Although the type could be queried with dynamic\_cast (among other things), the FunctionPtr class makes the bridge pointer private, so clients of FunctionPtr have no access to the type itself.
+\hspace*{0.75cm}虽然类型可以通过dynamic\_cast查询，FunctionPtr类使bridge指针私有，所以FunctionPtr的外部代码不能访问类型本身。
 \end{tcolorbox}
 
-This loss of type information explains why the term type erasure is often used to describe the technique of bridging between static and dynamic polymorphism.
+这种类型信息的丢失解释了，为什么经常使用术语类型擦除来描述静态和动态多态之间的桥接技术。
 
-One peculiarity of the implementation is the use of std::decay (see Section D.4 on page 731) to produce the Functor type, which makes the inferred type F suitable for storage, for example, by turning references to function types into function pointer types and removing top-level const, volatile, and reference types.
+该实现的一个特点是使用std::decay(请参阅第D.4节)来产生Functor类型，这使得推导类型F适合存储，例如：通过将对函数类型的引用转换成函数指针类型，并移除const、volatile和引用类型修饰。
 
 
 

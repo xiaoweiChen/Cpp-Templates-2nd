@@ -1,23 +1,22 @@
-Our Sqrt<> example demonstrates that a template metaprogram can contain:
+Sqrt<>示例演示了模板元程序可以包含:
 
 \begin{itemize}
 \item 
-State variables: The template parameters
+状态变量:模板参数
 
 \item 
-Loop constructs: Through recursion
+循环构造:通过递归
 
 \item 
-Execution path selection: By using conditional expressions or specializations
+执行路径选择:通过使用条件表达式或特化
 
 \item 
-Integer arithmetic
+整数运算
 \end{itemize}
 
-If there are no limits to the amount of recursive instantiations and the number of state variables that are allowed, it can be shown that this is sufficient to compute anything that is computable. However, it may not be convenient to do so using templates. Furthermore, because template instantiation requires substantial compiler resources, extensive recursive instantiation quickly slows down a compiler or even exhausts the resources available. The C++ standard recommends but does not mandate that 1024 levels of recursive instantiations be allowed as a minimum, which is sufficient for most (but certainly not all) template metaprogramming tasks.
+若不限制递归实例化的数量和允许的状态变量的数量，这足以进行任何计算。但是，使用模板可能不方便这样做。此外，由于模板实例化需要大量的编译器资源，大量的递归实例化会降低编译器的处理速度，甚至耗尽可用的资源。C++标准建议(但不是强制)至少允许1024级递归实例化，这对于大多数(但肯定不是所有)模板元编程任务来说已经足够了。
 
-Hence, in practice, template metaprograms should be used sparingly. There are a few situations, however, when they are irreplaceable as a tool to implement convenient templates. In particular, they can sometimes be hidden in the innards of more conventional templates to squeeze more performance out of critical algorithm implementations.
-
+在实践中，模板元程序应该有节制地使用。然而，作为实现方便模板的工具，其不可替代。特别是，有时可以隐藏在传统的模板内部，以便从关键算法实现中挤出更多的性能。
 
 
 

@@ -1,4 +1,4 @@
-Consider the following recursive template:
+考虑以下递归模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename U>
@@ -19,13 +19,13 @@ struct Trouble<0> {
 Trouble<10>::LongType ouch;
 \end{lstlisting}
 
-The use of Trouble<10>::LongType not only triggers the recursive instantiation of Trouble<9>, Trouble<8>, ..., Trouble<0>, but it also instantiates Doublify over increasingly complex types. Table 23.1 illustrates how quickly it grows.
+使用Trouble<10>::LongType不仅触发了Trouble<9>， Trouble<8>，…，Trouble<0>的递归实例化，但它的复杂性在Doublify的实例化处。表23.1说明了扩展增长的速度。
 
 \begin{center}
 \begin{table}[H]
 	\begin{tabular}{|l|l|}
 		\hline
-		Type Alias                                  & Underlying Type                                                                                                                                                                                                                                                                                                                                                                     \\ \hline
+		类型别名                                  & 基本类型                                                                                                                                                                                                                                                                                                                                                                   \\ \hline
 		Trouble\textless{}0\textgreater{}::LongType & double                                                                                                                                                                                                                                                                                                                                                                              \\ \hline
 		Trouble\textless{}1\textgreater{}::LongType & Doublify\textless{}double,double\textgreater{}                                                                                                                                                                                                                                                                                                                                      \\ \hline
 		Trouble\textless{}2\textgreater{}::LongType & \begin{tabular}[c]{@{}l@{}}Doublify\textless{}Doublify\textless{}double,double\textgreater{},\\          Doublify\textless{}double,double\textgreater{}\textgreater{}\end{tabular}                                                                                                                                                                                                  \\ \hline
@@ -33,13 +33,13 @@ The use of Trouble<10>::LongType not only triggers the recursive instantiation o
 	\end{tabular}
 \end{table}
 
-Table 23.1. Growth of Trouble<N>::LongType
+表23.1. Trouble<N>::LongType实例化的增长
 \end{center}
 
 
-As can be seen from Table 23.1, the complexity of the type description of the expression Trouble<N>::LongType grows exponentially with N. In general, such a situation stresses a C++ compiler even more than do recursive instantiations that do not involve recursive template arguments. One of the problems here is that a compiler keeps a representation of the mangled name for the type. This mangled name encodes the exact template specialization in some way, and early C++ implementations used an encoding that is roughly proportional to the length of the template-id. These compilers then used well over 10,000 characters for Trouble<10>::LongType.
+从表23.1可以看出，表达式Trouble<N>::LongType的类型描述的复杂性随着N的增加呈指数增长。通常，这种情况对C++编译器的压力甚至比不涉及递归模板实参的递归实例化更大。这里的问题是，编译器为类型保留了损坏名称。这个混乱的名称以某种方式编码了模板特化，早期的C++实现使用的编码大致与模板标识的长度成比例。这些编译器为Trouble<10>::LongType使用了超过10,000个字符的内存。
 
-Newer C++ implementations take into account the fact that nested template-ids are fairly common in modern C++ programs and use clever compression techniques to reduce considerably the growth in name encoding (e.g., a few hundred characters for Trouble<10>::LongType). These newer compilers also avoid generating a mangled name if none is actually needed because no low-level code is actually generated for the template instance. Still, all other things being equal, it is probably preferable to organize recursive instantiation in such a way that template arguments need not also be nested recursively.
+较新的C++实现考虑到，嵌套模板标识在现代C++程序中相当常见，并使用巧妙的压缩技术来大幅减少名称编码的增长(例如，Trouble<10>::LongType需要几百个字符)。因为没有为模板实例生成低级代码，这些编译器还会避免在不需要的情况下生成混乱的名称。尽管如此，在其他条件都相同的情况下，以模板参数不需要递归嵌套的方式组织递归实例化可能是更好的方法。
 
 
 

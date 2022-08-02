@@ -1,4 +1,4 @@
-Previously, we described value metaprogramming based on constexpr evaluation and type metaprogramming based on recursive template instantiation. These two options, both available in modern C++, clearly involve different methods driving the computation. It turns out that value metaprogramming can also be driven in terms of recursive template instantiation, and, prior to the introduction of constexpr functions in C++11, that was the mechanism of choice. For example, the following codecomputes a square root of an integer using recursive instantiation:
+前面描述了基于constexpr计算的值元编程和基于递归模板实例化的类型元编程。两项在现代C++中都有使用，涉及不同的方法来驱动计算。值元编程也可以通过递归模板实例化来驱动，C++11中引入constexpr函数之前，这是首选的机制。例如，下面的代码使用递归实例化计算了一个整数的平方根:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -21,32 +21,32 @@ struct Sqrt<N,M,M> {
 };
 \end{lstlisting}
 
-This metaprogram uses much the same algorithm as our integer square root constexpr function in Section 23.1.1 on page 529, successively halving an interval known to contain the square root. However, the input to the metafunction is a nontype template argument instead of a function argument, and the “local variables” tracking the bounds to the interval are also recast as nontype template arguments. Clearly, this is a far less friendly approach than the constexpr function, but we will nevertheless analyze this code later on to examine how it consumes compiler resources.
+这个元程序使用了与第23.1.1节中整数平方根constexpr函数使用相同的算法，连续将已知包含平方根的区间减半。然而，元函数的输入是非类型模板参数，跟踪区间边界的“局部变量”也改为非类型模板参数。显然，这是一种远不如constexpr函数友好的方法，但我们仍然会来分析这段代码，以检查它如何使用编译器的资源。
 
-In any case, we can see that the computational engine of metaprogramming could potentially have many options. That is, however, not the only dimension in which such options may be considered. Instead, we like to think that a comprehensive metaprogramming solution for C++ must make choices along three dimensions:
+我们可以看到元编程的计算引擎可能有很多选择。然而，这并不是可以考虑的唯一方面。相反，我们倾向于选择C++元编程解决方案必须在以下三个方面做出权衡:
 
 \begin{itemize}
 \item 
-Computation
+计算
 
 \item 
-Reflection
+反射
 
 \item 
-Generation
+生成
 \end{itemize}
 
-Reflection is the ability to programmatically inspect features of the program. Generation refers to the ability to generate additional code for the program.
+反射是一种以编程方式检查程序特性的能力。生成是指为程序生成额外代码的能力。
 
-We have seen two options for computation: recursive instantiation and constexpr evaluation. For reflection, we have found a partial solution in type traits (see Section 19.6.1 on page 431). Although available traits enable quite a few advanced template techniques, they are far from covering all that is wanted from a reflection facility in the language. For example, given a class type, many applications would like to programmatically explore the members of that class. Our current traits are based on template instantiation, and C++ could conceivably provide additional language facilities or “intrinsic” library components
+已经看到了两个计算选项:递归实例化和constexpr计算。我们在类型特征中找到了部分解决方案(参见第19.6.1节)。尽管可用的特性支持相当多的高级模板技术，但远不能涵盖语言中反射功能所需的功能。例如，给定一个类类型，应用程序希望以编程的方式探索该类的成员。当前的特性是基于模板实例化的，C++可以提供额外的语言工具或“固有”库组件
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Some of the traits provided in the C++ standard library already rely on some cooperation from the compiler (via nonstandard “intrinsic” operators). See Section 19.10 on page 461.
+\hspace*{0.75cm}C++标准库中提供的一些特性已经依赖于编译器的某些合作(通过非标准的“固有”操作符)。参见19.10节。
 \end{tcolorbox}
 
-to produce class template instances that contain the reflected information at compile time. Such an approach is a good match for computations based on recursive template instantiations. Unfortunately, class template instances consume a lot of compiler storage and that storage cannot be released until the end of the compilation (trying to do otherwise would result in taking significant more compilation time). An alternative option, which is expected to pair well with the constexpr evaluation option for the “computation” dimension, is to introduce a new standard type to represent reflected information. Section 17.9 on page 363 discusses this option (which is now under active investigation by the C++ standardization committee).
+生成在编译时包含反射信息的类模板实例。这种方法适合基于递归模板实例化的计算。但是，类模板实例占用大量编译器存储空间，而这些存储空间直到编译结束时才会释放(否则会导致编译时间大大增加)。另一种选择是引入一种新的标准类型来表示反映的信息，该选择有望与“计算”维度的constexpr评估选项很好地配对。17.9节讨论了这个选项(现在C++标准化委员会正在积极调查)。
 
-Section 17.9 on page 363 also shows a potential future approach to powerful code generation. Creating a flexible, general, and programmer-friendly code generation mechanism within the existing C++ language remains a challenge that is being investigated by various parties. However, it is also true that instantiating templates has always been a “code generation” mechanism of sorts. In addition, compilers have become reliable enough at expanding calls to small functions in-line that that mechanism can be used as a vehicle for code generation. Those observations are exactly what underlies our DotProductT example above and, combined with more powerful reflection facilities, existing techniques can already achieve remarkable metaprogramming effects.
+第17.9节还展示了实现强大代码生成的未来方法。在现有C++语言中创建一个灵活的、通用的、开发者友好的代码生成机制，仍然是一个挑战。然而，实例化模板是一种“代码生成”机制。此外，编译器在扩展对内联小函数的调用方面已经足够可靠，这种机制可以用作代码生成的载体。这些观察结果正是上面DotProductT示例的基础，结合更强大的反射功能，现有技术已经可以实现元编程的效果。
 
 
 

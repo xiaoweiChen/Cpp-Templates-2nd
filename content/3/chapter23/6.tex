@@ -1,5 +1,5 @@
 
-In the early days of C++, enumeration values were the only mechanism to create “true constants” (called constant-expressions) as named members in class declarations. With them, we could, for example, define a Pow3 metaprogram to compute powers of 3 as follows:
+早期的C++，枚举值是在类声明中创建“真正的常量”(称为常量表达式)作为命名成员的唯一机制。有了它们，可以定义一个Pow3元程序来计算3的幂，如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -18,7 +18,7 @@ struct Pow3<0> {
 };
 \end{lstlisting}
 
-The standardization of C++98 introduced the concept of in-class static constant initializers, so that our Pow3 metaprogram could look as follows:
+C++98的标准化引入了类内静态常量初始化器的概念，因此Pow3元程序可以这样写:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -37,23 +37,23 @@ struct Pow3<0> {
 };
 \end{lstlisting}
 
-However, there is a drawback with this version: Static constant members are lvalues (see Appendix B). So, if we have a declaration such as
+但是，这个版本有一个缺点:静态常量成员是左值(参见附录B)
 
 \begin{lstlisting}[style=styleCXX]
 void foo(int const&);
 \end{lstlisting}
 
-and we pass it the result of a metaprogram:
+将元程序的结果传递给它:
 
 \begin{lstlisting}[style=styleCXX]
 foo(Pow3<7>::value);
 \end{lstlisting}
 
-a compiler must pass the address of Pow3<7>::value, and that forces the compiler to instantiate and allocate the definition for the static member. As a result, the computation is no longer limited to a pure “compile-time” effect.
+编译器必须传递Pow3<7>::value的地址，这迫使编译器实例化和分配静态成员的定义。因此，计算不再局限于纯粹的“编译时”效应。
 
-Enumeration values aren’t lvalues (i.e., they don’t have an address). So, when we pass them by reference, no static memory is used. It’s almost exactly as if you passed the computed value as a literal. The first edition of this book therefore preferred the use of enumerator constants for this kind of applications.
+枚举值不是左值(即，它们没有地址)。因此，当通过引用传递它们时，没有使用静态内存。这就像将计算值作为文字传递一样。因此，本书的第一版在这类应用程序中更倾向于使用枚举常量。
 
-C++11, however, introduced constexpr static data members, and those are not limited to integral types. They do not solve the address issue raised above, but in spite of that shortcoming they are now a common way to produce results of metaprograms. They have the advantage of having a correct type (as opposed to an artificial enum type), and that type can be deduced when the static member is declared with the auto type specifier. C++17 added inline static data members, which do solve the address issue raised above, and can be used in conjunction with constexpr.
+然而，C++11引入了constexpr静态数据成员，而且这些成员不限于整型。它们没有解决上面提出的地址问题，尽管有这个缺点，不过目前是生成元程序结果的常用方法。它们的优点是具有正确的类型(与人工enum类型相反)，并且当使用auto类型说明符声明静态成员时，可以推导出该类型。C++17添加了内联静态数据成员，这确实解决了上面提出的地址问题，并且可以与constexpr一起使用。
 
 
 

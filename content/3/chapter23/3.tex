@@ -1,9 +1,9 @@
 
-Let’s analyze the Sqrt<> template introduced in Section 23.2 on page 537. The primary template is the general recursive computation that is invoked with the template parameter N (the value for which to compute the square root) and two other optional parameters. These optional parameters represent the minimum and maximum values the result can have. If the template is called with only one argument, we know that the square root is at least 1 and at most the value itself.
+让我们分析23.2节中介绍的Sqrt<>模板。主模板是一般的递归计算，使用模板参数N(用于计算平方根的值)和其他两个可选参数调用。这些可选参数表示结果可以拥有的最小值和最大值。如果模板只调用一个参数，并且我们已知平方根至少是1，所以结果最多是值本身。
 
-The recursion then proceeds using a binary search technique (often called method of bisection in this context). Inside the template, we compute whether value is in the first or the second half of the range between LO and HI. This case differentiation is done using the conditional operator ?:. If mid2 is greater than N, we continue the search in the first half. If mid2 is less than or equal to N, we use the same template for the second half again. The partial specialization ends the recursive process when LO and HI have the same value M, which is our final value.
+然后递归使用二分搜索技术(通常称为二分法)。模板内部，计算值是在LO和HI之间的范围的前半部分，还是后半部分。这种情况使用三元操作符来区分。如果二分的中间值大于N，我们继续上半部分的搜索。如果二分的中间值小于等于N，对第二部分使用相同的模板。当LO和HI具有相同的值M(即我们的最终值)时，偏特化结束递归。
 
-Template instantiations are not cheap: Even relatively modest class templates can allocate over a kilobyte of storage for every instance, and that storage cannot be reclaimed until compilation as completed. Let’s therefore examine the details of a simple program that uses our Sqrt template:
+模板实例化并简单:即使是相对普通的类模板，也可以为每个实例分配超过1千字节的存储空间，并且在编译完成之前不能回收这些存储空间。因此，可以来研究一下使用Sqrt模板的编程细节:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -21,19 +21,19 @@ int main()
 }
 \end{lstlisting}
 
-The expression
+表达式
 
 \begin{lstlisting}[style=styleCXX]
 Sqrt<16>::value
 \end{lstlisting}
 
-is expanded to
+可扩展为
 
 \begin{lstlisting}[style=styleCXX]
 Sqrt<16,1,16>::value
 \end{lstlisting}
 
-Inside the template, the metaprogram computes Sqrt<16,1,16>::value as follows:
+模板内部，元程序计算Sqrt<16,1,16>::value，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 mid = (1+16+1)/2
@@ -45,7 +45,7 @@ value = (16<9*9) ? Sqrt<16,1,8>::value
 	  = Sqrt<16,1,8>::value
 \end{lstlisting}
 
-Thus, the result is computed as Sqrt<16,1,8>::value, which is expanded as follows:
+因此，计算结果为Sqrt<16,1,8>::value，展开如下:
 
 \begin{lstlisting}[style=styleCXX]
 mid = (1+8+1)/2
@@ -57,7 +57,7 @@ value = (16<5*5) ? Sqrt<16,1,4>::value
 	  = Sqrt<16,1,4>::value
 \end{lstlisting}
 
-Similarly, Sqrt<16,1,4>::value is decomposed as follows:
+类似地，Sqrt<16,1,4>::value分解如下:
 
 \begin{lstlisting}[style=styleCXX]
 mid = (1+4+1)/2
@@ -69,7 +69,7 @@ value = (16<3*3) ? Sqrt<16,1,2>::value
 	  = Sqrt<16,3,4>::value
 \end{lstlisting}
 
-Finally, Sqrt<16,3,4>::value results in the following:
+最后，Sqrt<16,3,4>::value的结果如下:
 
 \begin{lstlisting}[style=styleCXX]
 mid = (3+4+1)/2
@@ -81,24 +81,24 @@ value = (16<4*4) ? Sqrt<16,3,3>::value
 	  = Sqrt<16,4,4>::value
 \end{lstlisting}
 
-and Sqrt<16,4,4>::value ends the recursive process because it matches the explicit specialization that catches equal high and low bounds. The final result is therefore
+因为匹配捕获相等的上下界的显式特化，所以Sqrt<16,4,4>::value结束递归进程。最终的结果是
 
 \begin{lstlisting}[style=styleCXX]
 value = 4
 \end{lstlisting}
 
-\subsubsubsection{23.3.1\hspace{0.2cm}Tracking All Instantiations}
+\subsubsubsection{23.3.1\hspace{0.2cm}跟踪所有实例化}
 
-Our analysis above followed the significant instantiations that compute the square root of 16. However, when a compiler evaluates the expression
+上面的分析计算16的平方根。但是，当编译器计算表达式时
 
 \begin{lstlisting}[style=styleCXX]
 (16<=8*8) ? Sqrt<16,1,8>::value
 		  : Sqrt<16,9,16>::value
 \end{lstlisting}
 
-it instantiates not only the templates in the positive branch but also those in the negative branch (Sqrt<16,9,16>). Furthermore, because the code attempts to access a member of the resulting class type using the :: operator, all the members inside that class type are also instantiated. This means that the full instantiation of Sqrt<16,9,16> results in the full instantiation of Sqrt<16,9,12> and Sqrt<16,13,16>. When the whole process is examined in detail, we find that dozens of instantiations end up being generated. The total number is almost twice the value of N.
+不仅实例化正分支中的模板，还实例化负分支中的模板(Sqrt<16,9,16>)。此外，由于代码试图使用::操作符访问结果类类型的成员，该类类型内的所有成员也会实例化。这意味着Sqrt<16,9,16>的完全实例化会导致Sqrt<16,9,12>和Sqrt<16,13,16>的完全实例化。当详细检查整个过程时，会发现生成了几十个实例，总数是N值的两倍。
 
-Fortunately, there are techniques to reduce this explosion in the number of instantiations. To illustrate one such important technique, we rewrite our Sqrt metaprogram as follows:
+有一些技术可以减少实例化数量的激增。为了说明这样一种重要的技术，这里重写Sqrt元程序如下:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -126,7 +126,7 @@ struct Sqrt<N, S, S> {
 };
 \end{lstlisting}
 
-The key change here is the use of the IfThenElse template, which was introduced in Section 19.7.1 on page 440. Remember, the IfThenElse template is a device that selects between two types based on a given Boolean constant. If the constant is true, the first type is type-aliased to Type; otherwise, Type stands for the second type. At this point it is important to remember that defining a type alias for a class template instance does not cause a C++ compiler to instantiate the body of that instance. Therefore, when we write
+这里的关键变化是IfThenElse模板的使用，该模板19.7.1节中介绍过。记住，IfThenElse模板是一个基于给定布尔常数在两种类型之间进行选择的工具。如果该常量为真，则第一个类型被类型别名为type;否则，Type代表第二种类型。并且，为类模板实例定义类型别名并不会导致C++编译器实例化该实例体。因此，当代码如下时
 
 \begin{lstlisting}[style=styleCXX]
 using SubT = IfThenElse<(N<mid*mid),
@@ -134,7 +134,7 @@ using SubT = IfThenElse<(N<mid*mid),
 						Sqrt<N,mid,HI>>;
 \end{lstlisting}
 
-neither Sqrt<N,LO,mid-1> nor Sqrt<N,mid,HI> is fully instantiated. Whichever of these two types ends up being a synonym for SubT is fully instantiated when looking up SubT::value. In contrast to our first approach, this strategy leads to a number of instantiations that is proportional to log2(N): a very significant reduction in the cost of metaprogramming when N gets moderately large.
+Sqrt<N,LO,mid-1>和Sqrt<N,mid,HI> 都没有完全实例化。查找SubT::value时，这两种类型中的一种最终成为SubT的同义词会进行完全实例化。与我们的第一种方法相反，这种策略导致了与log2(N)成比例的大量实例化:当N变得相当大时，元编程的成本降低了。
 
 
 

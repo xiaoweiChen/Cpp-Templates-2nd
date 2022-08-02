@@ -1,4 +1,4 @@
-The earliest documented example of a metaprogram was by Erwin Unruh, then representing Siemens on the C++ standardization committee. He noted the computational completeness of the template instantiation process and demonstrated his point by developing the first metaprogram. He used the Metaware compiler and coaxed it into issuing error messages that would contain successive prime numbers. Here is the code that was circulated at a C++ committee meeting in 1994 (modified so that it now compiles on standard conforming compilers):
+最早记录元程序的例子是Erwin Unruh，当时他是C++标准化委员会中西门子的代表。他注意到模板实例化过程的计算完整性，并通过开发第一个元程序证明了他的观点。他使用Metaware编译器并诱导它发出包含连续素数的错误消息。以下是在1994年C++委员会会议上流传的代码(经过修改，现在可以在符合标准的编译器上编译):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -66,12 +66,13 @@ int main()
 }
 \end{lstlisting}
 
-If you compile this program, the compiler will print error messages when, in Prime\_print::f(), the initialization of d fails. This happens when the initial value is 1 because there is only a constructor for void*, and only 0 has a valid conversion to void*. For example, on one compiler, we get (among several other messages) the following errors:
+如果编译这个程序，当在Prime\_print::f()中，d的初始化失败时，编译器将打印错误消息。当初始值为1时就会发生这种情况，因为只有void*的构造函数，只有0有到void*的有效转换。例如，在一个编译器上，我们得到(其他几个消息中)以下错误信息:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}As error handling in compilers differs, some compilers might stop after printing the first error message.
+\hspace*{0.75cm}由于编译器中的错误处理不同，有些编译器可能会在打印第一个错误消息后停止。
 \end{tcolorbox}
 
+{\footnotesize
 \begin{tcblisting}{commandshell={}}
 unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<17>’
 unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<13>’
@@ -81,15 +82,15 @@ unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<5>’
 unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<3>’
 unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<2>’
 \end{tcblisting}
+}
 
-The concept of C++ template metaprogramming as a serious programming tool was first made popular (and somewhat formalized) by Todd Veldhuizen in his paper Using C++ Template Metaprograms (see [VeldhuizenMeta95]). Todd’s work on Blitz++ (a numeric array library for C++, see [Blitz++]) also introduced many refinements and extensions to metaprogramming (and to expression template techniques, introduced in Chapter 27).
+C++模板元编程作为一种严肃的编程工具的概念，是由Todd Veldhuizen在他使用C++模板元程序的论文(参见[VeldhuizenMeta95])中首次发表(并在某种程度上形式化)的。Todd在Blitz++(C++的数字数组库，参见[Blitz++])方面的工作还对元编程(以及表达式模板技术，在第27章中介绍)进行了许多改进和扩展。
 
-Both the first edition of this book and Andrei Alexandrescu’s “Modern C++ Design” (see [AlexandrescuDesign]) contributed to an explosion of C++ libraries exploiting template-based metaprogramming by cataloging some of the basic techniques that are still in use today. The Boost project (see [Boost]) was instrumental in bringing order to this explosion. Early on, it introduced the MPL (metaprogramming library), which defined a consistent framework for type metaprogramming made popular also through Abrahams and Gurtovoy’s book “C++ Template Metaprogramming” (see [BoostMPL]).
+这本书的第一版和Andrei Alexandrescu的《现代C++设计》(参见[AlexandrescuDesign])通过对至今仍在使用的基本技术进行编码，促进了利用基于模板的元编程的C++库的爆火(Boost项目(参见[Boost])控制了这次爆火的场面)。早期的这些技术引入了MPL(元编程库)，为类型元编程定义了一致的框架，这种框架也通过Abrahams和Gurtovoy的书《C++模板元编程》(参见[BoostMPL])而流行起来。
 
-Additional important advances have been made by Louis Dionne in making metaprogramming syntactically more accessible, particularly through his Boost.Hana library (see [BoostHana]). Louis, along with Andrew Sutton, Herb Sutter, David Vandevoorde, and others are now spearheading efforts in the standardization committee to give metaprogramming first-class support in the language. An important basis for that work is the exploration of what program properties should be available through reflection; Matu´s Chochl ˇ ´ık, Axel Naumann, and David Sankel are principal contributors in that area.
+Louis Dionne在使元编程在语法上更容易访问方面取得了其他重要进展，特别是通过他的Boost.Hana库(参见[boostana])。Louis和Andrew Sutton、Herb Sutter、David Vandevoorde等人现在正在标准化委员会中努力，为语言使用元编程提供一流的支持。这项工作的一个重要基础是探索哪些程序属性应该通过反射可用;Mat\'{u}\v{s}\ Chochl\'{i}k, Axel Naumann和David Sankel是该领域的主要贡献者。
 
-In [BartonNackman] John J. Barton and Lee R. Nackman illustrated how to keep track of dimensional units when performing computations. The SIunits library was a more comprehensive library for dealing with physical units developed by Walter Brown ([BrownSIunits]). The std::chrono component in the standard library, which we used as an inspiration for Section 23.1.4 on page 534, only deals with time and dates, and was contributed by Howard Hinnant.
-
+John J. Barton和Lee R. Nackman在[BartonNackman]中说明了在执行计算时如何跟踪维度单位。SIunits库是一个更全面的库，用于处理Walter Brown开发的物理单元。标准库中的std::chrono组件(我们使用它作为第23.1.4节的灵感来源)只处理时间和日期，由Howard Hinnant贡献。
 
 
 

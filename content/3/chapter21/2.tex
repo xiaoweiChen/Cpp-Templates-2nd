@@ -372,9 +372,9 @@ IteratorFacade const& rhs) {
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Defining a Linked-List Iterator}
+\textbf{定义链表迭代器}
 
-With our definition of IteratorFacade, we can now easily define an iterator into a simple linked-list class. For example, imagine that we define a node in the linked list as follows:
+通过IteratorFacade的定义，可以将迭代器定义为简单的链表类。假设这样定义链表中的节点:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -390,7 +390,7 @@ class ListNode
 };
 \end{lstlisting}
 
-Using IteratorFacade, an iterator into such a list can be defined in a straightforward manner:
+使用IteratorFacade，可以以一种简单的方式定义列表迭代器:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -416,13 +416,13 @@ std::forward_iterator_tag>
 };
 \end{lstlisting}
 
-ListNodeIterator provides all of the correct operators and nested types needed to act as a forward iterator, and requires very little code to implement. As we will see later, defining more complicated iterators (e.g., random access iterators) requires only a small amount of extra work.
+ListNodeIterator提供了充当前向迭代器所需的所有正确操作符和嵌套类型，并且只需要很少的代码来实现。定义更复杂的迭代器(例如，随机访问迭代器)只需要少量的工作。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Hiding the interface}
+\textbf{隐藏接口}
 
-ne downside to our implementation of ListNodeIterator is that we were required to expose, as a public interface, the operations dereference(), advance(), and equals(). To eliminate this requirement, we can rework IteratorFacade to perform all of its operations on the derived CRTP class through a separate access class, which we call IteratorFacadeAccess:
+ListNodeIterator实现的缺点是，需要作为公共接口公开操作dereference()、advance()和equals()。为了消除这个需求，可以重写IteratorFacade，通过单独的访问类IteratorFacadeAccess在派生的CRTP类上执行所有操作:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -457,7 +457,7 @@ class IteratorFacadeAccess
 };
 \end{lstlisting}
 
-This class provides static member functions for each of the core iterator operations, calling the corresponding (nonstatic) member function of the provided iterator. All of the static member functions are private, with the access only granted to IteratorFacade itself. Therefore, our ListNodeIterator can make IteratorFacadeAccess a friend and keep private the interface needed by the facade:
+该类为每个核心迭代器操作提供静态成员函数，调用所提供的迭代器对应的(非静态)成员函数。所有的静态成员函数都是私有的，只授予IteratorFacade本身访问权。因此，ListNodeIterator可以将IteratorFacadeAccess设为友元，并对门面所需的接口保持私有:
 
 \begin{lstlisting}[style=styleCXX]
 friend class IteratorFacadeAccess;
@@ -465,9 +465,9 @@ friend class IteratorFacadeAccess;
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Iterator Adapters}
+\textbf{迭代器适配器}
 
-Our IteratorFacade makes it easy to build an iterator adapter that takes an existing iterator and exposes a new iterator that provides some transformed view of the underlying sequence. For example, we might have a container of Person values:
+IteratorFacade可以很容易地构建一个迭代器适配器，可接受一个现有的迭代器，并公开一个新的迭代器，以提供底层序列的转换视图。例如，可能有一个Person值的容器:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -483,9 +483,9 @@ struct Person {
 };
 \end{lstlisting}
 
-However, rather than iterating over all of the Person values in the container, we only want to see the first names. In this section, we develop an iterator adapter called ProjectionIterator that allows us “project” the values of an underlying (base) iterator to some pointer-to-data member, for example, Person::firstName.
+但不需要遍历容器中的所有Person值，而只希望看到名字。本节中，将开发一个名为ProjectionIterator的迭代器适配器，会将底层(基)迭代器的值“投射”到一些指向数据的成员，例如Person::firstName。
 
-A ProjectionIterator is an iterator defined in terms of the base iterator (Iterator) and the type of value that will be exposed by the iterator (T):
+ProjectionIterator是根据基本迭代器(iterator)和将由迭代器(T)公开值类型定义的迭代器:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -520,15 +520,15 @@ auto project(Iterator iter, T Base::* member) {
 }
 \end{lstlisting}
 
-Each projection iterator stores two values: iter, which is the iterator into the underlying sequence (of Base values), and member, a pointer-to-data member describing which member to project through. With that in mind, we consider the template arguments provided to the IteratorFacade base class. The first is the ProjectionIterator itself (to enable CRTP). The second (T) and fourth (T\&) arguments are the value and reference types of our projection iterator, defining this as a sequence of T values.
+每个投射迭代器存储两个值:iter和member，前者是底层序列(Base值)的迭代器，后者是指向数据的成员，描述投射哪个成员。考虑到这点，可以考虑为IteratorFacade的基类提供模板参数。第一个是ProjectionIterator(用于启用CRTP)，第二个(T)和第四个(T\&)参数是投射迭代器的值和引用类型，将其定义为一个由T值组成的序列。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Again, we assume that the underlying iterator returns a reference, rather than a proxy, to simplify the presentation.
+\hspace*{0.75cm}为了简化示例，假定底层迭代器返回的是引用，而不是代理。
 \end{tcolorbox}
 
-The third and fifth arguments merely pass through the category and difference types of the underlying iterator. Therefore, our projection iterator will be an input iterator when Iterator is an input iterator, a bidirectional iterator when Iterator is a bidirectional iterator, and so on. A project() function makes it easy to build projection iterators.
+第三和第五个参数仅传递底层迭代器的类别和不同类型。因此，当迭代器是输入迭代器时，投射迭代器将是输入迭代器;当iterator是双向迭代器时，投射迭代器将是双向迭代器，以此类推。project()函数可以方便地构建投射迭代器。
 
-The only missing pieces are the implementations of the core requirements for IteratorFacade. The most interesting is dereference(), which dereferences the underlying iterator and then projects through the pointer-to-data member:
+唯一缺少的部分是IteratorFacade核心需求的实现。最有趣的是dereference()，它对底层迭代器进行解引用，然后通过指向数据的指针成员进行投射:
 
 \begin{lstlisting}[style=styleCXX]
 T& dereference() const {
@@ -536,7 +536,7 @@ T& dereference() const {
 }
 \end{lstlisting}
 
-The remaining operations are implemented in terms of the underlying iterator:
+剩下的操作是底层迭代器实现的:
 
 \begin{lstlisting}[style=styleCXX]
 void increment() {
@@ -550,9 +550,9 @@ void decrement() {
 }
 \end{lstlisting}
 
-For brevity, we’ve omitted the definitions for random access iterators, which follow analogously.
+简单起见，我们省略了随机访问迭代器的定义，其类似于下面的定义。。
 
-That’s it! With our projection iterator, we can print out the first names of a vector containing Person values:
+就是这样!使用投射迭代器，可以打印出vector中Person对象的名字:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -573,7 +573,7 @@ int main()
 }
 \end{lstlisting}
 
-This program produces:
+这个程序会输出:
 
 \begin{tcblisting}{commandshell={}}
 David
@@ -581,7 +581,7 @@ Nicolai
 Douglas
 \end{tcblisting}
 
-The facade pattern is particularly useful for creating new types that conform to some specific interface. New types need only expose some small number of core operations (between three and six for our iterator facade) to the facade, and the facade takes care of providing a complete and correct public interface using a combination of CRTP and the Barton-Nackman trick.
+门面模式对于创建符合某些特定接口的新类型特别有用。新类型只需要向门面公开少量的核心操作(门面迭代器的核心操作在3到6个之间)，门面负责使用CRTP和Barton-Nackman技巧的组合，并提供完整而正确的公共接口即可。
 
 
 

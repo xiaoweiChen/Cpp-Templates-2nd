@@ -1,5 +1,5 @@
 
-Consider a simple Polygon class that consists of a sequence of points:
+一个简单的Polygon类，由一系列Point组成:
 
 \begin{lstlisting}[style=styleCXX]
 class Point
@@ -19,7 +19,7 @@ class Polygon
 };
 \end{lstlisting}
 
-This Polygon class would be more useful if the user could extend the set of information associated with each Point to include application-specific data such as the color of each point, or perhaps associate a label with each point. One option to make this extension possible would be to parameterize Polygon based on the type of the point:
+如果用户可以扩展与每个Point相关联的信息集，包括应用程序特定的数据，比如每个Point的颜色，或者可能将标签与每个Point相关联。使这个扩展成为可能的选项是，根据Point的类型参数化Polygon:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename P>
@@ -32,7 +32,7 @@ class Polygon
 };
 \end{lstlisting}
 
-Users could conceivably create their own Point-like data type that provided the same interface as Point but includes other application-specific data, using inheritance:
+用户可以使用继承创建自己的Point数据类型，提供与Point相同的接口，但包含其他应用程序特定的数据:
 
 \begin{lstlisting}[style=styleCXX]
 class LabeledPoint : public Point
@@ -44,11 +44,11 @@ class LabeledPoint : public Point
 };
 \end{lstlisting}
 
-This implementation has its shortcomings. For one, it requires that the type Point be exposed to the user so that the user can derive from it. Also, the author of LabeledPoint needs to be careful to provide exactly the same interface as Point (e.g., inheriting or providing all of the same constructors as Point), or LabeledPoint will not work with Polygon. This constraint becomes more problematic if Point changes from one version of the Polygon template to another: The addition of a new Point constructor could require each derived class to be updated.
+这种实现有其缺点。首先，要求向用户公开Point类型，以便用户可以从它派生。此外，LabeledPoint的作者需要小心地提供与Point完全相同的接口(例如，继承或提供与Point相同的所有构造函数)，否则LabeledPoint将无法与Polygon一起工作。若Point从一个版本的Polygon模板更改为另一个，这个约束就会变得有问题:添加新的Point构造函数可能需要更新每个派生类。
 
-Mixins provide an alternative way to customize the behavior of a type without inheriting from it. Mixins essentially invert the normal direction of inheritance, because the new classes are “mixed in” to the inheritance hierarchy as base classes of a class template rather than being created as a new derived class. This approach allows the introduction of new data members and other operations without requiring any duplication of the interface.
+混合类提供了另一种方法来定制类型的行为，而不用继承它。混合类本质上颠倒了继承的正常方向，因为新类作为类模板的基类“混合”到继承层次中，而不是作为新的派生类创建。这种方法允许引入新的数据成员和其他操作，而不需要复制任何接口。
 
-A class template that supports mixins will typically accept an arbitrary number of extra classes from which it will derive:
+支持混合的类模板通常会接受任意数量的额外类，并从中派生:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Mixins>
@@ -61,7 +61,7 @@ class Point : public Mixins...
 };
 \end{lstlisting}
 
-Now, we can “mix in” a base class containing a label to produce a LabeledPoint:
+现在，我们可以“混合”一个包含标签的基类来生成一个LabeledPoint:
 
 \begin{lstlisting}[style=styleCXX]
 class Label
@@ -74,7 +74,7 @@ class Label
 using LabeledPoint = Point<Label>;
 \end{lstlisting}
 
-or even mix in several base classes:
+或者混合几个基类:
 
 \begin{lstlisting}[style=styleCXX]
 class Color
@@ -86,7 +86,7 @@ class Color
 using MyPoint = Point<Label, Color>;
 \end{lstlisting}
 
-With this mixin-based Point, it becomes easy to introduce additional information to Point without changing its interface, so Polygon becomes easier to use and evolve. Users need only apply the implicit conversion from the Point specialization to their mixin class (Label or Color, above) to access that data or interface. Moreover, the Point class can even be entirely hidden, with the mixins provided to the Polygon class template itself:
+有了这个基于混合的Point，在不改变它的接口的情况下，可以很容易地向Point引入额外的信息，所以Polygon变得更容易使用和发展。用户只需要应用从Point特化到他们的混合类(上面的Label或Color)的隐式转换就可以访问该数据或接口。此外，Point类甚至可以隐藏，并将混合提供给Polygon类模板本身:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Mixins>
@@ -99,11 +99,11 @@ class Polygon
 };
 \end{lstlisting}
 
-Mixins are useful in cases where a template needs some small level of customization—such as decorating internally stored objects with user-specified data—without requiring the library to expose and document those internal data types and their interfaces.
+模板需要进行少量定制的情况下，混合类非常有用——比如用用户指定的数据装饰内部存储对象——而不需要库公开和记录这些内部数据类型及其接口。
 
-\subsubsubsection{21.3.1\hspace{0.2cm}Curious Mixins}
+\subsubsubsection{21.3.1\hspace{0.2cm}奇怪的混合类}
 
-Mixins can be made more powerful by combining them with the Curiously Recurring Template Pattern (CRTP) described in Section 21.2 on page 495. Here, each of the mixins is actually a class template that will be provided with the type of the derived class, allowing additional customization to that derived class. A CRTP-mixin version of Point would be written as follows:
+通过将混合类与第21.2节描述CRTP相结合，混合可以更强大。这里，每个混合实际上都是一个类模板，将与派生类的类型一起提供，从而允许对派生类进行定制。一个CRTP-混合版本的Point可以这样写:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename>... Mixins>
@@ -116,11 +116,11 @@ class Point : public Mixins<Point>...
 };
 \end{lstlisting}
 
-This formulation requires some more work for each class that will be mixed in, so classes such as Label and Color will need to become class templates. However, the mixed-in classes can now tailor their behavior to the specific instance of the derived class they’ve been mixed into. For example, we can mix the previously discussed ObjectCounter template into Point to count the number of points created by Polygon and compose that mixin with other application-specific mixins as well.
+公式需要对将要混合的每个类做更多的工作，因此像Label和Color这样的类要成为类模板。但混合类可以根据混合到的派生类特定实例，调整它们的行为。例如，可以将前面讨论的ObjectCounter模板混合到Point中，以计算Polygon创建的点的数量，并将该混合与其他特定于应用程序的混合在一起。
 
-\subsubsubsection{21.3.2\hspace{0.2cm}Parameterized Virtuality}
+\subsubsubsection{21.3.2\hspace{0.2cm}参数化的虚拟性}
 
-Mixins also allow us to indirectly parameterize other attributes of the derived class, such as the virtuality of a member function. A simple example shows this rather surprising technique:
+混合类还允许间接参数化派生类的其他属性，例如成员函数的虚函数。一个简单的例子展示了这种奇特的技巧:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -165,7 +165,7 @@ int main()
 }
 \end{lstlisting}
 
-This technique can provide a tool to design a class template that is usable both to instantiate concrete classes and to extend using inheritance. However, it is rarely sufficient just to sprinkle virtuality on some member functions to obtain a class that makes a good base class for more specialized functionality. This sort of development method requires more fundamental design decisions. It is therefore usually more practical to design two different tools (class or class template hierarchies) than to try to integrate them all into one template hierarchy.
+这种技术可以提供一种工具来设计类模板，该模板既可用于实例化具体类，也可用于使用继承进行扩展。然而，仅在一些成员函数上使用虚拟性来获得一个类还不够，这个类可以作为更好的基类来实现更特化的功能。这种开发方法需要更基本的设计决策，因此设计两个不同的工具(类或类模板层次结构)通常比尝试将全部集成到一个模板层次结构中更为实用。
 
 
 

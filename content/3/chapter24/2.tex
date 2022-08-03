@@ -165,7 +165,7 @@ using LargestType = typename LargestTypeT<List>::Type;
 
 LargestTypeT的第二个默认模板参数Empty检查列表是否为空。如果不是，递归情况(将此参数固定为false)将继续查找列表。否则，基本情况(将此参数固定为true)终止递归并提供初始结果(char)。
 
-\subsubsubsection{24.2.3\hspace{0.2cm}向类型列表添加类型}
+\subsubsubsection{24.2.3\hspace{0.2cm}添加类型}
 
 PushFront操作允许我们向类型列表的头部添加一个新类型，从而生成一个新的类型列表。假设我们想在列表的末尾添加一个新类型。对于我们的类型列表模板，这个操作只需要对第24.1节中的PushFront实现做一些修改，就可以完成PushBack操作:
 
@@ -278,7 +278,7 @@ Typelist<short, int, long>
 
 PushBack的第一个实现(在Typelist上使用了偏特化)只需要固定数量的模板实例化，这使得它(在编译时)比通用版本要高效得多。此外，因为描述为PushBackT的偏特化，所以在对Typelist实例执行PushBack时，将自动选择这个高效的实现，将算法特化的概念(如第20.1节所述)引入模板元程序。本节中讨论的许多技术都可以应用于模板元程序，以减少算法模板实例化的数量。
 
-\subsubsubsection{24.2.4\hspace{0.2cm}反转类型列表}
+\subsubsubsection{24.2.4\hspace{0.2cm}反转}
 
 当类型列表的元素之间有一定的顺序时，在应用某些算法时，可以反转类型列表中元素的顺序。例如，第24.1节中介绍的SignedIntegralTypes类型列表是按照递增的整数秩排序的。但是，将这个列表反向生成类型列表Typelist<long long, long, int, short, signed char>可能更有用。使用元函数实现Reverse算法:
 
@@ -326,7 +326,7 @@ using PopBack = typename PopBackT<List>::Type;
 
 该算法反转列表，从反转列表中删除第一个元素(使用PopFront)，然后再次反转结果列表。
 
-\subsubsubsection{24.2.5\hspace{0.2cm}改变类型列表}
+\subsubsubsection{24.2.5\hspace{0.2cm}修改}
 
 以前的类型列表算法允许我们从类型列表器中提取元素、在列表中搜索、构造新列表和反向列表。但我们还没有对类型列表中的元素执行任何操作。例如，可能想要以某种方式“转换”类型列表中的所有类型，
 
@@ -390,7 +390,7 @@ using Transform = typename TransformT<List, MetaFun>::Type;
 
 参见第24.4节，该节展示了如何开发更有效的Transform实现。
 
-\subsubsubsection{24.2.6\hspace{0.2cm}类型列表的累加}
+\subsubsubsection{24.2.6\hspace{0.2cm}累加}
 
 变换是一种对序列的每个元素进行变换的算法，经常与累加一起使用，后者将序列的所有元素组合成单个结果值。
 

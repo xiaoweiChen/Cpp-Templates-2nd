@@ -1,6 +1,6 @@
-A typelist is a type that represents a list of types and can be manipulated by a template metaprogram. It provides the operations typically associated with a list: iterating over the elements (types) in the list, adding elements, or removing elements. However, typelists differ from most run-time data structures, such as std::list, in that they don’t allow mutation. For example, adding an element to an std::list changes the list itself, and that change can be observed by any other part of the program that has access to that list. Adding an element to a typelist, on the other hand, does not change the original typelist: Rather, adding an element to an existing typelist creates a new typelist without modifying the original. Readers familiar with functional programming languages, such as Scheme, ML, and Haskell, will likely recognize the parallels between working with typelists in C++ and lists in those languages.
+类型列表是表示类型列表的类型，可以由模板元程序操作。提供了与列表相关联的操作:迭代列表中的元素(类型)、添加元素或删除元素。，类型列表与大多数运行时数据结构(如std::list)不同，其不允许修改。例如，向std::list中添加一个元素会改变列表本身，而这个改变会让程序中有权访问该列表的操作观察到。另一方面，向打字员添加一个元素不会改变原始的打字员:相反，向现有的类型列表员添加一个元素会创建一个新的类型列表，而非对原始类型列表的修改。熟悉函数式编程语言(如Scheme、ML和Haskell)的读者可能会感觉到，使用C++中的类型列表和使用这些语言中的列表非常相似。
 
-A typelist is typically implemented as a class template specialization that encodes the contents of the typelist—that is, the types it contains and their order—within its template arguments. A direct implementation of a typelist encodes the elements in a parameter pack:
+类型列表通常实现为一个类模板特化，该特化在其模板参数中编码类型列表的内容(即它所包含的类型及其顺序)。类型列表的直接实现对参数包中的元素进行编码:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -12,14 +12,14 @@ class Typelist
 };
 \end{lstlisting}
 
-The elements of a Typelist are written directly as its template arguments. An empty typelist is written as Typelist<>, a typelist containing just int is written  as Typelist<int>, and so on. Here is a typelist containing all of the signed integral types:
+类型列表的元素可以直接作为模板参数。空的类型列表表示为<>，只包含int的类型列表表示为<int>，依此类推。下面是一个包含所有带符号整型的类型列表:
 
 \begin{lstlisting}[style=styleCXX]
 using SignedIntegralTypes =
 			Typelist<signed char, short, int, long, long long>;
 \end{lstlisting}
 
-Manipulating this typelist typically requires breaking the typelist into parts, generally by separating the first element in the list (the head) from the remaining elements in the list (the tail). For example, the Front metafunction extracts the first element from the typelist:
+操作这个类型列表通常需要将类型列表拆分成几个部分，通常是将列表中的第一个元素(头)与列表中的其余元素(尾)分开。例如，从Front元函数从类型表中提取第一个元素:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -39,7 +39,7 @@ template<typename List>
 using Front = typename FrontT<List>::Type;
 \end{lstlisting}
 
-Therefore, FrontT<SignedIntegralTypes>::Type (written more succinctly as Front<SignedIntegralTypes>) will produce signed char. Similarly, the PopFront metafunction removes the first element from the typelist. It’s implementation splits the typelist elements into the head and tail, then forms a new Typelist specialization from the elements in the tail.
+因此，FrontT<SignedIntegralTypes>::Type(简化地写成Front<SignedIntegralTypes>)将生成signed char。类似地，PopFront元函数从列表中删除第一个元素。它的实现将列表元素分为头和尾，然后从尾中的元素形成一个新的类型列表特化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -58,13 +58,13 @@ template<typename List>
 using PopFront = typename PopFrontT<List>::Type;
 \end{lstlisting}
 
-PopFront<SignedIntegralTypes> produces the typelist
+PopFront<SignedIntegralTypes>会产生类型列表：
 
 \begin{lstlisting}[style=styleCXX]
 Typelist<short, int, long, long long>
 \end{lstlisting}
 
-One can also insert elements onto the front of the typelist by capturing all of the existing elements into a template parameter pack, then creating a new Typelist specialization containing all of those elements:
+还可以通过将所有元素捕获到模板参数包中，然后创建一个包含所有这些元素的新的类型列表特化，从而将元素插入到类型列表的前面:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -83,13 +83,13 @@ template<typename List, typename NewElement>
 using PushFront = typename PushFrontT<List, NewElement>::Type;
 \end{lstlisting}
 
-As one might expect,
+如我们所期望，
 
 \begin{lstlisting}[style=styleCXX]
 PushFront<SignedIntegralTypes, bool>
 \end{lstlisting}
 
-produces:
+产生了:
 
 \begin{lstlisting}[style=styleCXX]
 Typelist<bool, signed char, short, int, long, long long>

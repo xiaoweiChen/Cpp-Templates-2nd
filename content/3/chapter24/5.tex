@@ -1,4 +1,4 @@
-Prior to the introduction of variadic templates, typelists were generally formulated with a recursive data structure modeled after LISP’s cons cell. Each cons cell contains a value (the head of the list) and a nested list, the latter of which could either be another cons cell or the empty list, nil. This notion can be directly expressed in C++:
+引入可变参数模板之前，可以使用模仿LISP的cons单元的递归数据结构来制定类型列表。每个Cons单元格包含一个值(列表头部)和一个嵌套列表，后者可以是另一个Cons单元格，也可以是空列表nil。这个概念可以直接用C++表示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -14,20 +14,20 @@ class Cons {
 };
 \end{lstlisting}
 
-An empty typelist is written Nil, while a single-element list containing int is written as Cons<int, Nil> or, more succinctly, Cons<int>. Longer lists require nesting:
+空的类型列表写为Nil，而包含int的单元素列表写为Cons<int, Nil>，或者更简单的Cons<int>。较长的列表则需要嵌套:
 
 \begin{lstlisting}[style=styleCXX]
 using TwoShort = Cons<short, Cons<unsigned short>>;
 \end{lstlisting}
 
-Arbitrarily long typelists can be constructed by deep recursive nesting, although writing such long lists by hand can become rather unwieldy:
+可以通过深度递归嵌套来构造任意长度的类型列表，手工编写这样长的列表可能会有些蠢:
 
 \begin{lstlisting}[style=styleCXX]
 using SignedIntegralTypes = Cons<signed char, Cons<short, Cons<int,
 							Cons<long, Cons<long long, Nil>>>>>;
 \end{lstlisting}
 
-Extracting the first element in a cons-style list refers directly to the head of the list:
+提取Cons样式列表中的第一个元素直接指向列表的头:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -43,7 +43,7 @@ template<typename List>
 using Front = typename FrontT<List>::Type;
 \end{lstlisting}
 
-Adding an element to the front wraps another Cons around the existing list:
+前面添加一个元素将对现有列表进行限制:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -59,7 +59,7 @@ template<typename List, typename Element>
 using PushFront = typename PushFrontT<List, Element>::Type;
 \end{lstlisting}
 
-Finally, removing the first element from a recursive typelist extracts the tail of the list:
+最后，从递归类型列表中删除第一个元素将提取列表的尾部:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -75,7 +75,7 @@ template<typename List>
 using PopFront = typename PopFrontT<List>::Type;
 \end{lstlisting}
 
-An IsEmpty specialization for Nil completes the set of core typelist operations:
+Nil的IsEmpty特化完成了核心类型列表操作集:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -92,7 +92,7 @@ struct IsEmpty<Nil> {
 };
 \end{lstlisting}
 
-With these typelist operations, we can now use the InsertionSort algorithm defined in Section 24.2.7 on page 563, this time with cons-style lists:
+有了这些类型列表操作，就可以使用在24.2.7节中定义的InsertionSort算法，这次使用的是Cons风格的列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -112,7 +112,7 @@ void conslisttest()
 }
 \end{lstlisting}
 
-As we’ve seen with the insertion sort, cons-style typelists can express all of the same algorithms as the variadic typelists described throughout this chapter. Indeed, many of the algorithms described are written in precisely the same style used to manipulate cons-style typelists. However, they have a few downsides that lead us to prefer the variadic versions: First, the nesting makes long consstyle typelists very hard to both write and read, in source code and in compiler diagnostics. Second, several algorithms (including PushBack and Transform) can be specialized for variadic typelists to provide more efficient implementations (as measured by the number of instantiations). Finally, the use of variadic templates for typelists fits well with the use of variadic templates for heterogeneous containers, discussed in Chapter 25 and Chapter 26.
+正如在插入排序中看到的，Cons风格的类型列表可以表达适用于可变类型列表上的所有算法。但这也有一些缺点，导致我们更倾向于可变类型的版本:首先，嵌套使得长Con风格类型列表在源代码很难书写，并且编译器与之相关的诊断信息很难读懂。第二，一些算法(包括PushBack和Transform)可以专门用于可变类型列表，以提供更有效的实现(通过实例化的数量来衡量)。最后，在类型列表中使用可变参数模板与在异构容器中使用可变参数模板相同，这已在第25章和第26章中讨论过了。
 
 
 

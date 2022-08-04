@@ -1,11 +1,11 @@
 
-A tuples is a container that provides the ability to access and modify each of its elements (through get) as well as to create new tuples (directly or with makeTuple()) and to break a tuple into its head and tail (getHead() and getTail()). These fundamental building blocks are sufficient to build a suite of tuple algorithms, such as adding or removing elements from a tuple, reordering the elements in a tuple, or selecting some subset of the elements in the tuple.
+元组是一个容器，提供了访问和修改其每个元素的能力(通过get)，以及创建新的元组(直接或使用makeTuple())，并将元组分解为头部和尾部(getHead()和getTail())。这些基本构建块足以构建一套元组算法，例如从元组中添加或删除元素，重新排序元组中的元素，或选择元组中元素的某些子集。
 
-Tuple algorithms are particularly interesting because they require both compile-time and run-time computation. Like the typelist algorithms of Chapter 24, applying an algorithm to a tuple may result in a tuple with a completely different type, which requires compile-time computation. For example, reversing a Tuple<int, double, string> produces a Tuple<string, double, int>. However, like an algorithm for a homogeneous container (e.g., std::reverse() on a std::vector), tuple algorithms actually require code to execute at run time, and we need to be mindful of the efficiency of the generated code.
+元组算法特别有趣，因为它们同时需要编译时和运行时计算。与第24章的类型列表算法相同，将算法应用到元组可能会得到完全不同类型的元组，这需要编译时计算。例如，对Tuple<int, double, string>进行反转会产生Tuple<string, double, int>。然而，就像同构容器的算法(例如，std::vector上的std::reverse())一样，元组算法实际上需要在运行时执行代码，所以需要注意生成代码的效率。
 
-\subsubsubsection{25.3.1\hspace{0.2cm}Tuples as Typelists}
+\subsubsubsection{25.3.1\hspace{0.2cm}元组作为类型列表}
 
-If we ignore the actual run-time component of our Tuple template, we see that it has precisely the same structure as the Typelist template developed in Chapter 24: It accepts any number of template type parameters. In fact, with a few partial specializations, we can turn Tuple into a full-featured typelist:
+如果忽略Tuple模板的实际运行时组件，会发现它的结构与第24章中开发的类型列表模板完全相同:可以接受任意数量的模板类型参数。通过一些局部特化，可以将Tuple变成一个功能齐全的类型列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -46,7 +46,7 @@ class PushBackT<Tuple<Types...>, Element> {
 };
 \end{lstlisting}
 
-Now, all of the typelist algorithms developed in Chapter 24 work equally well with Tuple and Typelist, so that we easily can deal with the type of tuples. For example:
+现在，第24章中开发的所有类型列表算法，在Tuple和类型列表中也能工作，因此可以轻松地处理元组的类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(17, 3.14, "Hello, World!");
@@ -55,15 +55,15 @@ T2 t2(get<1>(t1), get<2>(t1), true);
 std::cout << t2;
 \end{lstlisting}
 
-which prints:
+输出为
 
 \begin{tcblisting}{commandshell={}}
 (3.14, Hello, World!, 1)
 \end{tcblisting}
 
-As we will see shortly, typelist algorithms applied to tuple types are often used to help determine the result type of a tuple algorithm.
+应用于元组类型的类型列表算法，可用来确定元组算法的结果类型。
 
-\subsubsubsection{25.3.2\hspace{0.2cm}Adding to and Removing from a Tuple}
+\subsubsubsection{25.3.2\hspace{0.2cm}添加和删除元素}
 
 For the values of tuples, the ability to add an element to the beginning or end of a tuple is important for building more advanced algorithms. As with typelists, insertion at the front of a tuple is far easier than insertion at the back, so we start with pushFront:
 
@@ -134,7 +134,7 @@ which prints
 (3.14, Hello, World!, true)
 \end{tcblisting}
 
-\subsubsubsection{25.3.3\hspace{0.2cm}Reversing a Tuple}
+\subsubsubsection{25.3.3\hspace{0.2cm}反转}
 
 The elements of a tuple can be reversed with another recursive tuple algorithm whose structure follows that of the typelist reverse of Section 24.2.4 on page 557:
 
@@ -178,7 +178,7 @@ popBack(Tuple<Types...> const& tuple)
 }
 \end{lstlisting}
 
-\subsubsubsection{25.3.4\hspace{0.2cm}Index Lists}
+\subsubsubsection{25.3.4\hspace{0.2cm}索引列表}
 
 The recursive formulation of tuple reversal in the previous section is correct, but it is unnecessarily inefficient at run time. To see the problem, we introduce a simple class that counts the number of times it is copied:
 
@@ -253,7 +253,7 @@ This program produces the exact output that we want, with a single copy of each 
 
 Index lists (also called index sequences; see Section 24.4 on page 570) generalize this notion by capturing the set of tuple indices—in this case 4, 3, 2, 1, 0—into a parameter pack, which allows the sequence of get calls to be produced via a pack expansion. This allows the separation of the index computation, which can be an arbitrarily complicated template metaprogram, from the actual application of that index list, where run-time efficiency is most important. The standard type std::integer\_sequence (introduced in C++14) is often used to represent index lists.
 
-\subsubsubsection{25.3.5\hspace{0.2cm}Reversal with Index Lists}
+\subsubsubsection{25.3.5\hspace{0.2cm}使用索引列表进行反转}
 
 To perform tuple reversal with index lists, we first need a representation of index lists. An index list is a typelist containing values meant to be used as indices into either a typelist or a heterogeneous data structure (see Section 24.4 on page 570). For our index list, we will use the Valuelist type developed in Section 24.3 on page 566. The index list corresponding to the tuple reversal example above would be
 
@@ -333,7 +333,7 @@ The reverseImpl() function template captures the indices from its Valuelist para
 
 The reverse() algorithm itself merely forms the appropriate index set, as discussed earlier, and provides that to the reverseImpl algorithm. The indices are manipulated as a template metaprogram and therefore produce no run-time code. The only run-time code is in reverseImpl, which uses makeTuple() to construct the resulting tuple in one step and therefore copies the tuple elements only a single time.
 
-\subsubsubsection{25.3.6\hspace{0.2cm}Shuffle and Select}
+\subsubsubsection{25.3.6\hspace{0.2cm}打乱和选择}
 
 The reverseImpl() function template used in the previous section to form the reversed tuple actually contains no code specific to the reverse() operation. Rather, it simply selects a particular set of indices from an existing tuple and uses them to form a new tuple. reverse() provides a reversed set of indices, but many algorithms can build on this core tuple select() algorithm:
 

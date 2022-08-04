@@ -1,10 +1,10 @@
 
-Typelists provide the ability to describe and manipulate a sequence of types using a rich set of algorithms and operations. In some cases, it is also useful to work with sequences of compile-time values, such as the bounds of a multidimensional array or indices into another typelist.
+类型列表提供了使用一组丰富的算法和操作描述，以及一系列操作类型的能力。其在处理编译时可以处理一组值，例如多维数组的边界或另一个类型列表的索引。
 
-There are several ways to produce a typelist of compile-time values. One simple approach involves defining a CTValue class template (named for a compile-time value) that represents a value of a specific type within a typelist:
+有几种方法可以生成编译时值的类型列表。一种简单的方法包括定义一个CTValue类模板(编译时值命名)，在一个类型列表中表示特定类型的值:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The standard library defines the std::integral\_constant template, which is more featureful version of CTValue.
+\hspace*{0.75cm}标准库定义了std::integral\_constant模板，它是CTValue的加强版本。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -18,7 +18,7 @@ struct CTValue
 };
 \end{lstlisting}
 
-Using the CTValue template, we can now express a typelist containing integer values for the first few prime numbers:
+使用CTValue模板，可以表示一个包含前几个素数的整数值的类型列表:
 
 \begin{lstlisting}[style=styleCXX]
 using Primes = Typelist<CTValue<int, 2>, CTValue<int, 3>,
@@ -26,9 +26,9 @@ using Primes = Typelist<CTValue<int, 2>, CTValue<int, 3>,
 						CTValue<int, 11>>;
 \end{lstlisting}
 
-With this representation, we can perform numeric computations on a typelist of values, such as computing the product of these primes.
+通过这种表示，可以对值的类型列表执行数值计算，例如计算这些质数的乘积。
 
-First, a MultiplyT template accepts two compile-time values with the same type and produces a new compile-time value of that same type, multiplying the input values:
+首先，MultiplyT模板接受两个相同类型的编译时值，并生成一个相同类型的新的编译时值，将输入值相乘:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -47,13 +47,13 @@ template<typename T, typename U>
 using Multiply = typename MultiplyT<T, U>::Type;
 \end{lstlisting}
 
-Then, by using MultiplyT, the following expression yields the product of all prime numbers:
+然后，通过使用MultiplyT，下面的表达式得到所有质数的乘积:
 
 \begin{lstlisting}[style=styleCXX]
 Accumulate<Primes, MultiplyT, CTValue<int, 1>>::value
 \end{lstlisting}
 
-Unfortunately, this usage of Typelist and CTValue is fairly verbose, especially for the case where all of the values are of the same type. We can optimize this particular case by introducing an alias template CTTypelist that provides a homogeneous list of values, described as a Typelist of CTValues:
+不过，类型列表和CTValue的这种用法相当繁琐，特别是对于所有值都相同类型的情况。可以通过引入一个别名模板CTTypelist来优化这种情况。提供了一个同类的值列表，描述为CTValues的类型列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -63,13 +63,13 @@ template<typename T, T... Values>
 using CTTypelist = Typelist<CTValue<T, Values>...>;
 \end{lstlisting}
 
-We can now write an equivalent (but far more concise) definition of Primes using CTTypelist as follows:
+现在可以使用CTTypelist编写一个等效的(但更简洁的)质数定义，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 using Primes = CTTypelist<int, 2, 3, 5, 7, 11>;
 \end{lstlisting}
 
-The only downside to this approach is that alias templates are just aliases, so error messages may end up printing the underlying Typelist of CTValueTypes, causing them to be more verbose than we would like. To address this issue, we can create an entirely new typelist class, Valuelist, that stores the values directly:
+这种方法的唯一缺点是别名模板只是别名，因此错误消息可能最终会打印CTValueTypes的底层类型列表，比我们期望的更详细。为了解决这个问题，可以创建一个全新的类型列表类Valuelist，可以存储值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -106,7 +106,7 @@ struct PushBackT<Valuelist<T, Values...>, CTValue<T, New>> {
 };
 \end{lstlisting}
 
-By providing IsEmpty, FrontT, PopFrontT, and PushFrontT, we have made Valuelist a proper typelist that can be used with the algorithms defined in this chapter. PushBackT is provided as an algorithm specialization to reduce the cost of this operation at compile time. For example, Valuelist can be used with the InsertionSort algorithm defined previously:
+通过提供IsEmpty, FrontT, PopFrontT和PushFrontT，已经使Valuelist成为好用的类型列表，并且可以在本章定义的算法中使用。PushBackT作为一种算法特化提供，以减少编译时此操作的成本。例如，Valuelist可以与之前定义的InsertionSort算法一起使用:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -131,17 +131,17 @@ void valuelisttest()
 }
 \end{lstlisting}
 
-Note that you can provide the ability to initialize CTValue by using the literal operator, e.g.,
+注意，可以通过使用字面符操作符来初始化CTValue，例如，
 
 \begin{lstlisting}[style=styleCXX]
 auto a = 42_c; // initializes a as CTValue<int,42>
 \end{lstlisting}
 
-See Section 25.6 on page 599 for details.
+参阅第25.6节了解详细信息。
 
-\subsubsubsection{24.3.1\hspace{0.2cm}Deducible Nontype Parameters}
+\subsubsubsection{24.3.1\hspace{0.2cm}可推导的非类型参数}
 
-In C++17, CTValue can be improved by using a single, deducible nontype parameter (spelled with auto):
+C++17中，CTValue可以通过使用单个可推导的非类型形参(用auto)来改进:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -154,14 +154,14 @@ struct CTValue
 };
 \end{lstlisting}
 
-This eliminates the need to specify the type for each use of CTValue, making it easier to use:
+这就省去了每次使用CTValue时指定类型的需要:
 
 \begin{lstlisting}[style=styleCXX]
 using Primes = Typelist<CTValue<2>, CTValue<3>, CTValue<5>,
 						CTValue<7>, CTValue<11>>;
 \end{lstlisting}
 
-The same can be done for a C++17 Valuelist, but the result isn’t necessarily better. As noted in Section 15.10.1 on page 296, a nontype parameter pack with deduced type allows the types of each argument to differ:
+C++17的值列表也可以这样，但结果不一定更好。如15.10.1节所述，带有推导类型的非类型参数包允许每个参数的类型不同:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto... Values>
@@ -171,7 +171,7 @@ int x;
 using MyValueList = Valuelist<1, ’a’, true, &x>;
 \end{lstlisting}
 
-While such a heterogeneous value list may be useful, it is not the same as our previous Valuelist that required all of the elements to have the same type. Although one could require that all of the elements have the same type (which is also discussed in Section 15.10.1 on page 296), an empty Valuelist<> will necessarily have no known element types.
+虽然这样的异构值列表可能有用，但与前面要求所有元素都具有相同类型的值列表不同。虽然可以要求所有元素都具有相同的类型(在15.10.1节中也讨论了这一点)，但空的Valuelist<>肯定没有已知的元素类型。
 
 
 

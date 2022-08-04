@@ -1,4 +1,4 @@
-Pack expansions (described in depth in Section 12.4.1 on page 201) can be a useful mechanism for offloading the work of typelist iteration to the compiler. The Transform algorithm developed in Section 24.2.5 on page 559 is one that naturally lends itself to the use of a pack expansion, because it is applying the same operation to each of the elements in the list. This enables an algorithm specialization (by way of a partial specialization) for a Transform of a Typelist:
+包扩展(在第12.4.1节中有详细描述)是一种有用的机制，可将类型列表迭代的工作转移给编译器。因为需要对列表中的每个元素应用相同的操作(进行包扩展)，这里可以使用在第24.2.5节中开发的Transform算法。这为类型列表的Transform提供了一个特化算法(通过偏特化):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -12,11 +12,11 @@ class TransformT<Typelist<Elements...>, MetaFun, false>
 };
 \end{lstlisting}
 
-This implementation captures the typelist elements into a parameter pack Elements. It then employs a pack expansion with the pattern typename MetaFun<Elements>::Type to apply the metafunc tion to each of the types in Elements and forms a typelist from the results. This implementation is arguably simpler, because it doesn’t require recursion and uses language features in a fairly straightforward way. Moreover, it requires fewer template instantiations, because only one instance of the Transform template needs to be instantiated. The algorithm still requires a linear number of instantiations of MetaFun, but those instantiations are fundamental to the algorithm.
+这个实现将类型列表元素捕获到一个参数包elements中。然后，使用模式typename MetaFun<Elements>::Type进行包扩展，将元功能应用到Elements中的每个类型，并形成一个类型列表。这个实现更简单，因为它不需要递归，并且以一种相当直接的方式使用语言特性。此外，因为只需要实例化Transform模板的一个实例，所以需要更少的模板实例化。该算法仍然需要线性数量的MetaFun实例化，但这些实例化是算法的基础。
 
-Other algorithms benefit indirectly from uses of pack expansions. For example, the Reverse algorithm described in Section 24.2.4 on page 557 requires a linear number of instantiations of PushBack. With the pack-expansion form of PushBack on Typelist described in Section 24.2.3 on page 555 (which requires a single instantiation), Reverse is linear. However, the more-general recursive implementation of Reverse also described in that section is itself linear in the number of instantiations, making Reverse quadratic!
+其他算法间接受益于使用包扩展。例如，在第24.2.4节中描述的反向算法需要线性数量的PushBack实例化。在那一节中描述的类型列表PushBack的包扩展形式(需要单个实例化)，Reverse是线性的。然而，描述的Reverse更一般的递归实现本身在实例化数量上是线性的，使Reverse的复杂度与数量成平方关系(2次方)!
 
-Pack expansions can also be useful to select the elements in a given list of indices to produce a new typelist. The Select metafunction takes in a typelist and a Valuelist containing indices into that typelist, then produces a new typelist containing the elements specified by the Valuelist:
+选择给定索引列表中的元素以生成新的类型列表时，可以使用Pack扩展。Select元函数接受一个类型列表和一个包含该类型列表索引的值列表，然后生成一个包含由值列表指定的元素的新类型列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -36,7 +36,7 @@ template<typename Types, typename Indices>
 using Select = typename SelectT<Types, Indices>::Type;
 \end{lstlisting}
 
-The indices are captured in a parameter pack Indices, which is expanded to produce a sequence of NthElement types to index into the given typelist, capturing the result in a new Typelist. The following example illustrates how we can use Select to reverse a typelist:
+索引在参数包Indices中捕获，该参数包扩展以生成索引到给定类型列表的一系列NthElement类型，并在新的参数列表中捕获结果。下面的例子说明了如何使用Select来反转输入列表:
 
 \begin{lstlisting}[style=styleCXX]
 using SignedIntegralTypes =
@@ -47,7 +47,7 @@ using ReversedSignedIntegralTypes =
 	// produces Typelist<long long, long, int, short, signed char>
 \end{lstlisting}
 
-A nontype typelist containing indices into another list is often called an index list (or index sequence), and can allow one to simplify or eliminate recursive computations. Index lists are described in detail in Section 25.3.4 on page 585.
+包含另一个列表索引的非类型类型列表，称为索引列表(或索引序列)，允许简化或消除递归计算。索引列表在25.3.4节有详细的描述。
 
 
 

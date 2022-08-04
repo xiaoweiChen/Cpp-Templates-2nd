@@ -1,11 +1,11 @@
 
 
 
-\subsubsubsection{25.1.1\hspace{0.2cm}Storage}
+\subsubsubsection{25.1.1\hspace{0.2cm}存储}
 
-Tuples contain storage for each of the types in the template argument list. That storage can be accessed through a function template get, used as get<I>(t) for a tuple t. For example, get<0>(t) on the t in the previous example would return a reference to the int 17, while get<1>(t) returns a reference to the double 3.14.
+元组包含模板参数列表中每个类型的存储空间，可以通过函数模板get来访问，用作元组t的get<I>(t)。例如，在前面的例子中，t上的get<0>(t)将返回对int 17的引用，而get<1>(t)将返回对double 3.14的引用。
 
-The recursive formulation of tuple storage is based on the idea that a tuple containing N > 0 elements can be stored as both a single element (the first element, or header of the list) and a tuple containing N − 1 elements (the tail), with a separate special case for a zero-element tuple. Thus, a three-element tuple Tuple<int, double, std::string> can be stored as an int and a Tuple<double, std::string>. That two-element tuple can then be stored as a double and a Tuple<std::string>, which itself can be stored as a std::string and a Tuple<>. In fact, this is the same kind of recursive decomposition used in the generic versions of typelist algorithms, and the actual implementation of recursive tuple storage unfolds similarly:
+元组存储的递归公式基于这样一种思想:包含N(>0)个元素的元组，既可以存储为单个元素(列表的第一个元素或头元素)，也可以存储为包含N - 1个元素的元组(列表的尾部)，对于空元组有单独的处理。因此，三元组tuple <int, double, std::string>可以存储为int类型，而tuple <double, std::string>可以存储为三元组。然后，包含两个元素的元组可以存储为double类型和tuple <std::string>类型，其本身可以存储为std::string类型和Tuple<>类型。这与通用版本的类型列表算法中使用的递归分解相同，递归元组存储的实现过程也类似:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -43,12 +43,12 @@ class Tuple<> {
 };
 \end{lstlisting}
 
-In the recursive case, each Tuple instance contains a data member head that stores the first element in the list, along with a data member tail that stores the remaining elements in the list. The basis case is simply the empty tuple, which has no associated storage.
+在递归情况下，每个Tuple实例包含存储列表中第一个元素的数据成员头部，以及存储列表中剩余元素的数据成员尾部。一般情况是空元组，没有相关的存储。
 
-The get function template walks this recursive structure to extract the requested element:
+get函数模板遍历这个递归结构来提取相应的元素:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}A complete implementation of get() should also handle non-const and rvalue-reference tuples appropriately.
+\hspace*{0.75cm}get()的完整实现还应该适当地处理非常量和右值引用元组。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -79,11 +79,11 @@ auto get(Tuple<Types...> const& t) {
 }
 \end{lstlisting}
 
-Note that the function template get is simply a thin wrapper over a call to a static member function of TupleGet. This technique is effectively a workaround for the lack of partial specialization of function templates (discussed in Section 17.3 on page 356), which we use to specialize on the value of N. In the recursive case (N > 0), the static member function apply() extracts the tail of the current tuple and decrements N to keep looking for the requested element later in the tuple. The basis case (N = 0) returns the head of the current tuple, completing the implementation.
+注意，函数模板get只是对TupleGet的静态成员函数使用的一个简单包装。这种技术有效地解决了函数模板缺乏偏特化的问题(在第17.3节中讨论)，我们使用它特化N的值。在递归情况下(N > 0)，静态成员函数apply()可取当前元组的尾部，并递减N以继续寻找元组中稍后请求的元素。一般情况会(N = 0)返回当前元组的头部。
 
-\subsubsubsection{25.1.2\hspace{0.2cm}Construction}
+\subsubsubsection{25.1.2\hspace{0.2cm}构造}
 
-Besides the constructors defined so far:
+除了目前定义的构造函数之外:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple() {
@@ -94,7 +94,7 @@ Tuple(Head const& head, Tuple<Tail...> const& tail)
 }
 \end{lstlisting}
 
-for a tuple to be useful, we need to be able to construct it both from a set of independent values (one for each element) and from another tuple. Copy-constructing from a set of independent values passes the first of those values to initialize the head element (via its base class), then passes the remaining values to the base class representing the tail:
+要使元组有效，需要能够从一组独立的值(每个元素一个值)和另一个元组中进行构造。复制构造从一组独立的值传递第一个值来初始化头部元素(通过基类)，然后将剩余的值传递给基类，表示尾部:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple(Head const& head, Tail const&... tail)
@@ -102,13 +102,13 @@ Tuple(Head const& head, Tail const&... tail)
 }
 \end{lstlisting}
 
-This enables our initial Tuple example:
+我们的初始化元组示例:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t(17, 3.14, "Hello, World!");
 \end{lstlisting}
 
-However, this isn’t the most general interface: Users may wish to move-construct to initialize some (but perhaps not all) of the elements or to have an element constructed from a value of a different type. Therefore, we should use perfect forwarding (Section 15.6.3 on page 280) to initialize the tuple:
+然而，这并不是最通用的接口:用户可能希望使用移动构造来初始化部分(但可能不是全部)元素，或者使用不同类型的值构造。因此，我们应该使用完美转发(第15.6.3节)来初始化元组:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename VHead, typename... VTail>
@@ -118,7 +118,7 @@ Tuple(VHead&& vhead, VTail&&... vtail)
 }
 \end{lstlisting}
 
-Next, we implement support for constructing a tuple from another tuple:
+接下来，实现使用一个元组构造另一个元组:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename VHead, typename... VTail>
@@ -126,14 +126,14 @@ Tuple(Tuple<VHead, VTail...> const& other)
 : head(other.getHead()), tail(other.getTail()) { }
 \end{lstlisting}
 
-However, the introduction of this constructor does not suffice to allow tuple conversions: Given the tuple t above, an attempt to create another tuple with compatible types will fail:
+然而，这个构造函数还不足以允许元组转换:给定上面的元组t，尝试创建另一个具有兼容类型的元组将会失败:
 
 \begin{lstlisting}[style=styleCXX]
 // ERROR: no conversion from Tuple<int, double, string> to long
 Tuple<long int, long double, std::string> t2(t);
 \end{lstlisting}
 
-The problem here is that the constructor template meant to initialize from a set of independent values is a better match than the constructor template that accepts a tuple. To address this problem, we have to use std::enable\_if<> (see Section 6.3 on page 98 and Section 20.3 on page 469) to disable both member function templates when the tail does not have the expected length:
+这里的问题是，用于从一组独立值进行初始化的构造函数模板，比接受元组的构造函数模板更匹配。为了解决这个问题，当尾部没有预期的长度时，必须使用std::enable\_if<>(参见第6.3节和第20.3节)来禁用两个成员函数模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename VHead, typename... VTail,
@@ -148,9 +148,9 @@ Tuple(Tuple<VHead, VTail...> const& other)
 : head(other.getHead()), tail(other.getTail()) { }
 \end{lstlisting}
 
-You can find all constructor declarations in tuples/tuple.hpp.
+可以在tuple/tuple.hpp中找到所有构造函数的声明。
 
-A makeTuple() function template uses deduction to determine the element types of the Tuple it returns, making it far easier to create a tuple from a given set of elements:
+makeTuple()函数模板使用推导来确定返回元组的元素类型，使得给定的元素集创建元组变得相对容易许多:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -163,13 +163,13 @@ auto makeTuple(Types&&... elems)
 }
 \end{lstlisting}
 
-Again, we use perfect forwarding combined with the std::decay<> trait to convert string literals and other raw arrays into pointers and remove const and references. For example:
+再次使用完美转发与std::decay<>特征相结合，将字字面值和其他原始数组转换成指针，并移除const和引用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 makeTuple(17, 3.14, "Hello, World!")
 \end{lstlisting}
 
-initializes a
+初始化
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, char const*>

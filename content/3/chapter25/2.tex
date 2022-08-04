@@ -1,9 +1,9 @@
 
 
 
-\subsubsubsection{25.2.1\hspace{0.2cm}Comparison}
+\subsubsubsection{25.2.1\hspace{0.2cm}比较}
 
-Tuples are structural types that contain other values. To compare two tuples, it suffices to compare their elements. Therefore, we can write a definition of operator== to compare two definitions element-wise:
+元组是包含其他值的结构类型。要比较两个元组，比较它们的元素就足够了。因此，可以编写operator==的定义来比较两个定义的元素:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -24,11 +24,11 @@ bool operator==(Tuple<> const&, Tuple<> const&)
 }
 \end{lstlisting}
 
-Like many algorithms on typelists and tuples, the element-wise comparison visits the head element and then recurses to visit the tail, eventually hitting the basis case. The !=, <, >, <=, and >= operators follow analogously.
+与许多关于类型列表和元组的算法一样，元素比较先访问头部元素，然后递归访问尾部元素。操作符!=、<、>、<=和>=的顺序类似。
 
-\subsubsubsection{25.2.2\hspace{0.2cm}Output}
+\subsubsubsection{25.2.2\hspace{0.2cm}输出}
 
-Throughout this chapter, we will be creating new tuple types, so it is useful to be able to see those tuples in an executing program. The following operator<< prints any tuple whose element types can be printed:
+本章中，将创建新的元组类型，因此能够在执行程序中看到这些元组是很有用的。以下操作符<<打印任何可打印的元组元素类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -58,13 +58,13 @@ std::ostream& operator<<(std::ostream& strm, Tuple<Types...> const& t)
 }
 \end{lstlisting}
 
-Now, it is easy to create and display tuples. For example:
+现在，创建和显示元组就很容易。例如:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << makeTuple(1, 2.5, std::string("hello")) << ’\n’;
 \end{lstlisting}
 
-prints
+输出为
 
 \begin{tcblisting}{commandshell={}}
 (1, 2.5, hello)

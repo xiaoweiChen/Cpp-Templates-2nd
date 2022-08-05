@@ -1,19 +1,18 @@
-The tuples developed in the previous chapter aggregate values of some list of types into a single value, giving them roughly the same functionality as a simple struct. Given this analogy, it is natural 
-to wonder what the corresponding type would be for a union: It would contain a single value, but that value would have a type selected from some set of possible types. For example, a database field might contain an integer, floating-point value, string, or binary blob, but it can only contain a value of one of those types at any given time.
+前一章中的元组将一些类型列表的值聚合为单个类值，使它们具有与简单结构体相同的功能。这样自然就会想知道，联合的对应类型是什么:其将包含单个值，但该值将具有从一些可能类型中选择的类型。例如，一个数据库字段可能包含一个整数、浮点值、字符串或二进制对象，但在相应的时间内，其只能表示这些类型中的一种。
 
-In this chapter, we develop a class template Variant that dynamically stores a value of one of a given set of possible value types, similar to the C++17 standard library’s std::variant<>. Variant is a discriminated union, meaning that a variant knows which of its possible value types is currently active, providing better type safety than the equivalent C++ union. Variant itself is a variadic template, which accepts the list of types the active value may have. For example, the variable
+本章中，我们开发了一个类模板Variant，可以动态存储给定的一组值类型中的一个值，类似于C++17标准库的std::variant<>。Variant是可辨识联合，从而其值的类型是动态的，并提供了比C++联合更好的类型安全性。Variant本身是一个可变参数模板，可接受动态值可能具有的类型列表。例如，
 
 \begin{lstlisting}[style=styleCXX]
 Variant<int, double, string> field;
 \end{lstlisting}
 
-can store an int, double, or string, but only one of these values at a time.
+可以存储整型、双精度或字符串，但只能存储其中一个值。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that the list of potential types is fixed at the time the Variant is declared, which means that Variant is a closed discriminated union. An open discriminated union would allow values of additional types, not known at the time the discriminated union was created, to be stored within the union. The FunctionPtr class discussed in Chapter 22 can be viewed as a form of an open discriminated union.
+\hspace*{0.75cm}注意，类型列表在声明Variant时是固定的，所以Variant是一个封闭的可辨识联合。开放的可辨识联合允许在创建时不知道有哪些类型的值存储在联合中。第22章中讨论的FunctionPtr类可以看作是一种开放可识别联合。
 \end{tcolorbox}
 
-The following program illustrates the behavior of Variant:
+下面的程序演示了Variant的行为:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -37,14 +36,14 @@ int main()
 }
 \end{lstlisting}
 
-It produces the following output:
+该程序会输出：
 
 \begin{tcblisting}{commandshell={}}
 Field stores the integer 17
 Field now stores the string "hello"
 \end{tcblisting}
 
-The variant can be assigned to a value of any of its types. We can test whether the variant currently contains a value of type T using the member function is<T>(), then extract that stored value with the member function get<T>().
+可以赋值给Variant任何类型的值，可以使用成员函数is<T>()来测试Variant当前是否包含类型为T的值，然后使用成员函数get<T>()获取存储值。
 
 
 

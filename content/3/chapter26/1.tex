@@ -1,4 +1,4 @@
-The first major design aspect of our Variant type is how to manage the storage of the active value, that is, the value that is currently stored within the variant. The different types likely have different sizes and alignments to consider. Additionally, the variant will need to store a discriminator to indicate which of the possible types is the type of the active value. One simple (albeit inefficient) storage mechanism uses a tuple (see Chapter 25) directly:
+我们的Variant类型的主要设计是为了管理动态值的存储，也就是当前存储在Variant中的值。不同的类型可能需要考虑不同的大小和对齐方式。此外，该变体还需要存储一个判别符，来指示哪些可能的类型是动态值的类型。一种简单的(尽管低效)存储机制直接使用元组(参见第25章):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -12,15 +12,15 @@ class Variant {
 };
 \end{lstlisting}
 
-Here, the discriminator acts as a dynamic index into the tuple. Only the tuple element whose static index is equal to the current discriminator value has a valid value, so when discriminator is 0, get<0>(storage) provides access to the active value; when the discriminator is 1, get<1>(storage) provides access to the active value, and so on.
+标识符充当元组的动态索引。只有静态索引等于当前discriminator值的元组元素才有效。所以当discriminator为0时，get<0>(storage)提供了对动态值的访问;当discriminator为1时，get<1>(storage)提供对动态值的访问，以此类推。
 
-We could build the core variant operations is<T>() and get<T>() on top of the tuple. However, doing so is quite inefficient, because the variant itself now requires storage equal to the sum of the sizes of all of the possible value types, even though only one will be active at a time.
+可以构建核心操作is<T>()，并在元组上使用get<T>()。然而，这样做非常低效，因为即使一次只有一个动态值，Variant本身现在需要的存储等于所有可能值类型的大小之和。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}There are many other problems with this approach as well, such as the implied requirement that all of the types in Types have a default constructor.
+\hspace*{0.75cm}这种方法还有许多其他问题，比如要求Types中的所有类型都有默认构造函数。
 \end{tcolorbox}
 
-A better approach overlaps the storage of each of the possible types. We could implement this by recursively unwrapping the variant into its head and tail, as we did with tuples in Section 25.1.1 on page 576, but with a union rather than a class:
+更好的方法是将每个可能类型的存储重叠，可以通过递归地解开Variant的头和尾来实现，但这里使用的是联合，而不是类:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -40,9 +40,9 @@ union VariantStorage<> {
 };
 \end{lstlisting}
 
-Here, the union is guaranteed to have sufficient size and alignment to allow any one of the types in Types to be stored at any given time. Unfortunately, this union itself is fairly hard to work with, because most of the techniques we will use to implement Variant will use inheritance, which is not permitted for a union.
+这里，联合保证有足够的大小和对齐方式，以允许在相应时间内存储Types中的类型。但这个联合本身就很难处理，因为实现Variant将使用继承，这是联合所不允许的。
 
-Instead, we opt for a low-level representation of the variant storage: a character array large enough to hold any of the types and with suitable alignment for any of the types, which we use as a buffer to store the active value. The VariantStorage class template implements this buffer along with a discriminator:
+不过，我们选择了变体存储的底层表示:足够大的字符数组，以容纳任何类型，并对任何类型具有适当的对齐方式，我们将其用作存储活动值的缓冲区。VariantStorage类模板实现了这个缓冲区和一个辨别器:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -71,13 +71,13 @@ class VariantStorage {
 };
 \end{lstlisting}
 
-Here, we use the LargestType metaprogram developed in Section 24.2.2 on page 552 to compute the size of the buffer, ensuring it is large enough for any of the value types. Similarly, the alignas pack expansion ensures that the buffer will have an alignment suitable for any of the value types.
+这里，使用在第24.2.2节中开发的LargestType元程序来计算缓冲区的大小，确保对于任何类型都足够大。类似地，alignas包扩展确保缓冲区具有适合任何值类型的对齐方式。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Although we opted not to, we could have used a template metaprogram to compute the maximal alignment rather than using the pack expansion of alignas. The result is the same either way, but the formulation above moves the alignment computation work into the compiler.
+\hspace*{0.75cm}虽然我们选择不这样做，但可以使用模板元程序来计算最大对齐数(而不是使用对齐的包扩展)。两种方法的结果都是相同的，但是上面的公式将对齐计算工作移到了编译时。
 \end{tcolorbox}
 
-The buffer we have computed is essentially the machine representation of the union shown above. We can access a pointer to the buffer using getBuffer() and manipulate the storage through the use of explicit casts, placement new (to create new values), and explicit destruction (to destroy the values we created). If you are not familiar with std::launder() as used in getBufferAs(), it sufficient for now to know that it returns its argument unmodified; we will explain its role when we talk about assignment operators for our Variant template (see Section 26.4.3 on page 617).
+缓冲区本质上是联合的物理底层表示。可以使用getBuffer()访问指向缓冲区的指针，并通过显式类型转换、new(创建新值)和显式销毁(销毁我们创建的值)来操作存储。如果不熟悉getBufferAs()中使用的std::launder()，那也没关系，现在只要知道它不修改地返回参数就足够了;我们将在讨论Variant模板的赋值操作符时解释它的作用(参见第26.4.3节)。
 
 
 

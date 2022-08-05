@@ -1,11 +1,11 @@
 
 
-Each VariantChoice base class is responsible for handling the initialization, assignment, and destruction when the active value has type T. This section develops these core operations by filling in the details of the VariantChoice class template.
+当动态值的类型为T时，每个VariantChoice基类负责处理初始化、赋值和销毁。本节通过填充VariantChoice类模板的详细信息，来实现这些操作。
 
 
-\subsubsubsection{26.4.1\hspace{0.2cm}Initialization}
+\subsubsubsection{26.4.1\hspace{0.2cm}初始化}
 
-We begin with initialization of a variant from a value of one of the types it stores. For example, initializing a Variant<int, double, string> from a double value. This is accomplished with VariantChoice constructors that accept a value of type T:
+从变量所存储的类型之一的值开始初始化变量。例如，用双精度值初始化Variant<int, double, string>，可以通过VariantChoice的构造函数完成，它接受T类型的值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -28,31 +28,31 @@ VariantChoice<T, Types...>::VariantChoice(T&& value) {
 }
 \end{lstlisting}
 
-In each case, the constructor uses the CRTP operation getDerived() to access the shared buffer, then performs a placement new to initialize the storage with a new value of type T. The first constructor copy-constructs the incoming value, while the second constructor move-constructs the incoming value.
+每种情况下，构造函数都使用CRTP操作getDerived()访问共享缓冲区，然后执行使用new，用类型T的新值初始化存储。第一个构造函数复制构造传入值，而第二个构造函数移动构造传入值。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The use of construction here prevents the use of reference types with our Variant design. This limitation could be addressed by wrapping references in a class such as std::reference\_wrapper.
+\hspace*{0.75cm}这里的构造使用，阻止了在Variant设计中使用引用类型。这个限制可以通过在类中包装引用来解决，比如std::reference\_wrapper。
 \end{tcolorbox}
 
-Afterward, the constructors set the discriminator value to indicate the (dynamic) type of the variant’s storage.
+之后，构造函数设置辨别值来指示变量存储的(动态)类型。
 
-Our eventual goal is to be able to initialize a variant from a value of any of its types, even accounting for implicit conversions. For example:
+我们的最终目标是能够用任何类型的值初始化变量，甚至是隐式转换。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Variant<int, double, string> v("hello"); // implicitly converted to string
 \end{lstlisting}
 
-To accomplish this, we inherit the VariantChoice constructors into Variant itself by introducing the using declaration
+为了实现这一点，通过引入using声明，将VariantChoice构造函数继承为Variant本身
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The use of a pack expansion in a using declaration (Section 4.4.5 on page 65) was introduced in C++17. Prior to C++17, inheriting these constructors would have required a recursive inheritance pattern similar to the formulation of Tuple shown in Chapter 25.
+\hspace*{0.75cm}在using声明(第4.4.5节)中介绍了包扩展的使用。C++17前，继承这些构造函数需要递归继承模式，类似于第25章中展示的Tuple公式。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
 using VariantChoice<Types, Types...>::VariantChoice...;
 \end{lstlisting}
 
-In effect, this using declaration produces Variant constructors that copy or move from each type T in Types. For a Variant<int, double, string>, the constructors are, effectively:
+实际上，这个using声明产生了Variant构造函数，从Types中的每个类型T复制或移动。对于Variant<int, double, string>，构造函数实际上是:
 
 \begin{lstlisting}[style=styleCXX]
 Variant(int const&);
@@ -63,9 +63,9 @@ Variant(string const&);
 Variant(string&&);
 \end{lstlisting}
 
-\subsubsubsection{26.4.2\hspace{0.2cm}Destruction}
+\subsubsubsection{26.4.2\hspace{0.2cm}销毁}
 
-When Variant is initialized, a value is constructed into its buffer. The destroy operation handles the destruction of that value:
+初始化Variant时，将在其缓冲区中构造一个值。destroy操作为该值的销毁过程:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -82,9 +82,9 @@ bool VariantChoice<T, Types...>::destroy() {
 }
 \end{lstlisting}
 
-When the discriminator matches, we explicitly destroy the contents of the buffer by calling the appropriate destructor using ->~T(). 
+当辨别器匹配时，通过使用\texttt{->}~T()调用适当的析构函数，可以显式地销毁缓冲区中的内容。 
 
-The VariantChoice::destroy() operation is only useful when the discriminator matches. However, we generally want to destroy the value stored in the variant without regard to which type is currently active. Therefore, Variant::destroy() calls all of the VariantChoice::destroy() operations in its base classes:
+VariantChoice::destroy()操作只有在辨别器匹配时才有用。但是，我们通常希望销毁存储在Variant中的值，而不考虑当前的类型。因此，Variant::destroy()在基类中调用VariantChoice::destroy()的操作:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -101,9 +101,9 @@ void Variant<Types...>::destroy() {
 }
 \end{lstlisting}
 
-The pack expansion in the initializer of results ensures that destroy is called on each of the VariantChoice base classes. At most one of these calls will actually succeed (the one with the matching discriminator), leaving the variant empty. The empty state is indicated by setting the discriminator value to 0.
+结果初始化式中的包展开确保对每个VariantChoice基类调用了destroy。这些调用中最多有一个会成功(匹配辨别器的那个)，而Variant为空。通过将辨别器的值设置为0来表示空状态。
 
-The array results itself is there only to provide a context to use an initializer list; its actual values are ignored. In C++17, we can use a fold expression (discussed in Section 12.4.6 on page 207) to eliminate the need for this extraneous variable:
+数组结果本身只是提供了一个使用初始化列表的上下文;它的实际值会忽略。C++17中，可以使用折叠表达式(在第12.4.6节中讨论过)来消除这个额外的变量:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -121,9 +121,9 @@ void Variant<Types...>::destroy()
 \end{lstlisting}
 
 
-\subsubsubsection{26.4.3\hspace{0.2cm}Assignment}
+\subsubsubsection{26.4.3\hspace{0.2cm}赋值}
 
-Assignment builds on initialization and destruction, as illustrated by the assignment operators:
+赋值构建在初始化和销毁的基础上，如赋值操作符所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -160,24 +160,24 @@ auto VariantChoice<T, Types...>::operator= (T&& value) -> Derived& {
 }
 \end{lstlisting}
 
-As with initialization from one of the stored value types, each VariantChoice provides an assignment operator that copies (or moves) from its stored value type into the variant’s storage. These assignment operators are inherited by Variant via the following using declaration;
+与从一种存储值类型进行初始化一样，每个VariantChoice提供一个赋值操作符，该操作符将其存储的值类型复制(或移动)到变量的存储中。这些赋值操作符由Variant通过以下using声明继承:
 
 \begin{lstlisting}[style=styleCXX]
 using VariantChoice<Types, Types...>::operator=...;
 \end{lstlisting}
 
-The implementation of the assignment operator has two paths. If the variant already stores a value of the given type T (identified by a discriminator match), then the assignment operator will copyassign or move-assign the value of type T directly into the buffer, as appropriate. The discriminator is unchanged.
+赋值操作符的实现有两条路径。如果该变体已经存储了给定类型T的值(由辨别器匹配)，那么赋值操作符将根据需要，直接将类型T的值复制赋值或移动赋值到缓冲区中，辨别器不变。
 
-If the variant does not store a value of type T, assignment requires a two-step process: Destroy the current value using Variant::destroy(), then initialize a new value of type T using placement new, setting the discriminator appropriately.
+如果Variant没有存储T类型的值，赋值需要两个步骤:使用Variant:: Destroy()销毁当前值，然后使用new初始化T类型的新值，并设置鉴辨别器。
 
-There are three common problems with such a two-step assignment using placement new, which we have to take into account:
+使用new的两步赋值有三个常见问题，我们必须考虑到:
 
 \begin{itemize}
 \item
-Self-assignment
+自赋值
 
 \item
-Exceptions
+异常
 
 \item
 std::launder()
@@ -186,24 +186,23 @@ std::launder()
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Self-Assignment}
+\textbf{自赋值}
 
-Self-assignment can occur for a variant v due to an expression like the following:
+由于像下面这样的表达式，变量v可以自赋值:
 
 \begin{lstlisting}[style=styleCXX]
 v = v.get<T>()
 \end{lstlisting}
 
-With the two-step process implemented above, the source value would be destroyed before it could be copied, potentially leading to memory corruption. Fortunately, self-assignment always implies that the discriminator matches, so such code will invoke the assignment operator for T rather than this two-step process.
-
+上面实现的两步过程中，源值将在复制之前销毁，这可能会导致内存损坏。不过，自赋值意味着辨别器匹配，所以这样的代码将调用T的赋值操作符。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Exceptions}
+\textbf{异常}
 
-If the destruction of the existing value completes but the initialization of the new value throws an exception, what is the state of the variant? In our implementation, Variant::destroy() resets the discriminator value to 0. In nonexceptional cases, the discriminator will be set appropriately after initialization completes. When an exception occurs during initialization of the new value, the discriminator remains 0 to indicate that the variant does not store a value. In our design, this is the only way to produce a variant without a value.
+如果现有值的销毁完成，但new初始化引发异常，变量的状态是什么?我们的实现中，Variant::destroy()将标识符的值重置为0。在非异常情况下，将在初始化完成后适当地设置辨别器。当在初始化新值期间发生异常时，标识符保持0，表示该变量不存储值。我们的设计中，这是产生无值Variant的唯一方法。
 
-The following program illustrates how to trigger a variant with no storage by attempting to copy a value of a type whose copy constructor throws:
+下面的程序演示了如何通过复制构造函数，抛出的类型的值来生成无值Variant:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -252,14 +251,14 @@ int main()
 }
 \end{lstlisting}
 
-The output of this program is:
+程序的输出为:
 
 \begin{tcblisting}{commandshell={}}
 Copy assignment of NonCopyable failed.
 Variant has no value.
 \end{tcblisting}
 
-Accesses to a variant that has no value, whether they are through get() or through the visitor mechanism described in the following section, throw the EmptyVariant exception to allow programs to recover from this exceptional condition. The empty() member function checks whether the variant is in this empty state:
+对没有值的Variant访问，无论是通过get()还是通过下面一节描述的访问者机制，都会抛出EmptyVariant异常，并允许程序从这种异常情况中恢复。empty()成员函数检查变量可以检查，Variant实例是否处于这种空状态:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -271,16 +270,16 @@ bool Variant<Types...>::empty() const {
 }
 \end{lstlisting}
 
-The third problem with our two-step assignment is a subtle one that the C++ standardization committee has only become aware of at the end of the C++17 standardization process. We briefly explain it next.
+两步赋值的第三个问题很微妙，C++标准化委员会直到C++17标准化结束时才意识到这个问题。下面先简要地解释一下。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{std::launder()}
 
-C++ compilers generally aim at producing high-performance code, and perhaps the primary mechanism to improve the performance of generated code is to avoid repeatedly copying data from memory to registers. To do this well, a compiler has to make some assumptions and one of those assumptions is that certain kinds of data are immutable during their lifetime. That includes const data, references (which can be initialized, but not thereafter modified), and some bookkeeping data stored in polymorphic objects that is used to dispatch virtual functions, locate virtual bases classes, and handle typeid and dynamic\_cast operators.
+C++编译器的目标通常是生成高性能的代码，而提高生成代码性能的主要机制可能是避免重复地将数据从内存复制到寄存器。为了做好这一点，编译器必须做出一些假设，其中一个假设是某些类型的数据在其生命周期内不可变。这包括const数据、引用(可以初始化，但之后不能修改)和存储在多态对象中的一些数据存储，这些对象用于分派虚函数、定位虚基类、处理typeid和static\_cast操作符。
 
-The problem with our two-step assignment procedure above is that it sneakily ends the lifetime of one object and starts the lifetime of another in the same place in a way that the compiler may not be able to recognize. Consequently, a compiler might assume that a value it acquired from the previous state of a Variant object is still valid, when, in fact, an initialization with placement new invalidated it. Without mitigation, the net result would be that a program using Variant of types with immutable data members may occasionally produce invalid results when compiled for good performance. Such bugs are usually very hard to track down (in part because they occur rarely and in part because they are not really visible in the source code).
+上面两步赋值过程的问题是，偷偷地结束一个对象的生命周期，并以编译器可能无法识别的方式在相同的地方开始另一个对象的生命周期。因此，编译器可能会假设，Variant对象的前一个状态获得的值仍然有效，而实际上，带有new初始化会使其失效。如果不解决，将在获得良好性能而编译时，使用带有不可变数据成员的Variant类型可能偶尔会产生无效的结果。这样的错误通常很难查(一部分原因是它们很少发生，部另一分原因是它们在源代码中不可见)。
 
-Since C++17, the solution for this issue is to access the address of the new object through std::launder(), which just returns its argument, but which causes the compiler to recognize that the resulting address points to an object that may differ from what the compiler assumes about the argument passed to std::launder(). However, note that std::launder() only fixes the address it returns, not the argument passed to std::launder(), because the compiler reasons in terms of expressions, not actual addresses (since they do not exist until run time). Therefore, after constructing a new value with placement new, we have to ensure that each following access uses the “laundered” data. That is why we always “launder” the pointer to our Variant buffer. There are ways to do a little better (such as adding an additional pointer member that refers to the buffer and gets the “laundered” address after each assignment of a new value with placement new), but they complicate the code in ways that are hard to maintain. Our approach is simple and correct, as long as we access the buffer exclusively through the getBufferAs() members.
+C++17后，这个问题的解决方案是通过std::laundry()访问新对象的地址，只返回实参，但这会导致编译器识别出结果地址指向的对象可能与编译器传递给std::laundry()的实参不同。但是，std::laundry()只修复它返回的地址，而不是传递给std::laundry()的参数，因为编译器是用表达式来表示的，而非实际地址(因为其在运行时才存在)。因此，在构造new的初始值之后，必须确保接下来的每个访问都进行数据“清洗”。这就是总是“清洗”指向Variant缓冲区指针的原因。有一些方法可以做得更好(例如添加一个指针成员，该成员引用缓冲区，并在每次赋值后通过new获得“清洗”地址)，但它们会以难以维护的方式使代码复杂化。我们的方法只要通过getBufferAs()成员独占地访问缓冲区，简单又正确。
 
-The situation with std::launder() is not wholly satisfying: It is very subtle, hard to perceive (e.g., we didn’t notice it until just before the book went to press), and hard to alleviate (i.e., std::launder() is not very easy to use). Several members of the committee have therefore asked that more work be done to find a more satisfactory solution. See [JosuttisLaunder] for a more detailed description of the issue.
+std::laundry()的并不完全令人满意:它非常微妙，很难察觉(例如，我们直到书快要出版之前才注意到)，而且很难缓解相关的问题(例如，std::laundry()不太容易使用)。因此，委员会的几位成员需要在这方面做更多的工作，以找到一个更令人满意的解决办法。请参阅[JosuttisLaunder]以获得该问题的更详细描述。

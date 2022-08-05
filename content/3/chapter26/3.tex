@@ -1,4 +1,4 @@
-The most basic queries for a Variant type are to ask it whether its active value is of a particular type T and to access the active value when its type is known. The is() member function, defined below, determines whether the variant currently stores a value of type T:
+对于Variant类型最基本的查询是，咨询动态值的类型是否是特定的类型T，并在其类型已知时访问动态值。下面定义的is()成员函数，可以确定Variant当前是否存储T类型的值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -13,11 +13,11 @@ bool Variant<Types...>::is() const
 }
 \end{lstlisting}
 
-Given a variant v, v.is<int>() will determine whether v’s active value is of type int. The check is straightforward, comparing the discriminator in the variant’s storage against the Discriminator value of the corresponding VariantChoice base class.
+给定变量v, v.is<int>()将确定v的动态值是否为int类型。检查很简单，将变量存储中的discriminator与对应VariantChoice基类的Discriminator值进行比较。
 
-If the type we’re looking for (T) is not found in the list, the VariantChoice base class will fail to instantiate because FindIndexOfT will not contain a value member, causing an (intentional) compilation failure in is<T>(). This prevents user errors where the user is asking for a type that cannot possibly be stored in the variant.
+如果正在寻找的类型(T)在列表中没有找到，VariantChoice基类将无法进行实例化，因为FindIndexOfT将不包含值成员，从而导致is<T>()中的(故意的)编译失败。这可以防止用户在请求不可能存储在变体中的类型时，报错进行提示。
 
-The get() member function extracts a reference to the stored value. It must be provided with the type to extract (e.g., v.get<int>()), and is only valid when the variant’s active value is of that type:
+get()成员函数提取对存储值的引用。必须提供要提取的类型(例如，v.get<int>())，并且只有当变量的动态值确实为该类型时才有效:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -40,7 +40,7 @@ T& Variant<Types...>::get() & {
 }
 \end{lstlisting}
 
-When the variant does not store a value (its discriminator is 0), get() throws an EmptyVariant exception. The conditions under which the discriminator can be 0 are themselves due to exceptions, and are described in Section 26.4.3 on page 613. Other attempts to get a value from the variant with the wrong type are programmer errors detected by a failed assertion.
+当Variant不存储值(标识值是0)时，get()会抛出EmptyVariant异常。由于异常，discriminator可以是0，在第26.4.3节中描述。从错误类型的Variant获取值的尝试，会通过断言进行检查。
 
 
 

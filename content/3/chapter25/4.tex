@@ -1,4 +1,4 @@
-Tuples are useful for storing a set of related values together into a single value, regardless of what types or how many of those related values there are. At some point, it may be necessary to unpack such a tuple, for example, to pass its elements as separate arguments to a function. As a simple example, we may want to take a tuple and pass its elements to the variadic print() operation described in Section 12.4 on page 200:
+元组用于将一组相关值存储到单个值中，而不管这些值是什么类型，或有多少个相关值。在某些情况下，可能需要解包这样的元组，例如：将其元素作为单独的参数传递给函数。举个简单的例子，可以取一个元组，并将其元素传递给变量print()操作，如第12.4节所述:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
@@ -6,7 +6,7 @@ Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
 print(t...); // ERROR: cannot expand a tuple; it isn’t a parameter pack
 \end{lstlisting}
 
-As noted in the example, the “obvious” attempt to unpack a tuple will not succeed, because it is not a parameter pack. We can achieve the same means using an index list. The following function template apply() accepts a function and a tuple, then calls the function with the unpacked tuple elements:
+如示例中所述，因为它不是参数包，所以解包元组的尝试不会成功。可以使用索引列表实现相同的方法。下面的函数模板apply()接受一个函数和一个元组，然后用未打包的元组元素调用该函数:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -29,7 +29,7 @@ auto apply(F f, Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-The applyImpl() function template takes a given index list and uses it to expand the elements of a tuple into the argument list for its function object argument f. The user-facing apply() is responsible only for constructing the initial index list. Together, they allow us to expand a tuple into the arguments of print():
+applyImpl()函数模板接受给定的索引列表，并将元组中的元素展开为其函数对象参数f的参数列表。面向用户的apply()只负责构造初始索引列表，其允许将一个元组扩展为print()的参数:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
@@ -37,7 +37,7 @@ Tuple<std::string, char const*, int, char> t("Pi", "is roughly",
 apply(print, t); // OK: prints Pi is roughly 3
 \end{lstlisting}
 
-C++17 provides a similar function that works for any tuple-like type.
+C++17提供了一个类似的函数，可用于类元组类型。
 
 
 

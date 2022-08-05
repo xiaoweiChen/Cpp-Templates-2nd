@@ -1,6 +1,6 @@
-In principle, it is also possible to define an operator[] to access the elements of a tuple, similarly to the way std::vector defines operator[]. However, unlike std::vector, a tuple’s elements can each have a different type, so a tuple’s operator[] must be a template where the result type differs depending on the index of the element. That, in turn, requires each index to have a different type, so the index’s type can be used to determine the element type.
+原则上，可以定义operator[]来访问元组的元素。然而，与std::vector不同，元组的元素类型可以有不同，因此元组的operator[]必须是一个模板，其结果类型根据元素的索引不同而不同。这要求每个索引具有不同的类型，因此可以使用索引的类型来确定元素类型。
 
-The class template CTValue, introduced in Section 24.3 on page 566, allows us to encode the numeric index within a type. We can use this to define a subscript operator as a member of Tuple:
+在第24.3节中介绍的类模板CTValue，可以在类型中编码数字索引。这里，可以用其将operator[]定义为Tuple的成员:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, T Index>
@@ -9,9 +9,9 @@ auto& operator[](CTValue<T, Index>) {
 }
 \end{lstlisting}
 
-Here, we use the value of the passed index within the type of the CTValue argument to make a corresponding get<>() call.
+这里，在CTValue参数的类型中传递索引值来进行相应的get<>()调用。
 
-Now we can use this class as follows:
+现在可以这样使用这个类:
 
 \begin{lstlisting}[style=styleCXX]
 auto t = makeTuple(0, ’1’, 2.2f, std::string{"hello"});
@@ -19,9 +19,9 @@ auto a = t[CTValue<unsigned, 2>{}];
 auto b = t[CTValue<unsigned, 3>{}];
 \end{lstlisting}
 
-a and b will be initialized by the type and value of the third and fourth values in the Tuple t.
+a和b将由Tuple t中的第三和第四个值的类型和值初始化。
 
-To make the usage of constant indices more convenient, we can implement the literal operator with constexpr to compute the numeric compile-time literals directly from ordinary literals with the suffix \_c:
+为了更方便地使用常量索引，可以使用constexpr实现字面操作符，从后缀为\_c的文字直接计算编译时的数字:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -86,26 +86,26 @@ constexpr auto operator"" _c() {
 }
 \end{lstlisting}
 
-Here we take the advantage of the fact that, for numeric literals, we can use the literal operator to deduce each character of the literal as its own template parameter (see Section 15.5.1 on page 277 for details). We pass the characters to a constexpr helper function parseInt() that computes the value of the character sequence at compile time and yields it as CTValue. For example:
+对于数字字面值，可以使用字面值操作符来推导出字面值的每个字符作为模板参数(详细信息请参阅第15.5.1节)。可以将字符传递给constexpr辅助函数parseInt()，该函数在编译时计算字符序列的值，并将其生成为CTValue。例如:
 
 \begin{itemize}
 \item 
-42\_c yields CTValue<int,42>
+42\_c生成CTValue<int,42>
 
 \item 
-0x815\_c yields CTValue<int,2069>
+0x815\_c生成CTValue<int,2069>
 
 \item 
-0b1111’1111\_c yields CTValue<int,255>
+0b1111’1111\_c生成CTValue<int,255>
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The prefix 0b for binary literals and the single quote character to separate digits are supported since C++14.
+\hspace*{0.75cm}C++14开始，就支持二进制字面值的前缀0b和分隔数字的单引号字符。
 \end{tcolorbox}
 \end{itemize}
 
-Note that the parser does not handle floating-point literals. For them, the assertion results in a compile-time error because it is a run-time feature that can’t be used in compile-time contexts.
+注意，解析器不处理浮点字面值，断言会导致编译时错误，因为这是一个不能在编译时上下文中使用的运行时特性。
 
-With this, we can use tuples as follows:
+现在，就可以这样使用元组了:
 
 \begin{lstlisting}[style=styleCXX]
 auto t = makeTuple(0, ’1’, 2.2f, std::string{"hello"});
@@ -113,7 +113,7 @@ auto c = t[2_c];
 auto d = t[3_c];
 \end{lstlisting}
 
-This approach is used by Boost.Hana (see [BoostHana]), a metaprogramming library suited for computations on both types and values.
+Boost.Hana(参见[boostana]， 适合对类型和值进行计算的元编程库)就使用了这种方法。
 
 
 

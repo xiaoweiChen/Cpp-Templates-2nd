@@ -1,11 +1,11 @@
 
-A tuple is a fundamental heterogeneous container with a large number of potential uses. As such, it is worthwhile to consider what can be done to optimize the use of tuples both at run time (storage, execution time) and at compile time (number of templates instantiations). This section discusses a few specific optimizations to our Tuple implementation.
+元组是基本的异构容器。因此，有必要考虑如何在运行时(存储、执行时)和编译时(模板实例化数量)优化元组的使用。本节讨论对Tuple实现的一些特定优化。
 
-\subsubsubsection{25.5.1\hspace{0.2cm}Tuples and the EBCO}
+\subsubsubsection{25.5.1\hspace{0.2cm}元组和EBCO}
 
-Our formulation for Tuple storage uses more storage than is strictly necessary. One problem is that the tail member will eventually be an empty tuple, because every nonempty tuple terminates with an empty tuple, and data members must always have at least one byte of storage.
+元组存储公式使用了更多的存储空间。一个问题是尾部成员最终将是一个空元组，因为每个非空元组都以一个空元组结束，而且数据成员必须始终有至少一个字节的存储空间。
 
-To improve Tuple’s storage efficiency, we can apply the empty base class optimization (EBCO) discussed in Section 21.1 on page 489 by inheriting from the tail tuple rather than making it a member. For example:
+为了提高元组的存储效率，可以通过继承尾元组而不是使其成为成员来应用21.1节中讨论的空基类优化(EBCO)。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -25,14 +25,13 @@ class Tuple<Head, Tail...> : private Tuple<Tail...>
 };
 \end{lstlisting}
 
-This is the same approach we took with BaseMemberPair in Section 21.1.2 on page 494. Unfortunately, it has the practical side effect of reversing the order in which the tuple elements are initialized
-in constructors. Previously, because the head member preceded the tail member, the head would be initialized first. In this new formulation of Tuple storage, the tail is in a base class, so it will be initialized before the member head.
+这与我们在第21.1.2节中使用的BaseMemberPair方法相同。但有一个副作用，即会在构造函数中颠倒元组元素初始化的顺序。在以前，因为头部成员位于尾部成员之前，所以会先初始化头部成员。这种新的元组存储方式中，尾部位于基类中，因此将在成员头部之前初始化。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Another practical impact of this change is that the elements of the tuple will end up being stored in reverse order, because base classes are typically stored before members.
+\hspace*{0.75cm}此更改的另一个影响是，元组的元素最终将以相反的顺序存储，因为基类通常存储在成员之前。
 \end{tcolorbox}
 
-This problem can be addressed by sinking the head member into its own base class that precedes the tail in the base class list. A direct implementation of this would introduce a TupleElt template that is used to wrap each element type so that Tuple can inherit from it:
+这个问题可以通过将头部成员嵌入到基类列表中，位于尾部之前的基类来解决。直接实现将引入一个TupleElt模板，用于封装每个元素类型，以便Tuple可以继承:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -80,12 +79,12 @@ class Tuple<> {
 };
 \end{lstlisting}
 
-While this approach has solved the initialization-ordering problem, it has introduced a new (worse) problem: We can no longer extract elements from a tuple that has two elements of the same type, such as Tuple<int, int>, because the derived-to-base conversion from a tuple to TupleElt of that type (e.g., TupleElt<int>) will be ambiguous.
+虽然这种方法解决了初始化排序问题，但也引入了一个新的(更糟糕的)问题:不能再从具有两个相同类型元素的元组中提取元素，例如tuple<int, int>，因为从元组到该类型的元组的派生到基的转换(例如TupleElt<int>)将有歧义。
 
-To break the ambiguity, we need to ensure that each TupleElt base class is unique within a given Tuple. One approach is to encode the “height” of this value within its tuple, that is, the length of the tail tuple. The last element in the tuple will be stored with height 0, the next-to-last-element will be stored with height 1, and so on:
+为了打破这种模糊性，需要确保每个TupleElt基类在给定的Tuple中是唯一的。一种方法是在其元组中编码该值的“高度”，即尾元组的长度。元组中最后一个元素的高度为0，倒数第二个元素的高度为1，依此类推:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}It would be more intuitive to simply use the index of the tuple element rather than its height. However, that information is not readily available in Tuple, because a given tuple may appear both as a standalone tuple and as the tail of another tuple. A given Tuple does know, however, how many elements are in its own tail.
+\hspace*{0.75cm}更直观的做法是简单地使用元组元素的索引，而不是它的高度。然而，因为给定的元组既可能作为独立元组出现，也可能作为另一个元组的尾部出现，所以这些信息在元组中并不容易获得。然而，给定的元组确实知道自己的尾部有多少元素。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -106,7 +105,7 @@ class TupleElt {
 };
 \end{lstlisting}
 
-With this solution, we can produce a Tuple that applies the EBCO while maintaining initialization order and support for multiple elements of the same type:
+通过这个解决方案，可以产生一个Tuple，其使用EBCO，同时保持初始化顺序，并支持同一类型的多个元素:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -139,7 +138,7 @@ class Tuple<> {
 };
 \end{lstlisting}
 
-With this implementation, the following program:
+有了这个实现，再看看下面的程序:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -169,7 +168,7 @@ int main()
 }
 \end{lstlisting}
 
-prints
+输出为
 
 \begin{lstlisting}[style=styleCXX]
 A()
@@ -178,7 +177,7 @@ B()
 5 bytes
 \end{lstlisting}
 
-The EBCO has eliminated one byte (for the empty tuple, Tuple<>). However, note that both A and B are empty classes, which hints at one more opportunity for applying the EBCO in Tuple. TupleElt can be extended slightly to inherit from the element type when it is safe to do so, without requiring changes to Tuple:
+EBCO删除了一个字节(对于空元组Tuple<>)。但请注意A和B都是空类，这意味着在Tuple中有更多的机会使用EBCO。TupleElt可以进行扩展，在安全的情况下继承元素类型，不需要更改Tuple:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -217,7 +216,7 @@ class TupleElt<Height, T, true> : private T
 };
 \end{lstlisting}
 
-When TupleElt is provided with a non-final class, it inherits from the class privately to allow the EBCO to apply to the stored value, too. With this change, the previous program now prints
+当TupleElt是一个非final类时，会私有地继承该类，以允许EBCO可以用于存储值。有了这个修改，程序现在的输出为
 
 \begin{lstlisting}[style=styleCXX]
 A()
@@ -226,11 +225,11 @@ B()
 2 bytes
 \end{lstlisting}
 
-\subsubsubsection{25.5.2\hspace{0.2cm}Constant-time get()}
+\subsubsubsection{25.5.2\hspace{0.2cm}常数时间的get()}
 
-The get() operation is extremely common when working with tuples, but it’s recursive implementation requires a linear number of template instantiations that can affect compile time. Fortunately, the EBCO optimizations introduced in the previous section have enabled a more efficient implementation of get that we will describe here.
+使用元组时，get()操作非常常见，但它的递归实现需要线性数量的模板实例化，这会影响编译时间。在上一节介绍的EBCO优化已经实现了更有效的get实现，我们将在这里进行描述。
 
-The key insight is that template argument deduction (Chapter 15) deduces template arguments for a base class when matching a parameter (of the base class type) to an argument (of the derived class type). Thus, if we can compute the height H of the element we wish to extract, we can rely on the conversion from the Tuple specialization to TupleElt<H, T> (where T is deduced) to extract that element without manually walking through all of the indices:
+关键的理解是模板参数推导(第15章)，当形参(基类类型)与实参(派生类类型)匹配时，需要推导基类的模板实参。因此，若可以计算想要提取的元素的高度H，就可以靠从Tuple特化到TupleElt<H, T>(其中T需要进行推导)的转换来提取，而无需遍历所有索引:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -253,7 +252,7 @@ auto get(Tuple<Elements...>& t)
 }
 \end{lstlisting}
 
-Because get<I>(t) receives the index I of the desired element (which counts from the beginning of the tuple) while the tuple’s actual storage is in terms of height H (which counts from the end of the tuple), we compute H from I. Template argument deduction for the call to getHeight() performs the actual search: The height H is fixed because it is explicitly provided in the call, so only one TupleElt base class will match, from which the type T will be deduced. Note that getHeight() must be declared a friend of Tuple to allow the conversion to the private base class. For example:
+因为get<I>(t)接收所需元素的索引I(从元组的开始计数)，而元组的实际存储是根据高度H(从元组的结束计数)计算的，所以可以通过I计算H。调用getHeight()的模板参数推导执行实际的搜索:高度H是固定的，因为可以在调用中显式地提供，所以只有一个TupleElt基类匹配，从而可以推导出类型T。注意，必须将getHeight()声明为Tuple的友元，从而允许转换为私有基类。例如:
 
 \begin{lstlisting}[style=styleCXX]
 // inside the recursive case for class template Tuple:
@@ -262,7 +261,7 @@ friend auto get(Tuple<Elements...>& t)
 	-> decltype(getHeight<sizeof...(Elements)-I-1>(t));
 \end{lstlisting}
 
-Note that this implementation requires only a constant number of template instantiations, because we have offloaded the hard work of matching up the index to the compiler’s template argument deduction engine.
+因为已经将复杂的索引匹配工作转移到编译器模板推导那里，所以这里的实现方式只需要常数数量的模板实例化。
 
 
 

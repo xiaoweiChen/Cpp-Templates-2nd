@@ -65,7 +65,7 @@ std::cout << t2;
 
 \subsubsubsection{25.3.2\hspace{0.2cm}添加和删除元素}
 
-For the values of tuples, the ability to add an element to the beginning or end of a tuple is important for building more advanced algorithms. As with typelists, insertion at the front of a tuple is far easier than insertion at the back, so we start with pushFront:
+对于元组的值，在开头或结尾添加元素的能力对于构建更高级的算法很重要。与类型列表一样，在元组前面插入比在后面插入容易，所以先从pushFront开始:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -79,9 +79,9 @@ pushFront(Tuple<Types...> const& tuple, V const& value)
 }
 \end{lstlisting}
 
-Adding a new element (called value) onto the front of an existing tuple requires us to form a new tuple with value as its head and the existing tuple as its tail. The resulting tuple type is Tuple<V, Types...>. However, we have opted to use the typelist algorithm PushFront to demonstrate the tight coupling between the compile-time and run-time aspects of tuple algorithms: The compile-time PushFront computes the type that we need to construct to produce the appropriate run-time value.
+现有元组的前面添加一个新元素(称为值)要求以值为头，以现有元组作为尾。产生的元组类型是Tuple<V, Types...>。但是，我们选择使用类型列表算法PushFront来演示元组算法的编译时和运行时之间的紧密耦合:编译时PushFront计算需要构造的类型，以产生运行时的值。
 
-Adding a new element to the end of an existing tuple is more complicated, because it requires a recursive walk of the tuple, building up the modified tuple as we go. Note how the structure of the pushBack() implementation follows the recursive formulation of the typelist PushBack() from Section 24.2.3 on page 555:
+在现有元组的末尾添加新元素更为复杂，因为需要对元组进行递归遍历，并在遍历过程中构建修改后的元组。pushBack()实现的结构遵循第24.2.3节中类型列表pushBack()的递归公式:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -104,9 +104,9 @@ pushBack(Tuple<Head, Tail...> const& tuple, V const& value)
 }
 \end{lstlisting}
 
-The basis case, as expected, appends a value to a zero-length tuple by producing a tuple containing just that value. In the recursive case, we form a new tuple from the current element at the beginning of the list (tuple.getHead()) and the result of adding the new element to the tail of the list (the recursive pushBack call). While we have opted to express the constructed type as Tuple<Head, Tail..., V>, we note that this is equivalent to using the compile-time PushBack<Tuple<Head, Tail...>, V>.
+基本情况，通过生成只包含该值的元组，将值追加到零长度的元组。在递归的情况下，需要用列表头部的当前元素(tuple. gethead())并将新元素添加到列表尾部的结果(递归pushBack调用)，组成一个新的元组。虽然将构造的类型表示为Tuple<Head, Tail..., V>，这相当于在编译时使用PushBack<Tuple<Head, Tail...>, V>。
 
-Also, popFront() is easy to implement:
+另外，popFront()很容易实现:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -120,7 +120,7 @@ popFront(Tuple<Types...> const& tuple)
 }
 \end{lstlisting}
 
-Now we can program the example from Section 25.3.1 on page 582 as follows:
+现在可以对25.3.1节中的示例进行编程，如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(17, 3.14, "Hello, World!");
@@ -128,7 +128,7 @@ auto t2 = popFront(pushBack(t1, true));
 std::cout << std::boolalpha << t2 << ’\n’;
 \end{lstlisting}
 
-which prints
+输出为
 
 \begin{tcblisting}{commandshell={}}
 (3.14, Hello, World!, true)
@@ -136,7 +136,7 @@ which prints
 
 \subsubsubsection{25.3.3\hspace{0.2cm}反转}
 
-The elements of a tuple can be reversed with another recursive tuple algorithm whose structure follows that of the typelist reverse of Section 24.2.4 on page 557:
+元组的元素可以用另一种递归元组算法进行反转，该算法的结构遵循第24.2.4节的类型列表反转:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -156,15 +156,15 @@ Reverse<Tuple<Head, Tail...>> reverse(Tuple<Head, Tail...> const& t)
 }
 \end{lstlisting}
 
-The basis case is trivial, while the recursive case reverses the tail of the list and appends the current head to the reversed list. This means, for example, that
+基本情况很简单，而递归情况则反转列表的尾部，并将当前头部元素追加到反转的列表中。例如
 
 \begin{lstlisting}[style=styleCXX]
 reverse(makeTuple(1, 2.5, std::string("hello")))
 \end{lstlisting}
 
-will produce a Tuple<string, double, int> with the values string("hello"), 2.5, and 1, respectively.
+将产生一个Tuple<string, double, int>，其值分别为string("hello")，2.5和1。
 
-As with typelists, that way we can now easily provide popBack() by calling popFront() for the temporarily reversed list using PopBack from Section 24.2.4 on page 558:
+和类型列表一样，可以通过调用popFront()来提供popBack()来反转列表，使用第24.2.4节中的popBack:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -180,10 +180,10 @@ popBack(Tuple<Types...> const& tuple)
 
 \subsubsubsection{25.3.4\hspace{0.2cm}索引列表}
 
-The recursive formulation of tuple reversal in the previous section is correct, but it is unnecessarily inefficient at run time. To see the problem, we introduce a simple class that counts the number of times it is copied:
+上一节中，元组反转递归公式是正确，但在运行时效率低下。为了了解这个问题，我们引入了简单的类，其会计算复制自己的次数:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++17, inline static members were not supported. So, we had to initialize numCopies outside the class structure in one translation unit.
+\hspace*{0.75cm}C++17之前，不支持内联静态成员。因此，必须在一个翻译单元中初始化类结构外的numCopies。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -202,7 +202,7 @@ struct CopyCounter
 };
 \end{lstlisting}
 
-Then, we create and reverse a tuple of CopyCounter instances:
+然后，创建并反转一个CopyCounter实例元组:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -221,7 +221,7 @@ void copycountertest()
 }
 \end{lstlisting}
 
-This program will output:
+程序将输出:
 
 \begin{tcblisting}{commandshell={}}
 0: 5 copies
@@ -231,9 +231,9 @@ This program will output:
 4: 5 copies
 \end{tcblisting}
 
-That’s a lot of copies! In the ideal implementation of tuple reverse, each element would only be copied a single time, from the source tuple directly to the correct position in the result tuple. We could achieve this goal with careful use of references, including using references for the types of the intermediate arguments, but doing so complicates our implementation considerably.
+这么多次复制!在元组反向的理想实现中，每个元素只会复制一次，从源元组直接复制到结果元组中的正确位置。我们可以通过引用(包括使用中间参数类型的引用)来实现这一目标，但会使实现变得相当复杂。
 
-To eliminate extraneous copies in tuple reverse, consider how we might implement a one-off tuple reverse operation for a single tuple of known length (say, 5 elements, as in our example). We could simply use makeTuple() and get():
+为了在元组反向操作中消除多余的副本，考虑如何对已知长度的单个元组(如本例中为5个元素)实现一次性元组反向操作。可以简单地使用makeTuple()和get():
 
 \begin{lstlisting}[style=styleCXX]
 auto reversed = makeTuple(get<4>(copies), get<3>(copies),
@@ -241,7 +241,7 @@ auto reversed = makeTuple(get<4>(copies), get<3>(copies),
 							get<0>(copies));
 \end{lstlisting}
 
-This program produces the exact output that we want, with a single copy of each tuple element:
+这个程序产生了期望的输出，每个元组元素只有一个副本:
 
 \begin{tcblisting}{commandshell={}}
 0: 1 copies
@@ -251,20 +251,20 @@ This program produces the exact output that we want, with a single copy of each 
 4: 1 copies
 \end{tcblisting}
 
-Index lists (also called index sequences; see Section 24.4 on page 570) generalize this notion by capturing the set of tuple indices—in this case 4, 3, 2, 1, 0—into a parameter pack, which allows the sequence of get calls to be produced via a pack expansion. This allows the separation of the index computation, which can be an arbitrarily complicated template metaprogram, from the actual application of that index list, where run-time efficiency is most important. The standard type std::integer\_sequence (introduced in C++14) is often used to represent index lists.
+索引列表(也称为索引序列;参见第24.4节)通过将元组索引集(本例中为4、3、2、1、0)捕获到参数包中来推广，并允许通过包展开产生get调用序列。计算索引(可以是复杂的模板元程序)与索引列表的应用程序可以分离开来。在索引列表中，运行时效率很重要。标准类型std::integer\_sequence(C++14中引入)用于表示索引列表。
 
 \subsubsubsection{25.3.5\hspace{0.2cm}使用索引列表进行反转}
 
-To perform tuple reversal with index lists, we first need a representation of index lists. An index list is a typelist containing values meant to be used as indices into either a typelist or a heterogeneous data structure (see Section 24.4 on page 570). For our index list, we will use the Valuelist type developed in Section 24.3 on page 566. The index list corresponding to the tuple reversal example above would be
+要使用索引列表对元组进行反转，首先需要索引列表。索引列表是一个类型列表，包含的值可以用作类型列表或异构数据结构的索引(参见第24.4节)。对于索引列表，将使用24.3节中开发的Valuelist类型。与上面的元组反转示例对应的索引列表是
 
 \begin{lstlisting}[style=styleCXX]
 Valuelist<unsigned, 4, 3, 2, 1, 0>
 \end{lstlisting}
 
-How do we produce this index list? One approach would be to start by generating an index list counting upward from 0 to N − 1 (inclusive), where N is the length of a tuple, using a simple template metaprogram MakeIndexList:
+要如何生成这个索引列表?一种方法是使用简单的模板元程序MakeIndexList生成一个从0到N - 1(包括)的索引列表，其中N是一个元组的长度:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++14 provides a similar template make\_index\_sequence that yields a list of indices of type std::size\_t, as well as a more general make\_integer\_sequence that allows the specific type to be selected.
+\hspace*{0.75cm}C++14提供了一个类似的模板make\_index\_sequence，生成了std::size\_t类型的索引列表，以及更通用的make\_integer\_sequence，其允许选择特定的类型。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -289,14 +289,14 @@ template<unsigned N>
 using MakeIndexList = typename MakeIndexListT<N>::Type;
 \end{lstlisting}
 
-We can then compose this operation with the typelist Reverse to produce the appropriate index list:
+可以将此操作与类型列表Reverse组合，以生成相应的索引列表:
 
 \begin{lstlisting}[style=styleCXX]
 using MyIndexList = Reverse<MakeIndexList<5>>;
 					// equivalent to Valuelist<unsigned, 4, 3, 2, 1, 0>
 \end{lstlisting}
 
-To actually perform the reversal, the indices in the index list need to be captured into a nontype parameter pack. This is handled by splitting the implementation of the index-set tuple reverse() algorithm into two parts:
+要执行反转，需要将索引列表中的索引捕获到非类型参数包中。这通过将索引集元组的reverse()算法实现分成两部分来处理的:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -317,28 +317,28 @@ auto reverse(Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-In C++11, the return types have to be declared as
+在C++11中，返回类型必须声明为
 
 \begin{lstlisting}[style=styleCXX]
 -> decltype(makeTuple(get<Indices>(t)...))
 \end{lstlisting}
 
-and
+和
 
 \begin{lstlisting}[style=styleCXX]
 -> decltype(reverseImpl(t, Reverse<MakeIndexList<sizeof...(Elements)>>()))
 \end{lstlisting}
 
-The reverseImpl() function template captures the indices from its Valuelist parameter into a parameter pack Indices. It then returns the result of calling makeTuple() with arguments formed by calling get() on the tuple with the set of captured indices.
+reverseImpl()函数模板将Valuelist参数中的索引捕获到参数包indices中，然后返回调用makeTuple()的结果，其参数通过使用捕获的索引集(对元组调用get()获得)。
 
-The reverse() algorithm itself merely forms the appropriate index set, as discussed earlier, and provides that to the reverseImpl algorithm. The indices are manipulated as a template metaprogram and therefore produce no run-time code. The only run-time code is in reverseImpl, which uses makeTuple() to construct the resulting tuple in one step and therefore copies the tuple elements only a single time.
+reverse()算法本身仅形成相应的索引集，并将其提供给reverseImpl算法。索引作为模板元程序进行操作，不会产生运行时代码。唯一的运行时代码会在reverseImpl中生成，它使用makeTuple()构造产生元组，因此元组元素只复制一次。
 
 \subsubsubsection{25.3.6\hspace{0.2cm}打乱和选择}
 
-The reverseImpl() function template used in the previous section to form the reversed tuple actually contains no code specific to the reverse() operation. Rather, it simply selects a particular set of indices from an existing tuple and uses them to form a new tuple. reverse() provides a reversed set of indices, but many algorithms can build on this core tuple select() algorithm:
+上一节中用于形成反向元组的reverseImpl()函数模板，实际上不包含与reverse()操作相关的代码。相反，它只是从现有元组中选择一组特定的索引，并使用它们来组成一个新的元组。Reverse()提供了一组反向索引，但许多算法可以建立在这个核心元组的select()算法基础上:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++11, the return type has to be declared as -> decltype(makeTuple(get<Indices>(t)...)).
+\hspace*{0.75cm}C++11中，返回类型必须声明为-> decltype(makeTuple(get<indices>(t)…))。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -353,7 +353,7 @@ auto select(Tuple<Elements...> const& t,
 }
 \end{lstlisting}
 
-One simple algorithm that builds on select() is a tuple “splat” operation, which takes a single element in a tuple and replicates it to create another tuple with some number of copies of that element. For example:
+元组splat操作是建立在select()上的一个简单算法，其接受元组中的单个元素，将其复制并创建另一个元组，该元组具有该元素的一定数量的副本。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(42, 7.7, "hello"};
@@ -361,16 +361,16 @@ auto a = splat<1, 4>(t);
 std::cout << a << ’\n’;
 \end{lstlisting}
 
-would produce a Tuple<double, double, double, double> where each of the values is a copy of get<1>(t), so it will print
+会产生一个Tuple<double, double, double, double>，其中每个值都是get<1>(t)的副本，所以它会输出
 
 \begin{lstlisting}[style=styleCXX]
 (7.7, 7.7, 7.7, 7.7)
 \end{lstlisting}
 
-Given a metaprogram to produce a “replicated” index set consisting of N copies of the value I, splat() is a direct application of select():
+给定一个元程序来生成一个“复制”索引集，该索引集由值I的N个副本组成，splat()是select()的直接应用:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++11, the return type of splat() has to be declared as -> decltype(return-expression).
+\hspace*{0.75cm}C++11中，splat()的返回类型必须声明为-> decltype(return-expression)。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -402,7 +402,7 @@ auto splat(Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-Even complicated tuple algorithms can also be implemented in terms of a template metaprogram on the index list followed by an application of select(). For example, we can use the insertion sort developed in Section 24.2.7 on page 563 to sort a tuple based on the sizes of the element types. Given such a sort() function, which accepts a template metafunction comparing tuple element types as the comparison operation, we could sort tuple elements by size with code like the following:
+即使是复杂的元组算法，也可以通过索引列表上的模板元程序和一个select()应用来实现。例如，可以使用第24.2.7节中开发的插入排序，根据元素类型的大小对元组进行排序。给定这样一个sort()函数，其能接受一个比较元组元素类型的模板元函数进行比较操作，这里可以按大小对元组元素进行排序:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -426,10 +426,10 @@ void testTupleSort()
 }
 \end{lstlisting}
 
-The output might, for example, be as follows:
+例如，输出可能如下所示:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that the resulting order depends on the platform-specific size. For example, the size of a double might be less, the same, or greater than the size of a long long
+\hspace*{0.75cm}结果的顺序取决于特定于平台。例如，double的大小可能比long long的大小更小、相同或更大
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -437,10 +437,10 @@ The output might, for example, be as follows:
 sorted by size: (c, 42, 7.7, 17, (42,77))
 \end{lstlisting}
 
-The actual sort() implementation involves the use of InsertionSort with a tuple select():
+sort()实现包括使用InsertionSort和元组select():
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}In C++11, the return type of sort() has to be declared as -> decltype(return-expression).
+\hspace*{0.75cm}C++11中，sort()的返回类型必须声明为-> decltype(return-expression)。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -470,7 +470,7 @@ auto sort(Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-Look carefully at the use of InsertionSort: The actual typelist to be sorted is a list of indices into the typelist, constructed with MakeIndexList<>. Therefore, the result of the insertion sort is a set of indices into the tuple, which is then provided to select(). However, because the InsertionSort is operating on indices, it expects its comparison operation to compare two indices. The principle is easier to understand when considering a sort of the indices of a std::vector, as in the following (non-metaprogramming) example:
+仔细查看InsertionSort的使用:要排序的实际类型列表是类型列表中的索引列表，并使用MakeIndexList<>构造。因此，插入排序的结果是元组中的一组索引，然后将其提供给select()。但是，因为InsertionSort对索引进行操作，所以它的比较操作是比较两个索引。当考虑std::vector的某种索引时，这个更容易理解，如下(非元编程)示例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -491,11 +491,11 @@ int main()
 }
 \end{lstlisting}
 
-Here, indices contains indices into the vector strings. The sort() operation sorts the actual indices, so the lambda provided as the comparison operation accepts two unsigned values (rather than string values). However, the body of the lambda uses those unsigned values as indices into the strings vector, so the ordering is actually according to the contents of strings. At the end of the sort, indices provides indices into strings, sorted based on the values in strings.
+这里，索引包含vector字符串的索引。sort()操作对实际的索引进行排序，因此作为比较操作提供的Lambda接受两个无符号值(而不是字符串值)。但Lambda函数体可以使用无符号值作为字符串vector的索引，因此排序实际上是根据字符串内容进行的。排序的最后，索引提供字符串的索引，并根据字符串中的值排序。
 
-Our use of InsertionSort for the tuple sort() employs the same approach. The adapter template MetafunOfNthElementT provides a template metafunction (its nested Apply) that accepts two indices (CTValue specializations) and uses NthElement to extract the corresponding elements from its Typelist argument. In a sense, the member template Apply has “captured” the typelist provided to its enclosing template (MetafunOfNthElementT) in the same way that the lambda captured the strings vector from its enclosing scope. Apply then forwards the extracted element types to the underlying metafunction F, completing the adaptation.
+我们对元组sort()的InsertionSort使用了相同的方法。适配器模板MetafunOfNthElementT提供了模板元函数(其嵌套的Apply)，该函数接受两个索引(CTValue特化)，并使用NthElement从类型列表参数中提取相应的元素。成员模板Apply“捕获”了提供给外围模板(MetafunOfNthElementT)的类型列表，与Lambda从其外围作用域捕获字符串vector的方式相同。然后Apply将提取的元素类型转发给底层元函数F，完成调整。
 
-Note that all of the computation for the sort is performed at compile time, and the resulting tuple is formed directly, with no extraneous copying of values at run time.
+排序的所有计算都在编译时执行，直接形成结果元组，在运行时没有多余的值复制。
 
 
 

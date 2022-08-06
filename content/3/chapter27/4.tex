@@ -1,6 +1,6 @@
-Expression templates were developed independently by Todd Veldhuizen and David Vandevoorde (Todd coined the term) at a time when member templates were not yet part of the C++ programming language (and it seemed at the time that they would never be added to C++). This caused some problems in implementing the assignment operator: It could not be parameterized for the expression template. One technique to work around this consisted of introducing in the expression templates a conversion operator to a Copier class parameterized with the expression template but inheriting from a base class that was parameterized only in the element  type. This base class then provided a (virtual) copy\_to interface to which the assignment operator could refer.
+表达式模板由Todd Veldhuizen和David Vandevoorde(Todd创造了这个词)独立开发，当时成员模板还不是C++编程语言的一部分(而且在当时看来，似乎永远不会添加到C++中)。这在实现赋值操作符时，出现了一些问题:无法为表达式模板对其进行参数化。解决这一问题的技术是在表达式模板中引入一个到复制类的转换操作符，该复制类用表达式模板参数化，但继承了一个只在元素类型中参数化的基类。然后，这个基类提供了赋值操作符，从而可以引用的(虚)copy\_to接口。
 
-Here is a sketch of the mechanism (with the template names used in this chapter):
+下面是这个机制的一个示意图(以及本章中使用的模板名称):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -40,40 +40,40 @@ class A_mult {
 };
 \end{lstlisting}
 
-This adds another level of complexity and some additional run-time cost to expression templates, but even so, the resulting performance benefits were impressive at the time.
+这给表达式模板增加了另一个层次的复杂性和额外的运行时成本，但即使这样，产生的性能优势在当时还是令人印象深刻。
 
-The C++ standard library contains a class template valarray that was meant to be used for applications that would justify the techniques used for the Array template developed in this chapter. A precursor of valarray had been designed with the intention that compilers aiming at the market for scientific computation would recognize the array type and use highly optimized internal code for their operations. Such compilers would have “understood” the types in some sense. However, this never happened (in part because the market in question is relatively small and in part because the problem grew in complexity as valarray became a template). Some time after the expression template technique was discovered, one of us (Vandevoorde) submitted to the C++ committee a proposal that turned valarray essentially into the Array template we developed (with many bells and whistles inspired by the existing valarray functionality). The proposal represents the first time that the concept of the Rep parameter was documented. Prior to this, the arrays with actual storage and the expression template pseudo-arrays were different templates. When client code introduced a function foo() accepting an array—for example,
+C++标准库包含了一个类模板valarray，可以证明本章开发的Array模板所使用的技术正确。valarray的前身设计出来是为了让面向科学计算市场的编译器能够识别数组类型，并使用高度优化的内部代码进行操作。这样的编译器在某种意义上已经“理解”了这些类型。然而，这种情况从未发生(部分原因是所涉及的市场相对较小，部分原因是随着valarray成为模板，问题变得越来越复杂)。在表达式模板技术发现后的一段时间，我们中的一个(Vandevoorde)向C++委员会提交了一份提案，将valarray转变为开发的Array模板(受现有valarray功能的启发，有很多花哨的功能)。该提议首次记录了Rep参数的概念。在此之前，实际存储的数组和表达式模板伪数组是不同的模板。当外部代码引入接受数组的函数foo()时——例如，
 
 \begin{lstlisting}[style=styleCXX]
 double foo(Array<double> const&);
 \end{lstlisting}
 
-calling foo(1.2*x) forced the conversion for the expression template to an array with actual storage, even when the operations applied to that argument did not require a temporary. With expresssion templates embedded in the Rep argument, it is possible instead to declare
+调用foo(1.2*x)强制将表达式模板转换为具有实际存储空间的数组，即使应用于该参数的操作不需要临时变量。如果表达式模板内嵌在Rep参数中，则可以声明
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Rep>
 double foo(Array<double, Rep> const&);
 \end{lstlisting}
 
-and no conversion happens unless one is actually needed.
+除非确实需要，否则不会发生转换。
 
-The valarray proposal came late in the C++ standardization process and practically rewrote all the text regarding valarray in the standard. It was rejected as a result, and instead, a few tweaks were added to the existing text to allow implementations based on expression templates. However, the exploitation of this allowance remains much more cumbersome than what was discussed here. At the time of this writing, no such implementation is known, and standard valarrays are, generally speaking, quite inefficient at performing the operations for which they were designed.
+valarray提案出现在C++标准化过程的后期，实际上重写了标准中所有关于valarray的内容。结果被拒绝了，取而代之的是对现有内容进行了一些调整，允许基于表达式模板的实现。但是，使用这种方式仍然比这里讨论的要麻烦得多。撰写本文时，还不知道存在这样的实现，标准valarray在执行其设计的操作时效率非常低。
 
-Finally, it is worth observing here that many of the pioneering techniques presented in this chapter, as well as what later became known as the STL,
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The Standard Template Library (STL) revolutionized the world of C++ libraries and was later made part of the C++ standard library (see [JosuttisStdLib]).
-\end{tcolorbox}
-
-were all originally implemented on the same compiler: version
+最后，本章介绍的许多开创性技术，以及后来称为STL的技术，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Jaakko was also instrumental in developing the core language feature.
+\hspace*{0.75cm}标准模板库(STL)彻底改变了C++世界，后来成为C++标准库的一部分(参见[JosuttisStdLib])。
 \end{tcolorbox}
 
-of the Borland C++ compiler. This was perhaps the first compiler that made template programming broadly popular in the C++ programming community.
+最初都是在同一个编译器上实现(Borland的C++编译器)
 
-Expression templates were first applied primarily for operations on array-like types. However, after a few years, new applications were found. Among the most ground-breaking were Jaakko Jarvi’s ¨ and Gary Powell’s Boost.Lambda library(see [LambdaLib]), which provided a usable lambda expression facility years before lambda expressions became a core language feature3, and Eric Niebler’s Boost.Proto library, which is a library to meta-program expression templates, with the goal of creating embedded domain-specific languages in C++. Other Boost libraries, like Boost.Fusion and Boost.Hana, also make advanced use of expression templates.
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}Jaakko在开发核心语言特性方面发挥了重要作用。
+\end{tcolorbox}
+
+这可能是第一个使模板编程在C++编程社区中广泛使用的编译器。
+
+表达式模板最初主要应用于对类数组类型的操作。几年后，发现了新的应用场景。其中最具开创性的是Jaakko J{\"a}rvi和Gary Powell的Boost.Lambda库(参见[LambdaLib])，它在Lambda表达式成为核心语言特性之前提供了一个可用的Lambda表达式工具，以及Eric Niebler的Boost.Proto库，是一个元程序表达式模板库，目标是在C++中创建嵌入式领域特定语言。其他Boost库，比如Boost.Fusion和Boost.Hana中也使用了高级的表达式模板。
 
 
 

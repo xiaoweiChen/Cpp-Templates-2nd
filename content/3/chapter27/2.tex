@@ -1,37 +1,37 @@
 
-The key to resolving our problem is not to attempt to evaluate part of an expression until the whole expression has been seen (in our example, until the assignment operator is invoked). Thus, before the evaluation, we must record which operations are being applied to which objects. The operations are determined at compile time and can therefore be encoded in template arguments.
+解决这个问题的关键是，在整个表达式之前(我们的示例中，调用赋值操作符之前)不要尝试计算表达式。因此，在求值之前，必须记录哪些操作应用于哪些对象。操作在编译时确定，因此可以对模板参数进行编码。
 
-For our example expression,
-
-\begin{lstlisting}[style=styleCXX]
-1.2*x + x*y;
-\end{lstlisting}
-
-this means that the result of 1.2*x is not a new array but an object that represents each value of x multiplied by 1.2. Similarly, x*y must yield each element of x multiplied by each corresponding element of y. Finally, when we need the values of the resulting array, we do the computation that we stored for later evaluation.
-
-Let’s design a concrete implementation. Our implementation will evaluate the expression
+我们的示例表达式，
 
 \begin{lstlisting}[style=styleCXX]
 1.2*x + x*y;
 \end{lstlisting}
 
-into an object with the following type:
+1.2*x的结果不是一个新数组，而是一个表示x的每个值乘以1.2的对象。类似地，x*y必须得到x中的每个元素乘以y中每个对应的元素。最后，当需要得到结果数组的值时，进行存储以备后续的计算。
+
+这里设计一个具体的实现，实现对表达式进行求值
+
+\begin{lstlisting}[style=styleCXX]
+1.2*x + x*y;
+\end{lstlisting}
+
+转换成以下类型的对象:
 
 \begin{lstlisting}[style=styleCXX]
 A_Add<A_Mult<A_Scalar<double>,Array<double>>,
 	  A_Mult<Array<double>,Array<double>>>
 \end{lstlisting}
 
-We combine a new fundamental Array class template with class templates A\_Scalar, A\_Add, and A\_Mult. You may recognize a prefix representation for the syntax tree corresponding to this expression (see Figure 27.1). This nested template-id represents the operations involved and the types of the objects to which the operations should be applied. A\_Scalar is presented later but is essentially just a placeholder for a scalar in an array expression.
+我们将新的基本数组类模板与类模板A\_Scalar、A\_Add和A\_Mult组合在一起。在个表达式对应的语法树中，可以找到一个前缀表示(参见图27.1)。这个嵌套的模板标识表示所涉及的操作，以及操作应该应用到的对象的类型。A\_Scalar稍后会出现，但实际上其只是数组表达式中标量的占位符。
 
 \begin{center}
-\includegraphics[width=0.8\textwidth]{content/3/chapter27/images/1.png} \\
-Figure 27.1. Tree representation of expression 1.2*x+x*y
+\includegraphics[width=0.6\textwidth]{content/3/chapter27/images/1.png} \\
+图27.1. 表达式1.2*x+x*y的树型表示
 \end{center}
 
-\subsubsubsection{27.2.1\hspace{0.2cm}Operands of the Expression Templates}
+\subsubsubsection{27.2.1\hspace{0.2cm}表达式模板的操作数}
 
-To complete the representation of the expression, we must store references to the arguments in each of the A\_Add and A\_Mult objects and record the value of the scalar in the A\_Scalar object (or a reference thereto). Here are possible definitions for the corresponding operands:
+为了完成表达式的表示，必须在每个A\_Add和A\_Mult对象中存储对参数的引用，并记录A\_Scalar对象的值(或对其的引用)。以下是相应操作数的定义:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -97,9 +97,9 @@ class A_Mult {
 };
 \end{lstlisting}
 
-As you can see, we added subscripting and size-querying operations that allow us to compute the size and the values of the elements for the array resulting from the operations represented by the subtree of nodes rooted at the given object.
+这里添加了下标和大小查询操作，这些操作可以计算数组元素的大小和值，这些操作由在根部给定对象上的节点子树表示。
 
-For operations involving arrays only, the size of the result is the size of either operand. However, for operations involving both an array and a scalar, the size of the result is the size of the array operand. To distinguish array operands from scalar operands, we define a size of zero for scalars. The A\_Scalar template is therefore defined as follows:
+对于只涉及数组的操作，结果的大小是两个操作数的大小。但是，对于同时涉及数组和标量的操作，结果的大小是数组操作数的大小。为了区分数组操作数和标量操作数，我们定义标量的大小为0。因此，A\_Scalar模板的定义如下:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -129,38 +129,38 @@ class A_Scalar {
 };
 \end{lstlisting}
 
-(We have declared the constructor and member functions constexpr so this class can be used at compile time. This is, however, not strictly needed for our purposes.)
+(我们已经声明了构造函数和成员函数constexpr，因此这个类可以在编译时使用。然而，对于我们的目的来说，这不是必需的。)
 
-Note that scalars also provide an index operator. Inside the expression, they represent an array with the same scalar value for each index.
+注意，标量还提供索引操作符。表达式内部，其表示一个数组，每个索引都具有相同的标量值。
 
-You probably saw that the operator classes used a helper class A\_Traits to define the members for the operands:
+操作符类可能使用了一个辅助类A\_Traits来定义操作数的成员:
 
 \begin{lstlisting}[style=styleCXX]
 typename A_Traits<OP1>::ExprRef op1; // first operand
 typename A_Traits<OP2>::ExprRef op2; // second op
 \end{lstlisting}
 
-This is necessary because, in general, we can declare them to be references, since most temporary nodes are bound in the top-level expression and therefore live until the end of the evaluation of that complete expression. The one exception are the A\_Scalar nodes. They are bound within the operator functions and might not live until the end of the evaluation of the complete expression. Thus, to avoid having members refer to scalars that no longer exist, the A\_Scalar operands have to be copied by value.
+通常情况下，可以将它们声明为引用，因为大多数临时节点都绑定在顶层表达式中，因此直到整个表达式的计算结束为止都存在。唯一的例外是A\_Scalar节点，其绑定在操作符函数中，可能直到整个表达式求值结束才会存在。因此，为了避免成员引用不再存在的标量，必须按值复制A\_Scalar操作数。
 
-In other words, we need members that are
+换句话说，我们需要这样的成员
 
 \begin{itemize}
 \item 
-constant references in general:
+一般的常量引用:
 \begin{lstlisting}[style=styleCXX]
 OP1 const& op1; // refer to first operand by reference
 OP2 const& op2; // refer to second operand by reference
 \end{lstlisting}
 
 \item 
-but ordinary values for scalars:
+作为标量是普通值:
 \begin{lstlisting}[style=styleCXX]
 OP1 op1; // refer to first operand by value
 OP2 op2; // refer to second operand by value
 \end{lstlisting}
 \end{itemize}
 
-This is a perfect application of traits classes. The traits class defines a type to be a constant reference in general but an ordinary value for scalars:
+这是特性类的完美应用。特性类定义了一个类型，通常是常量引用，但对于标量是普通值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -187,26 +187,26 @@ class A_Traits<A_Scalar<T>> {
 };
 \end{lstlisting}
 
-Note that since A\_Scalar objects refer to scalars in the top-level expression, those scalars can use reference types. That is, A\_Scalar<T>::s is a reference member.
+注意，因为A\_Scalar对象引用顶层表达式中的标量，所以这些标量可以使用引用类型。也就是说，A\_Scalar<T>::s是引用成员变量。
 
-\subsubsubsection{27.2.2\hspace{0.2cm}The ArrayType}
+\subsubsubsection{27.2.2\hspace{0.2cm}ArrayType}
 
-With our ability to encode expressions using lightweight expression templates, we must now create an Array type that controls actual storage and that knows about the expression templates. However, it is also useful for engineering purposes to keep as similar as possible the interface for a real array with storage and one for a representation of an expression that results in an array. To this end, we declare the Array template as follows:
+有了使用轻量级表达式模板表达式的能力，现在必须创建一个Array类型，控制实际的存储，并且了解表达式模板。然而，对于工程目的来说，保持具有存储功能的真实数组的接口，与产生数组的表达式的表示的接口最好尽可能相似。为此，可以声明Array模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Rep = SArray<T>>
 class Array;
 \end{lstlisting}
 
-The type Rep can be SArray if Array is a real array of storage,
+如果Array是一个存储阵列，Rep类型可以是SArray，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}It is convenient to reuse the previously developed SArray here, but in an industrial-strength library, a specialpurpose implementation may be preferable because we won’t use all the features of SArray.
+\hspace*{0.75cm}这里重用以前开发的SArray就很方便，但在工业强度的库中，一个特殊用途的实现可能更可取，因为其不会使用SArray的所有特性。
 \end{tcolorbox}
 
-or it can be the nested template-id such as A\_Add or A\_Mult that encodes an expression. Either way we are handling Array instantiations, which considerably simplify our later dealings. In fact, even the definition of the Array template needs no specializations to distinguish the two cases, although some of the members cannot be instantiated for types like A\_Mult substituted for Rep.
+或者它可以是嵌套的模板标识，如A\_Add或A\_Mult，其构建一个表达式。无论哪种方式，这里都在处理Array实例化，这简化了后面的处理操作。即使是Array模板的定义，尽管有些成员不能使用A\_Mult代替Rep这样的类型实例化，但也不需要特化来区分这两种情况。
 
-Here is the definition. The functionality is limited roughly to what was provided by our SArray template, although once the code is understood, it is not hard to add to that functionality:
+这是定义。该功能主要局限于SArray模板所提供的功能，在理解了代码意图后，添加该功能并不难:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -276,15 +276,15 @@ class Array {
 };
 \end{lstlisting}
 
-As you can see, many operations are simply forwarded to the underlying Rep object. However, when copying another array, we must take into account the possibility that the other array is really built on an expression template. Thus, we parameterize these copy operations in terms of the underlying Rep representation.
+许多操作可以转发至底层的Rep对象。但在复制另一个数组时，必须考虑到另一个数组实际上是在表达式模板上构建的可能。因此，可以根据底层表示参数化的复制操作。
 
-The subscripting operator deserves a little discussion. Note that the const version of that operator uses a deduced return type rather than the more traditional type T const\&. We do that because if Rep represents is A\_Mult or A\_Add, its subscripting operator returns a temporary value (i.e., a prvalue), which cannot be returned by reference (and decltype(auto) will deduce a nonreference type for the prvalue case). On the other hand, if Rep is SArray<T> then the underlying subscript operator produces a const lvalue, and the deduced return type will be a matching const reference for that case.
+下标操作符需要更多的讨论，该操作符的const版本使用的是推导的返回类型，而不是传统的T const\&。这样做的原因是，若Rep代表是A\_Mult或A\_Add，其下标操作符需要返回一个临时值(即prvalue)，不能通过引用返回(decltype(auto)将为prvalue情况推导出非引用类型)。另一方面，如果Rep是SArray<T>，则底层下标操作符产生一个const左值，并且推导出的返回类型将是一个匹配的const引用。
 
-\subsubsubsection{27.2.3\hspace{0.2cm}The Operators}
+\subsubsubsection{27.2.3\hspace{0.2cm}运算符}
 
-We have most of the machinery in place to have efficient numeric operators for our numeric Array template, except the operators themselves. As implied earlier, these operators only assemble the expression template objects—they don’t actually evaluate the resulting arrays.
+除了运算符本身之外，我们已经具备了为数值数组模板创建高效数值运算符的大部分机制。这些操作符只组装表达式模板对象——并不实际计算结果数组。
 
-For each ordinary binary operator, we must implement three versions: array-array, array-scalar, and scalar-array. To be able to compute our initial value, we need, for example, the following operators:
+对于每个普通的二元运算符，必须实现三个版本:数组-数组、数组-标量和标量-数组。为了能够计算初始值，我们需要以下操作符:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -319,35 +319,35 @@ operator* (T const& s, Array<T,R2> const& b) {
 ...
 \end{lstlisting}
 
-The declaration of these operators is somewhat cumbersome (as can be seen from these examples), but the functions really don’t do much. For example, the plus operator for two arrays first creates an A\_Add<> object that represents the operator and the operands
+这些操作符的声明有些繁琐(从这些示例可以看出)，但这些函数实际上没有做太多工作。例如，两个数组的plus操作符首先创建一个A\_Add<>对象，该对象表示操作符和操作数
 
 \begin{lstlisting}[style=styleCXX]
 A_Add<T,R1,R2>(a.rep(),b.rep())
 \end{lstlisting}
 
-and wraps this object in an Array object so that we can use the result as any other object that represents data of an array:
+并将该对象包装在Array对象中，以便可以将结果用作其他表示数组数据的对象:
 
 \begin{lstlisting}[style=styleCXX]
 return Array<T,A_Add<T,R1,R2>> (...);
 \end{lstlisting}
 
-For scalar multiplication, we use the A\_Scalar template to create the A\_Mult object
+对于标量乘法，可以使用A\_Scalar模板来创建A\_Mult对象
 
 \begin{lstlisting}[style=styleCXX]
 A_Mult<T,A_Scalar<T>,R2>(A_Scalar<T>(s), b.rep())
 \end{lstlisting}
 
-and wrap again:
+然后再次包装:
 
 \begin{lstlisting}[style=styleCXX]
 return Array<T,A_Mult<T,A_Scalar<T>,R2>> (...);
 \end{lstlisting}
 
-Other nonmember binary operators are so similar that macros can be used to cover most operators with relatively little source code. Another (smaller) macro could be used for nonmember unary operators.
+其他非成员二元操作符非常类似，可以使用宏来实现大多数操作符。另一个(较小的)宏可用于非成员一元操作符。
 
-\subsubsubsection{27.2.4\hspace{0.2cm}Review}
+\subsubsubsection{27.2.4\hspace{0.2cm}审查}
 
-On first discovery of the expression template idea, the interaction of the various declarations and definitions can be daunting. Hence, a top-down review of what happens with our example code may help crystallize understanding. The code we will analyze is the following (you can find it as part of meta/exprmain.cpp):
+第一次发现表达式模板思想时，各种声明和定义之间的交互可能会令人生畏。因此，对示例代码所发生的事情进行自上而下的审查，有助于理解。这里将要分析的代码如下所示(可以在meta/exprmain.cpp中找到):
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -358,15 +358,15 @@ int main()
 }
 \end{lstlisting}
 
-Because the Rep argument is omitted in the definition of x and y, it is set to the default, which is SArray<double>. So, x and y are arrays with “real” storage and not just recordings of operations.
+因为在x和y的定义中省略了Rep参数，所以其设置为默认值，即SArray<double>。因此，x和y是具有“真实”存储的数组，而不仅仅是记录操作。
 
-When parsing the expression
+解析表达式时
 
 \begin{lstlisting}[style=styleCXX]
 1.2*x + x*y
 \end{lstlisting}
 
-the compiler first applies the leftmost * operation, which is a scalar-array operator. Overload resolution thus selects the scalar-array form of operator*:
+编译器首先应用最左边的*操作，这是一个标量数组操作符。因此，重载解析选择了操作符*的标量数组形式:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename R2>
@@ -377,15 +377,15 @@ operator* (T const& s, Array<T,R2> const& b) {
 }
 \end{lstlisting}
 
-The operand types are double and Array<double, SArray<double>>. Thus, the type of the result is
+操作数类型为double和Array<double, SArray<double>>。因此，结果的类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double, A_Mult<double, A_Scalar<double>, SArray<double>>>
 \end{lstlisting}
 
-The result value is constructed to reference an A\_Scalar<double> object constructed from the double value 1.2 and the SArray<double> representation of the object x.
+结果值构造为A\_Scalar<double>对象的引用，该对象由double值1.2和对象x的SArray<double>表示构成。
 
-Next, the second multiplication is evaluated: It is an array-array operation x*y. This time we use the appropriate operator*:
+接下来，计算第二个乘法:它是一个数组-数组操作x*y。这次使用了另一个操作符*:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename R1, typename R2>
@@ -396,15 +396,15 @@ operator* (Array<T,R1> const& a, Array<T,R2> const& b) {
 }
 \end{lstlisting}
 
-The operand types are both Array<double, SArray<double>>, so the result type is
+操作数类型都是Array<double, SArray<double>>，因此结果类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double, A_Mult<double, SArray<double>, SArray<double>>>
 \end{lstlisting}
 
-This time the wrapped A\_Mult object refers to two SArray<double> representations: the one of x and the one of y.
+这次包装的A\_Mult对象引用了两个SArray<double>表示:一个是x，一个是y。
 
-Finally, the + operation is evaluated. It is again an array-array operation, and the operand types are the result types that we just deduced. So, we invoke the array-array operator +:
+最后，计算加法操作。这又是一个数组-数组操作，操作数类型是刚才推导的结果类型。因此，使用数组加法操作符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename R1, typename R2>
@@ -415,19 +415,19 @@ operator+ (Array<T,R1> const& a, Array<T,R2> const& b) {
 }
 \end{lstlisting}
 
-T is substituted with double, whereas R1 is substituted with
+T可替换为double，R1可替换为
 
 \begin{lstlisting}[style=styleCXX]
 A_Mult<double, A_Scalar<double>, SArray<double>>
 \end{lstlisting}
 
-and R2 is substituted with
+R2可替换为
 
 \begin{lstlisting}[style=styleCXX]
 A_Mult<double, SArray<double>, SArray<double>>
 \end{lstlisting}
 
-Hence, the type of the expression to the right of the assignment token is
+因此，赋值标记右侧的表达式类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double,
@@ -436,7 +436,7 @@ Array<double,
 		A_Mult<double, SArray<double>, SArray<double>>>>
 \end{lstlisting}
 
-This type is matched to the assignment operator template of the Array template:
+该类型匹配数组模板的赋值操作符模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Rep = SArray<T>>
@@ -456,7 +456,7 @@ class Array {
 };
 \end{lstlisting}
 
-The assignment operator computes each element of the destination x by applying the subscript operator to the representation of the right side, the type of which is
+赋值操作符通过将下标操作符应用于右侧的表示(其类型为)，来计算目标x的每个元素
 
 \begin{lstlisting}[style=styleCXX]
 A_Add<double,
@@ -464,23 +464,23 @@ A_Add<double,
 	A_Mult<double, SArray<double>, SArray<double>>>>
 \end{lstlisting}
 
-Carefully tracing this subscript operator shows that for a given subscript idx, it computes
+仔细观察这个下标操作符可以发现，对于给定的下标idx，会进行计算
 
 \begin{lstlisting}[style=styleCXX]
 (1.2*x[idx]) + (x[idx]*y[idx])
 \end{lstlisting}
 
-which is exactly what we want.
+这正是我们想要的。
 
-\subsubsubsection{27.2.5\hspace{0.2cm}Expression Templates Assignments}
+\subsubsubsection{27.2.5\hspace{0.2cm}表达式模板赋值}
 
-It is not possible to instantiate write operations for an array with a Rep argument that is built on our example A\_Mult and A\_Add expression templates. (Indeed, it makes no sense to write a+b = c.) However, it is entirely reasonable to write other expression templates for which assignment to the result is possible. For example, indexing with an array of integral values would intuitively correspond to subset selection. In other words, the expression
+我们示例的A\_Mult和A\_Add表达式模板上，不可能构建一个Rep参数数组的实例化写操作。(事实上，a+b=c毫无意义)但完全可以编写其他表达式模板，对其结果赋值。例如，对整数值数组进行索引将对应于子集选择。换句话说，表达式
 
 \begin{lstlisting}[style=styleCXX]
 x[y] = 2*x[y];
 \end{lstlisting}
 
-should mean the same as
+应该等价于
 
 \begin{lstlisting}[style=styleCXX]
 for (std::size_t idx = 0; idx<y.size(); ++idx) {
@@ -488,7 +488,7 @@ for (std::size_t idx = 0; idx<y.size(); ++idx) {
 }
 \end{lstlisting}
 
-Enabling this implies that an array built on an expression template behaves like an lvalue (i.e., is writable). The expression template component for this is not fundamentally different from, say, A\_Mult, except that both const and non-const versions of the subscript operators are provided, and they may return lvalues (references):
+启用此功能意味着构建在表达式模板上，数组的行为类似于左值(即，是可写的)。这类操作的表达式模板组件与A\_Mult没有本质上的区别，只是提供了下标操作符的const版本和非const版本，可以返回左值(引用):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -520,9 +520,9 @@ class A_Subscript {
 };
 \end{lstlisting}
 
-Again, decltype(auto) comes in handy to handle subscripting of arrays independently of whether the underlying representation produces prvalues or lvalues.
+同样，decltype(auto)在处理数组下标时很有用，无论底层表示产生的是值，还是左值。
 
-The extended subscript operator with subset semantics that was suggested earlier would require that additional subscript operators be added to the Array template. One of these operators could be defined as follows (a corresponding const version would presumably also be needed):
+前面建议的具有子集语义的扩展下标操作符，需要向Array模板添加额外的下标操作符。其中一个操作符可以这样定义(可能还需要对应的const版本):
 
 \hspace*{\fill} \\ %插入空行
 \noindent

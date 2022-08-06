@@ -1,14 +1,14 @@
-To justify the complexity of the expression template idea, we have already invoked greatly enhanced performance on array-wise operations. As you trace what happens with the expression templates, you’ll find that many small inline functions call each other and that many small expression template objects are allocated on the call stack. The optimizer must perform complete inlining and elimination of the small objects to produce code that performs as well as manually coded loops. In the first edition of this book, we reported that few compilers could achieve such optimizations. Since then, the situation has improved considerably, no doubt due in part to the fact that the technique has proven popular.
+为了证明表达式模板思想的复杂性，我们已经在数组操作上提高了性能。在跟踪表达式模板时，会发现许多小型内联函数相互调用，并且在调用堆栈上分配了许多小型表达式模板对象。优化器必须执行完整的内联和消除小对象，以产生与手动编码循环一样有效的代码。本书的第一版中，我们说过很少有编译器能够实现这样的优化。但从那时起，情况有了很大的改善，部分原因是因为该技术已经很受欢迎。
 
-The expression templates technique does not resolve all the problematic situations involving numeric operations on arrays. For example, it does not work for matrix-vector multiplications of the form
+表达式模板技术不能解决涉及数组数值操作的所有问题。例如，不适用于这种形式的矩阵-向量乘法
 
 x = A*x;
 
-where x is a column vector of size n and A is an n-by-n matrix. The problem here is that a temporary must be used because each element of the result can depend on each element of the original x. Unfortunately, the expression template loop updates the first element of x right away and then uses that newly computed element to compute the second element, which is wrong. The slightly different expression
+其中x是一个大小为n的列向量，a是一个n × n的矩阵。问题是必须使用一个临时元素，因为结果中的每个元素都依赖于原始x中的每个元素。但表达式模板循环会更新x的第一个元素，然后使用新计算的元素来计算第二个元素，这是错误的。另一个稍有不同的表达
 
 x = A*y;
 
-on the other hand, does not need a temporary if x and y aren’t aliases for each other, which implies that a solution would have to know the relationship of the operands at run time. This in turn suggests creating a run-time structure that represents the expression tree instead of encoding the tree in the type of the expression template. This approach was pioneered by the NewMat library of Robert Davies (see [NewMat]). It was known long before expression templates were developed.
+另一方面，如果x和y不是彼此的别名，则不需要临时变量，从而解决方案必须在运行时知道操作数的关系。这里建议创建一个表示表达式运行时的树型结构，而不是用表达式模板的类型对树型结构进行编码。这种方法是由Robert Davies的NewMat库首创的(见[NewMat])。早在表达式模板开发出来之前，这种方式就已经很出名了。
 
 
 

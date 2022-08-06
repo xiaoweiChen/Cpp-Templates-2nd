@@ -1,4 +1,4 @@
-To motivate expression templates, let’s start with a straightforward (or maybe naive) approach to implement templates that enable numeric array operations. A basic array template might look as follows (SArray stands for simple array):
+为了激发表达式模板的灵感，先从一种简单的方法开始，来实现支持数字数组操作的模板。基本数组模板可能如下所示(SArray代表简单数组):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -70,7 +70,7 @@ class SArray {
 };
 \end{lstlisting}
 
-The numeric operators can be coded as follows:
+数字运算符的代码如下:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -117,7 +117,7 @@ SArray<T> operator* (T const& s, SArray<T> const& a)
 ...
 \end{lstlisting}
 
-Many other versions of these and other operators can be written, but these suffice to allow our example expression:
+这些操作符和其他操作符的许多其他版本都可以这样写，这些足够我们的示例表达式使用:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -134,17 +134,17 @@ int main()
 }
 \end{lstlisting}
 
-This implementation turns out to be very inefficient for two reasons:
+由于两个原因，这个实现非常低效:
 
 \begin{itemize}
 \item 
-Every application of an operator (except assignment) creates at least one temporary array (i.e., at least three temporary arrays of size 1,000 each in our example, assuming a compiler performs all the allowable temporary copy eliminations).
+操作符的每个应用程序(赋值除外)至少创建一个临时数组(即，假设编译器执行所有允许的临时复制消除操作，则在本例中至少创建三个大小为1,000的临时数组)。
 
 \item 
-Every application of an operator requires additional traversals of the argument and result arrays (approximately 6,000 doubles are read, and approximately 4,000 doubles are written in our example, assuming only three temporary SArray objects are generated).
+操作符的每个应用程序都需要对参数数组和结果数组进行遍历(假设只生成三个临时SArray对象，那么在示例中将读取大约6000个double，并写入大约4000个double)。
 \end{itemize}
 
-What happens concretely is a sequence of loops that operates with temporaries:
+具体的是一个使用临时变量操作的循环序列:
 
 \begin{lstlisting}[style=styleCXX]
 hat happens concretely is a sequence of loops that operates with temporaries:
@@ -157,9 +157,9 @@ tmp3 = tmp1+tmp2; // loop of 1,000 operations
 x = tmp3; // 1,000 read operations and 1,000 write operations
 \end{lstlisting}
 
-The creation of unneeded temporaries often dominates the time needed for operations on small arrays unless special fast allocators are used. For truly large arrays, temporaries are totally unacceptable because there is no storage to hold them. (Challenging numeric simulations often try to use all the available memory for more realistic results. If the memory is used to hold unneeded temporaries instead, the quality of the simulation will suffer.)
+除非使用特殊的快速分配器，否则创建不需要的临时变量通常占用小数组操作所需的时间。对于真正的大型临时数组是完全不可接受的，因为没有存储它们的储空间(具有挑战性的数值模拟通常试图使用所有可用的内存来获得更真实的结果。如果内存用来保存不需要的临时文件，模拟的质量就会受到影响)。
 
-Early implementations of numeric array libraries faced this problem and encouraged users to use computed assignments (such as +=, *=, and so forth) instead. The advantage of these assignments is that both the argument and the destination are provided by the caller, and hence no temporaries are needed. For example, we could add SArray members as follows:
+数字数组库的早期实现也面临这个问题，并鼓励用户使用计算赋值(如+=、*=等)。这些赋值的优点是参数和目的地都是由调用方提供的，因此不需要临时变量。例如，可以这样添加SArray成员:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -198,7 +198,7 @@ SArray<T>& SArray<T>::operator*= (T const& s)
 }
 \end{lstlisting}
 
-With operators such as these, our example computation could be rewritten as
+使用这样的运算符，计算示例可以重写为
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -220,20 +220,20 @@ int main()
 }
 \end{lstlisting}
 
-Clearly, the technique using computed assignments still falls short:
+显然，计算赋值的技术仍有不足:
 
 \begin{itemize}
 \item 
-The notation has become clumsy.
+符号很笨拙。
 
 \item 
-We are still left with an unneeded temporary tmp.
+不需要的临时tmp。
 
 \item 
-The loop is split over multiple operations, requiring a total of approximately 6,000 double elements to be read from memory and 4,000 doubles to be written to memory.
+循环拆分为多个操作，总共需要从内存中读取大约6000个double元素，并将4000个double元素写入内存。
 \end{itemize}
 
-What we really want is one “ideal loop” that processes the whole expression for each index:
+我们真正想要的是一个“理想循环”，可以处理每个索引的整个表达式:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -246,9 +246,9 @@ int main()
 }
 \end{lstlisting}
 
-Now we need no temporary array, and we have only two memory reads (x[idx] and y[idx]) and one memory write (x[k]) per iteration. As a result, the manual loop requires only approximately 2,000 memory reads and 1,000 memory writes.
+现在我们不需要临时数组，每次迭代只需要两次内存读取(x[idx]和y[idx])和一次内存写入(x[k])。因此，手动循环只需要大约2000次内存读取和1000次内存写入。
 
-Given that on modern, high-performance computer architectures, memory bandwidth is the limiting factor for the speed of these sorts of array operations, it is not surprising that in practice the performance of the simple operator overloading approaches shown here is one or two orders of magnitude slower than the manually coded loop. However, we would like to get the performance of the manually coded loop without the cumbersome and error-prone effort of writing these loops by hand and without using a clumsy notation.
+考虑到在现代高性能计算机架构中，内存带宽是这类数组操作速度的限制因素，因此在实践中，这里展示的简单运算符重载方法的性能比手动编码循环慢一到两个数量级也不足为奇。但我们希望获得手动编码循环的性能，而不需要手工编写这些循环，也不需要使用笨拙的表示法，但这样做既麻烦又容易出错。
 
 
 

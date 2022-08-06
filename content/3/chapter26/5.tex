@@ -1,5 +1,5 @@
 
-The is() and get() member functions allow us to check whether the active value is of a specific type and access a value with that type. However, inspecting all of the possible types within a variant quickly devolves into a redundant chain of if statements. For example, the following prints the value of a Variant<int, double, string> named v:
+is()和get()成员函数可以检查动态值是否为特定类型，并访问该类型的值。但是，检查变量中的所有可能类型很快就会变成冗长的if语句链。例如，下面打印了名为v的Variant<int, double, string>的值:
 
 \begin{lstlisting}[style=styleCXX]
 if (v.is<int>()) {
@@ -13,7 +13,7 @@ else {
 }
 \end{lstlisting}
 
-To generalize this to print the value stored in an arbitrary variant requires a recursively instantiated function template along with a helper. For example:
+要一般化输出存储在变量中的值，需要递归实例化函数模板和辅助函数。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -45,7 +45,7 @@ int main() {
 }
 \end{lstlisting}
 
-This is a significant amount of code for a relatively simple operation. To simplify this, we turn the problem around by extending Variant with a visit() operation. The client then passes in a visitor function object whose operator() will be invoked with the active value. Because the active value could be any one of the variant’s potential types, this operator() is likely either to be overloaded or itself a function template. For example, a generic lambda provides a templated operator(), allowing us to concisely represent the print operation for a variant v:
+对于一个简单的操作来说，这代码体积已经相当大了。为了简化，我们通过使用visit()操作扩展Variant来解决这个问题。然后，外部传入访问函数对象，该对象的函数操作符的调用将使用动态值。因为动态值可以是Variant的任何类型，所以这个函数操作符很可能是重载的，或者本身就是一个函数模板。例如，泛型Lambda提供了一个模板函数操作符，可以表示Variant v的打印操作:
 
 \begin{lstlisting}[style=styleCXX]
 v.visit([](auto const& value) {
@@ -53,7 +53,7 @@ v.visit([](auto const& value) {
 		});
 \end{lstlisting}
 
-This generic lambda is roughly equivalent to the following function object, which can also be useful for compilers that do not yet support generic lambdas:
+泛型Lambda大致等价于下面的函数对象，对于还不支持泛型Lambda的编译器也很有用:
 
 \begin{lstlisting}[style=styleCXX]
 class VariantPrinter {
@@ -66,7 +66,7 @@ class VariantPrinter {
 };
 \end{lstlisting}
 
-The core of the visit() operation is similar to the recursive print operation: It steps through the types of the Variant, checking whether the active value has the given type (with is<T>()), and then acts when it has found the appropriate type:
+visit()操作的核心类似于递归打印操作:遍历变量的类型，检查动态值是否具有给定的类型(使用is<T>())，然后在找到合适的类型时进行打印:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -91,17 +91,17 @@ R variantVisitImpl(V&& variant, Visitor&& vis, Typelist<Head, Tail...>) {
 }
 \end{lstlisting}
 
-variantVisitImpl() is a nonmember function template with a number of template parameters. The template parameter R describes the result type of the visitation operation, which we will return to later. V is the type of the variant and Visitor is the type of the visitor. Head and Tail are used to decompose the types in the Variant to effect recursion.
+variantVisitImpl()是一个带有许多模板参数的非成员函数模板。模板参数R描述了访问操作的结果类型，在稍后返回。V是Variant类型，访问器是Visitor的类型。Head和Tail用于分解Variant中的类型，从而影响递归。
 
-The first if performs a (run-time) check to determine whether the active value of the given variant is of type Head: If so, the value is extracted from the variant via get<Head>() and passed along to the visitor, terminating the recursion. The second if performs recursion when there are more elements to consider. If none of the types have matched, the variant does not contain a value,
+第一个if执行(运行时)检查，以确定给定变量的活动值是否为Head类型:如果是，则通过get()从变量中提取值，并传递给visitor，终止递归。第二个if在需要考虑更多元素时执行递归。如果没有匹配的类型，则该Variant不包含值，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This case is discussed in detail in Section 26.4.3 on page 613
+\hspace*{0.75cm}这个案例在第26.4.3节有详细的讨论
 \end{tcolorbox}
 
-in which case the implementation throws the EmptyVariant exception.
+这种情况下，实现可以抛出EmptyVariant异常。
 
-Aside from the result type computation provided by VisitResult (which will be discussed in the next section), the visit() implementation is straightforward:
+除了VisitResult提供的结果类型计算(在下一节中讨论)，visit()的实现也很简单:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -136,11 +136,11 @@ Variant<Types...>::visit(Visitor&& vis) && {
 }
 \end{lstlisting}
 
-The implementations delegate to variantVisitImpl directly, passing along the variant itself, forwarding the visitor, and supplying the complete list of types. The only differences between the three implementations are whether they pass the variant itself as Variant\&, Variant const\&, or Variant\&\&.
+实现直接委托给variantVisitImpl，传递Variant本身，转发访问器，并提供完整的类型列表。这三种实现之间唯一的区别是，它们是否将Variant本身作为Variant\&、Variant const\&或Variant\&\&进行传递。
 
-\subsubsubsection{26.5.1\hspace{0.2cm}Visit Result Type}
+\subsubsubsection{26.5.1\hspace{0.2cm}访问结果类型}
 
-The result type of visit() remains a mystery. A given visitor might have different operator() overloads that produce different result types, a templated operator() whose result type is dependent on its parameter type, or some combination thereof. For example, consider the following generic lambda:
+visit()的结果类型仍然是一个谜。给定的访问器可能具有不同的函数操作符重载，以产生不同的结果类型，结果类型依赖于其形参类型的模板函数操作符，或者某种组合。看看下面的泛型Lambda:
 
 \begin{lstlisting}[style=styleCXX]
 [](auto const& value) {
@@ -148,9 +148,9 @@ The result type of visit() remains a mystery. A given visitor might have differe
 }
 \end{lstlisting}
 
-The result type of this lambda depends on the input type: given an int, it will produce a int, but given a double, it will produce a double. If this generic lambda were passed to the visit() operation of a Variant<int, double>, what should the result be?
+这个Lambda的结果类型取决于输入类型:给定int型，则将产生int型值；给定double型，将产生double型值。如果这个泛型Lambda传递给了Variant<int, double>的visit()操作，结果类型应该是什么呢?
 
-There is no single correct answer, so our visit() operation allows the result type to be explicitly provided. For example, one might want to capture the results in another Variant<int, double>. One can explicitly specify the result type to visit() as the first template argument:
+这里没有正确的答案，因此visit()操作允许提供结果类型。例如，在另一个Variant<int, double>中捕获结果。可以将结果类型指定为visit()作为第一个模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 v.visit<Variant<int, double>>([](auto const& value) {
@@ -158,20 +158,20 @@ v.visit<Variant<int, double>>([](auto const& value) {
 							});
 \end{lstlisting}
 
-The ability to explicitly specify the result type is important when there is no one-size-fits-all solution. However, requiring that the result type be explicitly specified in all cases can be verbose. Therefore, visit() provides both options using the combination of a default template argument and a simple metaprogram. Recall the declaration of visit():
+当没有通用解决方案时，指定结果类型就很重要。但要求在所有情况下指定结果类型可能会让代码显得非常冗长。因此，visit()使用默认模板参数和简单元程序组合提供了这两个选项。回顾visit()的声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename R = ComputedResultType, typename Visitor>
 VisitResult<R, Visitor, Types&...> visit(Visitor&& vis) &;
 \end{lstlisting}
 
-The template parameter R, which we explicitly specified in the example above, also has a default argument so that it need not always be explicitly specified. That default argument is an incomplete sentinel type ComputedResultType:
+上面的例子中显式地指定了模板参数R，它有一个默认参数，因此不需要总是指定。该默认参数是一个不完整的哨兵类型ComputedResultType:
 
 \begin{lstlisting}[style=styleCXX]
 class ComputedResultType;
 \end{lstlisting}
 
-To compute its result type, visit passes all of its template parameters along to VisitResult, an alias template that provides access to a new type trait VisitResultT:
+要计算它的结果类型，visit将所有的模板参数传递给VisitResult，这是一个别名模板，提供了对新类型特征VisitResultT的访问:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -190,7 +190,7 @@ using VisitResult =
 typename VisitResultT<R, Visitor, ElementTypes...>::Type;
 \end{lstlisting}
 
-The primary definition of VisitResultT handles cases where the argument for R has been explicitly specified, so Type is defined to R. A separate partial specialization applies when R receives its default argument, ComputedResultType:
+VisitResultT的主要定义了处理R参数显式指定的情况，因此Type定义为R。当R接收到默认参数ComputedResultType时，启用偏特化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Visitor, typename... ElementTypes>
@@ -200,13 +200,13 @@ class VisitResultT<ComputedResultType, Visitor, ElementTypes...>
 }
 \end{lstlisting}
 
-This partial specialization is responsible for computing an appropriate result type for the common case, and is the subject of the next section.
+这种偏特化负责为常见情况计算适当的结果类型，这是下一节的主题。
 
-\subsubsubsection{26.5.2\hspace{0.2cm}Common Result Type}
+\subsubsubsection{26.5.2\hspace{0.2cm}常见的结果类型}
 
-When calling a visitor that may produce different types for each of the variant’s element types, how can we combine those types into a single result type for visit()? There are some obvious cases—if the visitor returns the same type for each element type, that should be the result type of visit().
+当调用可能为每个变量的元素类型产生不同类型的访问器时，如何将这些类型组合成一个单独的结果类型用于visit()?有一些简答的情况——如果访问器为每个元素类型返回相同的类型，那么这应该是visit()的结果类型。
 
-C++ already has a notion of a reasonable result type, which was introduced in Section 1.3.3 on page 12: In the ternary expression b ? x : y, the type of the expression is the common type between the types of x and y. For example, if x has type int and y has type double, the common type is double because int promotes to double. We can capture this notion of the common type in a type trait:
+C++已经有了合理结果类型的概念，在第1.3.3节中介绍过:三元表达式b ? x : y的类型是x和y类型之间的公共类型。例如，如果x有int类型，y有double类型，公共类型是double，因为int可以提升为double。也可以在类型特征中捕捉到共同类型的概念:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -225,7 +225,7 @@ template<typename T, typename U>
 using CommonType = typename CommonTypeT<T, U>::Type;
 \end{lstlisting}
 
-The notion of a common type extends to a set of types: The common type is a type to which all of the types in the set can promote. For our visitor, we want to compute the common type of the result types that the visitor will produce when called with each of the types in the variant:
+公共类型的概念扩展到一组类型:公共类型是集合中的所有类型，都可以提升到的类型。对于访问器，我们希望计算访问器在使用变量中的每个类型调用时，将产生的结果的通用类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -250,11 +250,11 @@ class VisitResultT<ComputedResultType, Visitor, ElementTypes...>
 };
 \end{lstlisting}
 
-The VisitResult computation occurs in two stages. First, VisitElementResult computes the result type produced when calling the visitor with a value of  type T. This metafunction is applied to each of the given element types to determine all of the result  types that the visitor could produce, capturing the result in the typelist ResultTypes.
+VisitResult的计算分两个阶段进行。首先，VisitElementResult计算调用访问器的值为T类型时，产生的结果类型。这个元函数应用于每个给定的元素类型，以确定访问器可以产生的所有结果类型，并在类型列表ResultTypes中进行捕获。
 
-Next, the computation uses the Accumulate algorithm described in Section 24.2.6 on page 560 to apply the common-type computation to the typelist of result types. Its initial value (the third argument to Accumulate) is the first result type, which is combined via CommonTypeT with successive values from the remainder of the ResultTypes typelist. The end result is the common type to which all of the visitor’s result types can be converted, or an error if the result types are incompatible.
+接下来，计算使用24.2.6节中描述的Accumulate算法，将公共类型计算应用于结果类型的类型列表。其初始值(Accumulate的第三个参数)是第一个结果类型，通过CommonTypeT与ResultTypes类型列表剩余部分的连续值组合在一起。最终结果是通用类型，访问器的所有结果类型都可以转换为通用类型，如果结果类型不兼容，则会出现错误。
 
-Since C++11, the standard library provides a corresponding type trait, std::common\_type<>, which uses this approach to yield the common type of an arbitrary number of passed types (see Section D.5 on page 732), effectively combining CommonTypeT and Accumulate. By using std::common\_type<>, the implementation of VisitResultT is simpler:
+C++11后，标准库提供了一个相应的类型特征，std::common\_type<>，有效地结合了CommonTypeT和Accumulate，使用这种方法来生成任意数量传递类型的通用类型(参见D.5节)。通过使用std::common\_type<>，VisitResultT的实现可以更简单:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -269,7 +269,7 @@ class VisitResultT<ComputedResultType, Visitor, ElementTypes...>
 };
 \end{lstlisting}
 
-The following example program prints out the type produced by passing in a generic lambda that adds 1 to the value it gets:
+下面的示例程序输出了通过传入泛型Lambda来生成的类型，该泛型Lambda将其得到的值加1:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -289,7 +289,7 @@ int main()
 }
 \end{lstlisting}
 
-The output of this program will be the type\_info name for double, because that is the type to which all of the result types can be converted.
+因为结果是所有结果类型都可以转换的类型，所以这个程序的输出将是double的type\_info名。
 
 
 

@@ -1,14 +1,14 @@
-Variants can be initialized and assigned in a variety of ways, including default construction, copy- and move-construction, and copy- and move-assignment. This section details these Variant operations.
+Variant可以通过多种方式进行初始化和赋值，包括默认构造、复制和移动构造以及复制和移动赋值。本节详细介绍了这些Variant操作。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Default Initialization}
+\textbf{默认构造}
 
-Should variants provide a default constructor? If it does not, variants may be unnecessarily hard to use because one will always have to conjure an initial value (even when one does not make sense programmatically). If it does provide a default constructor, what should the semantics be?
+Variant是否应该提供默认构造函数?若不这样做，Variant的使用可能会变得困难，因为总是需要一个初始值(即使初始值在编程上没有意义)。如果提供了默认构造函数，那么语义应该是什么?
 
-One possible semantics would be for default initialization to have no stored value, represented by the discriminator 0. However, such empty variants aren’t generally useful (e.g., one cannot visit them or find any value to extract), and making this the default initialization behavior would promote the exceptional state of an empty variant (described in Section 26.4.3 on page 613) to a common one.
+一种可能的语义是默认初始化没有存储值，由辨别器0表示。然而，空Variant通常没有用(例如，不能访问或找到任何值来提取)，并且将此作为默认初始化行为会将空Variant的异常状态(在第26.4.3节中描述)提升为普通状态。
 
-Alternatively, the default constructor could construct a value of some type. For our variant, we follow the semantics of C++17’s std::variant<> and default-construct a value of the first type in the list of types:
+或者，默认构造函数可以构造某种类型的值。对于我们的Variant，我们遵循C++17的std::variant<>语义，并默认构造类型列表中的第一个类型的值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -20,7 +20,7 @@ Variant<Types...>::Variant() {
 }
 \end{lstlisting}
 
-This approach is simple and predictable and avoids the introduction of empty variants in most uses. The behavior can be seen in this program:
+这种方法简单且可预测，并避免在大多数使用中引入空Variant。这个行为可以在下面的程序中看到:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -44,7 +44,7 @@ int main()
 }
 \end{lstlisting}
 
-which produces the following output:
+输出为
 
 \begin{tcblisting}{commandshell={}}
 Default-constructed v stores the int 0
@@ -53,12 +53,12 @@ Default-constructed v2 stores the double 0
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Copy/Move Initialization}
+\textbf{复制/移动构造}
 
-Copy and move initialization are more interesting. To copy a source variant, we need to determine which type it is currently storing, copy-construct that value into the buffer, and set that discriminator. Fortunately, visit() handles decoding the active value of the source variant, and the copyassignment operator inherited from VariantChoice will copy-construct a value into the buffer, leading to a compact implementation:
+复制和移动构造更有趣。要复制源变量，需要确定当前存储的是哪种类型，将该值复制构造到缓冲区中，并设置辨别器。visit()可以解码源Variant的动态值，而从VariantChoice继承的复制赋值操作符将复制构造一个值到缓冲区:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Despite the syntactic use of the assignment operator (=) within the lambda, the actual implementations of the assignment operator in VariantChoice will perform a copy-construction because the variant initially stores no value.
+\hspace*{0.75cm}尽管在Lambda表达式中使用了赋值操作符(=)，但赋值操作符在VariantChoice中的实际实现执行的是复制构造，因为该变量最初无存储值。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -75,7 +75,7 @@ Variant<Types...>::Variant(Variant const& source) {
 }
 \end{lstlisting}
 
-The move constructor is similar, differing only in its use of std::move when visiting the source variant and move-assigning from the source value:
+移动构造函数与此类似，不同之处在于它在访问源变量时使用std::move，并根据源值进行移动赋值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -91,7 +91,7 @@ Variant<Types...>::Variant(Variant&& source) {
 }
 \end{lstlisting}
 
-One particularly interesting aspect of the visitor-based implementation is that it also works for the templated forms of the copy and move operations. For example, the templated copy constructor can be defined as follows:
+基于访问器实现的一个有趣的方面是，其也适用于复制和移动操作的模板参数。例如，模板复制构造函数可以这样定义:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -108,7 +108,7 @@ Variant<Types...>::Variant(Variant<SourceTypes...> const& source) {
 }
 \end{lstlisting}
 
-Because this code visits the source, the assignment to *this will occur for each of the types of the source variant. Overload resolution for this assignment will find the most appropriate destination type for each source type, performing implicit conversions as necessary. The following example illustrates construction and assignment from different variant types:
+因为这段代码访问了source，所以对*this的赋值将在每个SourceTypes中发生。此赋值的重载解析将为每个SourceTypes找到最合适的目标类型，并根据需要进行隐式转换。下面的例子说明了不同Variant类型的构造和赋值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -136,7 +136,9 @@ int main()
 }
 \end{lstlisting}
 
-Constructing or assigning from v1 to either v2 or v3 involves integral promotions (short to int), floating-point promotions (float to double), and user-defined conversions (char const* to std::string). The output of this program is as follows:
+从v1构造或赋值到v2或v3涉及整型提升(short到int)、浮点提升(float到double)和用户定义的转换(char const*到std::string)。
+
+输出如下所示:
 
 \begin{tcblisting}{commandshell={}}
 v2 contains the integer 123
@@ -146,9 +148,9 @@ v4 contains the string hello
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Assignment}
+\textbf{赋值}
 
-The Variant assignment operators are similar to the copy and move constructors above. Here, we illustrate only the copy assignment operator:
+Variant赋值操作符类似于上面的复制和移动构造函数。这里，只演示复制赋值操作符:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -168,7 +170,7 @@ Variant<Types...>& Variant<Types...>::operator= (Variant const& source) {
 }
 \end{lstlisting}
 
-The only interesting addition is in the else branch: When the source variant contains no value (indicated by a discriminator 0), we destroy the value of the destination, implicitly setting its discriminator to 0.
+这里唯一有趣点是在else分支中:当source不包含值(由辨别器0表示)时，我们销毁目标Variant的值，隐式地将其辨别器设置为0。
 
 
 

@@ -1,22 +1,22 @@
 
-As we implied in the introduction to this appendix, there are many details to the actual ODR. We organize the rule’s constraints by their scope.
+在本附录的介绍中所述，ODR有很多细节。我们根据规则的范围组织约束。
 
-\subsubsubsection{A.3.1\hspace{0.2cm}One-per-Program Constraints}
+\subsubsubsection{A.3.1\hspace{0.2cm}程序的约束}
 
-There can be at most one definition of the following items per program:
+每个程序最多只能有以下的一个定义:
 
 \begin{itemize}
 \item 
-Noninline functions and noninline member functions (including full specializations of function templates)
+非内联函数和非内联成员函数(包括函数模板的完全特化)
 
 \item 
-Noninline variables (essentially, variables declared in a namespace scope or in the global scope, and without the static specifier)
+非内联变量(本质上是在命名空间作用域或全局作用域中声明的变量，没有静态说明符)
 
 \item 
-Noninline static data members
+非内联静态数据成员
 \end{itemize}
 
-For example, a C++ program consisting of the following two translation units is invalid:
+例如，由以下两个翻译单元组成的C++程序无效:
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -26,7 +26,7 @@ int counter;
 int counter; // ERROR: defined twice (ODR violation)
 \end{lstlisting}
 
-This rule does not apply to entities with internal linkage (essentially, entities declared with the static specifier in the global scope or in a namespace scope) because even when two such entities have the same name, they are considered distinct. In the same vein, entities declared in unnamed namespaces are considered distinct if they appear in distinct translation units; in C++11 and later, such entities also have internal linkage by default, but prior to C++11 they had external linkage by default. For example, the following two translation units can be combined into a valid C++ program:
+此规则不适用于具有内部链接的实体(本质上是在全局作用域或命名空间作用域中使用静态说明符声明的实体)，因为即使两个这样的实体具有相同的名称，也会认为是不同的。同样，在匿名命名空间中声明的实体如果出现在不同的翻译单元中，则认为是不同的;在C++11及以后的版本中，这些实体默认也具有内部链接，但在C++11之前，它们默认具有外部链接。例如，以下两个翻译单元可以组合成一个有效的C++程序:
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -52,15 +52,15 @@ int main()
 }
 \end{lstlisting}
 
-Furthermore, there must be exactly one of the previously mentioned items in the program if they are used in a context other than the discarded branch of a constexpr if statement (a feature only available in C++17; see Section 14.6 on page 263). The term used in this context has a precise meaning. It indicates that there is some sort of reference to the entity somewhere in the program that causes the entity to be needed for straightforward code generation.
+此外，如果在conexpr if语句的丢弃分支之外的上下文中使用，则程序中必须只有前面提到的一项(该特性仅在C++17中可用;参见第14.6节)。在上下文中使用的术语具有确切的含义，表明在程序的某个地方存在对实体的某种引用，所以在直接的代码生成中需要实体。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Various optimization techniques may cause this need to be removed, but the language doesn’t assume such optimizations.
+\hspace*{0.75cm}各种优化技术可能会导致需要删除这一点，但该语言没有假设这种优化。
 \end{tcolorbox}
 
-This reference can be an access to the value of a variable, a call to a function, or the address of such an entity. This reference can be explicit in the source, or it can be implicit. For example, a new expression may create an implicit call to the associated delete operator to handle situations when a constructor throws an exception requiring the unused (but allocated) memory to be cleaned up. Another example consists of copy constructors, which must be defined even if they end up being optimized away (unless the language requires them to be optimized away, which is frequently the case in C++17). Virtual functions are also implicitly used (by the internal structures that enable virtual function calls), unless they are pure virtual functions. Several other kinds of implicit uses exist, but we omit them for the sake of conciseness.
+此引用可以是对变量值的访问、对函数的调用或此类实体的地址。这个引用可以在源文件中显式引用，也可以隐式引用。例如，new表达式可以隐式地创建对关联的delete操作符的调用，以处理当构造函数抛出异常要求清理未使用(但已分配)内存时的情况。另一个例子包括复制构造函数，即使最终优化掉了，也必须定义(除非语言要求优化，C++17中经常出现这种情况)。虚函数也隐式使用(支持虚函数调用的内部结构使用)，除非是纯虚函数。还有其他几种隐式用法，但为了简明起见，这里暂时忽略它们。
 
-Some references do not constitute a use in the previous sense: Those that appear in an unevaluated operand (e.g., the operand of a sizeof or decltype operator). The operand of a typeid operator (see Section 9.1.1 on page 138) is unevaluated only in some cases. Specifically, if a reference appears as part of a typeid operator, it is not a use in the previous sense, unless the argument of the typeid operator ends up designating a polymorphic object (an object with—possibly inherited—virtual functions). For example, consider the following single-file program:
+有些引用不构成使用:出现在未求值操作数中的引用(例如，sizeof或decltype操作符的操作数)。typeid操作符(参见第9.1.1节)的操作数只在某些情况下不计算。具体来说，如果引用作为typeid操作符的一部分出现，就不是使用了，除非typeid操作符的参数最终指定了一个多态对象(可能继承了虚函数的对象)。例如，考虑以下单文件程序:
 
 \begin{lstlisting}[style=styleCXX]
 #include <typeinfo>
@@ -81,20 +81,20 @@ int main()
 }
 \end{lstlisting}
 
-This is a valid program if and only if the preprocessor symbol DYNAMIC is not defined. Indeed, the variable d is not defined, but the reference to d in sizeof(d) does not constitute a use, and the reference in typeid(d) is a use only if d is an object of a polymorphic type (because, in general, it is not always possible to determine the result of a polymorphic typeid operation until run time).
+当预处理器符号DYNAMIC未定义时，这是一个有效的程序。实际上，变量d没有定义，但是sizeof(d)中对d的引用并不构成使用，而typeid(d)中的引用只有在d是多态类型对象时才构成使用(在运行时之前，不总确定多态类型id操作的结果)。
 
-According to the C++ standard, the constraints described in this section do not require a diagnostic from a C++ implementation. In practice, they are usually reported by linkers as duplicate or missing definitions.
+根据C++标准，本节描述的约束不需要从C++实现进行诊断。实践中，这些符号就是链接器报告为重复或缺失的定义。
 
-\subsubsubsection{A.3.2\hspace{0.2cm}One-per-Translation Unit Constraints}
+\subsubsubsection{A.3.2\hspace{0.2cm}翻译单元的限制}
 
-No entity can be defined more than once in a translation unit. So the following example is invalid C++:
+翻译单元中，实体都不能定义超过一次。所以下面的例子是无效的C++:
 
 \begin{lstlisting}[style=styleCXX]
 inline void f() {}
 inline void f() {} // ERROR: duplicate definition
 \end{lstlisting}
 
-This is one of the main reasons for surrounding the code in header files with guards:
+这也是在头文件中使用守卫包围代码的主要原因之一:
 
 \begin{lstlisting}[style=styleCXX]
 // guarddemo.hpp:
@@ -104,38 +104,38 @@ This is one of the main reasons for surrounding the code in header files with gu
 #endif // GUARDDEMO_HPP
 \end{lstlisting}
 
-Such guards ensure that the second time a header file is \#included, its contents are discarded, thereby avoiding the duplicate definition of a class, inline entity, template, and so on, that it may contain.
+这样的保护确保头文件第二次\#include时，丢弃内容，从而避免其类、内联实体、模板等的重复定义。
 
-The ODR also specifies that certain entities must be defined in certain circumstances. This can be the case for class types, inline functions, and inlines variables. In the following few paragraphs, we review the detailed rules.
+ODR还指定必须在某些情况下定义某些实体。这可能是类类型、内联函数和内联变量的情况。接下来，我们将回顾详细的规则。
 
-A class type X (including structs and unions) must be defined in a translation unit prior to any of the following kinds of uses in that translation unit:
+类类型X(包括结构体和联合体)必须在翻译单元中定义，然后才能在该翻译单元中进行下列类型的使用:
 
 \begin{itemize}
 \item 
-The creation of an object of type X (e.g., as a variable declaration or through a new expression). The creation could be indirect, for example, when an object that itself contains an object of type X is being created.
+创建类型为X的对象(例如，通过变量声明或通过new表达式)。当创建本身包含X类型对象的对象时，创建可以是间接的。
 
 \item 
-The declaration of a data member of type X.
+类型X的数据成员声明。
 
 \item 
-Applying the sizeof or typeid operator to an object of type X.
+对X类型的对象应用sizeof或typeid操作符。
 
 \item 
-Explicitly or implicitly accessing members of type X.
+显式或隐式地访问类型X的成员。
 
 \item 
-Converting an expression to or from type X using any kind of conversion, or converting an expression to or from a pointer or reference to X (except void*) using an implicit cast, static\_cast, or dynamic\_cast.
+使用类型的转换将表达式转换为或从类型X转换，或者使用隐式强制转换、static\_cast或dynamic\_cast换将表达式转换为指向X的指针或引用(void*除外)。
 
 \item 
-Assigning a value to an object of type X.
+将值赋给X类型的对象。
 
 \item 
-Defining or calling a function with an argument or return type of type X. Just declaring such a function doesn’t need the type to be defined, however.
+定义或调用带有参数或返回类型为X的函数，但是，声明这样的函数并不需要定义其类型。
 \end{itemize}
 
-The rules for types also apply to types X generated from class templates, which means that the corresponding templates must be defined in those situations in which such a type X must be defined. These situations create points of instantiation or POIs (see Section 14.3.2 on page 250).
+类型规则也适用于从类模板生成的类型X，需要在定义类型X的情况下定义相应的模板。这些情况会创建实例化点或POI(参见第14.3.2节)。
 
-Inline functions must be defined in every translation unit in which they are used (in which they are called or their address is taken). However, unlike class types, their definition can follow the point of use:
+内联函数必须使用每个翻译单元中定义(这些翻译单元中调用它们或获取它们的地址)。然而，与类类型不同，它们的定义可以遵循以下使用要点:
 
 \begin{lstlisting}[style=styleCXX]
 inline int notSoFast();
@@ -149,23 +149,23 @@ inline int notSoFast()
 { }
 \end{lstlisting}
 
-Although this is valid C++, some compilers based on older technology do not actually “inline” the call to a function with a body that has not been seen yet; hence the desired effect may not be achieved. 
+虽然这是有效的C++代码，但一些基于旧技术的编译器实际上并不会“内联”调用尚未看到主体的函数;因此，预期的效果可能无法达到。
 
-Just as with class templates, the use of a function generated from a parameterized function declaration (a function or member function template, or a member function of a class template) creates a point of instantiation. Unlike class templates, however, the corresponding definition can appear after the point of instantiation.
+与类模板一样，使用由参数化函数声明(函数或成员函数模板，或类模板的成员函数)生成的函数会创建一个实例化点。然而，与类模板不同，相应的定义可以出现在实例化点之后。
 
-The facets of the ODR explained in this subsection are generally easily verified by C++ compilers; hence the C++ standard requires that compilers issue some sort of diagnostic when one of these rules is violated. An exception is the lack of definition of a parameterized function. Such situations are typically not diagnosed.
+本小节中解释的ODR的各个方面通常很容易通过C++编译器验证;因此，C++标准要求编译器在违反这些规则时发出某种诊断。异常是缺少参数化函数的定义，这种情况通常没有诊断信息。
 
-\subsubsubsection{A.3.3\hspace{0.2cm}Cross-Translation Unit Equivalence Constraints}
+\subsubsubsection{A.3.3\hspace{0.2cm}交叉翻译单元的等价约束}
 
-The ability to define certain kinds of entities in more than one translation unit brings with it the potential for a new kind of error: multiple definitions that don’t match. Unfortunately, such errors are hard to detect by traditional compiler technology in which translation units are processed one at a time. Consequently, the C++ standard doesn’t mandate that differences in multiple definitions be detected or diagnosed (it does allow it, of course). If this cross-translation unit constraint is violated, however, the C++ standard qualifies this as leading to undefined behavior, which means that anything reasonable or unreasonable may happen. Typically, such undiagnosed errors may lead to program crashes or wrong results, but in principle they can also lead to other, more direct, kinds of damage (e.g., file corruption).
+多个翻译单元中定义某些类型可能会带来新的错误:多个定义不匹配。但传统的编译器技术每次只处理一个翻译单元，所以很难检测到这些错误。因此，C++标准并不要求检测或诊断多个定义之间的差异。然而，若违反交叉转换单元的约束，C++标准将其限定为未定义行为，从而任何合理或不合理的事情都可能发生。通常，这种未诊断的错误可能导致程序崩溃或错误的结果，但也可能导致其他更直接的损害(例如，文件损坏)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Version 1 of the gcc compiler actually jokingly did this by starting the game of Rogue in some situations like this.
+\hspace*{0.75cm}gcc编译器的第1版实际上没有做到了这一点，只是某些情况下启动了肉鸽游戏。
 \end{tcolorbox}
 
-The cross-translation unit constraints specify that when an entity is defined in two different places, the two places must consist of exactly the same sequence of tokens (the keywords, operators, identifiers, and so forth, remaining after preprocessing). Furthermore, these tokens must mean the same thing in their respective context (e.g., the identifiers may need to refer to the same variable). 
+交叉翻译单元约束指定，实体在两个不同的地方定义时，这两个地方必须包含完全相同的标记序列(预处理之后保留的关键字、操作符、标识符等)。此外，这些标记必须在它们各自的上下文中表示相同的东西(例如，标识符可能需要引用相同的变量)。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -186,17 +186,17 @@ inline void increaseCounter()
 }
 \end{lstlisting}
 
-This example is in error because even though the token sequence for the inline function increaseCounter() looks identical in both translation units, they contain a token counter that refers to two different entities. Indeed, because the two variables named counter have internal linkage (static specifier), they are unrelated despite having the same name. Note that this is an error even though neither of the inline functions is actually used.
+这个例子是错误的，因为即使内联函数incrementounter()的标记序列在两个翻译单元中看起来相同，从而包含一个指向两个不同实体的标记计数器。不过，因为名为counter的两个变量具有内部链接(静态说明符)，所以尽管名称相同，但它们不相关。注意，即使没有实际使用内联函数，这也是一个错误。
 
-Placing the definitions of entities that can be defined in multiple translation units in header files that are \#included whenever the definitions are needed ensures that token sequences are identical in almost all situations.
+\#included头文件中可以放置在多个翻译单元中的实体定义，无论何时需要定义，都要包含这些定义，确保在几乎所有情况下标记序列都相同。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Occasionally, conditional compilation directives evaluate differently in different translation units. Use such directives with care. Other differences are possible too, but they are even less common.
+\hspace*{0.75cm}条件编译指令在不同的翻译单元中会有不同的计算结果，所以小心使用这些指令。其他更不常见差异也可能存在。
 \end{tcolorbox}
 
-With this approach, situations in which two identical tokens refer to different things become fairly rare, but when it does happen, the resulting errors are often mysterious and hard to track.
+使用这种方法，两个相同的标记引用不同事物的情况将变得相当罕见。当它发生时，产生的错误往往是隐秘的，难以查找。
 
-The cross-translation unit constraints apply not only to entities that can be defined in multiple places but also to default arguments in declarations. In other words, the following program has undefined behavior:
+交叉转换单元约束不仅可以在多个地方定义的实体，还适用于声明中的默认参数。换句话说，下面的程序有未定义行为:
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -208,7 +208,7 @@ int main()
 void unused(int = 4);
 \end{lstlisting}
 
-We should note here that the equivalence of token streams can sometimes involve subtle implicit effects. The following example is lifted (in a slightly modified form) from the C++ standard:
+这里，标记流的等价有时会涉及微妙的隐式影响。下面的例子是从C++标准中提取出来的(稍微修改了一下):
 
 \begin{lstlisting}[style=styleCXX]
 // translation unit 1:
@@ -244,9 +244,9 @@ class D : public X {
 D d2; // X(int, int, int) called by D()
 \end{lstlisting}
 
-In this example, the problem occurs because the implicitly generated default constructor of class D is different in the two translation units. One calls the X constructor taking two arguments, and the other calls the X constructor taking three arguments. If anything, this example is an additional incentive to limit default arguments to one location in the program (if possible, this location should be in a header file). Fortunately, placing default arguments on out-of-class definitions is a rare practice.
+本例中，出现问题是因为类D隐式生成的默认构造函数在两个转换单元中不同。一个调用带两个参数的X构造函数，另一个调用带三个参数的X构造函数。如果有什么区别的话，就是将默认参数限制在程序中的一个位置(可能的话，这个位置应该在头文件中)的动机。幸运的是，在类外定义上放置默认参数是一种少见的做法。
 
-There is also an exception to the rule that says that identical tokens must refer to identical entities. If identical tokens refer to unrelated constants that have the same value and the address of the resulting expressions is not used (not even implicitly by binding a reference to a variable producing the constant), then the tokens are considered equivalent. This exception allows for program structures like the following:
+对于相同的标记必须引用相同的实体规则，当然也有例外。如果相同的标记引用了具有相同值的不相关常量，并且没有使用结果表达式的地址(甚至通过将引用绑定到产生该常量的变量，也没有隐式地使用)，那么这些标记等价。该异常允许的程序结构如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 // header.hpp:
@@ -263,9 +263,9 @@ class MiniBuffer {
 #endif // HEADER_HPP
 \end{lstlisting}
 
-In principle, when this header file is included in two different translation units, two distinct constant variables named length are created because const in this context implies static. However, such constant variables are often meant to define compile-time constant values, not a particular storage location at run time. Hence, if we don’t force such a storage  location to exist (by referring to theaddress of the variable), it is sufficient for the two constants to have the same value.
+原则上，当头文件包含在两个不同的翻译单元中时，将创建两个名为length的不同常量变量。因为在此上下文中，const意味着static。然而，这种常量变量通常用于定义编译时常量值，而不是运行时的特定存储位置。因此，若不强制存在这样一个存储位置(通过引用变量的地址)，两个常量有相同的值就足够了。
 
-Finally, a note about templates. The names in templates bind in two phases. Nondependent names bind at the point where the template is defined. For these, the equivalence rules are handled similarly to other nontemplate definitions. For names that bind at the point of instantiation, the equivalence rules must be applied at that point, and the bindings must be equivalent.
+最后，关于模板的说明。模板中的名称绑定分为两个阶段，非依赖名称在模板定义点绑定。对于这些规则，等价规则的处理类似于其他非模板定义。对于在实例化点绑定的名称，必须在该点应用等价规则，绑定必须等价。
 
 
 

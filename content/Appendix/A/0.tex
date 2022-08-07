@@ -1,6 +1,6 @@
-Affectionately known as the ODR, the one-definition rule is a cornerstone for the well-formed structuring of C++ programs. The most common consequences of the ODR are simple enough to remember and apply: Define noninline functions or objects exactly once across all files, and define classes, inline functions, and inline variables at most once per translation unit, making sure that all definitions for the same entity are identical.
+定义规则称为ODR，它是C++程序结构良好的基石。ODR最常见的结果很容易记住和应用:所有文件中只定义一次非内联函数或对象，每个翻译单元中最多定义一次类、内联函数和内联变量，确保对同一实体的所有定义相同。
 
-However, the devil is in the details, and when combined with template instantiation, these details can be daunting. This appendix is meant to provide a comprehensive overview of the ODR for the interested reader. We also indicate when specific related issues are expounded on in the main text.
+问题在于细节，当与模板实例化结合使用时，这些细节可能会令人生畏。本附录旨在为感兴趣的读者提供ODR的全面概述。在正文中还指出了相关的问题。
 
 
 

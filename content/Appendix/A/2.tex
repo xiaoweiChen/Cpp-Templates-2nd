@@ -1,49 +1,49 @@
-The terms declaration and definition are often used interchangeably in common “programmer talk.” In the context of the ODR, however, the exact meaning of these words is important.
+术语声明和定义在常见的“开发者对话”中经常互换使用。但是，在ODR的范围内，这些词的确切含义很重要。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}We also think it’s a good habit to handle the terms carefully when exchanging ideas about C and C++. We do so throughout this book.
+\hspace*{0.75cm}交换关于C和C++的观点时，仔细处理术语也是一个好习惯。我们在整本书中都是这样做的。
 \end{tcolorbox}
 
-A declaration is a C++ construct that (usually)
+声明是一种C++构造，(通常)
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Some constructs (such as static\_assert) do not introduce any names but are syntactically treated as declarations.
+\hspace*{0.75cm}有些结构(如static\_assert)不引入任何名称，但在语法上视为声明。
 \end{tcolorbox}
 
-introduces or reintroduces a name in your program. A declaration can also be a definition, depending on which entity it introduces and how it introduces it:
+程序中引入或重新引入一个名称。声明也可以是定义，这取决于它引入了哪个，以及如何引入:
 
 \begin{itemize}
 \item 
-\textbf{Namespaces and namespace aliases: }
-The declarations of namespaces and their aliases are always also definitions, although the term definition is unusual in this context because the list of members of a namespace can be “extended” at a later time (unlike classes and enumeration types, for example).
+\textbf{命名空间和命名空间别名: }
+命名空间及其别名的声明也需要定义，尽管术语定义在此上下文中并不常见，因为命名空间的成员列表可以在以后进行“扩展”(例如，与类和枚举类型不同)。
 
 \item 
-\textbf{Classes, class templates, functions, function templates, member functions, and member function templates: }
-The declaration is a definition if and only if the declaration includes a brace-enclosed body associated with the name. This rule includes unions, operators, member operators, static member functions, constructors and destructors, and explicit specializations of template versions of such things (i.e., any class-like and function-like entity).
+\textbf{类、类模板、函数、函数模板、成员函数和成员函数模板: }
+当声明包含与名称相关联的大括号正文时，声明就是定义。该规则包括联合、操作符、成员操作符、静态成员函数、构造函数和析构函数，以及这些东西的模板版本的显式特化(即任何类实体和函数实体)。
 
 \item 
-\textbf{Enumerations:}
-The declaration is a definition if and only if it includes the brace-enclosed list of enumerators.
+\textbf{枚举:}
+当声明包含用大括号括起来的枚举数列表时，该声明是定义。
 
 \item 
-\textbf{Local variables and nonstatic data members:}
-These entities can always be treated as definitions, although the distinction rarely matters. Note that the declaration of a function parameter in a function definition is itself a definition because it denotes a local variable, but a function parameter in a function declaration that is not a definition is not a  definition.
+\textbf{局部变量和非静态数据成员:}
+这些可以视为定义，尽管区别很少。注意，函数定义中的函数参数声明本身就是一个定义，因为它表示一个局部变量，但函数声明中的函数参数不是定义。
 
 \item 
-\textbf{Global variables:}
-If the declaration is not directly preceded by a keyword extern or if it has an initializer, the declaration of a global variable is also a definition of that variable. Otherwise, it is not a definition.
+\textbf{全局变量:}
+若声明之前没有直接使用关键字extern，或者有初始化式，那么全局变量的声明也是该变量的定义。否则，就不是定义。
 
 \item 
-\textbf{Static data members: }
-The declaration is a definition if and only if it appears outside the class or class template of which it is a member or it is declared inline or constexpr in the class or class template.
+\textbf{静态数据成员: }
+当声明出现在成员的类或类模板外部，或者在类或类模板中内联或constexpr声明时，声明就是定义。
 
 \item 
-\textbf{Explicit and partial specializations:}
-The declaration is a definition if the declaration following the template<> or template<...> is itself a definition, except that the explicit specialization of a static data member or static data member template is a definition only if it includes an initializer.
+\textbf{显式和偏特化:}
+若template<>或template<…>本身是一个定义，只是静态数据成员或静态数据成员模板的显式特化，只有在包含初始化式时才是定义。
 
 \end{itemize}
 
-Other declarations are not definitions. That includes type aliases (with typedef or using), using declarations, using directives, template parameter declarations, explicit instantiation directive, static\_assert declarations, and so on.
+其他声明不是定义。这包括类型别名(带有typedef或using)、using声明、using指令、模板参数声明、显式实例化指令、static\_assert声明等。
 
 
 

@@ -1,11 +1,11 @@
-So far, we have discussed bugs that arise when compiling or linking programs that contain templates. However, the most challenging task of ensuring that a program behaves correctly at run time often follows a successful build. Templates can sometimes make this task a little more difficult because the behavior of generic code represented by a template depends uniquely on the client of that template (certainly much more so than ordinary classes and functions). A tracer is a software device that can alleviate that aspect of debugging by detecting problems in template definitions early in the development cycle.
+我们已经讨论了在编译或链接包含模板的程序时出现的bug。然而，在成功构建之后，最具挑战性的任务是确保程序在运行时的行为正确。因为模板所表示的泛型代码行为只依赖于该模板的外部使用(当然比普通的类和函数要多得多)，所以模板有时会使这项任务变得困难。跟踪程序是一种软件工具，可以通过在开发早期检测模板定义中的问题来减轻这方面的工作。
 
-A tracer is a user-defined class that can be used as an argument for a template to be tested. Often, a tracer is also an archetype, written just to meet the requirements of the template. More important, however, a tracer should generate a trace of the operations that are invoked on it. This allows, for example, to verify experimentally the efficiency of algorithms as well as the sequence of operations.
+跟踪程序是一个用户定义的类，可以用作要测试的模板的参数。通常，跟踪程序也是一个原型，其只是为了满足模板的需求。然而，跟踪程序应该生成对其调用操作的跟踪。例如，这允许通过实验验证算法的效率，以及操作的顺序。
 
-Here is an example of a tracer that might be used to test a sorting algorithm:
+下面是一个可以用来测试排序算法跟踪器的例子:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++17, we had to initialize the static members outside the class declaration in one translation unit.
+\hspace*{0.75cm}C++17前，必须在翻译单元中在类声明之外初始化静态成员。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -106,9 +106,9 @@ class SortTracer {
 };
 \end{lstlisting}
 
-In addition to the value to sort, value, the tracer provides several members to trace an actual sort: For each object, generation traces by how many copy operations it is removed from the original. That is, an original has generation == 1, a direct copy of an original has generation == 2, a copy of a copy has generation == 3, and so on. The other static members trace the number of creations (constructor calls), destructions, assignment comparisons, and the maximum number of objects that ever existed.
+除了用于排序的值，跟踪器还提供了几个成员来跟踪实际的排序:对于每个对象，生成跟踪的依据是从原始对象中删除了多少个复制操作。也就是说，原始操作generation == 1，操作的直接副本为generation == 2，副本的副本为generation == 3，依此类推。其他静态成员会跟踪创建(构造函数调用)、销毁、赋值比较和最大值操作。
 
-This particular tracer allows us to track the pattern of entity creation and destruction as well as assignments and comparisons performed by a given template. The following test program illustrates this for the std::sort() algorithm of the C++ standard library:
+这个特殊的跟踪器允许跟踪实体创建和销毁的模式，以及给定模板执行的赋值和比较。下面的测试程序演示了C++标准库的std::sort()算法:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -162,7 +162,7 @@ int main()
 }
 \end{lstlisting}
 
-Running this program creates a considerable amount of output, but much can be concluded from the final report. For one implementation of the std::sort() function, we find the following:
+运行这个程序会产生相当多的输出，但是可以从最终输出中得出很多结论。对于std::sort()函数的实现，有如下输出:
 
 \begin{tcblisting}{commandshell={}}
 std::sort() of 10 SortTracer’s was performed by:
@@ -172,9 +172,9 @@ std::sort() of 10 SortTracer’s was performed by:
  27 comparisons
 \end{tcblisting}
 
-For example, we see that although nine temporary tracers were created in our program while sorting, at most two additional tracers existed at any one time.
+例如，尽管在排序时在程序中创建了9个临时跟踪器，但最多有两个跟踪器存在。
 
-Our tracer thus fulfills two roles: It proves that the standard sort() algorithm requires no more functionality than our tracer (e.g., operators == and > were not needed), and it gives us a sense of the cost of the algorithm. It does not, however, reveal much about the correctness of the sorting template.
+因此，跟踪器扮演了两个角色:证明标准sort()算法不需要跟踪器的更多功能(例如，不需要操作符==和>)，并且让我们了解算法的成本。然而，这并不能说明排序模板的正确性。
 
 
 

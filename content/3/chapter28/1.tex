@@ -1,10 +1,10 @@
-When template errors occur, the problems are often found after a long chain of instantiations, leading to lengthy error messages like those discussed in Section 9.4 on page 143.
+当模板错误发生时，问题通常在实例化后发现，从而会有冗长的错误消息，就像在第9.4节中那样。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}And if you’ve made it this far in the book, no doubt you’ve encountered error messages that make that initial example look tame!
+\hspace*{0.75cm}到这里，无疑在写代码时会遇到一些错误消息，会使最初的示例看起来很乏味!
 \end{tcolorbox}
 
-To illustrate this, consider the following somewhat contrived code:
+为了说明这一点，请考虑以下的手写代码:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -33,9 +33,9 @@ void shell (T const& env)
 }
 \end{lstlisting}
 
-This example illustrates the typical layering of software development: High-level function templates like shell() rely on components like middle(), which themselves make use of basic facilities like core(). When we instantiate shell(), all the layers below it also need to be instantiated. In this example, a problem is revealed in the deepest layer: core() is instantiated with type int (from the use of Client::Index in middle()) and attempts to dereference a value of that type, which is an error.
+这个例子阐明了软件开发的分层:像shell()这样的高级函数模板依赖于像middle()这样的组件，而这些组件本身会使用像core()这样的功能。当实例化shell()时，下面的所有层也需要实例化。这个例子中，有一个问题:core()实例化为int类型(在middle()中使用Client::Index)，并试图错误的解引用该类型。
 
-The error is only detectable at instantiation time. For example:
+该错误仅在实例化时可检测到。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class Client
@@ -51,11 +51,11 @@ int main()
 }
 \end{lstlisting}
 
-A good generic diagnostic includes a trace of all the layers that led to the problems, but we observe that so much information can appear unwieldy.
+好的通用诊断包括导致问题的所有级别的跟踪，但是获得这么多信息，也会让我们感觉手足无措。
 
-An excellent discussion of the core ideas surrounding this problem can be found in [StroustrupDnE], in which Bjarne Stroustrup identifies two classes of approaches to determine earlier whether template arguments satisfy a set of constraints: through a language extension or through earlier parameter use. We cover the former option in Section 17.8 on page 361 and Appendix E. The latter alternative consists of forcing any errors in shallow instantiations. This is achieved by inserting unused code with no other purpose than to trigger an error if that code is instantiated with template arguments that do not meet the requirements of deeper levels of templates.
+在[StroustrupDnE]中可以找到围绕这个问题核心思想的讨论，Bjarne Stroustrup确定了两类方法来更早地确定模板参数是否满足一组约束:通过语言扩展或更早的参数使用。我们在第17.8节和附录E中介绍了前一种选择，后一种选择包括在浅层实例化中强制错误。这通过插入未使用的代码来实现，如果代码使用的模板参数不满足更深层模板的要求，那么就会触发错误。
 
-In our previous example, we could add code in shell() that attempts to dereference a value of type T::Index. For example:
+前面的例子中，可以在shell()中添加代码，尝试对T::Index类型的值解引用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -76,15 +76,15 @@ void shell (T const& env)
 }
 \end{lstlisting}
 
-If T is a type such that T::Index cannot be dereferenced, an error is now diagnosed on the local class ShallowChecks. Note that because the local class is not actually used, the added code does not impact the running time of the shell() function. Unfortunately, many compilers will warn that ShallowChecks is not used (and neither are its members). Tricks such as the use of the ignore() template can be used to inhibit such warnings, but they add to the complexity of the code.
+若T是不能解引用T::Index的类型，则会在局部类ShallowChecks上出现编译错误。因为没有使用局部类，所以添加的代码不会影响shell()函数的运行时间，但许多编译器会警告说没有使用ShallowChecks(成员也是如此)。可以使用ignore()模板等技巧来抑制此类警告，但也会增加代码的复杂性。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Concept Checking}
+\textbf{概念检查}
 
-Clearly, the development of the dummy code in our example can become as complex as the code that implements the actual functionality of the template. To control this complexity, it is natural to attempt to collect various snippets of dummy code in some sort of library. For example, such a library could contain macros that expand to code that triggers the appropriate error when a template parameter substitution violates the concept underlying that particular parameter. The most popular such library is the Concept Check Library, which is part of the Boost distribution (see [BCCL]). Unfortunately, the technique isn’t particularly portable (the way errors are diagnosed differs considerably from one compiler to another) and sometimes masks issues that cannot be captured at a higher level.
+显然，示例中的代码开发可能会变得与实现模板的实际功能代码一样复杂。为了控制这种复杂性，可以尝试在某种类型的库中收集各种代码片段。例如，这样的库可以包含宏，当模板参数替换违反该特定参数的概念时，这些宏可以扩展为触发适当错误的代码。这类库中最流行的是Concept Check库，是Boost发行版的一部分(参见[BCCL])。但这种技术的可移植性不是特别好(不同编译器诊断错误的方式不同)，有时还会掩盖在更高级别上无法捕获错误的问题。
 
-Once we have concepts in C++ (see Appendix E), we have other ways to support the definition of requirements and expected behavior.
+当C++中有了概念(参见附录E)，就有了其他的方法来支持需求和预期行为的定义。
 
 
 

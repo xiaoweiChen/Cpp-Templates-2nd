@@ -1,19 +1,19 @@
-With the keyword decltype (introduced in C++11), it is possible to check the value category of any C++ expression. For any expression x, decltype((x)) (note the double parentheses) yields:
+使用关键字decltype(在C++11中引入)，可以检查C++表达式的值类别。对于任意表达式x, decltype((x))(注意双括号)会产生:
 
 \begin{itemize}
 \item 
-type if x is a prvalue
+x是类型，则为prvalue
 
 \item
-type\& if x is an lvalue
+x是左值引用，则为lvalue
 
 \item
-type\&\& if x is an xvalue
+x是右值引用，则为xvalue
 \end{itemize}
 
-The double parentheses in decltype((x)) are needed to avoid producing the declared type of a named entity in case where the expression x does indeed name an entity (in other cases, the parentheses have no effect). For example, if the expression x simply names a variable v, the construct without parentheses becomes decltype(v), which produces the type of the variable v rather than a type reflecting the value category of the expression x referring to that variable.
+decltype((x))中需要双括号，以避免在表达式x确实命名了实体的情况下，产生命名实体的声明类型(在其他情况下，括号不起作用)。例如，如果表达式x只是将一个变量命名为v，那么不带圆括号的构造就变成了decltype(v)，其生成变量v的类型，而不是反映引用该变量的表达式x的值类别的类型。
 
-Thus, using type traits for any expression e, we can check its value category as follows:
+因此，对任意表达式e使用类型特征，可以使用如下方法检查它的值类别:
 
 \begin{lstlisting}[style=styleCXX]
 if constexpr (std::is_lvalue_reference<decltype((e))>::value) {
@@ -27,7 +27,7 @@ else {
 }
 \end{lstlisting}
 
-See Section 15.10.2 on page 298 for details.
+详见第15.10.2节。
 
 
 

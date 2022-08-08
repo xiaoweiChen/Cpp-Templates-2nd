@@ -1,9 +1,9 @@
 
-The previous section covers most of the overloading situations encountered in everyday C++ programming. There are, unfortunately, many more rules and exceptions to these rules—more than is reasonable to present in a book that is not really about function overloading in C++. Nonetheless, we discuss some of them here in part because they apply somewhat more often than other rules and in part to provide a sense for how deep the details go.
+上一节介绍了在C++编程中遇到的大多数重载情况。但对于这些规则，还有更多的规则和例外——本书并不是转为C++函数重载所著，因此不太可能一一介绍。尽管如此，我们在这里会讨论其中一些规则，一方面是因为它们比其他规则应用得更多，另一方面是为了让大家了解其中细节的水有多深。
 
-\subsubsubsection{C.3.1\hspace{0.2cm}Prefer Nontemplates or More Specialized Temp}
+\subsubsubsection{C.3.1\hspace{0.2cm}选择非模板或更特化的临时模板}
 
-When all other aspects of overload resolution are equal, a nontemplate function is preferred over an instance of a template (it doesn’t matter whether that instance is generated from the generic template definition or whether it is provided as an explicit specialization). For example:
+当重载解析的所有方面都相同时，非模板函数优先于模板的实例(该实例是从泛型模板定义生成，还是作为显式专门化提供，都无关紧要)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> int f(T); // #1
@@ -15,15 +15,15 @@ int main()
 }
 \end{lstlisting}
 
-This example also clearly illustrates that overload resolution normally does not involve the return type of the selected function. 
+这个例子还清楚地说明了重载解析通常不涉及所选函数的返回类型。
 
-However, when other aspects of overload resolution slightly differ (such as having different const and reference qualifiers), first the general rules of overload resolution apply. This effect can easily accidentally cause surprising behavior, when member functions are defined that accept the same arguments as copy or move constructors. See Section 16.2.4 on page 333 for details.
+但当重载解析的其他方面略有不同时(例如具有不同的const和引用限定符)，首先应用重载解析的一般规则。当成员函数定义为接受与复制或移动构造函数相同的参数时，这种方式就很容易导致不可预期的行为。参见16.2.4节。
 
-If the choice is between two templates, then the most specialized of the templates is preferred (provided one is actually more specialized than the other). See Section 16.2.2 on page 330 for a thorough explanation of this concept. One special case of this distinction occurs when two templates only differ in that one adds a trailing parameter packs: The template without the pack is considered more specialized and is therefore preferred if it matches the call. Section 4.1.2 on page 57 discusses an example of this situation.
+如果要在两个模板之间进行选择，首选最特化的模板(前提是其中一个实际上比另一个更特化)。关于这个概念的详细解释，请参阅16.2.2节。这种区别的特殊情况发生在两个模板仅在添加末尾参数包时:没有包的模板认为是更特化，因此若与调用相匹配将首先选择。4.1.2节讨论了这种情况的一个例子。
 
-\subsubsubsection{C.3.2\hspace{0.2cm}Conversion Sequences}
+\subsubsubsection{C.3.2\hspace{0.2cm}转换序列}
 
-An implicit conversion can, in general, be a sequence of elementary conversions. Consider the following code example:
+隐式转换通常可以是转换的序列。考虑下面的代码示例:
 
 \begin{lstlisting}[style=styleCXX]
 class Base {
@@ -42,50 +42,50 @@ void process(Derived const& object)
 }
 \end{lstlisting}
 
-The call count(object) works because object can implicitly be converted to int. However, this conversion requires several steps:
+调用count(object)有效，是因为object可以隐式转换为int。然而，这种转换需要几步:
 
 \begin{enumerate}
 \item 
- A conversion of object from Derived const to Base const (this is a glvalue conversion; it preserves the identity of the object)
+从派生const对象到基本const对象的转换(这是glvalue转换，保留了对象的身份)
 
 \item 
-A user-defined conversion of the resulting Base const object to type short
+将生成的Base const对象转换为short类型的用户定义转换
 
 \item 
-A promotion of short to int
+short升为int
 \end{enumerate}
 
-This is the most general kind of conversion sequence: a standard conversion (a derived-to-base conversion, in this case), followed by a user-defined conversion, followed by another standard conversion. Although there can be at most one user-defined conversion in a conversion sequence, it is also possible to have only standard conversions
-.
-An important principle of overload resolution is that a conversion sequence that is a subsequence of another conversion sequence is preferable over the latter sequence. If there were an additional candidate function
+这是最常见的转换序列:标准转换(在本例中是派生到基类的转换)，然后是用户定义的转换，然后是另一个标准转换。虽然在转换序列中最多只能有一个用户定义的转换，但也可能只有标准转换。
+
+重载解析的一个重要原则是，作为另一个转换序列的子序列的转换序列要优于后一个序列。若有额外的候选函数
 
 \begin{lstlisting}[style=styleCXX]
 void count(short);
 \end{lstlisting}
 
-in the example, it would be preferred for the call count(object) because it doesn’t require the third step (promotion) in the conversion sequence.
+在这个例子中，调用count(object)会首选它，因为它不需要转换序列中的第三步(类型提升)。
 
-\subsubsubsection{C.3.3\hspace{0.2cm}Pointer Conversions}
+\subsubsubsection{C.3.3\hspace{0.2cm}指针转换}
 
-Pointers and pointers to members undergo various special standard conversions, including
+指针和指向成员的指针进行各种特殊的标准转换，包括
 
 \begin{itemize}
 \item 
-Conversions to type bool
+转换为bool类型
 
 \item 
-Conversions from an arbitrary pointer type to void*
+将任意指针类型转换为void*
 
 \item 
-Derived-to-base conversions for pointers
+派生类的指针转换为基类指针
 
 \item 
-Base-to-derived conversions for pointers to members
+成员指针转换为派生类指针
 \end{itemize}
 
-Although all of these can cause a “match with standard conversions only,” they are not ranked equally.
+尽管所有这些都可以“只与标准转换匹配”，但它们的排名并不相同。
 
-First, conversions to type bool (both from a regular pointer and from a pointer to a member) are considered worse than any other kind of standard conversion. For example:
+首先，到bool类型的转换(无论是从普通指针还是从指向成员的指针)，认为比其他类型的标准转换都要糟糕。例如:
 
 \begin{lstlisting}[style=styleCXX]
 void check(void*); // #1
@@ -98,7 +98,7 @@ void rearrange (Matrix* m)
 }
 \end{lstlisting}
 
-Within the category of regular pointer conversions, a conversion to type void* is considered worse than a conversion from a derived class pointer to a base class pointer. Furthermore, if conversions to different classes related by inheritance exist, a conversion to the most derived class is preferred. Here is another short example:
+常规指针转换的类别中，void*类型的转换认为比从派生类指针到基类指针的转换更糟糕。此外，若存在到与继承相关的不同类的转换，则首选到最派生类的转换。下面是另一个例子:
 
 \begin{lstlisting}[style=styleCXX]
 class Interface {
@@ -123,13 +123,13 @@ void dump (Machine* machine)
 }
 \end{lstlisting}
 
-The conversion from Machine* to CommonProcesses* is preferred over the conversion to Interface*, which is fairly intuitive.
+从Machine*到CommonProcesses*的转换优于到Interface*的转换，后者非常直观。
 
-A very similar rule applies to pointers to members: Between two conversions of related pointerto-member types, the “closest base” in the inheritance graph (i.e., the least derived) is preferred.
+类似的规则也适用于成员指针:相关的指针成员类型的两种转换之间，优先选择继承图中“最接近的基”(即派生最少的基)。
 
-\subsubsubsection{C.3.4\hspace{0.2cm}Initializer Lists}
+\subsubsubsection{C.3.4\hspace{0.2cm}初始化式列表}
 
-Initializer list arguments (initializers passed with in curly braces) can be converted to several different kinds of parameters: initializer\_lists, class types with an initializer\_list constructor, class types for which the initializer list elements can be treated as (separate) parameters to a constructor, or aggregate class types whose members can be  initialized by the elements of the initializer list. The following program illustrates these cases:
+初始化列表参数(初始化列表参数用大括号传递)可以转换为几种不同类型的参数:initializer\_lists、带有initializer\_list构造函数的类类型、初始化列表元素可以作为构造函数(单独)参数的类类型，或者聚合类类型，其成员可以由初始化列表的元素初始化。下面的程序阐明了这些情况:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -174,13 +174,13 @@ int main()
 }	
 \end{lstlisting}
 
-In the first two calls to f(), the initializer list arguments are converted to std::initializer\_list values, which involves converting each of the elements in the initializer list to the element type of the std::initializer\_list. In the first call, all of the elements are already of type int, so no additional conversion is needed. In the second call, each string literal in the initializer list is converted to a std::string by calling the string(char const*) constructor. The third call (to g()) performs a user-defined conversion using the std::vector(std::initializer\_list<int>) constructor. The next call invokes the std::complex(double, double) constructor, as if one had written std::complex<double>(1.5, 2.5). The final call performs aggregate initialization, which initializes the members of an instance of the Point class from the elements in the initializer list without calling a constructor of Point.
+在对f()的前两次调用中，初始化式列表参数转换为std::initializer\_list值，这将初始化式列表中的每个元素转换为std::initializer\_list的元素类型。第一个调用中，所有元素都已经是int类型，因此不需要进行额外的转换。第二次调用中，通过调用string(char const*)构造函数，初始化式列表中的每个字符串字面值都转换为std::string。第三个调用(g())使用std::vector(std::initializer\_list<int>)构造函数执行用户定义的转换。下一个调用std::complex(double, double)构造函数，就好像编写了std::complex<double>(1.5, 2.5)。最后一个调用执行聚合初始化，从初始化式列表中的元素初始化Point类实例的成员，而不调用Point的构造函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Aggregate initialization is only available for aggregate types in C++, which are either arrays or simple, Clike classes that have no user-provided constructors, no private or protected nonstatic data members, no base classes, and no virtual functions. Prior to C++14, they must also not have a default member initializer. Since C++17, public base classes are allowed.
+\hspace*{0.75cm}聚合初始化只适用于C++中的聚合类型，即数组或简单的类C，这些类没有用户提供的构造函数，没有private或protected的非静态数据成员，没有基类，也没有虚函数。C++14前，它们也不能有默认的成员初始化式。C++17后，可以使用公共基类。
 \end{tcolorbox}
 
-There are several interesting overloading cases for initializer lists. When converting an initializer list to an initializer\_list, as in the first two calls of the example above, the overall conversion is given the same ranking as the worst conversion from any given element in the initializer list to the element type of the initializer\_list (i.e., the T in initializer\_list<T>). This can lead to some surprises, as in the following example:
+对于初始化式列表，有几种重载情况。当将初始化式列表转换为initializer\_list时，如上例的前两次调用，整个转换排名与初始化式列表中给定元素到initializer\_list元素类型的最差转换相同(即initializer\_list<T>中的T)。这可能会导致一些意外出现，比如下面的例子:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -204,23 +204,23 @@ int main()
 }
 \end{lstlisting}
 
-In the first call to ovl(), each element of the initializer list is a char. For the first ovl() function, these elements require no conversion at all. For the second ovl() function, these elements require a promotion to int. Because the perfect match is better than a promotion, the first call to ovl() calls \#1.
+对ovl()的第一次调用中，初始化式列表的每个元素都是一个字符。对于第一个ovl()函数，这些元素根本不需要转换。对于第二个ovl()函数，这些元素需要升为int。因为完美匹配比类型升级要好，所以对ovl()的第一次调用的是\#1。
 
-In the second call to ovl(), the first five elements are of type char, while the last is of type int. For the first ovl() function, the char elements are a perfect match, but the int requires a standard conversion, so the overall conversion is ranked as a standard conversion. For the second ovl() function, the char elements require a promotion to int, while the int element at the end is a perfect match. The overall conversion for the second ovl() function is ranked as a promotion, which makes it a better candidate than the first ovl(), even though only a single element’s conversion was better.
+对ovl()的第二次调用中，前五个元素是char类型，而最后一个是int类型。对于第一个ovl()函数，char元素完美匹配，但是int需要标准转换，因此整个转换为标准转换。对于第二个ovl()函数，char元素需要升级为int，而末尾的int元素完全匹配。第二个ovl()函数的整体转换排名为提升，这使的它比第一个ovl()函数更为合适(尽管只有单个元素的转换更好)。
 
-When initializing an object of class type with an initializer list, as in the calls to g() and h() in our original example, overload resolution proceeds in two phases:
+当使用初始化式列表初始化类类型对象时，就像在我们的原始示例中调用g()和h()一样，重载解析分为两个阶段进行:
 
 \begin{enumerate}
 \item
-The first phase considers only initializer-list constructors, that is, constructors whose only nondefaulted parameter is of type  std::initializer\_list<T> for some type T (after removing the top-level reference and const/volatile qualifiers).
+第一阶段只考虑初始化列表构造函数，对于某些类型T，其唯一非默认形参是std::initializer\_list<T>类型的构造函数(删除顶层引用和const/volatile限定符之后)。
 
 \item
-If no such viable constructor is found, then the second phase considers all other constructors.
+如果没有找到这样的可行构造函数，那么第二阶段将考虑其他构造函数。
 \end{enumerate}
 
-There is one exception to this rule: If the initializer list is empty and the class has a default constructor, the first phase is skipped so that the default constructor will be called.
+该规则有一个例外:如果初始化列表为空，并且类有一个默认构造函数，则跳过第一阶段，以便调用默认构造函数。
 
-The effect of this rule is that any initializer-list constructor is a better match than any noninitializer-list constructor, as illustrated in the following example:
+该规则的效果是，任何初始化式列表构造函数比非初始化式列表构造函数更匹配，如下所示:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -256,21 +256,21 @@ int main()
 }
 \end{lstlisting}
 
-Note that the second constructor, which takes an unsigned and a T const\&, won’t be called when initializing an Array<int> object from an initializer list, because its initializer-list constructor is always a better match than its non-initializer-list  constructors. With Array<string>, however, the non-initializer-list constructor will be called when the initializer-list constructor is not viable, as in the second call to arr2().
+注意，第二个构造函数接受一个unsigned和一个T const\&参数，从初始化列表初始化Array<int>对象时不会调用，因为其初始化列表构造函数总是比非初始化列表构造函数更匹配。但对于Array<string>，当初始化列表构造函数不可用时，就会调用非初始化列表构造函数，就像对arr2()的第二次调用一样。
 
-\subsubsubsection{C.3.5\hspace{0.2cm}Functors and Surrogate Functions}
+\subsubsubsection{C.3.5\hspace{0.2cm}函子和代理函数}
 
-We mentioned earlier that after the name of a function has been looked up to create an initial overload set, the set is tweaked in various ways. An interesting situation arises when a call expression refers to a class type object instead of a function. In this case, there are two potential additions to the overload set.
+在前面提到，查找函数名以创建初始重载集之后，可以各种方式调整该集合。当调用表达式引用类类型对象而不是函数时，会出现一种有趣的情况，重载集会增加。
 
-The first addition is straightforward: Any member operator () (the function call operator) is added to the set. Objects with such operators are usually called functors or function objects (see Section 11.1 on page 157).
+第一个方式很简单:将成员的函数操作符(函数调用操作符)添加到集合中。带有此类操作符的对象通常称为函子或函数对象(参见第11.1节)。
 
-A less obvious addition occurs when a class type object contains an implicit conversion operator to a pointer to a function type (or to a reference to a function type).
+当类类型对象包含指向函数类型指针(或指向函数类型引用)的隐式转换操作符时，重载集就会出现不那么明显的增加。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The conversion operator must also be applicable in the sense that, for example, a non-const operator is not considered for const objects.
+\hspace*{0.75cm}转换操作符也必须适用于以下情况，例如：const对象不考虑非const操作符。
 \end{tcolorbox}
 
-In such situations, a dummy (or surrogate) function is added to the overload set. This surrogate function candidate is considered to have an implied parameter of the type designated by the conversion function, in addition to parameters with types corresponding to the parameter types in the destination type of that conversion function. An example makes this much clearer:
+这种情况下，将向重载集添加一个虚拟(或代理)函数。除了具有与该转换函数的目标类型中的参数类型对应的类型的参数外，这个代理函数候选函数认为具有转换函数指定的类型的参数。下面的例子清楚地说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 using FuncType = void (double, int);
@@ -288,15 +288,15 @@ void activate(IndirectFunctor const& funcObj)
 }
 \end{lstlisting}
 
-The call funcObj(3, 5) is treated as a call with three arguments: funcObj, 3, and 5. The viable function candidates include the member operator() (which is treated as having parameter types IndirectFunctor const\&, double, and double) and a surrogate function with parameters of type FuncType*, double, and int. The surrogate function has a worse match for the implied parameter (because it requires a user-defined conversion), but it has a better match for the last parameter; hence the two candidates cannot be ordered. The call is therefore ambiguous.
+调用funcObj(3, 5)视为带有三个参数的调用:funcObj、3和5。候选函数包括成员operator()(视为具有IndirectFunctor const\&、double和double参数类型)和参数类型为FuncType*、double和int的代理函数。代理函数与隐含参数的匹配较差(因为它需要用户定义的转换)，但与最后一个形参的匹配较好;因此，不能使用这俩候选。因此，该调用具有歧义。
 
-Surrogate functions are in the most obscure corners of C++ and rarely occur in practice (fortunately).
+代理函数是C++中最晦涩的角落，在实践中很少出现(幸运的是)。
 
-\subsubsubsection{C.3.6\hspace{0.2cm}Other Overloading Contexts}
+\subsubsubsection{C.3.6\hspace{0.2cm}其他情况的重载}
 
-So far we have discussed overloading in the context of determining which function should be called in a call expression. However, there are a few other contexts in which a similar selection must be made.
+目前为止，已经讨论了重载在确定调用表达式中，应该调用哪个函数的上下文中。然而，在其他一些情况下，必须做出类似的选择。
 
-The first context occurs when the address of a function is needed. Consider the following example:
+第一个上下文发生在需要函数地址的时候。考虑下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 int numElems(Matrix const&); // #1
@@ -305,9 +305,9 @@ int numElems(Vector const&); // #2
 int (*funcPtr)(Vector const&) = numElems; // selects #2
 \end{lstlisting}
 
-Here, the name numElems refers to an overload set, but only the address of one function in that set is desirable. Overload resolution then attempts to match the required function type (the type of funcPtr in this example) to the available candidates.
+这里，numElems指的是一个重载集，但我们只希望知道其中一个函数的地址。然后重载解析尝试将所需的函数类型(本例中是funcPtr的类型)与可用的候选函数匹配。
 
-The other context that requires overload resolution is initialization. Unfortunately, this is a topic fraught with subtleties that are beyond what can be covered in an appendix. However, a simple example at least illustrates this additional aspect of overload resolution:
+另一个需要重载解析的上下文是初始化，但这是一个和微妙的主题，超出了附录所能涵盖的范围。一个简单的例子说明了重载解析的这特殊的情况:
 
 \begin{lstlisting}[style=styleCXX]
 #include <string>
@@ -330,7 +330,7 @@ void initDemo()
 }
 \end{lstlisting}
 
-In this example, overload resolution is needed to select the appropriate constructor or conversion operator. Specifically, the initialization of bn1 calls the first constructor, that of bn2 calls the third constructor, and that of in() calls operator long(). In  the vast majority of cases, the overloading rules produce the intuitive result. However, the  details of these rules are quite complex, and some applications rely on some of the more obscure corners in this area of the C++ language.
+本例中，需要重载解析来选择适当的构造函数或转换操作符。具体来说，bn1的初始化调用第一个构造函数，bn2的初始化调用第三个构造函数，in()的初始化调用operator long()。大多数情况下，重载规则会产生直观的结果。然而，这些规则的细节相当复杂，一些(少量)应用程序会依赖于C++语言这一领域中的技术。
 
 
 

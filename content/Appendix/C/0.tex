@@ -1,4 +1,4 @@
-Overload resolution is the process that selects the function to call for a given call expression. Consider the following simple example:
+重载解析是为给定调用表达式选择要调用函数的过程。考虑下面这个简单的例子:
 
 \begin{lstlisting}[style=styleCXX]
 void display_num(int); // #1
@@ -11,11 +11,11 @@ int main()
 }
 \end{lstlisting}
 
-In this example, the function name display\_num() is said to be overloaded. When this name is used in a call, a C++ compiler must therefore distinguish between the various candidates using additional information; mostly, this information is the types of the call arguments. In our example, it makes intuitive sense to call the int version when the function is called with an integer argument and the double version when a floating-point argument is provided. The formal process that attempts to model this intuitive choice is the overload resolution process.
+例子中，函数名display\_num()重载。因此，当在调用中使用这个名称时，C++编译器必须使用更多信息来区分不同的候选名称;大多数情况下，这些信息是调用参数的类型。我们的例子中，当函数调用一个整型参数时调用整型版本，当函数提供一个浮点参数时调用双精度浮点版本，就很简单。尝试对这种简单选择建模的流程就是重载解析。
 
-The general ideas behind the rules that guide overload resolution are simple enough, but the details have become quite complex during the C++ standardization process. This complexity was driven mostly by the desire to support various real-world examples that intuitively (to a human) seem to have an “obviously best match,” but when trying to formalize this intuition, various subtleties arose.
+指导重载解析规则背后的思想很简单，但在C++标准化过程中，细节变得相当复杂。这种复杂性主要是由支持各种实际示例愿望所驱使，这些示例似乎具有“明显的最佳匹配”，但试图将这种直觉形式化时，各种微妙的问题就出现了。
 
-In this appendix, we provide a reasonably detailed survey of the overload resolution rules. However, the complexity of this process is such that we do not claim to cover every part of the topic.
+本附录中，我们将对重载解析规则进行较为详细的介绍。然而，这个过程非常复杂，我们不能涵盖该主题的每个部分。
 
 
 

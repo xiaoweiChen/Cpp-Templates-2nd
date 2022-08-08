@@ -1,64 +1,64 @@
 
-We start with the standard traits that test primary and composite type categories (see Figure D.1).
+我们从测试主要类型和复合类型类别的标准特征开始(参见图D.1)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Thanks to Howard Hinnant for providing this type hierarchy in \url{http://howardhinnant.github.io/TypeHiearchy.pdf}
+\hspace*{0.75cm}感谢Howard Hinnant提供了这种类型层次结构\url{http://howardhinnant.github.io/TypeHiearchy.pdf}
 \end{tcolorbox}
 
-In general, each type belongs to exactly one primary type category (the white elements in Figure D.1). Composite type categories then merge primary type categories into higher-level concepts.
+通常，每个类型都只属于一个主要类型类别(图D.1中的白色元素)。复合类型类别需要将主要类型合并到更高级的概念中。
 
 \begin{center}
-\includegraphics[width=0.8\textwidth]{content/Appendix/D/images/1.png} \\
-Figure D.1. Primary and Composite Type Categories
+\includegraphics[width=0.65\textwidth]{content/Appendix/D/images/1.png} \\
+图D.1. 主要和复合类型类别
 \end{center}
 
-\subsubsubsection{D.2.1\hspace{0.2cm}Testing for the Primary Type Category}
+\subsubsubsection{D.2.1\hspace{0.2cm}测试主要类型类别}
 
-This section describes type utilities that test the primary type category of a given type. For any given type, exactly one of the primary type categories has a static value member that evaluates to true.
+本节测试给定类型的主要类型类别。对于给定类型，只有一个主类型类别具有计算结果为true的静态值成员。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++14, the only exception was the type of nullptr, std::nullptr\_t, for which all primary type category utilities yielded false, because is\_null\_pointer<> was not part of C++11.
+\hspace*{0.75cm}C++14前，唯一的例外是std::nullptr\_t，对于它所有的主类型类别实用程序都产生了false，因为is\_null\_pointer<>不是C++11的一部分。
 \end{tcolorbox}
 
-The result is independent of whether the type is qualified with const and/or volatile (cv-qualified).
+结果与类型是否用const和/或volatile(cv限定)限定无关。
 
-Note that for types std::size\_t and std::ptrdiff\_t, is\_integral<> yields true. For type std::max\_align\_t, which one of these primary type categories yields true is an implementation detail (thus, it might be an integral or floating-point or class type). The language specifies that the type of a lambda expression is a class type (see Section 15.10.6 on page 310). Applying is\_class to that type therefore yields true.
+注意，对于类型std::size\_t和std::ptrdiff\_t，当\_integral<>时结果为真。对于类型std::max\_align\_t，这些主要类型类别中哪一个是true是实现的细节(因此，它可能是整型、浮点型或类类型)。语言指定Lambda表达式是类类型(参见第15.10.6节)。因此，将is\_class应用于该类型可得到true。
 
 \begin{table}[H]
 	\begin{tabular}{|l|l|}
 		\hline
-		Trait                                                    & Effect                                                                                                         \\ \hline
-		is\_void\textless{}T\textgreater{}                       & Type void                                                                                                      \\ \hline
-		is\_integral\textless{}T \textgreater{}                  & \begin{tabular}[c]{@{}l@{}}Integral type (including bool, char, char16\_t, char32\_t,\\ wchar\_t)\end{tabular} \\ \hline
-		is\_floating\_point\textless{}T \textgreater{}           & Floating-point type (float, double, long double)                                                               \\ \hline
-		is\_array\textless{}T \textgreater{}                     & Ordinary array type (not type std::array)                                                                      \\ \hline
-		is\_pointer\textless{}T \textgreater{}                   & \begin{tabular}[c]{@{}l@{}}Pointer type (including function pointer but not pointer to \\ nonstatic member)\end{tabular}                                  \\ \hline
-		is\_null\_pointer\textless{}T \textgreater{}             & Type of nullptr (since C++14)                                                                                  \\ \hline
-		is\_member\_object\_pointer\textless{}T \textgreater{}   & Pointer to a nonstatic data member                                                                             \\ \hline
-		is\_member\_function\_pointer\textless{}T \textgreater{} & Pointer to a nonstatic member function                                                                         \\ \hline
-		is\_lvalue\_reference\textless{}T \textgreater{}         & Lvalue reference                                                                                               \\ \hline
-		is\_rvalue\_reference\textless{}T \textgreater{}         & Rvalue reference                                                                                               \\ \hline
-		is\_enum\textless{}T \textgreater{}                      & Enumeration type                                                                                               \\ \hline
-		is\_class\textless{}T \textgreater{}                     & Class/struct or lambda type but not a union type                                                               \\ \hline
-		is\_union\textless{}T \textgreater{}                     & Union type                                                                                                     \\ \hline
-		is\_function\textless{}T \textgreater{}                  & Function type                                                                                                  \\ \hline
+		特征                                                    & 作用                                                                                                         \\ \hline
+		is\_void\textless{}T\textgreater{}                       & void类型                                                                                                      \\ \hline
+		is\_integral\textless{}T \textgreater{}                  & \begin{tabular}[c]{@{}l@{}}整数类型(包括bool, char, char16\_t, char32\_t, wchar\_t)\end{tabular} \\ \hline
+		is\_floating\_point\textless{}T \textgreater{}           & 浮点类型(float, double, long double)                                                               \\ \hline
+		is\_array\textless{}T \textgreater{}                     & 普通的数组类型(非 std::array类型)                                                                      \\ \hline
+		is\_pointer\textless{}T \textgreater{}                   & \begin{tabular}[c]{@{}l@{}}指针类型(包括函数指针，但不包括指向非静态成员的指针)\end{tabular}                                  \\ \hline
+		is\_null\_pointer\textless{}T \textgreater{}             & nullptr的类型(C++14)                                                                                  \\ \hline
+		is\_member\_object\_pointer\textless{}T \textgreater{}   & 指向非静态数据成员的指针                                                                             \\ \hline
+		is\_member\_function\_pointer\textless{}T \textgreater{} & 指向非静态成员函数的指针                                                                         \\ \hline
+		is\_lvalue\_reference\textless{}T \textgreater{}         & 左值引用                                                                                           \\ \hline
+		is\_rvalue\_reference\textless{}T \textgreater{}         & 右值引用                                                                                           \\ \hline
+		is\_enum\textless{}T \textgreater{}                      & 枚举类型                                                                         \\ \hline
+		is\_class\textless{}T \textgreater{}                     & class/struct或Lambda类型，但非联合类型                                                               \\ \hline
+		is\_union\textless{}T \textgreater{}                     & 联合类型                                                                                                    \\ \hline
+		is\_function\textless{}T \textgreater{}                  & 函数类型                                                                                                  \\ \hline
 	\end{tabular}
 \end{table}
 
 \begin{center}
-Table D.1. Traits to Check the Primary Type Category
+表D.1. 检查主要类型类别的特征
 \end{center}
 
-ype of a lambda expression is a class type (see Section 15.10.6 on page 310). Applying is\_class to that type therefore yields true.
+Lambda表达式的类型是一个类类型(参见第15.10.6节)。因此，将is\_class应用于该类型将得到true。
 
-std::is\_void < T >::value
+std::is\_void<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is (cv-qualified) void.
+如果类型T是(cv限定的)void，则生成true。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_void_v<void> // yields true
 is_void_v<void const> // yields true
@@ -70,46 +70,46 @@ is_void_v<decltype(f())> // yields true (return type of f() is void)
 
 \end{itemize}
 
-std::is\_integral < T >::value
+std::is\_integral<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is one of the following (cv-qualified) types:
+如果类型T是以下(cv限定的)类型之一，则生成true:
 
 \begin{itemize}
 \item [-]
 bool
 
 \item [-]
- a character type (char, signed char, unsigned char, char16\_t, char32\_t, or wchar\_t)
+字符类型(char, signed char, unsigned char, char16\_t, char32\_t或wchar\_t)
 
 \item [-]
-an integer type (signed or unsigned variants of short, int, long, or long long; this includes std::size\_t and std::ptrdiff\_t)
+一个整数类型(short、int、long或long的有符号或无符号;这包括std::size\_t和std::ptrdiff\_t)
 \end{itemize}
 
 \end{itemize}
 
-std::is\_floating\_point < T >::value
+std::is\_floating\_point<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is (cv-qualified) float, double, or long double
+如果类型T是(cv限定的)float、double或long double则为true
 \end{itemize}
 
-std::is\_array < T >::value
+std::is\_array<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) array type.
+如果类型T是一个(cv限定的)数组类型，则生成true。
 
 \item 
-Recall that a parameter declared as an array (with or without length) by language rules really has a pointer type.
+由语言规则声明为数组(带或不带长度)的参数实际上可以是指针类型。
 
 \item 
-Note that class std::array<> is not an array type, but a class type.
+注意，类std::array<>不是数组类型，而是类类型。
 
 \item 
-For example:
+例如:
 
 \begin{lstlisting}[style=styleCXX]
 is_array_v<int[]> // yields true
@@ -125,34 +125,35 @@ void foo(int a[], int b[5], int* c)
 \end{lstlisting}
 
 \item 
-See Section 19.8.2 on page 453 for implementation details.
+参见第19.8.2节了解实现细节。
 
 \end{itemize}
 
-std::is\_pointer < T >::value
+std::is\_pointer<T>::value
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) pointer. This includes:
+如果类型T是一个(cv限定的)指针，则生成true。这包括:
 \begin{itemize}
-\item[-] 
-pointers to static/global (member) functions
 
 \item[-] 
-parameters declared as arrays (with or without length) or function types
+指向静态/全局(成员)函数的指针
+
+\item[-] 
+参数声明为数组(带/不带长度)或函数类型
 \end{itemize}
 
-This does not include:
+这不包括:
 
 \begin{itemize}
 \item[-] 
-pointer-to-member types (e.g., the type of \&X::m where X is a class type and m is a nonstatic member function or a nonstatic data member)
+指向成员类型的指针(例如，\&X::m的类型，其中X是类类型，m是非静态成员函数或非静态数据成员)
 
 \item[-] 
-the type of nullptr, std::nullptr\_t
+nullptr的类型是std::nullptr\_t
 \end{itemize}
 
 \item 
-For example:
+例如:
 
 \begin{lstlisting}[style=styleCXX]
 is_pointer_v<int> // yields false
@@ -172,17 +173,17 @@ int* foo(int a[5], void(f)())
 \end{lstlisting}
 
 \item 
-See Section 19.8.2 on page 451 for implementation details.
+参见第19.8.2节了解实现细节。
 \end{itemize}
 
-std::is\_null\_pointer < T >::value
+std::is\_null\_pointer<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is the (cv-qualified) std::nullptr\_t, which is the type of nullptr.
+如果类型T是(cv限定的)std::nullptr\_t，它是nullptr的类型，则生成true。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_null_pointer_v<decltype(nullptr)> // yields true
 void* p = nullptr;
@@ -191,28 +192,28 @@ is_null_pointer_v<decltype(p)> // yields false (p has not type std::nullptr_t)
 \end{lstlisting}
 
 \item 
-Provided since C++14.
+从C++14开始支持。
 \end{itemize}
 
-std::is\_member\_object\_pointer < T >::value
+std::is\_member\_object\_pointer<T>::value
 
-std::is\_member\_function\_pointer < T >::value
+std::is\_member\_function\_pointer<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) pointer-to-member type (e.g., int X::* or int (X::*)() for some class type X).
+如果类型T是一个(cv限定的)指向成员的指针类型(例如，int X::*或对于某些类类型X的int (X::*)())，则返回true。
 \end{itemize}
 
-std::is\_lvalue\_reference < T >::value
+std::is\_lvalue\_reference<T>::value
 
-std::is\_rvalue\_reference < T >::value
+std::is\_rvalue\_reference<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) lvalue or rvalue reference type, respectively.
+如果类型T分别是(cv限定的)左值或右值引用类型，则生成true。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_lvalue_reference_v<int> // yields false
 is_lvalue_reference_v<int&> // yields true
@@ -225,30 +226,30 @@ is_rvalue_reference_v<void> // yields false
 \end{lstlisting}
 
 \item 
-See Section 19.8.2 on page 452 for implementation details.
+参见第19.8.2节了解实现细节。
 \end{itemize}
 
-std::is\_enum < T >::value
+std::is\_enum<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) enumeration type. This applies to both scoped and unscoped enumeration types.
+如果类型T是(cv限定的)枚举类型，则生成true。这既适用于作用域枚举类型，也适用于非作用域枚举类型。
 
 \item 
-See Section 19.8.5 on page 457 for implementation details.
+参见第19.8.5节了解实现细节。
 \end{itemize}
 
-std::is\_class < T >::value
+std::is\_class<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) class type declared with class or struct, including such a type generated from instantiating a class template. Note that the language guarantees that the type of a lambda expression is a class type (see Section 15.10.6 on page 310).
+如果类型T是用class或struct声明的(cv限定的)类类型，包括从实例化类模板中生成的这种类型，则生成真。注意，语言保证Lambda表达式的类型是类类型(参见15.10.6节)。
 
 \item 
-Yields false for unions, scoped enumeration type (despite being declared with enum class), std::nullptr\_t, and any other type.
+对联合、作用域枚举类型(尽管用enum类声明)、std::nullptr\_t和任何其他类型会产生false。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_class_v<int> // yields false
 is_class_v<std::string> // yields true
@@ -259,27 +260,27 @@ is_class_v<decltype(l1)> // yields true (a lambda is a class object)
 \end{lstlisting}
 
 \item 
-See Section 19.8.4 on page 456 for implementation details.
+参见第19.8.4节了解实现细节。
 \end{itemize}
 
-std::is\_union < T >::value
+std::is\_union<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) union, including a union generated from a class template that is a union template.
+如果类型T是一个(cv限定的)联合，包括一个由联合模板的类模板生成的联合，则生成true。
 \end{itemize}
 
-std::is\_function < T >::value
+std::is\_function<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a (cv-qualified) function type. Yields false for a function pointer type, the type of a lambda expression, and any other type.
+如果类型T是一个(cv限定的)函数类型，则生成true。对函数指针类型、Lambda表达式的类型和其他类型产生false。
 
 \item 
-Recall that a parameter declared as an function type by language rules really has a pointer type.
+根据语言规则声明为函数类型的参数，实际上可以是一个指针类型。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 void foo(void(f)())
 {
@@ -291,101 +292,106 @@ void foo(void(f)())
 \end{lstlisting}
 
 \item 
-See Section 19.8.3 on page 454 for implementation details.
+参见第19.8.3节了解实现细节。
 \end{itemize}
 
-\subsubsubsection{D.2.2\hspace{0.2cm}Test for Composite Type Categories}
+\subsubsubsection{D.2.2\hspace{0.2cm}复合类型类别的测试}
 
-The following type utilities determine whether a type belongs to a more general type category that is the union of some primary type categories. The composite type categories do not form a strict partition: A type may belong to multiple composite type categories (e.g., a pointer type is both a scalar type and a compound type). Again, cv-qualifiers (const and volatile) do not matter in classifying a type.
+以下类型可以确定一个类型是否属于更一般的类型类别，该类型类别是一些主要类型类别的联合。复合类型类别不构成严格的划分:一个类型可以属于多个复合类型类别(例如，指针类型既是标量类型又是复合类型)。同样，cv限定符(const和volatile)在对类型进行分类时无关。
 
-std::is\_reference < T >::value
+std::is\_reference<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a reference type.
+如果类型T是引用类型，则生成true。
 
 \item 
-Same as: is\_lvalue\_reference\_v<T> || is\_rvalue\_reference\_v<T>
+等价于: 
+\begin{lstlisting}[style=styleCXX]
+is_lvalue_reference_v<T> || is_rvalue_reference_v<T>
+\end{lstlisting}
 
 \item 
-See Section 19.8.2 on page 452 for implementation details.
+参见第19.8.2节了解实现细节。
 \end{itemize}
 
+
 \begin{table}[H]
+	\centering
 	\begin{tabular}{|l|l|}
 		\hline
-		Trait                                          & Effect                                                                                                                                                                                     \\ \hline
-		is\_reference\textless{}T \textgreater{}       & Lvalue or rvalue reference                                                                                                                                                                 \\ \hline
-		is\_member\_pointer\textless{}T \textgreater{} & Pointer to nonstatic member                                                                                                                                                                \\ \hline
-		is\_arithmetic\textless{}T \textgreater{}      & Integral (including bool and characters) or floating-point type                                                                                                                            \\ \hline
-		is\_fundamental\textless{}T \textgreater{}     & \begin{tabular}[c]{@{}l@{}}void, integral (including bool and characters), floating-point, or\\ std::nullptr\_t\end{tabular}                                                               \\ \hline
-		is\_scalar\textless{}T \textgreater{}          & \begin{tabular}[c]{@{}l@{}}Integral (including bool and characters), floating-point, enumeration, pointer,\\ pointer-to-member, and std::nullptr\_t\end{tabular}                           \\ \hline
-		is\_object\textless{}T \textgreater{}          & Any type except void, function, or reference                                                                                                                                               \\ \hline
-		is\_compound\textless{}T \textgreater{}        & \begin{tabular}[c]{@{}l@{}}The opposite of is\_fundamental\textless{}T \textgreater{}: array, enumeration, union, class,\\ function, reference, pointer, or pointer-to-member\end{tabular} \\ \hline
+		特性                                          & 作用                                                                                                                                                                                     \\ \hline
+		is\_reference\textless{}T \textgreater{}       & 左值或右值引用                                                                                                                                                                 \\ \hline
+		is\_member\_pointer\textless{}T \textgreater{} & 指向非静态成员的指针                                                                                                                                                                \\ \hline
+		is\_arithmetic\textless{}T \textgreater{}      & 整型(包括bool和字符型)或浮点型                                                                                                                            \\ \hline
+		is\_fundamental\textless{}T \textgreater{}     & \begin{tabular}[c]{@{}l@{}}void，整型(包括bool和字符)，浮点，或std::nullptr\_t\end{tabular}                                                               \\ \hline
+		is\_scalar\textless{}T \textgreater{}          & \begin{tabular}[c]{@{}l@{}}整型(包括bool和字符型)、浮点型、枚举型、指针型、成员\\指针型和std::nullptr\_t型\end{tabular}                           \\ \hline
+		is\_object\textless{}T \textgreater{}          & 除void、函数或引用外的类型                                                                                                                                              \\ \hline
+		is\_compound\textless{}T \textgreater{}        & \begin{tabular}[c]{@{}l@{}}与 is\_fundamental相反\textless{}T \textgreater{}: 数组、枚举、联合、类、函数、\\引用、指针或成员指针\end{tabular} \\ \hline
 	\end{tabular}
 \end{table}
 
 \begin{center}
-Table D.2. Traits to Check for Composite Type Category
+表D.2. 检查复合类型类别的特征
 \end{center}
 
-std::is\_member\_pointer < T >::value
+std::is\_member\_pointer <T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is any pointer-to-member type.
+如果类型T是任何指向成员的类型，则生成true。
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 ! (is_member_object_pointer_v<T> || is_member_function_pointer_v<T>)
 \end{lstlisting}
 \end{itemize}
 
-std::is\_arithmetic < T >::value
+std::is\_arithmetic<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is an arithmetic type (bool, character type, integer type, or floating-point type).
+如果类型T是算术类型(bool、字符类型、整数类型或浮点类型)，则生成true。
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 is_integral_v<T> || is_floating_point_v<T>
 \end{lstlisting}
 \end{itemize}
 
-std::is\_fundamental < T >::value
+std::is\_fundamental<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a fundamental type (arithmetic type or void or std::nullptr\_t).
+如果类型T是基本类型(算术类型或void或std::nullptr\_t)，则生成true。
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 is_arithmetic_v<T> || is_void_v<T> || is_null_pointer_v<T>
 \end{lstlisting}
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 !is_compound_v<T>
 \end{lstlisting}
 
 \item 
-See IsFundaT in Section 19.8.1 on page 448 for implementation details.
+参见第448页19.8.1节中的IsFundaT的实现细节。
 \end{itemize}
 
 
-std::is\_scalar < T >::value
+std::is\_scalar<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a “scalar” type.
+如果类型T是“标量”类型，则生成true。
 
 \item 
-Same as: 
+等价于:  
 \begin{lstlisting}[style=styleCXX]
 is_arithmetic_v<T> || is_enum_v<T> || is_pointer_v<T>
 || is_member_pointer_v<T> || is_null_pointer_v<T>
@@ -396,36 +402,35 @@ std::is\_object < T >::value
 
 \begin{itemize}
 \item 
-Yields true if type T describes the type of an object.
+如果类型T描述了对象的类型，则生成true。
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 is_scalar_v<T> || is_array_v<T> || is_class_v<T> || is_union_v<T>
 \end{lstlisting}
 
 \item
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 ! (is_function_v<T> || is_reference_v<T> || is_void_v<T>)
 \end{lstlisting}
 \end{itemize}
 
-
-std::is\_compound < T >::value
+std::is\_compound <T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T is a type compound out of other types.
+如果类型T是由其他类型组合而成的类型，则生成true。
 
 \item 
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 !is_fundamental_v<T>
 \end{lstlisting}
 
 \item
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 is_enum_v<T> || is_array_v<T> || is_class_v<T> || is_union_v<T>
 || is_reference_v<T> || is_pointer_v<T> || is_member_pointer_v<T>

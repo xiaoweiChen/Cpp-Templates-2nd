@@ -1,48 +1,45 @@
 
-The next group of traits tests other properties of single types as well as certain operations (e.g., value swapping) that may apply to them.
+下一组特征测试单类型的其他属性，以及可能适用于它们的某些操作(例如值交换)。
 
-\subsubsubsection{D.3.1\hspace{0.2cm}Other Type Properties}
+\subsubsubsection{D.3.1\hspace{0.2cm}其他类型的属性}
 
-std::is\_signed < T >::value
+std::is\_signed<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is a signed arithmetic type (i.e., an arithmetic type  that includes negative value representations; this includes types like (signed) int, float).
+如果T是有符号算术类型(即包含负数表示的算术类型;这包括(signed) int, float)等类型。
 
 \item 
-For type bool, it yields false.
+对于bool类型，会产生false。
 
 \item 
-For type char, it is implementation defined whether it yields true or false.
+对于char类型，其结果由具体实现定义。
 
 \item 
-For all nonarithmetic types (including enumeration types) is\_signed yields false.
+对于所有非算术类型(包括枚举类型)，is\_signed会生成false。
 \end{itemize}
 
-std::is\_unsigned < T >::value
+std::is\_unsigned<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is an unsigned arithmetic type (i.e., an arithmetic type that does not include negative value representations; this includes types like unsigned int and bool).
+如果T是无符号算术类型(即不包含负数表示的算术类型;这包括unsigned int和bool类型)。
 
 \item 
-For type char, it is implementation defined whether it yields true or false.
+对于char类型，其结果由具体实现定义。
 
 \item 
-For type char, it is implementation defined whether it yields true or false.
-
-\item 
-For all nonarithmetic types (including enumeration types) is\_unsigned yields false.
+对于所有非算术类型(包括枚举类型)，is\_unsigned会生成false。
 \end{itemize}
 
-std::is\_const < T >::value
+std::is\_const<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the type is const-qualified.
+如果类型是const的，则生成true。
 
 \item 
-Note that a const pointer has a const-qualified type, whereas a non-const pointer or a reference to a const type is not const-qualified. For example:
+注意，const指针具有const类型，而非const指针或指向const类型的引用则不具有const类型。例如:
 \begin{lstlisting}[style=styleCXX]
 is_const<int* const>::value // true
 is_const<int const*>::value // false
@@ -50,13 +47,13 @@ is_const<int const&>::value // false
 \end{lstlisting}
 
 \item 
-The language defines arrays to be const-qualified if the element type is const-qualified.
+如果元素类型是const的，则该将数组定义为const的。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This was clarified by the resolution of core issue 1059 after C++11 was published.
+\hspace*{0.75cm}C++11发布后，核心问题1059的解决方案澄清了这一点。
 \end{tcolorbox}
 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_const<int[3]>::value // false
 is_const<int const[3]>::value // true
@@ -67,50 +64,51 @@ is_const<int const[]>::value // true
 \end{itemize}
 
 \begin{table}[H]
+	\centering
 	\begin{tabular}{|l|l|}
 		\hline
-		\textbf{Trait}                                                  & \textbf{Effect}                                                                                                            \\ \hline
-		is\_signed\textless{}T \textgreater{}                           & Signed arithmetic type                                                                                                     \\ \hline
-		is\_unsigned\textless{}T \textgreater{}                         & Unsigned arithmetic type                                                                                                   \\ \hline
-		is\_const\textless{}T \textgreater{}                            & const-qualified                                                                                                            \\ \hline
-		is\_volatile\textless{}T \textgreater{}                         & volatile-qualified                                                                                                         \\ \hline
-		is\_aggregate\textless{}T \textgreater{}                        & Aggregate type (since C++17)                                                                                               \\ \hline
-		is\_trivial\textless{}T \textgreater{}                          & Scalar, trivial class, or arrays of these types                                                                            \\ \hline
-		is\_trivially\_copyable\textless{}T \textgreater{}              & Scalar, trivially copyable class, or arrays of these types                                                                 \\ \hline
-		is\_standard\_layout\textless{}T \textgreater{}                 & Scalar, standard layout class, or arrays of these types                                                                    \\ \hline
-		is\_pod\textless{}T \textgreater{}                              & \begin{tabular}[c]{@{}l@{}}Plain old data type (type where memcpy() works to\\ copy objects)\end{tabular}                  \\ \hline
-		is\_literal\_type\textless{}T \textgreater{}                    & \begin{tabular}[c]{@{}l@{}}Scalar, reference, class, or arrays of these types\\ (deprecated since C++17)\end{tabular}      \\ \hline
-		is\_empty\textless{}T \textgreater{}                            & \begin{tabular}[c]{@{}l@{}}Class with no members, virtual member functions, or\\ virtual base classes\end{tabular}         \\ \hline
-		is\_polymorphic\textless{}T \textgreater{}                      & Class with a (derived) virtual member function                                                                             \\ \hline
-		is\_abstract\textless{}T \textgreater{}                         & Abstract class (at least one pure virtual function)                                                                        \\ \hline
-		is\_final\textless{}T \textgreater{}                            & \begin{tabular}[c]{@{}l@{}}Final class (a class not allowed to derive from, since\\ C++14)\end{tabular}                    \\ \hline
-		has\_virtual\_destructor\textless{}T \textgreater{}             & Class with virtual destructor                                                                                              \\ \hline
-		has\_unique\_object\_representations\textless{}T \textgreater{} & \begin{tabular}[c]{@{}l@{}}Any two object with same value have same representation \\ in memory (since C++17)\end{tabular} \\ \hline
-		alignment\_of\textless{}T \textgreater{}                        & Equivalent to alignof(T)                                                                                                   \\ \hline
-		rank\textless{}T \textgreater{}                                 & Number of dimensions of an array type (or 0)                                                                               \\ \hline
-		extent\textless{}T,I=0 \textgreater{}                           & Extent of dimension I (or 0)                                                                                               \\ \hline
-		underlying\_type\textless{}T \textgreater{}                     & Underlying type of an enumeration type                                                                                     \\ \hline
-		is\_invocable\textless{}T,Args... \textgreater{}                & Can be used as callable for Args... (since C++17)                                                                          \\ \hline
-		is\_nothrow\_invocable\textless{}T,Args... \textgreater{}       & \begin{tabular}[c]{@{}l@{}}Can be used as callable for Args... without throwing\\ (since C++17)\end{tabular}               \\ \hline
-		is\_invocable\_r\textless{}RT,T,Args... \textgreater{}          & \begin{tabular}[c]{@{}l@{}}Can be used as callable for Args... returning RT (since\\ C++17)\end{tabular}                   \\ \hline
-		is\_nothrow\_invocable\_r\textless{}RT,T,Args... \textgreater{} & \begin{tabular}[c]{@{}l@{}}Can be used as callable for Args... returning RT \\ without throwing (since C++17)\end{tabular} \\ \hline
-		invoke\_result\textless{}T,Args... \textgreater{}               & \begin{tabular}[c]{@{}l@{}}Result type if used as callable for Args... (since\\ C++17)\end{tabular}                        \\ \hline
-		result\_of\textless{}F,ArgTypes \textgreater{}                  & \begin{tabular}[c]{@{}l@{}}Result type if calling F with argument types ArgTypes\\ (deprecated since C++17)\end{tabular}   \\ \hline
+		\textbf{特征}                                                  & \textbf{作用}                                                                                                            \\ \hline
+		is\_signed\textless{}T \textgreater{}                           & 有符号算术类型                                                                                                     \\ \hline
+		is\_unsigned\textless{}T \textgreater{}                         & 无符号算术类型                                                                                                   \\ \hline
+		is\_const\textless{}T \textgreater{}                            & 常量(不可变)限定                                                                                                            \\ \hline
+		is\_volatile\textless{}T \textgreater{}                         & 可变限定                                                                                                         \\ \hline
+		is\_aggregate\textless{}T \textgreater{}                        & 聚合类型(C++17)                                                                                               \\ \hline
+		is\_trivial\textless{}T \textgreater{}                          & 标量、普通类或这些类型的数组                                                                            \\ \hline
+		is\_trivially\_copyable\textless{}T \textgreater{}              & 标量、可简单复制的类或这些类型的数组                                                                 \\ \hline
+		is\_standard\_layout\textless{}T \textgreater{}                 & 标量、标准布局类或这些类型的数组                                                                    \\ \hline
+		is\_pod\textless{}T \textgreater{}                              & \begin{tabular}[c]{@{}l@{}}普通旧数据类型(memcpy()用于复制对象的类型)\end{tabular}                  \\ \hline
+		is\_literal\_type\textless{}T \textgreater{}                    & \begin{tabular}[c]{@{}l@{}}类型的标量、引用、类或数组(C++17起弃用)\end{tabular}      \\ \hline
+		is\_empty\textless{}T \textgreater{}                            & \begin{tabular}[c]{@{}l@{}}没有成员、虚成员函数或虚基类的类\end{tabular}         \\ \hline
+		is\_polymorphic\textless{}T \textgreater{}                      & 具有(派生)虚成员函数的类                                                                             \\ \hline
+		is\_abstract\textless{}T \textgreater{}                         & 抽象类(至少一个纯虚函数)                                                                        \\ \hline
+		is\_final\textless{}T \textgreater{}                            & \begin{tabular}[c]{@{}l@{}}最后一个类(不允许派生的类，C++14)\end{tabular}                    \\ \hline
+		has\_virtual\_destructor\textless{}T \textgreater{}             & 具有虚析构函数的类                                                                                              \\ \hline
+		has\_unique\_object\_representations\textless{}T \textgreater{} & \begin{tabular}[c]{@{}l@{}}两个具有相同值的对象，在内存中具有相同的表示形式(C++17)\end{tabular} \\ \hline
+		alignment\_of\textless{}T \textgreater{}                        & 相当于alignof (T)                                                                                                   \\ \hline
+		rank\textless{}T \textgreater{}                                 & 数组类型的维数(或0)                                                                               \\ \hline
+		extent\textless{}T,I=0 \textgreater{}                           & 维度I(或0)的范围                                                                                               \\ \hline
+		underlying\_type\textless{}T \textgreater{}                     & 枚举类型的基础类型                                                                                     \\ \hline
+		is\_invocable\textless{}T,Args... \textgreater{}                & 用作可调用的Args…(C++ 17)                                                                          \\ \hline
+		is\_nothrow\_invocable\textless{}T,Args... \textgreater{}       & \begin{tabular}[c]{@{}l@{}}用作可调用的Args…不抛出异常(C++17)\end{tabular}               \\ \hline
+		is\_invocable\_r\textless{}RT,T,Args... \textgreater{}          & \begin{tabular}[c]{@{}l@{}}用作可调用的Args…返回RT(C++17)\end{tabular}                   \\ \hline
+		is\_nothrow\_invocable\_r\textless{}RT,T,Args... \textgreater{} & \begin{tabular}[c]{@{}l@{}}用作可调用的Args…返回RT而不抛出异常(C++17)\end{tabular} \\ \hline
+		invoke\_result\textless{}T,Args... \textgreater{}               & \begin{tabular}[c]{@{}l@{}}结果类型用作可调用的Args…(C++17)\end{tabular}                        \\ \hline
+		result\_of\textless{}F,ArgTypes \textgreater{}                  & \begin{tabular}[c]{@{}l@{}}使用参数类型ArgTypes调用F的结果类型(C++17起弃用)\end{tabular}   \\ \hline
 	\end{tabular}
 \end{table}
 
 \begin{center}
-Table D.3. Traits to Test Simple Type Properties
+表D.3. 特征测试简单类型的属性
 \end{center}
 
-std::is\_volatile < T >::value
+std::is\_volatile<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the type is volatile-qualified.
+如果类型是变量限定，则生成true。
 
 \item 
-Note that a volatile pointer has a volatile-qualified type, whereas a non-volatile pointer or a reference to a volatile type is not volatile-qualified. For example:
+注意，可变指针具有可变限定的类型，而非可变指针或对可变类型的引用不是可变限定的。例如:
 
 \begin{lstlisting}[style=styleCXX]
 is_volatile<int* volatile>::value // true
@@ -119,13 +117,13 @@ is_volatile<int volatile&>::value // false
 \end{lstlisting}
 
 \item 
-The language defines arrays to be volatile-qualified if the element type is volatile-qualified.
+如果元素类型是可变限定的，语言将数组定义为可变限定的。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}This was clarified by the resolution of core issue 1059 after C++11 was published.
+\hspace*{0.75cm}C++11发布后，核心问题1059的解决方案澄清了这一点。
 \end{tcolorbox}
 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_volatile<int[3]>::value // false
 is_volatile<int volatile[3]>::value // true
@@ -134,7 +132,7 @@ is_volatile<int volatile[]>::value // true
 \end{lstlisting}
 \end{itemize}
 
-std::is\_aggregate < T >::value
+std::is\_aggregate<T>::value
 
 \begin{itemize}
 \item 

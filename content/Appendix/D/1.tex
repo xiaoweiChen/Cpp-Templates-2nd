@@ -1,22 +1,22 @@
 
-When using type traits, in general you have to include the header file <type\_traits>:
+使用类型特征时，必须包含头文件<type\_traits>:
 
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
 \end{lstlisting}
 
-Then the usage depends on whether a trait yields a type or a value:
+然后，该用法取决于特征是否产生类型或值:
 
 \begin{itemize}
 \item 
-For traits yielding a type, you can access the type as follows:
+对于产生类型的特征，可以如下方式访问该类型:
 \begin{lstlisting}[style=styleCXX]
 typename std::trait<...>::type
 std::trait_t<...> // since C++14
 \end{lstlisting}
 
 \item 
-For traits yielding a value, you can access the value as follows:
+对于产生值的特征，可以通过如下方式访问该值:
 \begin{lstlisting}[style=styleCXX]
 std::trait<...>::value
 std::trait<...>() // implicit conversion to its type
@@ -24,7 +24,7 @@ std::trait_v<...> // since C++17
 \end{lstlisting}
 \end{itemize}
 
-For example:
+例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -51,11 +51,11 @@ int main()
 }
 \end{lstlisting}
 
-See Section 2.8 on page 40 for the way the \_t version of the traits is defined. See Section 5.6 on page 83 for the way the \_v version of the traits is defined.
+参见第2.8节，了解traits的\_t版本的定义方式。关于特征的\_v版本的定义方式，请参见5.6节。
 
-\subsubsubsection{D.1.1\hspace{0.2cm}std::integral\_constant and std::bool\_constant}
+\subsubsubsection{D.1.1\hspace{0.2cm}std::integral\_constant和std::bool\_constant}
 
-All standard type traits yielding a value are derived from an instance of the helper class template std::integral\_constant:
+所有产生值的标准类型特征都派生自辅助类模板的实例std::integral\_constant:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -74,26 +74,26 @@ namespace std {
 }
 \end{lstlisting}
 
-That is:
+就是说:
 
 \begin{itemize}
 \item 
-We can use the value\_type member to query the type of the result. Since many traits yielding a value are predicates, value\_type is often just bool.
+可以使用value\_type成员来查询结果的类型。由于产生值的许多特征是谓词，value\_type通常是bool。
 
 \item 
-Objects of traits types have an implicit type conversion to the type of the value produced by the type trait.
+特征类型的对象具有隐式的类型转换，转换为由类型特征产生值的类型。
 
 \item 
-In C++14 (and later), objects of type traits are also function objects (functors), where a “function call” yields their value.
+C++14(以及以后的版本)中，类型特征的对象也可为函数对象(函子)，其中“函数调用”会产生值。
 
 \item 
-The type member just yields the underlying integral\_constant instance.
+类型成员只生成底层的integral\_constant实例。
 \end{itemize}
 
-If traits yield Boolean values, they can also use
+如果特征产生布尔值，也可以这样
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Before C++17, the standard did not include the alias template bool\_constant<>. std::true\_type and std::false\_type did exist in C++11 and C++14, however, and were specified directly in terms of integral\_constant<bool,true> and integral\_constant<bool,false>, respectively.
+\hspace*{0.75cm}C++17前，该标准不包括别名模板bool\_constant<>。std::true\_type和std::false\_type在C++11和C++14中确实存在，但它们分别指定为integral\_constant<bool,true>和integral\_constant<bool,false>。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -105,9 +105,9 @@ namespace std {
 }
 \end{lstlisting}
 
-so that these Boolean traits inherit from std::true\_type if a specific property applies and from std::false\_type if not. That also means that their corresponding value members equal true or false. Having distinct types for the resulting values true and false allows us to tag-dispatch based on the result of type traits (see Section 19.3.3 on page 411 and Section 20.2 on page 467).
+以便这些布尔特征在特定属性适用时继承std::true\_type，否则继承std::false\_type，这也意味着它们对应的值成员等于true和false。为结果值设置不同的类型true和false，可以基于类型特征的结果进行标签调度(参见第19.3.3节和第20.2节)。
 
-For example:
+例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -145,15 +145,15 @@ int main()
 }
 \end{lstlisting}
 
-Having distinct types for non-Boolean integral\_constant specializations is also useful in various metaprogramming contexts. See the discussion of the similar type CTValue in Section 24.3 on page 566 and its use for element access of tuples in Section 25.6 on page 599.
+各种元编程上下文中，具有不同的非布尔integral\_constant特化类型。参见第24.3节对类似类型CTValue的讨论，以及第25.6节对元组元素访问的使用。
 
-\subsubsubsection{D.1.2\hspace{0.2cm}Things You Should Know When Using Traits}
+\subsubsubsection{D.1.2\hspace{0.2cm}使用特征}
 
-There are a few things to note when using traits:
+使用性格特征时需要注意以下几点:
 
 \begin{itemize}
 \item 
-Type traits apply directly to types, but decltype allows us to also test the properties of expressions, variables, and functions. Recall, however, that decltype produces the type of a variable or function only if the entity is named with no extraneous parentheses; for any other expression, it yields a type that also reflects the type category of the expression. For example:
+类型特征应用于类型，但decltype允许测试表达式、变量和函数的属性。不过，decltype只在变量或函数的命名没有附加括号的情况下才会产生类型;对于任何其他表达式，生成的类型也反映表达式的类型类别。例如:
 
 \begin{lstlisting}[style=styleCXX]
 void foo (std::string&& s)
@@ -167,28 +167,28 @@ void foo (std::string&& s)
 }
 \end{lstlisting}
 
-See Section 15.10.2 on page 298 for details.
+详见第15.10.2节。
 
 \item 
-Some traits may have nonintuitive behavior for the novice programmer. See Section 11.2.1 on page 164 for examples.
+对于菜鸟开发者来说，有些特征可能具有非直觉的行为。参见第11.2.1节中的示例。
 
 \item 
-Some traits have requirements or preconditions. Violating these preconditions results in undefined behavior.
+有些特征是有要求或前提条件，违反这些前提条件会导致未定义行为。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The C++ standardization committee considered a proposal for C++17 to require that violations of preconditions of type traits always result in a compile-time error. However, because some type traits currently have requirements that are stronger than strictly necessary (such as always requiring complete types) this change was postponed.
+\hspace*{0.75cm}C++标准委员会考虑了C++17的提议，要求违反类型特征的前提条件会导致编译时错误。然而，因为一些类型特征目前的需求比严格的必要条件更强(比如总是需要完整的类型)，所以这个改变推迟了。
 \end{tcolorbox}
 
-See Section 11.2.1 on page 164 for some examples.
+参见第11.2.1节中的一些示例。
 
 \item 
-Many traits require complete types (see Section 10.3.1 on page 154). To be able to use them for incomplete types, we can sometimes introduce templates to defer their evaluation (see Section 11.5 on page 171 for details).
+许多特征需要完整的类型(参见第10.3.1节)。为了能够在不完整类型中使用，有时可以引入模板来延迟计算(详见第11.5节)。
 
 \item 
-Sometimes the logical operators \&\&, ||, and ! cannot be used to define new type traits based on other type traits. In addition, dealing with traits that might fail can become a problem or at least cause some drawbacks. For this reason, special traits are provided that allow us to logically combine Boolean traits. See Section D.6 on page 734 for details.
+有时逻辑操作符\&\&、||和!不能用于定义基于其他类型特征的新类型特征。此外，处理可能失败的特征可能会有问题，至少会有一些缺陷。出于这个原因，我们提供了一些特殊的特性，能够在逻辑上组合布尔特性。参见第D.6部分了解详细信息。
 
 \item 
-Although the standard alias templates (ending with \_t or \_v) are often convenient, they also have downsides, making them unusable in some metaprogramming contexts. See Section 19.7.3 on page 446 for details.
+尽管标准别名模板(以\_t或\_v结尾)，但也有缺点，并在某些元编程上下文中不可用。详见第19.7.3节。
 \end{itemize}
 
 

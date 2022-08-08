@@ -1,5 +1,5 @@
 
-Overload resolution ranks the viable candidate functions by comparing how each argument of the call matches the corresponding parameter of the candidates. For one candidate to be considered better than another, the better candidate cannot have any of its parameters be a worse match than the corresponding parameter in the other candidate. The following example illustrates this:
+重载解析通过比较调用的每个参数与候选函数对应参数的匹配程度，来对可行候选函数进行排序。为了使一个候选函数比另一个更好，更好的候选不能有参数比另一个候选的相应参数匹配的差。下面的例子说明了这一点:
 
 \begin{lstlisting}[style=styleCXX]
 void combine(int, double);
@@ -11,35 +11,35 @@ int main()
 }
 \end{lstlisting}
 
-In this example, the call to combine() is ambiguous because the first candidate matches the first argument (the literal 1 of type int) best, whereas the second candidate matches the second argument best. We could argue that int is in some sense closer to long than to double (which supports choosing the second candidate), but C++ does not attempt to define a measure of closeness that involves multiple call arguments.
+本例中，对combine()的调用具有歧义，因为第一个候选参数最匹配第一个参数(int类型的1字面值)，而第二个候选参数最匹配第二个参数。可以说int在某种意义上比double更接近long(支持选择第二个候选项)，但是C++并没有定义包含多个调用参数的匹配度指标。
 
-Given this first principle, we are left with specifying how well a given argument matches the corresponding parameter of a viable candidate. As a first approximation, we can rank the possible matches as follows (from best to worst):
+有了这第一原则，就需要指定给定参数与可行候选参数的对应参数的匹配程度。作为第一次近似的候选，可以将可能的匹配按如下顺序排列(从最好到最差):
 
 \begin{enumerate}
 \item 
-Perfect match. The parameter has the type of the expression, or it has a type that is a reference to the type of the expression (possibly with added const and/or volatile qualifiers).
+完美匹配。参数具有表达式的类型，或者具有指向表达式类型的引用类型(可能添加了const和/或volatile限定符)。
 
 \item 
-Match with minor adjustments. This includes, for example, the decay of an array variable to a pointer to its first element or the addition of const to match an argument of type int** to a parameter of type int const* const*.
-
-
-\item 
-Match with promotion. Promotion is a kind of implicit conversion that includes the conversion of small integral types (such as bool, char, short, and sometimes enumerations) to int, unsigned int, long, or unsigned long, and the conversion of float to double.
+匹配需要微调。例如，将数组变量衰变为指向其第一个元素的指针，或将const相加以匹配int**类型的参数和const* const* int类型的参数。
 
 
 \item 
-Match with standard conversions only. This includes any sort of standard conversion (such as int to float) or conversion from a derived class to one of its public, unambiguous base classes but excludes the implicit call to a conversion operator or a converting constructor.
+类型升级匹配。类型升级是一种隐式转换，包括将小整型(如bool、char、short，有时还包括枚举)转换为int、unsigned int、long或unsigned long，以及将float转换为double。
 
 
 \item 
-Match with user-defined conversions. This allows any kind of implicit conversion.
+只匹配标准转换。任何类型的标准转换(如int到float)或从派生类到其公共、明确的基类的转换，但不包括对转换操作符或转换构造函数的隐式调用。
 
 
 \item 
-Match with ellipsis (...). An ellipsis parameter can match almost any type. However, there is one exception: Class types with a nontrivial copy constructor may or may not be valid (implementations are free to allow or disallow this).
+匹配用户定义的转换。这允许任何类型的隐式转换。
+
+
+\item 
+匹配省略号(…)，省略号参数几乎可以匹配任何类型。但是，有一个例外:具有重要复制构造函数的类型可能是有效的，也可能不是有效的(实现可以进行允许或禁止)。
 \end{enumerate}
 
-The following contrived example illustrates some of these matches:
+下面的例子展示了其中的一些匹配方式:
 
 \begin{lstlisting}[style=styleCXX]
 int f1(int); // #1
@@ -61,7 +61,7 @@ f3(7); // calls #5 : match with user-defined conversion
 // (#6 requires a match with ellipsis)
 \end{lstlisting}
 
-Note that overload resolution occurs after template argument deduction, and this deduction does not consider all these sorts of conversions. For example:
+重载解析发生在模板参数推导后，而且推导不考虑所有这些类型的转换。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -82,9 +82,9 @@ int main()
 }
 \end{lstlisting}
 
-The implicit conversion provided through the converting constructor is not considered during template argument deduction. The assignment to str2 finds no viable function truncate(); hence overload resolution is not performed at all.
+模板参数推导期间，不会考虑通过转换构造函数提供的隐式转换。str2的赋值没有找到可行函数truncate()，因此不执行重载解析。
 
-In the context of template argument deduction, recall also that an rvalue reference to a template parameter can deduce to either an lvalue reference type (after reference collapsing) if the corresponding argument is an lvalue or to an rvalue reference type if that argument is an rvalue (see Section 15.6 on page 277). For example:
+模板参数推导的上下文中，如果对应的参数是左值，则对模板参数的右值引用可以推断为左值引用类型(在引用折叠之后)，如果该参数是右值，则可以推断为右值引用类型(参见15.6节)。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> void strange(T&&, T&&);
@@ -100,19 +100,19 @@ int main()
 }
 \end{lstlisting}
 
-The previous principles are only a first approximation, but they cover many cases. Yet there are quite a few common situations that are not adequately explained by these rules. We proceed with a brief discussion of the most important refinements of these rules.
+前面的原则只是一种近似方式，但覆盖了许多情况。然而，有相当多的常见情况，这些规则没有充分解释。我们将继续简要讨论这些规则的最重要改进。
 
-\subsubsubsection{C.2.1\hspace{0.2cm}The Implied Argument for Member Functions}
+\subsubsubsection{C.2.1\hspace{0.2cm}成员函数的隐含参数}
 
-Calls to nonstatic member functions have a hidden parameter that is accessible in the definition of the member function as *this. For a member function of a class MyClass, the hidden parameter is usually of type MyClass\& (for non-const member functions) or MyClass const\& (for const member functions).
+对非静态成员函数的调用具有一个隐藏参数，成员函数的定义中可访问该形参为*this。对于类MyClass的成员函数，隐藏参数的类型通常为MyClass\&(用于非const成员函数)或MyClass const\&(用于const成员函数)。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm} It could also be of type MyClass volatile\& or MyClass const volatile\& if the member function was volatile, but this is extremely rare.
+\hspace*{0.75cm}若成员函数是volatile类型，那也可以是MyClass volatile\&类型，或者MyClass const volatile\&类型，但这种情况非常罕见。
 \end{tcolorbox}
 
-This is somewhat surprising given that this has a pointer type. It would have been nicer to make this equivalent to what is now *this. However, this was part of an early version of C++ before reference types were part of the language, and by the time reference types were added, too much code already depended on this being a pointer.
+考虑到其具有指针类型，如果让这个等于现在的*this就更好了。然而，这是C++早期版本的一部分，在引用类型成为语言的一部分之前，并且当添加引用类型时，太多的代码已经依赖于this指针了。
 
-The hidden *this parameter participates in overload resolution just like the explicit parameters.Most of the time this is quite natural, but occasionally it comes unexpectedly. The following example shows a string-like class that does not work as intended (yet we have seen such code in the real world):
+隐藏的*this参数和显式参数一样参与重载解析，但偶尔也会发生意外。下面的例子显示了一个类似字符串的类，其不能按预期工作(但在这种代码实际存在):
 
 \begin{lstlisting}[style=styleCXX]
 #include <cstddef>
@@ -139,17 +139,17 @@ int main()
 }
 \end{lstlisting}
 
-At first, nothing seems ambiguous about the expression str[5]. The subscript operator at \#1 seems like a perfect match. However, it is not quite perfect because the argument 5 has type int, and the operator expects an unsigned integer type (size\_t and std::size\_t usually have type unsigned int or unsigned long, but never type int). Still, a simple standard integer conversion makes \#1 easily viable. However, there is another viable candidate: the built-in subscript operator. Indeed, if we apply the implicit conversion operator to str (which is the implicit member function argument), we obtain a pointer type, and now the built-in subscript operator applies. This built-in operator takes an argument of type ptrdiff\_t, which on many platforms is equivalent to int and therefore is a perfect match for the argument 5. So even though the built-in subscript operator is a poor match (by user-defined conversion) for the implied argument, it is a better match than the operator defined at \#1 for the actual subscript! Hence the potential ambiguity.
+首先，表达式str[5]似乎没有任何问题。在\#1处的下标操作符似乎是完美的匹配。然而，并不完美，因为参数5是int类型，而操作符需要无符号整型(size\_t和std::size\_t通常有unsigned int类型或unsigned long类型，但从来没有int类型)。尽管如此，一个简单的标准整数转换使\#1很容易实现。然而，还有另一种候选方法:内置下标操作符。实际上，若将隐式转换操作符应用于str(隐式成员函数参数)，就会获得指针类型，现在内置下标操作符也会应用。这个内置操作符接受一个ptrdiff\_t类型的参数，该参数在许多平台上等价于int，因此参数5完美匹配。因此，尽管内置下标操作符对隐含参数匹配的很差(通过用户定义的转换)，但比在\#1处定义的操作符对实际下标的匹配更好!因此，可能存在歧义。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that the ambiguity exists only on platforms for which size\_t is a synonym for unsigned int. On platforms for which it is a synonym for unsigned long, the type ptrdiff\_t is a type alias of long, and no ambiguity exists because the built-in subscript operator also requires a conversion of the subscript expression.
+\hspace*{0.75cm}注意，这种歧义只存在于size\_t是unsigned int的平台上。在它是unsigned long平台上，类型ptrdiff\_t是long的类型别名，并且不存在歧义，因为内置的下标操作符也需要对下标表达式进行转换。
 \end{tcolorbox}
 
-To solve this kind of problem portably, you can declare operator [ ] with a ptrdiff\_t parameter, or you can replace the implicit type conversion to char* by an explicit conversion (which is usually recommended anyway).
+为了可移植地解决这类问题，可以用一个ptrdiff\_t参数声明operator[]，或者可以用显式转换来替换隐式到char*的类型转换(这是推荐做法)。
 
-It is possible for a set of viable candidates to contain both static and nonstatic members. When comparing a static member with a nonstatic member, the quality of the match of the implicit argument is ignored (only the nonstatic member has an implicit *this parameter).
+一组候选成员可能同时包含静态成员和非静态成员。当比较静态成员和非静态成员时，将忽略隐式参数的匹配度(只有非静态成员具有隐式的*this参数)。
 
-By default, a nonstatic member function has an implicit *this parameter that is an lvalue reference type, but C++11 introduced syntax to make it an rvalue reference type. For example:
+默认情况下，非静态成员函数有一个隐含的*this参数，它是左值引用类型，但C++11引入了语法使其成为右值引用类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {
@@ -159,7 +159,7 @@ struct S {
 };
 \end{lstlisting}
 
-As you can tell from this example, it is possible not only to make the implicit parameter an rvalue reference (with the \&\& suffix) but also to affirm the lvalue reference case (with the \& suffix). Interestingly, specifying the \& suffix is not exactly equivalent to leaving it off: An old special-case permits an rvalue to be bound to an lvalue reference to non-const type when that reference is the traditional implicit *this parameter, but that (somewhat dangerous) special case no longer applies if the lvalue reference treatment was requested explicitly. So, with the definition of S specified above:
+从这个例子中可以看出，不仅可以使隐式参数成为右值引用(带\&\&后缀)，还可以确认左值引用情况(带\&后缀)。有趣的是，指定\&后缀并不完全等同于引用它:旧的特殊情况允许右值绑定到对非const类型的左值引用，当该引用是传统的隐式*this参数时，但若显式请求左值引用处理，这种特殊情况(有些危险)不再适用。因此，根据上面S的定义，有如下的结果:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -174,9 +174,9 @@ int main()
 \end{lstlisting}
 
 
-\subsubsubsection{C.2.2\hspace{0.2cm}Refining the Perfect Match}
+\subsubsubsection{C.2.2\hspace{0.2cm}改善完美匹配}
 
-For an argument of type X, there are four common parameter types that constitute a perfect match: X, X\&, X const\&, and X\&\& (X const\&\& is also an exact match, but it is rarely used). However, it is rather common to overload a function on two kinds of references. Prior to C++11, this meant cases like these:
+对于X类型的参数，有四种常见的形参类型可以构成完美匹配:X、X\&、X const\&和X\&\&(X const\&\&也是完美匹配，但很少使用)。但是，在两种引用上重载函数是很常见的。C++11之前，这意味着:
 
 \begin{lstlisting}[style=styleCXX]
 void report(int&); // #1
@@ -191,9 +191,9 @@ int main()
 }
 \end{lstlisting}
 
-Here, the version without the extra const is preferred for lvalues, whereas only the version with const can match rvalues.
+没有其他的const的版本更适合用于左值，而只有带有const的版本才能匹配右值。
 
-With the addition of rvalue references in C++11, another common case of two perfect matches needing to be distinguished is illustrated by the following example:
+随着C++11中右值引用的引入，需要区分两个完全匹配的另一种常见情况如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 struct Value {
@@ -210,9 +210,9 @@ void g(X&& x)
 }
 \end{lstlisting}
 
-This time, the version taking an rvalue reference is considered a better match for rvalues, but it cannot match lvalues.
+这次，采用右值引用的版本认为是右值的更好匹配，但不能匹配左值。
 
-Note that this also applies to the implicit argument of a member function call:
+这也适用于成员函数调用的隐式参数:
 
 \begin{lstlisting}[style=styleCXX]
 class Wonder {
@@ -230,7 +230,7 @@ void run(Wonder& device)
 }
 \end{lstlisting}
 
-Finally, the following modification of our earlier example illustrates that two perfect matches can also create an ambiguity if you overload with and without references:
+最后，下面代码对前面示例的修改说明，不管使用和不使用引用，两个完美匹配都会产生歧义:
 
 \begin{lstlisting}[style=styleCXX]
 void report(int); // #1

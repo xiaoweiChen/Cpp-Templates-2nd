@@ -1,25 +1,25 @@
-Overload resolution is just one part of the complete processing of a function call. In fact, it is not part of every function call. First, calls through function pointers and calls through pointers to member functions are not subject to overload resolution because the function to call is entirely determined (at run time) by the pointers. Second, function-like macros cannot be overloaded and are therefore not subject to overload resolution.
+重载解析只是函数调用完整处理的一部分，并不是每个函数调用的一部分。首先，通过函数指针和通过指向成员函数的指针进行的调用不受重载解析的影响，因为要调用的函数完全(在运行时)由指针决定。其次，类函数宏不能重载，因此不需要重载解析。
 
-At a very high level, a call to a named function can be processed in the following way:
+在高层次上，对命名函数的调用可以按以下方式处理:
 
 \begin{itemize}
 \item 
-The name is looked up to form an initial overload set.
+查找名称以形成初始重载集。
 
 \item 
-If necessary, this set is adjusted in various ways (e.g., template argument deduction and substitution occurs, which can cause some function template candidates to be discarded).
+若有必要，这个集合会以各种方式进行调整(例如，发生模板参数推导和替换，这会导致丢弃一些函数模板候选)。
 
 \item 
-Any candidate that doesn’t match the call at all (even after considering implicit conversions and default arguments) is eliminated from the overload set. This results in a set of viable function candidates.
+何与调用完全不匹配的候选(在考虑隐式转换和默认参数之后)都将从重载集中删除。这就产生了一组匹配的候选函数。
 
 \item 
-Overload resolution is performed to find a best candidate. If there is one, it is selected; otherwise, the call is ambiguous.
+执行重载解析以找到最佳候选。如果有，则选中;否则，调用具有歧义。
 
 \item 
-The selected candidate is checked. For example, if it is a deleted function (i.e., one defined with = delete) or an inaccessible private member function, a diagnostic is issued.
+选中的候选需要检查。例如，如果是一个已删除函数(即用=delete定义的函数)或一个不可访问的私有成员函数，则编译器会发出错误信息。
 \end{itemize}
 
-Each of these steps has its own subtleties, but overload resolution is arguably the most complex. Fortunately, a few simple principles clarify the majority of situations. We examine these principles next.
+每个步骤都有自己的微妙之处，但是重载解析无疑是复杂的。幸运的是，一些简单的原则可以解释大多数情况。接下来我们将研究这些原则。
 
 
 

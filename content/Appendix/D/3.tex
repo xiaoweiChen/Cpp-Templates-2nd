@@ -86,8 +86,20 @@ is_const<int const[]>::value // true
 		has\_unique\_object\_representations\textless{}T \textgreater{} & \begin{tabular}[c]{@{}l@{}}两个具有相同值的对象，在内存中具有相同的表示形式(C++17)\end{tabular} \\ \hline
 		alignment\_of\textless{}T \textgreater{}                        & 相当于alignof (T)                                                                                                   \\ \hline
 		rank\textless{}T \textgreater{}                                 & 数组类型的维数(或0)                                                                               \\ \hline
+
 		extent\textless{}T,I=0 \textgreater{}                           & 维度I(或0)的范围                                                                                               \\ \hline
 		underlying\_type\textless{}T \textgreater{}                     & 枚举类型的基础类型                                                                                     \\ \hline
+	\end{tabular}
+\end{table}
+
+\begin{center}
+表D.3. 特征测试简单类型的属性
+\end{center}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|l|}
+		\hline
 		is\_invocable\textless{}T,Args... \textgreater{}                & 用作可调用的Args…(C++ 17)                                                                          \\ \hline
 		is\_nothrow\_invocable\textless{}T,Args... \textgreater{}       & \begin{tabular}[c]{@{}l@{}}用作可调用的Args…不抛出异常(C++17)\end{tabular}               \\ \hline
 		is\_invocable\_r\textless{}RT,T,Args... \textgreater{}          & \begin{tabular}[c]{@{}l@{}}用作可调用的Args…返回RT(C++17)\end{tabular}                   \\ \hline
@@ -98,7 +110,7 @@ is_const<int const[]>::value // true
 \end{table}
 
 \begin{center}
-表D.3. 特征测试简单类型的属性
+表D.3. 特征测试简单类型的属性(续)
 \end{center}
 
 std::is\_volatile<T>::value
@@ -136,14 +148,14 @@ std::is\_aggregate<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is an aggregate type (either an array or a class/struct/union that has no userdefined, explicit, or inherited constructors, no private or protected nonstatic data members, no virtual functions, and no virtual, private, or protected base classes).
+如果T是聚合类型(数组或没有用户定义的类型、显式的或继承的构造函数的class/struct/union，没有私有的或受保护的非静态数据成员，没有虚函数，没有虚拟的、私有的或受保护的基类)，则生成true。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Note that the base classes and/or data members of aggregates don’t have to be aggregates. Prior to C++14, aggregate class types could not have default member initializers. Prior to C++17, aggregates could not have public base classes.
+\hspace*{0.75cm}注意，聚合的基类和/或数据成员不必聚合。C++14前，聚合类类型不能有默认的成员初始化式。C++17前，聚合不能有公共基类。
 \end{tcolorbox}
 
 \item 
-Helps to find out whether list initialization is required. For example:
+帮助确定是否需要列表初始化。例如:
 \begin{lstlisting}[style=styleCXX]
 template<typename Coll, typename... T>
 void insert(Coll& coll, T&&... val)
@@ -158,295 +170,296 @@ void insert(Coll& coll, T&&... val)
 \end{lstlisting}
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void。
 
 \item 
-Available since C++17.
+C++17后可用。
 \end{itemize}
 
-std::is\_trivial < T >::value
+std::is\_trivial<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the type is a “trivial” type:
+如果类型是一个“简单”类型，则返回true:
 
 \begin{itemize}
 \item [-]
-a scalar type (integral, float, enum, pointer; see is\_scalar() on page 707)
+标量类型(整型、浮点型、枚举型、指针型;参见is\_scalar())
 
 \item [-]
-a trivial class type (a class that has no virtual functions, no virtual base classes, no (indirectly) user-defined default constructor, copy/move constructor, copy/move assignment operator, or destructor, no initializer for nonstatic data members, no volatile members, and no nontrival members)
+简单类类型(没有虚函数、虚基类、(间接)用户定义的默认构造函数、复制/移动构造函数、复制/移动赋值操作符或析构函数、非静态数据成员没有初始化式、可变成员和非普通成员的类)
 
 \item [-]
-an array of such types
+简单类型的数组
 
 \item [-]
-and cv-qualified versions of these types
+以及这些类型的cv限定类型
 \end{itemize}
 
 \item 
-Yields true if is\_trivially\_copyable\_v<T> yields true and a trivial default constructor exists.
+如果is\_trivially\_copyable\_v<T>会产生true，并且存在一个简单的默认构造函数。
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void。
 \end{itemize}
 
-std::is\_trivially\_copyable < T >::value
+std::is\_trivially\_copyable<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the type is a “trivially copyable” type:
+如果类型是“简单可复制”类型，则返回true:
 
 \begin{itemize}
 \item [-]
-a scalar type (integral, float, enum, pointer; see is\_scalar<> on page 707)
+标量类型(整型、浮点型、枚举型、指针型;参见is\_scalar<>)
 
 \item [-]
-a trivial class type (a class that has no virtual functions, no virtual base classes, no (indirectly) user-defined default constructor, copy/move constructor, copy/move assignment operator, or destructor, no initializer for nonstatic data members, no volatile members, and no nontrival members)
+简单类类型(没有虚函数、虚基类、(间接)用户定义的默认构造函数、复制/移动构造函数、复制/移动赋值操作符或析构函数、非静态数据成员没有初始化式、可变成员和非普通成员的类)
 
 \item [-]
-an array of such types
+这种类型的数组
 
 \item [-]
-and cv-qualified versions of these types
+以及这些类型的cv限定类型
 \end{itemize}
 
 \item 
-Yields the same as is\_trivial\_v<T> except it can produce true for a class type without a trivial default constructor.
+产生与is\_trivial\_v<T>相同的结果，但可以为没有普通默认构造函数的类类型产生true。
 
 \item 
-In contrast to is\_standard\_layout<>, volatile members are not allowed, references are allowed, members might have different access, and members might be distributed among different (base) classes.
+与is\_standard \_layout<>相比，不允许可变成员，允许引用。成员可以有不同的访问权限，成员可以分布在不同的(基)类中。
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void。
 \end{itemize}
 
-std::is\_standard\_layout < T >::value
+std::is\_standard\_layout<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the type has a standard layout, which, for example, makes it easier to exchange values of this type with other languages.
+如果该类型具有标准布局，则生成true。例如，这样可以更容易地与其他语言交换该类型的值。
 
 \begin{itemize}
 \item [-]
-a scalar type (integral, float, enum, pointer; see is\_scalar<> on page 707)
+标量类型(整型、浮点型、枚举型、指针型;参见is\_scalar<>)
 
 \item [-]
-a standard-layout class type (no virtual functions, no virtual base classes, no nonstatic reference members, all nonstatic members are in the same (base) class defined with the same access, all members are also standard-layout types)
+标准布局类类型(没有虚函数、没有虚基类、没有非静态引用成员，所有非静态成员都在具有相同访问权限的相同(基)类中，所有成员也是标准布局类型)
 
 \item [-]
-an array of such types
+这种类型的数组
 
 \item [-]
-and cv-qualified versions of these types
+以及这些类型的cv限定类型
 \end{itemize}
 
 \item 
-In contrast to is\_trivial<>, volatile members are allowed, references are not allowed, members might not have different access, and members might not be distributed among different (base) classes.
+与is\_trivial<>相比，允许可变成员，不允许引用，成员可能有相同的访问权限，成员可能不分布在不同的(基)类中。
 
 \item 
-Requires that the given type (for arrays, the basic type) is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+要求给定的类型(对于数组，基本类型)要么完整(见10.3.1节)，要么是(cv限定的)void。
 \end{itemize}
 
-std::is\_pod < T >::value
+std::is\_pod<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is a plain old datatype (POD).
+如果T是普通的旧数据类型(POD)，则生成true。
 
 \item 
-Objects of such types can be copied by copying the underlying storage (e.g., using memcpy()).
+这种类型的对象可以通过复制底层存储来复制(例如，使用memcpy())。
 
 \item
-Same as: 
+等价于: 
 \begin{lstlisting}[style=styleCXX]
 is_trivial_t<T> && is_standard_layout_v<T>
 \end{lstlisting}
 
 \item
-Yields false for:
+生成false的情况:
 
 \begin{itemize}
 \item [-]
-classes that don’t have a trivial default constructor, copy/move constructor, copy/move assignment, or destructor
+没有简单的默认构造函数、复制/移动构造函数、复制/移动赋值或析构函数的类
 
 \item [-]
-classes that have virtual members or virtual base classes
+具有虚成员或虚基类的类
 
 \item [-]
-classes that have volatile or reference members
+具有可变成员或引用成员的类
 
 \item [-]
-classes that have members in different (base) classes or with different access
+不同(基)类中具有成员或具有不同访问权限的类
 
 \item [-]
-the types of lambda expressions (called closure types)
+Lambda表达式的类型(称为闭包类型)
 
 \item [-]
-functions
+函数
 
 \item [-]
 void
 
 \item [-]
-types composed from these types
+由这些类型组成的类型
 \end{itemize}
 
 \item
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
+要求给定的类型要么完整(见10.3.1节)，要么是(cv限定的) void。
 \end{itemize}
 
-std::is\_literal\_type < T >::value
+std::is\_literal\_type<T>::value
 
 \begin{itemize}
 \item 
-Yields true if the given type is a valid return type for a constexpr function (which notably excludes any type requiring nontrivial destruction).
+若给定的类型是constexpr函数的有效返回类型，则生成true(需要注意的是，该类型不包含非简单销毁的类型)。
 
 \item 
-Yields true if T is a literal type:
-
-\begin{itemize}
-\item [-]
-a scalar type (integral, float, enum, pointer; see is\_scalar() on page 707)
-
-\item [-]
-a reference
-
-\item [-]
-a class type with at least one constexpr constructor that is not a copy/move constructor in each (base) class, no user-defined or virtual destructor in any (base) class or member, and where every initialization for nonstatic data members is a constant expression
-
-\item [-]
-an array of such types
-\end{itemize}
-
-\item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void.
-
-\item 
-Note that this trait is deprecated since C++17 because “it is too weak to be used meaningfully in generic code. What is really needed is the ability to know that a specific construction would produce constant initialization.”
-\end{itemize}
-
-std::is\_empty < T >::value
-
-\begin{itemize}
-\item 
-Yields true if T is a class type but not a union type, whose objects hold no data.
-
-\item 
-Yields true if T is defined as class or struct with
+如果T是文字类型，则返回true:
 
 \begin{itemize}
 \item [-]
-no nonstatic data members other than bit-fields of length 0
+标量类型(整型、浮点型、枚举型、指针型;参见is\_scalar())
 
 \item [-]
-no virtual member functions
+引用
 
 \item [-]
-no virtual base classes
+每个(基)类中至少有一个constexpr构造函数，该构造函数不是复制/移动构造函数，在(基)类或成员中都没有用户定义或虚拟析构函数，并且对非静态数据成员的每次初始化都是常量表达式
 
 \item [-]
-no nonempty base classes
+这种类型的数组
 \end{itemize}
 
 \item 
-Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void。
+
+\item 
+注意，这个特征自C++17以来已弃用，因为“它太弱了，不能在泛型代码中有意义地使用。我们需要的是能够了解特定构造是否会产生恒定的初始化。”
 \end{itemize}
 
-std::is\_polymorphic < T >::value
+std::is\_empty<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is polymorphic class type (a class that declares or inherits a virtual function).
+如果T是类类型而不是联合类型(其对象不包含数据)，则生成true。
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or neither a class nor a struct.
+如果T定义为带有的类或结构，则生成true
+
+\begin{itemize}
+\item [-]
+除了长度为0的位域外，没有非静态数据成员
+
+\item [-]
+没有虚成员函数
+
+\item [-]
+没有虚基类
+
+\item [-]
+没有非空基类
 \end{itemize}
 
+\item 
+如果是类/结构体，则要求给定的类型完整(见10.3.1节)(不完整的联合也可以)。
+\end{itemize}
 
-std::is\_abstract < T >::value
+std::is\_polymorphic<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is an abstract class type (a class for which no objects can be created because it has at least one pure virtual member function).
+如果是类/结构体，则要求给定的类型完整(见10.3.1节)(不完整的联合也可以)。
 
 \item 
-Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+要求给定的类型要么完整(见第10.3.1节)，要么既不是类也不是结构体。
 \end{itemize}
 
-std::is\_final < T >::value
+
+std::is\_abstract<T>::value
 
 \begin{itemize}
 \item 
-Yields true if T is an final class type (a class or union that can’t serve as a base class because it is declared as being final).
+要求给定的类型要么完整(见第10.3.1节)，要么既不是类也不是结构体。
 
 \item 
-For all non-class/union types such as int, it returns false (thus, this is not the same as something like is derivable).
-
-\item 
-Requires that the given type T is either complete (see Section 10.3.1 on page 154) or neither class/struct nor union.
-
-\item 
-Available since C++14.
+如果是类/结构体，则要求给定的类型完整(见10.3.1节)(不完整的联合也可以)。
 \end{itemize}
 
-std::has\_virtual\_destructor < T >::value
+std::is\_final<T>::value
 
 \begin{itemize}
 \item 
-Yields true if type T has a virtual destructor.
+如果T是final类类型(该类或联合类不能作为基类，因为声明为final)，则生成true。
 
 \item 
-Requires that the given type is complete (see Section 10.3.1 on page 154) if it is a class/struct (an incomplete union is fine).
+对于所有非类/联合类型，如int，会返回false(因此，这与类似于可派生不同)。
+
+\item 
+要求给定的类型T要么完整(见第10.3.1节)，要么既不是类/结构体，也不是联合。
+
+\item 
+C++14后可用。
 \end{itemize}
 
-std::has\_unique\_object\_representations < T >::value
+std::has\_virtual\_destructor<T>::value
 
 \begin{itemize}
 \item 
-Yields true if any two objects of type T have the same object representation in memory. That is, two identical values are always represented using the same sequence of byte values.
+如果类型T具有虚析构函数，则生成true。
 
 \item 
-Objects with this property can produce a reliable hash value by hashing the associated byte sequence (there is no risk that some bits not participating in the object value might differ from one case to another).
-
-\item 
-Requires that the given type is trivially copyable (see Section D.3.1 on page 712) and either complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
-
-\item 
-Available since C++17.
+如果是类/结构体，则要求给定的类型完整(见第10.3.1节)(不完整的联合也可以)。
 \end{itemize}
 
-std::alignment\_of < T >::value
+std::has\_unique\_object\_representations<T>::value
 
 \begin{itemize}
 \item 
-Yields the alignment value of an object of type T as std::size\_t (for arrays, the element type; for references, the referenced type).
+如果任意两个T类型的对象在内存中具有相同的对象表示形式，则生成true。也就是说，始终使用相同的字节值序列表示两个相同的值。
 
 \item 
-Same as: alignof(T)
+具有此属性的对象，可以通过哈希关联的字节序列产生可靠的哈希值(没有参与对象值的某些位可能在不同情况下不同，这没有风险)。
 
 \item 
-This trait was introduced in C++11 before the alignof(...) construct. It is still useful, however, because the trait can be passed around as a class type, which is useful for certain metaprograms.
+要求给定的类型是简单可复制的(见第D.3.1节)，并且要么是完整的(见第10.3.1节)，要么是(cv限定的)void或未知边界的数组。
 
 \item 
-Requires that alignof(T) is a valid expression.
-
-\item 
-Use aligned\_union<> to get the common alignment of multiple types (see Section D.5 on page 733).
+C++17后可用。
 \end{itemize}
 
-std::rank < T >::value
+std::alignment\_of<T>::value
 
 \begin{itemize}
 \item 
-Yields the number of dimensions of an array of type T as std::size\_t.
+生成类型为T的对象的对齐值std::size\_t(对于数组，为元素类型;对于引用，为引用类型)。
 
 \item 
-Yields 0 for all other types.
+等价于: alignof(T)
 
 \item 
-Pointers do not have any associated dimensions. An unspecified bound in an array type does specify a dimension. (As usual, a function parameter declared with an array type does not have an actual array type, and std::array is not an array type either. See Section D.2.1 on page 704.)
-For example:
+这个特性是在C++11中alignof(…)之前引入。然而，它仍然有用，因为特征可以作为类类型传递，这对元编程很有用。
+
+\item 
+要求alignof(T)是一个有效的表达式。
+
+\item 
+使用aligned\_union<>来获得多种类型的公共对齐(参见第D.5节)。
+\end{itemize}
+
+std::rank<T>::value
+
+\begin{itemize}
+\item 
+生成类型为T的数组的维数std::size\_t。
+
+\item 
+其他类型的结果为0。
+
+\item 
+指针没有相关的维度，数组类型中未指定的边界指定维度。(通常，用数组类型声明的函数参数没有实际的数组类型，而且std::array也不是数组类型。参见D.2.1节。)
+
+例如:
 \begin{lstlisting}[style=styleCXX]
 int a2[5][7];
 rank_v<decltype(a2)>; // yields 2
@@ -456,19 +469,20 @@ rank_v<decltype(p1)>; // yields1
 \end{lstlisting}
 \end{itemize}
 
-std::extent < T >::value
+std::extent<T>::value
 
-std::extent < T, IDX >::value
+std::extent<T, IDX>::value
 
 \begin{itemize}
 \item 
-Yields the size of the first or IDX-th dimension of an array of type T as std::size\_t.
+生成类型为T的数组的第一个或第idx维的大小为std::size\_t。
 
 \item 
-Yields 0, if T is not an array, the dimension doesn’t exist, or the size of the dimension is not known.
+如果T不是数组，维度不存在，或者维度未知，则生成0。
 
 \item 
-See Section 19.8.2 on page 453 for implementation details.
+参见第19.8.2节了解实现细节。
+
 \begin{lstlisting}[style=styleCXX]
 int a2[5][7];
 extent_v<decltype(a2)>; // yields 5
@@ -481,32 +495,32 @@ extent_v<decltype(p1)>; // yields 0
 \end{lstlisting}
 \end{itemize}
 
-std::underlying\_type < T >::type
+std::underlying\_type<T>::type
 
 \begin{itemize}
 \item 
-Yields the underlying type of an enumeration type T.
+生成枚举类型T的基本类型。
 
 \item 
-Requires that the given type is a complete (see Section 10.3.1 on page 154) enumeration type. For all other types, it has undefined behavior.
+要求给定的类型是完整的(见10.3.1节)枚举类型。对于所有其他类型，具有未定义行为。
 \end{itemize}
 
-std::is\_invocable < T, Args... >::value
+std::is\_invocable<T, Args...>::value
 
-std::is\_nothrow\_invocable < T, Args... >::value
+std::is\_nothrow\_invocable<T, Args...>::value
 
 \begin{itemize}
 \item 
-Yields true if T is usable as a callable for Args... (with the guarantee that no exception is thrown).
+如果T可用作Args…的可调用对象，则生成true真(保证不抛出异常)。
 
 \item 
-That is, we can use these traits to test whether we can call or std::invoke() the given callable T for Args.... (See Section 11.1 on page 157 for details about callables and std::invoke().)
+可以使用这些特征来测试是否可以调用或std::invoke()给定Args....的可调用T(关于可调用对象和std::invoke()的详细信息请参见第11.1节。)
 
 \item 
-Requires that all given types are complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
+要求所有给定的类型都是完整的(见第10.3.1节)或(cv限定的)void或一个边界未知的数组。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 struct C {
 	bool operator() (int) const {
@@ -520,29 +534,29 @@ std::is_invocable<int(*)()>::value // true
 \end{lstlisting}
 
 \item 
-Available since C++17.
+C++17之后可用。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Late in the standardization process of C++17, is\_invocable was renamed from is\_callable.
+\hspace*{0.75cm}C++17标准化过程的后期，is\_invocable改名为is\_callable。
 \end{tcolorbox}
 \end{itemize}
 
-std::is\_invocable\_r < RET\_T, T, Args... >::value
+std::is\_invocable\_r<RET\_T, T, Args...>::value
 
-std::is\_nothrow\_invocable\_r < RET\_T, T, Args... >::value
+std::is\_nothrow\_invocable\_r<RET\_T, T, Args...>::value
 
 \begin{itemize}
 \item 
-Yields true if we can use T as a callable for Args... (with the guarantee that no exception is thrown), returning a value convertible to type RET\_T.
+如果可以使用T作为Args…的可调用对象，结果为true(保证不抛出异常)，返回一个可转换为RET\_T类型的值。
 
 \item 
-That is, we can use these traits to test whether we can call or std::invoke() the passed callable T for Args... and use the return value as RET\_T. (See Section 11.1 on page 157 for details about callables and std::invoke().)
+可以使用这些特征来测试是否可以调用或std::invoke()传递给Args…的可调用T，并使用返回值RET\_T。(关于可调用对象和std::invoke()的详细信息请参见第11.1节。)
 
 \item 
-Requires that all passed types are complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bounds.
+要求传入的所有类型都完整(见第10.3.1节)或(cv限定的)void或未知边界的数组。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 struct C {
 	bool operator() (int) const {
@@ -559,42 +573,42 @@ std::is_invocable_r<long,int(*)(int),double>::value // true
 \end{lstlisting}
 
 \item 
-Available since C++17.
+C++17后可用。
 \end{itemize}
 
-std::invoke\_result < T, Args... >::value
+std::invoke\_result<T, Args...>::value
 
-std::result\_of < T, Args... >::value
+std::result\_of<T, Args...>::value
 
 \begin{itemize}
 \item 
-Yields the return type of the callable T called for Args....
+生成为Args...调用可调用T的返回类型
 
 \item 
-Note that the syntax is slightly different:
+注意，语法略有不同:
 
 \begin{itemize}
 \item [-]
-To invoke\_result<> you have to pass both the type of the callable and the type of the arguments as parameters.
+对于invoke\_result<>，必须同时传递可调用对象的类型和参数的类型作为参数。
 
 \item [-]
-To result\_of<> you have to pass a “function declaration” using the corresponding types.
+对于result\_of<>，必须传递一个使用相应类型的“函数声明”。
 \end{itemize}
 
 \item 
-If no call is possible, there is no type member defined, so that using it is an error (which might SFINAE out a function template using it in its declaration; see Section 8.4 on page 131).
+如果不可能调用，则没有定义类型成员，因此使用它是一个错误(可能会在函数模板的声明中SFINAE输出使用它的函数模板;参见第8.4节)。
 
 \item 
-That is, we can use these traits to get the return type obtained when we call or std::invoke() the given callable T for Args.... (See Section 11.1 on page 157 for details about callables and std::invoke().)
+可以使用这些特征来获取Args...在调用或std::invoke()给定的可调用T时，获得的返回类型(关于可调用对象和std::invoke()的详细信息请参见第11.1节。)
 
 \item 
-Requires that all given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array type of unknown bound.
+要求所有给定的类型要么完整(见第10.3.1节)，(cv限定的)void，要么是边界未知的数组类型。
 
 \item 
-invoke\_result<> is available since C++17 and replaces result\_of<>, which is deprecated since C++17, because invoke\_result<> provides some improvements such the easier syntax and permitting abstract types for T.
+invoke\_result<>自C++17后可用，并取代了C++17弃用的result\_of<>，因为invoke\_result<>提供了一些改进，例如更容易的语法和接受T的抽象类型。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 std::string foo(int);
 
@@ -612,54 +626,57 @@ using T1 = typename std::result_of<ABC(int)>::type; // ERROR: ABC is abstract
 using T2 = typename std::invoke_result<ABC, int>::type; // OK since C++17
 \end{lstlisting}
 
-See Section 11.1.3 on page 163 for a full example.
+请参阅第11.1.3节以获得完整的示例。
 
 \end{itemize}
+
+\newpage
 
 \subsubsubsection{D.3.2\hspace{0.2cm}测试具体操作}
 
 \begin{table}[H]
+	\centering
 	\begin{center}
 	\begin{tabular}{l|l}
 		\hline
-		\textbf{Trait}                                                   & \textbf{Effect}                                                                                                                                         \\ \hline
-		is\_constructible\textless{}T,Args... \textgreater{}             & Can initialize type T with types Args                                                                                                                   \\ \hline
-		is\_trivially\_constructible\textless{}T,Args... \textgreater{}  & Can trivially initialize type T with types Args                                                                                                         \\ \hline
-		is\_nothrow\_constructible\textless{}T,Args... \textgreater{}    & \begin{tabular}[c]{@{}l@{}}Can initialize type T with types Args and that operation\\ can’t throw\end{tabular}                                          \\ \hline
-		is\_default\_constructible\textless{}T \textgreater{}            & Can initialize T without arguments                                                                                                                      \\ \hline
-		is\_trivially\_default\_constructible\textless{}T \textgreater{} & Can trivially initialize T without arguments                                                                                                            \\ \hline
-		is\_nothrow\_default\_constructible\textless{}T \textgreater{}   & \begin{tabular}[c]{@{}l@{}}Can initialize T without arguments and that operation\\ can’t throw\end{tabular}                                             \\ \hline
-		is\_copy\_constructible\textless{}T \textgreater{}               & Can copy a T                                                                                                                                            \\ \hline
-		is\_trivially\_copy\_constructible\textless{}T \textgreater{}    & Can trivially copy a T                                                                                                                                  \\ \hline
-		is\_nothrow\_copy\_constructible\textless{}T \textgreater{}      & Can copy a T and that operation can’t throw                                                                                                             \\ \hline
-		is\_move\_constructible\textless{}T \textgreater{}               & Can move a T                                                                                                                                            \\ \hline
-		is\_trivially\_move\_constructible\textless{}T \textgreater{}    & Can trivially move a T                                                                                                                                  \\ \hline
-		is\_nothrow\_move\_constructible\textless{}T \textgreater{}      & Can move a T and that operation can’t throw                                                                                                             \\ \hline
-		is\_assignable\textless{}T,T2 \textgreater{}                     & Can assign type T2 to type T                                                                                                                            \\ \hline
-		is\_trivially\_assignable\textless{}T,T2 \textgreater{}          & Can trivially assign type T2 to type T                                                                                                                  \\ \hline
-		is\_nothrow\_assignable\textless{}T,T2 \textgreater{}            & \begin{tabular}[c]{@{}l@{}}Can assign type T2 to type T and that operation can’t\\ throw\end{tabular}                                                   \\ \hline
-		is\_copy\_assignable\textless{}T \textgreater{}                  & Can copy assign a T                                                                                                                                     \\ \hline
-		is\_trivially\_copy\_assignable\textless{}T \textgreater{}       & Can trivially copy assign a T                                                                                                                           \\ \hline
-		is\_nothrow\_copy\_assignable\textless{}T \textgreater{}         & Can copy assign a T and that operation can’t throw                                                                                                      \\ \hline
-		is\_move\_assignable\textless{}T \textgreater{}                  & Can move assign a T                                                                                                                                     \\ \hline
-		is\_trivially\_move\_assignable\textless{}T \textgreater{}       & Can trivially move assign a T                                                                                                                           \\ \hline
-		is\_nothrow\_move\_assignable\textless{}T \textgreater{}         & Can move assign a T and that operation can’t throw                                                                                                      \\ \hline
-		is\_destructible\textless{}T \textgreater{}                      & Can destroy a T                                                                                                                                         \\ \hline
-		is\_trivially\_destructible\textless{}T \textgreater{}           & Can trivially destroy a T                                                                                                                               \\ \hline
-		is\_nothrow\_destructible\textless{}T \textgreater{}             & Can trivially destroy a T and that operation can’t throw                                                                                                \\ \hline
-		is\_swappable\textless{}T \textgreater{}                         & Can call swap() for this type (since C++17)                                                                                                             \\ \hline
-		is\_nothrow\_swappable\textless{}T \textgreater{}                & \begin{tabular}[c]{@{}l@{}}Can call swap() for this type and that operation can’t\\ throw (since C++17)\end{tabular}                                    \\ \hline
-		is\_swappable\_with\textless{}T,T2 \textgreater{}                & \begin{tabular}[c]{@{}l@{}}Can call swap() for these two types with specific value\\ category (since C++17)\end{tabular}                                \\ \hline
-		is\_nothrow\_swappable\_with\textless{}T,T2 \textgreater{}       & \begin{tabular}[c]{@{}l@{}}Can call swap() for these two types with specific value\\ category and that operation can’t throw (since C++17)\end{tabular} \\ \hline
+		\textbf{特性}                                                   & \textbf{作用}                                                                                                                                         \\ \hline
+		is\_constructible\textless{}T,Args... \textgreater{}             & 可以用类型Args初始化类型T                                                                                                                   \\ \hline
+		is\_trivially\_constructible\textless{}T,Args... \textgreater{}  & 可以用Args类型简单初始化类型T                                                                                                         \\ \hline
+		is\_nothrow\_constructible\textless{}T,Args... \textgreater{}    & \begin{tabular}[c]{@{}l@{}}可以初始化类型T与类型Args，并且操作不能抛出异常\end{tabular}                                          \\ \hline
+		is\_default\_constructible\textless{}T \textgreater{}            & 可以不带参数初始化T                                                                                                                      \\ \hline
+		is\_trivially\_default\_constructible\textless{}T \textgreater{} & 可以不带参数地简单初始化T                                                                                                            \\ \hline
+		is\_nothrow\_default\_constructible\textless{}T \textgreater{}   & \begin{tabular}[c]{@{}l@{}}Can initialize T不带参数，操作不能抛出异常\end{tabular}                                             \\ \hline
+		is\_copy\_constructible\textless{}T \textgreater{}               & 可复制T                                                                                                                                            \\ \hline
+		is\_trivially\_copy\_constructible\textless{}T \textgreater{}    & 可简单的复制T                                                                                                                                  \\ \hline
+		is\_nothrow\_copy\_constructible\textless{}T \textgreater{}      & 是否可以复制一个T，而操作不能抛出异常                                                                                                             \\ \hline
+		is\_move\_constructible\textless{}T \textgreater{}               & 可以移动T                                                                                                                                            \\ \hline
+		is\_trivially\_move\_constructible\textless{}T \textgreater{}    & 可以简单移动T                                                                                                                              \\ \hline
+		is\_nothrow\_move\_constructible\textless{}T \textgreater{}      & 可以移动一个T，而那个操作不能抛出异常                                                                                                             \\ \hline
+		is\_assignable\textless{}T,T2 \textgreater{}                     & 将T2赋值给T                                                                                                                            \\ \hline
+		is\_trivially\_assignable\textless{}T,T2 \textgreater{}          & 简单地将T2赋值给T                                                                                                                  \\ \hline
+		is\_nothrow\_assignable\textless{}T,T2 \textgreater{}            & \begin{tabular}[c]{@{}l@{}}可以将类型T2赋值给类型T，而该操作不抛出异常\end{tabular}                                                   \\ \hline
+		is\_copy\_assignable\textless{}T \textgreater{}                  & 复制赋值给T                                                                                                                                     \\ \hline
+		is\_trivially\_copy\_assignable\textless{}T \textgreater{}       & 简单的复制赋值给T                                                                                                                            \\ \hline
+		is\_nothrow\_copy\_assignable\textless{}T \textgreater{}         & 复制赋值操作不能抛出异常                                                                                                      \\ \hline
+		is\_move\_assignable\textless{}T \textgreater{}                  & 移动赋值给T                                                                                                                                     \\ \hline
+		is\_trivially\_move\_assignable\textless{}T \textgreater{}       & 简单的移动赋值给T                                                                                                                           \\ \hline
+		is\_nothrow\_move\_assignable\textless{}T \textgreater{}         & 移动赋值T，不能抛出异常                                                                                                     \\ \hline 
+		is\_destructible\textless{}T \textgreater{}                      & 可销毁T                                                                                                                                         \\ \hline
+		is\_trivially\_destructible\textless{}T \textgreater{}           & 可简单的销毁T                                                                                                                               \\ \hline
+		is\_nothrow\_destructible\textless{}T \textgreater{}             & 销毁T，而不抛出异常                                                                                               \\ \hline
+		is\_swappable\textless{}T \textgreater{}                         & 可以对该类型使用swap()(C++ 17)                                                                                                             \\ \hline
+		is\_nothrow\_swappable\textless{}T \textgreater{}                & \begin{tabular}[c]{@{}l@{}}可以对该类型调用swap()，而不能抛出异常(C++17)\end{tabular}                                    \\ \hline
+		is\_swappable\_with\textless{}T,T2 \textgreater{}                & \begin{tabular}[c]{@{}l@{}}可以为这两种类型调用swap()与特定的\\ 值类别(C++17)\end{tabular}                                \\ \hline
+		is\_nothrow\_swappable\_with\textless{}T,T2 \textgreater{}       & \begin{tabular}[c]{@{}l@{}}可以为这两种类型调用swap()与特定的值\\类别，该操作不能抛出异常(C++17)\end{tabular} \\ \hline
 	\end{tabular}
 	\end{center}
 \end{table}
 
 \begin{center}
-Table D.4. Traits to Check for Specific Operations
+表D.4. 检查特定操作的特征
 \end{center}
 
-Table D.4 lists the type traits that allow us to check for some specific operations. The forms with is\_trivially\_... additionally check whether all (sub-)operations called for the object, members, or base classes are trivial (neither user-defined nor virtual). The forms with is\_nothrow\_... additionally check whether the called operation guarantees not to throw. Note that all is\_...\_constructible checks imply the corresponding is\_...\_destructible check. For example:
+表D.4列出了允许检查某些特定操作的类型特征。形式is\_trivially\_…，检查对象、成员或基类调用的所有(子)操作是否简单(既不是用户定义的，也不是虚的)。形式is\_nothrow\_…，检查调用的操作是否保证不抛出异常。注意，所有is\_…\_constructible检查对应的is\_…\_destructible。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -689,20 +706,20 @@ int main()
 }
 \end{lstlisting}
 
-Due to the definition of a virtual constructor, all operations are no longer trivial. And because we define a default constructor without noexcept, it might throw. All other operations, by default, guarantee not to throw.
+因虚拟构造函数的定义，所有操作都不再简单。因为我们定义了一个默认构造函数，没有使用noexcept，所以可能会抛出异常。默认情况下，所有其他操作都不会抛出异常。
 
-std::is\_constructible < T, Args... >::value
+std::is\_constructible<T, Args...>::value
 
-std::is\_trivially\_constructible < T, Args... >::value
+std::is\_trivially\_constructible<T, Args...>::value
 
-std::is\_nothrow\_constructible < T, Args... >::value
+std::is\_nothrow\_constructible<T, Args...>::value
 
 \begin{itemize}
 \item 
-Yields true if an object of type T can be initialized with arguments of the types given by Args... (without using a nontrivial operation or with the guarantee that no exception is thrown). That is, the following must be valid:
+若T类型的对象可以用Args给出的参数类型初始化，则生成true。(不使用非简单操作或保证不抛出异常)。也就是说，以下内容是有效的:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}See Section 11.2.3 on page 166 for the effect of std::declval
+\hspace*{0.75cm}关于std::declval的效果，请参见第11.2.3节
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -710,13 +727,13 @@ T t(std::declval<Args>()...);
 \end{lstlisting}
 
 \item
-A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or  is\_nothrow\_destructible\_v<T> yields true).
+true意味着对象可以销毁(is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>， 或is\_nothrow\_destructible\_v<T>的结果为true)。
 
 \item
-Requires that all given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+要求所有给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void，要么是边界未知的数组。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_constructible_v<int> // true
 is_constructible_v<int,int> // true
@@ -729,56 +746,56 @@ is_constructible_v<std::string,char const*,int,int> // true
 \end{lstlisting}
 
 \item
-Note that is\_convertible has a different order for the source and destination types.
+注意，is\_convertible对源类型和目标类型有不同的顺序。
 \end{itemize}
 
-std::is\_default\_constructible < T >::value
+std::is\_default\_constructible<T>::value
 
-std::is\_trivially\_default\_constructible < T >::value
+std::is\_trivially\_default\_constructible<T>::value
 
-std::is\_nothrow\_default\_constructible < T >::value
+std::is\_nothrow\_default\_constructible<T>::value
 
 \begin{itemize}
 \item 
-Yields true if an object of type T can be initialized without any argument for initialization (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若T类型的对象可以初始化，而不需要初始化参数(不需要使用非简单操作或保证不抛出异常)，则生成true。
 
 \item 
-Same as is\_constructible\_v<T>, is\_trivially\_constructible\_v<T>, or is\_nothrow\_constructible\_v<T>, respectively.
+与is\_constructible\_v<T>, is\_trivially\_constructible\_v<T>或 is\_nothrow\_constructible\_v<T>相同。
 
 \item 
-A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+true意味着可以相应地销毁对象 (例如，is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>或 is\_nothrow\_destructible\_v<T>生成true)。
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，(cv限定的)void，要么是一个边界未知的数组。
 \end{itemize}
 
-std::is\_copy\_constructible < T >::value
+std::is\_copy\_constructible<T>::value
 
-std::is\_trivially\_copy\_constructible < T >::value
+std::is\_trivially\_copy\_constructible<T>::value
 
-std::is\_nothrow\_copy\_constructible < T >::value
+std::is\_nothrow\_copy\_constructible<T>::value
 
 \begin{itemize}
 \item 
-Yields true if an object of type T can be created by copying another value of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若T类型的对象可以通过复制T类型的另一个值来创建(无需使用非简单操作或保证不抛出异常)，则生成true。
 
 \item 
-Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用类型，则生成false(可以是(cv限定的)void，也可以是const、volatile、\&和/或\&\&限定的函数类型)。
 
 \item 
-Provided T is a referenceable type, same as is\_constructible<T,T const\&>::value, is\_trivially\_constructible<T,T const\&>::value, or is\_nothrow\_constructible<T,T const\&>::value respectively.
+假设T是一个可引用的类型，就像 is\_constructible<T,T const\&>::value, is\_trivially\_constructible<T,T const\&>::value或is\_nothrow\_constructible<T,T const\&>::value一样。
 
 \item 
-To find out whether an object of T would be copy constructible from an rvalue of type T, use is\_constructible<T,T\&\&>, and so on.
+要找出T类型的对象是否可以从类型T的右值复制构造，可使用 is\_constructible<T,T\&\&>。
 
 \item 
-A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+true意味着可以相应地销毁对象(例如，is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>或 is\_nothrow\_destructible\_v<T>生成true)。
 
 \item 
-Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，(cv限定的)void，要么是一个边界未知的数组。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_copy_constructible_v<int> // yields true
 is_copy_constructible_v<void> // yields false
@@ -794,33 +811,33 @@ is_constructible_v<std::string&&,std::string&&> // yields true
 
 \end{itemize}
 
-std::is\_move\_constructible < T >::value
+std::is\_move\_constructible<T>::value
 
-std::is\_trivially\_move\_constructible < T >::value
+std::is\_trivially\_move\_constructible<T>::value
 
-std::is\_nothrow\_move\_constructible < T >::value
+std::is\_nothrow\_move\_constructible<T>::value
 
 \begin{itemize}
 \item 
-Yields true if an object of type T can be created from an rvalue of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若T类型的对象可以由T类型的右值创建(无需使用非简单操作或保证不抛出异常)，则生成true。
 
 \item 
-Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
 
 \item 
-Provided T is a referenceable type, same as is\_constructible<T,T\&\&>::value, is\_trivially\_constructible<T,T\&\&>::value, or is\_nothrow\_constructible<T,T\&\&>::value respectively.
+假设T是一个可引用的类型，就像is\_constructible<T,T\&\&>::value，is\_trivially\_constructible<T,T\&\&>::value，或者is\_nothrow\_constructible<T,T\&\&>::value一样。
 
 \item 
-A true value implies that the object can be destroyed accordingly (i.e., is\_destructible\_v<T>, is\_trivially\_destructible\_v<T>, or is\_nothrow\_destructible\_v<T> yields true).
+true意味着对象可以相应地被销毁(即，is\_destructible\_v<T>，is\_trivially\_destructible\_v<T>，或者is\_nothrow\_destructible\_v<T>生成true)。
 
 \item 
-Note that there is no way to check whether a move constructor throws without being able to call it directly for an object of type T. It is not enough for the constructor to be public and not deleted; it also requires that the corresponding type is not an abstract class (references or pointers to abstract classes work fine).
+注意，若不能为T类型的对象直接调用移动构造函数，就没有办法检查它是否可以抛出异常。构造函数为public，而不删除是不够的;还要求对应的类型不是抽象类(对抽象类的引用或指针可以正常工作)。
 
 \item 
-See Section 19.7.2 on page 443 for implementation details.
+参见19.7.2节了解实现细节。
 
 \item 
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_move_constructible_v<int> // yields true
 is_move_constructible_v<void> // yields false
@@ -835,27 +852,27 @@ is_constructible_v<std::string&&,std::string&&> // yields true
 \end{lstlisting}
 \end{itemize}
 
-std::is\_assignable < TO, FROM >::value
+std::is\_assignable<TO, FROM>::value
 
-std::is\_trivially\_assignable < TO, FROM >::value
+std::is\_trivially\_assignable<TO, FROM>::value
 
-std::is\_nothrow\_assignable < TO, FROM >::value
+std::is\_nothrow\_assignable<TO, FROM>::value
 
 \begin{itemize}
 \item
-Yields true if an object of type FROM can be assigned to an object of type TO (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若可以将FROM类型的对象赋值给TO类型的对象(无需使用重要操作或保证不抛出异常)，则生成true。
 
 \item
-Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，(cv限定的)void，要么是边界未知的数组。
 
 \item
-Note that is\_assignable\_v<> for a nonreference, nonclass type as first type always yields false, because such types produce prvalues. That is, the statement 42 = 77; is not valid. For class types, however, rvalues may be assigned to, given an appropriate assignment operator (due to an old rule that non-const member functions can be invoked on rvalues of class types).
+作为第一类型的非引用非类类型is\_assignable\_v<>总是会产生false，因为这样的类型会产生prvalues。也就是说，42 = 77;不是有效的。然而，对于类类型，只要给定适当的赋值操作符，就可以对右值赋值(这是由于旧的规则，可以对类类型的右值调用非const成员函数)。
 
 \item
-Note that is\_convertible has a different order for the source and destination types.
+is\_convertible对源类型和目标类型有不同的顺序。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_assignable_v<int,int> // yields false
 is_assignable_v<int&,int> // yields true
@@ -872,34 +889,34 @@ is_assignable_v<std::string&&,std::string&&> // yields true
 \end{lstlisting}
 \end{itemize}
 
-std::is\_copy\_assignable < T >::value
+std::is\_copy\_assignable<T>::value
 
-std::is\_trivially\_copy\_assignable < T >::value
+std::is\_trivially\_copy\_assignable<T>::value
 
-std::is\_nothrow\_copy\_assignable < T >::value
+std::is\_nothrow\_copy\_assignable<T>::value
 
 \begin{itemize}
 \item
-Yields true if a value of type T can be (copy-)assigned to an object of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若T类型的值可以(复制-)赋值给T类型的对象(无需使用非简单操作或保证不抛出异常)，则生成true。
 
 \item
-Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
  
 \item
-Provided T is a referenceable type, same as is\_assignable<T\&,T const\&>::value, is\_trivially\_assignable<T\&,T const\&>::value, or is\_nothrow\_assignable<T\&,T const\&>::value respectively.
+假设T是一个可引用的类型，就和is\_assignable<T\&,T const\&>::value, is\_trivially\_assignable<T\&,T const\&>::value或is\_nothrow\_assignable<T\&,T const\&>::value一样。
 
 \item
-To find out whether an rvalue of type T can be copy assigned to another rvalue of type T, use is\_assignable<T\&\&,T\&\&>, and so on.
+要找出是否可以将类型T的右值复制赋值给另一个类型T的右值，要使用is\_assignable<T\&\&,T\&\&>。
 
 
 \item
-Note that void, built-in array types, and classes with deleted copy-assignment operator cannot be copy-assigned.
+void、内置数组类型和带有删除复制赋值操作符的类，不能复制赋值。
 
 \item
-Requires that the given type is either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，(cv限定的)void，要么是一个边界未知的数组。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_copy_assignable_v<int> // yields true
 is_copy_assignable_v<int&> // yields true
@@ -912,30 +929,30 @@ is_copy_assignable_v<std::unique_ptr<int>> // yields false
 \end{lstlisting}
 \end{itemize}
 
-std::is\_move\_assignable < T >::value
+std::is\_move\_assignable<T>::value
 
-std::is\_trivially\_move\_assignable < T >::value
+std::is\_trivially\_move\_assignable<T>::value
 
-std::is\_nothrow\_move\_assignable < T >::value
+std::is\_nothrow\_move\_assignable<T>::value
 
 \begin{itemize}
 \item
-Yields true if an rvalue of type T can be move-assigned to an object of type T (without using a nontrivial operation or with the guarantee that no exception is thrown).
+若T类型的右值可以移动赋值给T类型的对象(无需使用非简单操作或保证不抛出异常)，则生成true。
 
 \item
-Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
 
 \item
-Provided T is a referenceable type, same as is\_assignable<T\&,T\&\&>::value, is\_trivially\_assignable<T\&,T\&\&>::value, or is\_nothrow\_assignable<T\&,T\&\&>::value respectively.
+假设T是一个可引用的类型，就像is\_assignable<T\&,T\&\&>::value, is\_trivially\_assignable<T\&,T\&\&>::value或is\_nothrow\_assignable<T\&,T\&\&>::value一样。
 
 \item
-Note that void, built-in array types, and classes with deleted move-assignment operator cannot be move-assigned.
+void、内置数组类型和带有删除移动赋值操作符的类不能进行移动赋值。
 
 \item
-Requires that the given type is either complete (see Section 10.3.1 on page 154) or (cv-qualified) void or an array of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void或一个边界未知的数组。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_move_assignable_v<int> // yields true
 is_move_assignable_v<int&> // yields true
@@ -949,22 +966,22 @@ is_move_assignable_v<std::unique_ptr<int>> // yields true
 \end{itemize}
 
 
-std::is\_swappable\_with < T1, T2 >::value
+std::is\_swappable\_with<T1, T2>::value
 
-std::is\_nothrow\_swappable\_with < T1, T2 >::value
+std::is\_nothrow\_swappable\_with<T1, T2>::value
 
 \begin{itemize}
 \item
-Yields true if an expression of type T1 can be swap()’ed with an expression of type T2 except that reference types only determine the value category of the expression (with the guarantee that no exception is thrown).
+若类型T1的表达式可以与类型T2的表达式交换()，则生成true，除非引用类型只确定表达式的值类别(保证不抛出异常)。
 
 \item
-Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void或边界未知的数组。
 
 \item
-Note that is\_swappable\_with\_v<> for a nonreference, nonclass type as first or second type always yields false, because such types produce prvalues. That is, swap(42,77) is not valid.
+作为第一或第二种类型的非引用、非类类型is\_swappable\_with\_v<>总是会产生false，因为这样的类型会产生prvalues。也就是说，swap(42,77)无效。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_swappable_with_v<int,int> // yields false
 is_swappable_with_v<int&,int> // yields false
@@ -981,30 +998,31 @@ is_swappable_with_v<std::string&&,std::string&&> // yields false
 \end{lstlisting}
 
 \item
-Available since C++17.
+C++17后可用。
 \end{itemize}
 
-std::is\_swappable < T >::value
-std::is\_nothrow\_swappable < T >::value
+std::is\_swappable<T>::value
+
+std::is\_nothrow\_swappable<T>::value
 
 \begin{itemize}
 \item
-Yields true if lvalues of type T can be swapped (with the guarantee that no exception is thrown).
+若T类型的左值可以交换(保证不抛出异常)，则生成true。
 
 \item
-Provided T is a referenceable type. same as is\_swappable\_with<T\&,T\&>::value or is\_nothrow\_swappable\_with<T\&,T\&>::value respectively.
+假设T是一个可引用的类型。就像 is\_swappable\_with<T\&,T\&>::value或is\_nothrow\_swappable\_with<T\&,T\&>::value一样。
 
 \item
-Yields false if T is not a referenceable type (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
 
 \item
-To find out whether an rvalue of T would be swappable with another rvalue of T, use is\_swappable\_with<T\&\&,T\&\&>.
+要找出一个T的右值是否可以与另一个T的右值交换，请使用 is\_swappable\_with<T\&\&,T\&\&>。
 
 \item
-Requires that the given type is a complete type (Section 10.3.1 on page 154), (cv-qualified) void, or an array of unknown bound.
+要求给定的类型是一个完整的类型(第10.3.1节)、(cv限定的)void或一个边界未知的数组。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 is_swappable_v<int> // yields true
 is_swappable_v<int&> // yields true
@@ -1017,46 +1035,46 @@ is_swappable_v<std::unique_ptr<int>> // yields true
 \end{lstlisting}
 
 \item
-Available since C++17.
+C++17后可用。
 \end{itemize}
 
 \subsubsubsection{D.3.3\hspace{0.2cm}类型之间的关系}
 
-Table D.5 lists the type traits that allow testing certain relationships between types. This includes checking which constructors and assignment operators are provided for class types.
+表D.5列出了允许测试类型之间特定关系的类型特征，包括检查为类类型提供了哪些构造函数和赋值操作符。
 
 \begin{table}[H]
 	\begin{center}
 	\begin{tabular}{l|l}
 		\hline
-		\textbf{Trait}                                & \textbf{Effect}                                                    \\ \hline
-		is\_same\textless{}T1,T2 \textgreater{}       & T1 and T2 are the same types (including const/volatile qualifiers) \\ \hline
-		is\_base\_of\textless{}T,D \textgreater{}     & Type T is base class of type D                                     \\ \hline
-		is\_convertible\textless{}T,T2 \textgreater{} & Type T is convertible into type T2                                 \\ \hline
+		\textbf{特性}                                & \textbf{作用}                                                    \\ \hline
+		is\_same\textless{}T1,T2 \textgreater{}       & T1和T2是相同的类型(包括const/volatile限定符)\\ \hline
+		is\_base\_of\textless{}T,D \textgreater{}     & 类型T是类型D的基类                                     \\ \hline
+		is\_convertible\textless{}T,T2 \textgreater{} & 类型T可以转换为类型T2                                 \\ \hline
 	\end{tabular}
 	\end{center}
 \end{table}
 
 \begin{center}
-Table D.5. Traits to Test Type Relationships
+表D.5. 测试类型关系的特征
 \end{center}
 
-std::is\_same < T1, T2 >::value
+std::is\_same<T1, T2>::value
 
 \begin{itemize}
 \item
-Yields true if T1 and T2 name the same type including cv-qualifiers (const and volatile).
+如果T1和T2命名相同的类型，包括cv限定符(const和volatile)，则生成true。
 
 \item
-Yields true if a type is a type alias of another.
+若一个类型是另一个类型的别名，则生成true。
 
 \item
-Yields true if two objects were initialized by objects of the same type.
+若两个对象由相同类型的对象初始化，则生成true。
 
 \item
-Yields false for the (closure) types associated with two distinct lambda expressions even if they define the same behavior.
+对于与两个不同的Lambda表达式关联的(闭包)类型，即使它们定义了相同的行为，也会产生false。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 auto a = nullptr;
 auto b = nullptr;
@@ -1073,27 +1091,26 @@ is_same_v<decltype(x),decltype(z)> // yields false
 \end{lstlisting}
 
 \item
-See Section 19.3.3 on page 410 for implementation details.
+参见第19.3.3节了解实现细节。
 \end{itemize}
 
-std::is\_base\_of < B, D >::value
+std::is\_base\_of<B, D>::value
 
 \begin{itemize}
 \item
-Yields true if B is a base class of D or B is the same class as D.
+若B是D的基类或B与D是同一个类，则为true。
 
 \item
-It doesn’t matter whether a type is cv-qualified, private or protected inheritance is used, D has multiple base classes of type B, or D has B as a base class via multiple inheritance paths (via virtual
-inheritance).
+类型是cv限定的、私有的还是受保护的继承并不重要，D有多个B的基类，或者D通过多个继承(通过虚拟继承)将B作为基类。
 
 \item
-Yields false if at least one of the types is a union.
+如果至少有一个类型是联合类型，则生成false。
 
 \item
-Requires that type D is either complete (see Section 10.3.1 on page 154), has the same type as B (ignoring any const/volatile qualification), or is neither a struct nor a class.
+要求类型D要么是完整的(见第10.3.1节)，与B具有相同的类型(忽略任何const/volatile限定)，要么既不是结构体也不是类。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 class B {
 };
@@ -1114,15 +1131,11 @@ is_base_of_v<int, int> // yields false (no class type)
 \end{lstlisting}
 \end{itemize}
 
-std::is\_convertible < FROM, TO >::value
+std::is\_convertible<FROM, TO>::value
 
 \begin{itemize}
 \item
-Yields true if expression of type FROM is convertible to type TO. Thus, the following must be valid:
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}See Section 11.2.3 on page 166 for the effect of std::declval.
-\end{tcolorbox}
+如果FROM类型的表达式可转换为TO类型，则生成true。因此，以下代码必须是有效的:
 
 \begin{lstlisting}[style=styleCXX]
 TO test() {
@@ -1130,11 +1143,15 @@ TO test() {
 }
 \end{lstlisting}
 
-\item
-A reference on top of type FROM is only used to determine the value category of the expression being converted; the underlying type is then the type of the source expression.
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}关于std::declval的效果，请参见第11.2.3节。
+\end{tcolorbox}
 
 \item
-Note that is\_constructible does not always imply is\_convertible. For example:
+类型FROM之上的引用仅用于确定转换表达式的值类别;基础类型就是源表达式的类型。
+
+\item
+注意，is\_constructible并不总等价于is\_convertible。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class C {
@@ -1147,11 +1164,11 @@ is_convertible_v<C,C> // yields false
 \end{lstlisting}
 
 \item
-Requires that the given types are either complete (see Section 10.3.1 on page 154), (cv-qualified) void, or arrays of unknown bound.
+要求给定的类型要么完整(见第10.3.1节)，要么是(cv限定的)void或是边界未知的数组。
 
 \item
-Note that is\_constructible (see Section D.3.2 on page 719) and is\_assignable (see Section D.3.2 on page 721) have a different order for the source and destination types.
+s\_constructible(参见D.3.2节)和is\_assignable(参见D.3.2节)对于源和目标类型有不同的顺序。
 
 \item
-See Section 19.5 on page 428 for implementation details.
+参见第19.5节了解实现细节。
 \end{itemize}

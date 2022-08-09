@@ -6,42 +6,42 @@
 	\begin{tabular}{l|l}
 		\hline
 		\textbf{特征}                                    & \textbf{作用}                                                \\ \hline
-		remove\_const\textless{}T \textgreater{}          & Corresponding type without const                               \\ \hline
-		remove\_volatile\textless{}T \textgreater{}       & Corresponding type without volatile                            \\ \hline
-		remove\_cv\textless{}T \textgreater{}             & Corresponding type without const and volatile                  \\ \hline
-		add\_const\textless{}T \textgreater{}             & Corresponding const type                                       \\ \hline
-		add\_volatile\textless{}T \textgreater{}          & Corresponding volatile type                                    \\ \hline
-		add\_cv\textless{}T \textgreater{}                & Corresponding const volatile type                              \\ \hline
-		make\_signed\textless{}T \textgreater{}           & Corresponding signed nonreference type                         \\ \hline
-		make\_unsigned\textless{}T \textgreater{}         & Corresponding unsigned nonreference type                       \\ \hline
-		remove\_reference\textless{}T \textgreater{}      & Corresponding nonreference type                                \\ \hline
-		add\_lvalue\_reference\textless{}T \textgreater{} & Corresponding lvalue reference type (rvalues become lvalues)   \\ \hline
-		add\_rvalue\_reference\textless{}T \textgreater{} & Corresponding rvalue reference type (lvalues remain lvalues)   \\ \hline
-		remove\_pointer\textless{}T \textgreater{}        & Referred type for pointers (same type otherwise)               \\ \hline
-		add\_pointer\textless{}T \textgreater{}           & Type of pointer to corresponding nonreference type             \\ \hline
-		remove\_extent\textless{}T \textgreater{}         & Element types for arrays (same type otherwise)                 \\ \hline
-		remove\_all\_extents\textless{}T \textgreater{}   & Element type for multidimensional arrays (same type otherwise) \\ \hline
-		decay\textless{}T \textgreater{}                  & Transfers to corresponding “by-value” type                     \\ \hline
+		remove\_const\textless{}T \textgreater{}          & 对应无const的类型                               \\ \hline
+		remove\_volatile\textless{}T \textgreater{}       & 对应无volatile的类型                            \\ \hline
+		remove\_cv\textless{}T \textgreater{}             & 对应无const和volatile的类型                  \\ \hline
+		add\_const\textless{}T \textgreater{}             & 对应有const的类型                                       \\ \hline
+		add\_volatile\textless{}T \textgreater{}          & 对应有volatile的类型                                    \\ \hline
+		add\_cv\textless{}T \textgreater{}                & 对应有const volatile的类型                              \\ \hline
+		make\_signed\textless{}T \textgreater{}           & 对应的有符号非引用类型                         \\ \hline
+		make\_unsigned\textless{}T \textgreater{}         & 对应的无符号非引用类型                       \\ \hline
+		remove\_reference\textless{}T \textgreater{}      & 对应的非引用类型                                \\ \hline
+		add\_lvalue\_reference\textless{}T \textgreater{} & 对应的左值引用类型(右值变成左值)   \\ \hline
+		add\_rvalue\_reference\textless{}T \textgreater{} & 对应的右值引用类型(左值保持不变)   \\ \hline
+		remove\_pointer\textless{}T \textgreater{}        & 指针的引用类型(其他类型相同)               \\ \hline
+		add\_pointer\textless{}T \textgreater{}           & 指向对应非引用类型的指针类型             \\ \hline
+		remove\_extent\textless{}T \textgreater{}         & 数组的元素类型(其他类型相同)                 \\ \hline
+		remove\_all\_extents\textless{}T \textgreater{}   & 多维数组的元素类型(其他类型相同) \\ \hline
+		decay\textless{}T \textgreater{}                  & 转换为对应的“值”类型                     \\ \hline
 	\end{tabular}
 	\end{center}
 \end{table}
 
 \begin{center}
-Table D.6. Traits for Type Construction
+表D.6. 类型构造的特性
 \end{center}
 
-std::remove\_const < T >::type
+std::remove\_const<T>::type
 
-std::remove\_volatile < T >::type
+std::remove\_volatile<T>::type
 
-std::remove\_cv < T >::type
+std::remove\_cv<T>::type
 
 \begin{itemize}
 \item
-Yields the type T without const or/and volatile at the top level.
+生成不带const或/和volatile的T类型。
 
 \item
-Note that a const pointer is a const-qualified type, whereas a non-const pointer or reference to a const type is not const-qualified. For example:
+注意，const指针是const限定类型，而非const指针或指向const类型的引用则不是const限定类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 remove_cv_t<int> // yields int
@@ -50,10 +50,10 @@ remove_cv_t<int const volatile> // yields int
 remove_const_t<int const&> // yields int const& (only refers to int const)
 \end{lstlisting}
 
-Clearly, the order in which type construction traits are applied matters:
+显然，类型构造特征的顺序很重要:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The next standard after C++17 will probably provide a remove\_refcv trait for this reason.
+\hspace*{0.75cm}由于这个原因，C++17后的下一个标准可能会提供remove\_refcv特性。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -61,28 +61,28 @@ remove_const_t<remove_reference_t<int const&>> // yields int
 remove_reference_t<remove_const_t<int const&>> // yields int const
 \end{lstlisting}
 
-Instead, we may prefer to use std::decay<>, which, however, also converts array and function types to corresponding pointer types (see Section D.4 on page 731):
+相反，我们可能更喜欢使用std::decay<>。但是，它会将数组和函数类型转换成相应的指针类型(见第D.4节):
 
 \begin{lstlisting}[style=styleCXX]
 decay_t<int const&> // yields int
 \end{lstlisting}
 
 \item
-See Section 19.3.2 on page 406 for implementation details.
+参见19.3.2节了解实现细节。
 \end{itemize}
 
-std::add\_const < T >::type
+std::add\_const<T>::type
 
-std::add\_volatile < T >::type
+std::add\_volatile<T>::type
 
-std::add\_cv < T >::type
+std::add\_cv<T>::type
 
 \begin{itemize}
 \item
-Yields the type of T with const or/and volatile qualifiers added at the top level.
+生成在带有const或/和volatile限定符的T类型。
 
 \item
-Applying one of these traits to a reference type or a function type has no effect. For example:
+将这些特征应用于引用类型或函数类型是无效的。例如:
 \begin{lstlisting}[style=styleCXX]
 add_cv_t<int> // yields int const volatile
 add_cv_t<int const> // yields int const volatile
@@ -93,19 +93,19 @@ add_const_t<int&> // yields int&
 \end{lstlisting}
 \end{itemize}
 
-std::make\_signed < T >::type
+std::make\_signed<T>::type
 
-std::make\_unsigned < T >::type
+std::make\_unsigned<T>::type
 
 \begin{itemize}
 \item
-Yields the corresponding signed/unsigned type of T.
+生成对应的有符号/无符号T类型。
 
 \item
-Requires that T is an enumeration type or a (cv-qualified) integral type other than bool. All other types lead to undefined behavior (see Section 19.7.1 on page 442 for a discussion about how to avoid this undefined behavior).
+T是枚举类型，或除bool以外的整型(cv限定)。所有其他类型都会导致未定义行为(参见第19.7.1节，讨论如何避免这种未定义行为)。
 
 \item
-Applying one of these traits to a reference type or a function type has no effect, whereas a nonconst pointer or reference to a const type is not const-qualified. For example:
+将这些特征应用于引用类型或函数类型是无效的，而非const指针或对const类型的引用不由const限定。例如:
 \begin{lstlisting}[style=styleCXX]
 make_unsigned_t<char> // yields unsigned char
 make_unsigned_t<int> // yields unsigned int
@@ -113,14 +113,14 @@ make_unsigned_t<int const&> // undefined behavior
 \end{lstlisting}
 \end{itemize}
 
-std::remove\_reference < T >::type
+std::remove\_reference<T>::type
 
 \begin{itemize}
 \item
-Yields the type the reference type T refers to (or T itself if it is not a reference type).
+生成引用类型T引用的类型(如果T不是引用类型，则生成T本身)。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 remove_reference_t<int> // yields int
 remove_reference_t<int const> // yields int const
@@ -129,11 +129,10 @@ remove_reference_t<int&&> // yields int
 \end{lstlisting}
 
 \item
-Note that a reference type itself is not a const type. For this reason, the order of applying type
-construction traits matters:
+注意，引用类型本身不是const类型。因此，类型构造特征的顺序很重要:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The next standard after C++17 will probably provide a remove\_refcv trait for this reason.
+\hspace*{0.75cm}由于这个原因，C++17后的下一个标准可能会提供remove\_refcv特性。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -141,32 +140,32 @@ remove_const_t<remove_reference_t<int const&>> // yields int
 remove_reference_t<remove_const_t<int const&>> // yields int const
 \end{lstlisting}
 
-Instead, we may prefer to use std::decay<>, which, however, also converts array and function types to corresponding pointer types (see Section D.4 on page 731):
+相反，我们可能更喜欢使用std::decay<>。但是，它会将数组和函数类型转换成相应的指针类型(见第D.4节):
 
 \begin{lstlisting}[style=styleCXX]
 decay_t<int const&> // yields int
 \end{lstlisting}
 
 \item
-See Section 19.3.2 on page 404 for implementation details.
+参见19.3.2节了解实现细节。
 \end{itemize}
 
-std::add\_lvalue\_reference < T >::type
+std::add\_lvalue\_reference<T>::type
 
-std::add\_rvalue\_reference < T >::type
+std::add\_rvalue\_reference<T>::type
 
 \begin{itemize}
 \item
-Yields an lvalue or rvalue reference to T if T is a referenceable type.
+若T是可引用类型，则生成对T的左值或右值引用。
 
 \item
-Yields T if T is not referenceable (either (cv-qualified) void or a function type that is qualified with const, volatile, \&, and/or \&\&).
+若T不是可引用的(cv限定的)void或用const、volatile、\&和/或\&\&限定的函数类型)，则生成T。
 
 \item
-Note that if T already is a reference type, the traits use the reference collapsing rules (see Section 15.6.1 on page 277): The result is an rvalue reference only if add\_rvalue\_reference is used and T is an rvalue reference.
+注意，若T已经是一个引用类型，特性使用引用折叠规则(参见第15.6.1节):只有当使用add\_rvalue\_reference并且T是一个右值引用时，结果是一个右值引用。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 add_lvalue_reference_t<int> // yields int&
 add_rvalue_reference_t<int> // yields int&&
@@ -179,17 +178,17 @@ add_rvalue_reference_t<void> // yields void
 \end{lstlisting}
 
 \item
-See Section 19.3.2 on page 405 for implementation details.
+参见第19.3.2节了解实现细节。
 \end{itemize}
 
-std::remove\_pointer < T >::type
+std::remove\_pointer<T>::type
 
 \begin{itemize}
 \item
-Yields the type the pointer type T points to (or T itself if it is not a pointer type).
+生成指针类型T所指向的类型(如果不是指针类型，则生成T本身)。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 remove_pointer_t<int> // yields int
 remove_pointer_t<int const*> // yields int const
@@ -197,17 +196,17 @@ remove_pointer_t<int const* const* const> // yields int const* const
 \end{lstlisting}
 \end{itemize}
 
-std::add\_pointer < T >::type
+std::add\_pointer<T>::type
 
 \begin{itemize}
 \item
-Yields the type of a pointer to T, or, in the case of a reference type T, the type of a pointer to underlying type of T.
+生成指向T的指针的类型，或在引用类型T的情况下，生成指向T基础类型的指针的类型。
 
 \item
-Yields T if there is no such type (applies to cv-qualified function types).
+若没有这种类型，则生成T(适用于cv限定的函数类型)。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 add_pointer_t<void> // yields void*
 add_pointer_t<int const* const> // yields int const* const*
@@ -219,19 +218,19 @@ add_pointer_t<void(int) const> // yields void(int) const (no change)
 \end{lstlisting}
 \end{itemize}
 
-std::remove\_extent < T >::type
+std::remove\_extent<T>::type
 
-std::remove\_all\_extents < T >::type
+std::remove\_all\_extents<T>::type
 
 \begin{itemize}
 \item
-Given an array type, remove\_extent produces its immediate element type (which could itself be an array type) and remove\_all\_extents strips all “array layers” to produce the underlying element type (which is therefore no longer an array type). If T is not an array type, T itself is produced.
+给定数组类型，remove\_extent生成直接元素类型(本身可以是数组类型)，而remove\_all\_extents剥离所有“数组层”来产生底层元素类型(因此不再是数组类型)。如果T不是数组类型，则生成T本身。
 
 \item
-Pointers do not have any associated dimensions. An unspecified bound in an array type does specify a dimension. (As usual, a function parameter declared with an array type does not have an actual array type, and std::array is not an array type either. See Section D.2.1 on page 704.)
+指针没有维度信息，数组类型中未指定的边界指定维度。(通常，用数组类型声明的函数参数没有实际的数组类型，而且std::array也不是数组类型。参见第D.2.1节。)
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 remove_extent_t<int> // yields int
 remove_extent_t<int[10]> // yields int
@@ -246,40 +245,40 @@ remove_all_extents_t<int(*)[5]> // yields int(*)[5]
 \end{lstlisting}
 
 \item
-See Section 23.1.2 on page 531 for implementation details.
+参见第23.1.2节了解实现细节。
 \end{itemize}
 
-std::decay < T >::type
+std::decay<T>::type
 
 \begin{itemize}
 \item
-Yields the decayed type of T.
+生成衰变的T。
 
 \item
-In detail, for type T the following transformations are performed:
+对于T类型执行以下转换:
 
 \begin{itemize}
 \item[-]
-First, remove\_reference (see Section D.4 on page 729) is applied.
+首先，使用remove\_reference(参见D.4)。
 
 \item[-]
-If the result is an array type, a pointer to the immediate element type is produced (see Section 7.1 on page 107).
+若结果是数组类型，则生成指向直接元素类型的指针(参见第7.1节)。
 
 \item[-]
-Otherwise, if the result is a function type, the type yielded by add\_pointer for that function type is produced (see Section 11.1.1 on page 159).
+若结果是一个函数类型，则生成该函数类型的add\_pointer产生的类型(参见第11.1.1节)。
 
 \item[-]
-Otherwise, that result is produced without any top-level const/volatile qualifiers.
+生成的结果不包含任何前置const/volatile限定符。
 \end{itemize}
 
 \item
-decay<> models by-value passing of arguments or the type conversions when initializing an objects of type auto.
+初始化auto类型的对象时，通过参数的值传递或类型转换decay<>模型。
 
 \item
-decay<> is particularly useful to handle template parameters that may be substituted by reference types but used to determine a return type or a parameter type of another function. See Section 1.3.2 on page 12 and Section 7.6 on page 120 for examples discussing and using std::decay<>() (the latter with the history of implementing std::make\_pair<>()).
+decay<>对于处理可能用引用类型替代，但用于确定另一个函数的返回类型或参数类型的模板参数特别有用。关于讨论和使用std::decay<>()(后者历史上有用来实现std::make\_pair<>())的例子，请参阅第1.3.2节和第7.6节。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 decay_t<int const&> // yields int
 decay_t<int const[4]> // yields int const*
@@ -288,7 +287,7 @@ decay_t<decltype(foo)> // yields void(*)()
 \end{lstlisting}
 
 \item
-See Section 19.3.2 on page 407 for implementation details.
+参见19.3.2节了解实现细节。
 \end{itemize}
 
 

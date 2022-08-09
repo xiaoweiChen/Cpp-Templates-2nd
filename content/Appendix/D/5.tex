@@ -1,64 +1,64 @@
 
 
-Table D.7 lists all remaining type traits. They query special properties or provide more complicated type transformations.
+表D.7列出了所有剩余的类型特征，可以查询特殊属性或提供更复杂的类型转换。
 
 \begin{table}[H]
 	\begin{center}
 	\begin{tabular}{l|l}
 		\hline
-		\textbf{Trait}                                       & \textbf{Effect}                                                   \\ \hline
-		enable\_if\textless{}B,T=void \textgreater{}         & Yields type T only if bool B is true                              \\ \hline
-		conditional\textless{}B,T,F \textgreater{}           & Yields type T if bool B is true and type F otherwise              \\ \hline
-		common\_type\textless{}T1,... \textgreater{}         & Common type of all passed types                                   \\ \hline
-		aligned\_storage\textless{}Len \textgreater{}        & Type of Len bytes with default alignment                          \\ \hline
-		aligned\_storage\textless{}Len,Align \textgreater{}  & Type of Len bytes aligned according to a divisor of size\_t Align \\ \hline
-		aligned\_union\textless{}Len,Types... \textgreater{} & Type of Len bytes aligned for a union of Types...                 \\ \hline
+		\textbf{特性}                                       & \textbf{作用}                                                   \\ \hline
+		enable\_if\textless{}B,T=void \textgreater{}         & 当bool B为true时才返回类型T                              \\ \hline
+		conditional\textless{}B,T,F \textgreater{}           & 若bool B为真，则返回类型T，否则返回类型F              \\ \hline
+		common\_type\textless{}T1,... \textgreater{}         & 所有传递类型的通用类型                                   \\ \hline
+		aligned\_storage\textless{}Len \textgreater{}        & 默认Len字节对齐的类型                          \\ \hline
+		aligned\_storage\textless{}Len,Align \textgreater{}  & 根据size\_t Align的除数，对齐Len字节的类型 \\ \hline
+		aligned\_union\textless{}Len,Types... \textgreater{} & Len字节对齐的Types…联合类型                 \\ \hline
 	\end{tabular}
 	\end{center}
 \end{table}
 
 \begin{center}
-Table D.7. Other Type Traits
+表D.7. 剩余类型特征
 \end{center}
 
-std::enable\_if < cond >::type
+std::enable\_if<cond>::type
 
-std::enable\_if < cond, T >::type
-
-\begin{itemize}
-\item
-Yields void or T in its member type if cond is true. Otherwise, it does not define a member type.
-
-\item
-Because the type member is not defined when the cond is false, this trait can and is usually used to disable or SFINAE out a function template based on the given condition.
-
-\item
-See Section 6.3 on page 98 for details and a first example. See Section D.6 on page 735 for another example using parameter packs.
-
-\item
-See Section 20.3 on page 469 for details about how std::enable\_if is implemented.
-\end{itemize}
-
-std::conditional < cond, T, F >::type
+std::enable\_if<cond, T>::type
 
 \begin{itemize}
 \item
-Yields T if cond is true, and F otherwise.
+如果cond为true，则在其成员类型中返回void或T。否则，不定义成员类型。
 
 \item
-This is the standard version of the trait IfThenElseT introduced in Section 19.7.1 on page 440.
+因为当cond为false时，没有定义类型成员，因此该特性可以通常给定的条件，禁用或使用SFINAE退出函数模板。
 
 \item
-Note that, unlike a normal C++ if-then-else statement, the template arguments for both the “then” and “else” branches are evaluated before the selection is made, so neither branch may contain ill-formed code or the program is likely to be ill-formed. As a consequence, you might have to add a level of indirection to avoid that expressions in the “then” and “else” branches are evaluated if the branch is not used. Section 19.7.1 on page 440 demonstrates this for the trait IfThenElseT, which has the same behavior.
+请参阅第6.3节了解详细信息和第一个例子。有关使用参数包的另一个例子，请参阅第D.6节。
 
 \item
-See Section 11.5 on page 171 for an example.
-
-\item
-See Section 19.7.1 on page 440 for details about how std::conditional is implemented.
+有关std::enable\_if如何实现的详细信息，请参见第20.3节。
 \end{itemize}
 
-std::common\_type < T... >::type
+std::conditional<cond, T, F>::type
+
+\begin{itemize}
+\item
+如果cond为真，则为T，否则为F。
+
+\item
+这是19.7.1节介绍的特征IfThenElseT的标准版本。
+
+\item
+与普通的C++ if-then-else语句不同，then和else分支的模板参数都是在选择之前进行求值的，因此两个分支都不包含错误的代码，或者程序可能是格式错误的。因此，可能需要添加一个间接级别，以避免then和else分支中的表达式在未使用该分支时进行计算。第19.7.1节演示了特征IfThenElseT的这个功能，其具有相同的行为。
+
+\item
+参见第11.5节中的示例。
+
+\item
+请参阅19.7.1节，了解std::conditional的实现。
+\end{itemize}
+
+std::common\_type<T...>::type
 
 \begin{itemize}
 \item

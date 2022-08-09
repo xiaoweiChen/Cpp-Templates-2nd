@@ -676,7 +676,7 @@ using T2 = typename std::invoke_result<ABC, int>::type; // OK since C++17
 表D.4. 检查特定操作的特征
 \end{center}
 
-表D.4列出了允许检查某些特定操作的类型特征。形式is\_trivially\_…，检查对象、成员或基类调用的所有(子)操作是否简单(既不是用户定义的，也不是虚的)。形式is\_nothrow\_…，检查调用的操作是否保证不抛出异常。注意，所有is\_…\_constructible检查对应的is\_…\_destructible。例如:
+表D.4列出了允许检查某些特定操作的类型特征。is\_trivially\_…，检查对象、成员或基类调用的所有(子)操作是否简单(既不是用户定义的，也不是虚的)。is\_nothrow\_…，检查调用的操作是否保证不抛出异常。注意，所有is\_…\_constructible检查对应的is\_…\_destructible。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -903,10 +903,10 @@ std::is\_nothrow\_copy\_assignable<T>::value
 若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
  
 \item
-假设T是一个可引用的类型，就和is\_assignable<T\&,T const\&>::value, is\_trivially\_assignable<T\&,T const\&>::value或is\_nothrow\_assignable<T\&,T const\&>::value一样。
+假设T是一个可引用的类型，就和is\_assignable<T\&, T const\&>::value, is\_trivially\_assignable<T\&, T const\&>::value或is\_nothrow\_assignable<T\&, T const\&>::value一样。
 
 \item
-要找出是否可以将类型T的右值复制赋值给另一个类型T的右值，要使用is\_assignable<T\&\&,T\&\&>。
+要找出是否可以将类型T的右值复制赋值给另一个类型T的右值，要使用is\_assignable<T\&\&, T\&\&>。
 
 
 \item
@@ -943,7 +943,7 @@ std::is\_nothrow\_move\_assignable<T>::value
 若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
 
 \item
-假设T是一个可引用的类型，就像is\_assignable<T\&,T\&\&>::value, is\_trivially\_assignable<T\&,T\&\&>::value或is\_nothrow\_assignable<T\&,T\&\&>::value一样。
+假设T是一个可引用的类型，就像is\_assignable<T\&, T\&\&>::value, is\_trivially\_assignable<T\&, T\&\&>::value或is\_nothrow\_assignable<T\&, T\&\&>::value一样。
 
 \item
 void、内置数组类型和带有删除移动赋值操作符的类不能进行移动赋值。
@@ -1010,13 +1010,13 @@ std::is\_nothrow\_swappable<T>::value
 若T类型的左值可以交换(保证不抛出异常)，则生成true。
 
 \item
-假设T是一个可引用的类型。就像 is\_swappable\_with<T\&,T\&>::value或is\_nothrow\_swappable\_with<T\&,T\&>::value一样。
+假设T是一个可引用的类型。就像 is\_swappable\_with<T\&, T\&>::value或is\_nothrow\_swappable\_with<T\&, T\&>::value一样。
 
 \item
 若T不是可引用类型((cv限定的)void或使用const、volatile、\&和/或\&\&限定的函数类型)，则生成false。
 
 \item
-要找出一个T的右值是否可以与另一个T的右值交换，请使用 is\_swappable\_with<T\&\&,T\&\&>。
+要找出一个T的右值是否可以与另一个T的右值交换，请使用 is\_swappable\_with<T\&\&, T\&\&>。
 
 \item
 要求给定的类型是一个完整的类型(第10.3.1节)、(cv限定的)void或一个边界未知的数组。

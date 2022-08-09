@@ -189,7 +189,7 @@ class A_Traits<A_Scalar<T>> {
 
 注意，因为A\_Scalar对象引用顶层表达式中的标量，所以这些标量可以使用引用类型。也就是说，A\_Scalar<T>::s是引用成员变量。
 
-\subsubsubsection{27.2.2\hspace{0.2cm}ArrayType}
+\subsubsubsection{27.2.2\hspace{0.2cm}数组类型}
 
 有了使用轻量级表达式模板表达式的能力，现在必须创建一个Array类型，控制实际的存储，并且了解表达式模板。然而，对于工程目的来说，保持具有存储功能的真实数组的接口，与产生数组的表达式的表示的接口最好尽可能相似。为此，可以声明Array模板:
 

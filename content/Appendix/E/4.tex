@@ -1,7 +1,7 @@
 
 Although C++ concepts have been worked on for many years now, and experimental implementations have been available in some form for over a decade, broad experience with them is just starting to emerge. We hope that a future edition of this book will be able to provide much more practical guidance about how to design constrained template libraries. Meanwhile, however, we offer three observations.
 
-\subsubsubsection{E.4.1\hspace{0.2cm}Testing Concepts}
+\subsubsubsection{E.4.1\hspace{0.2cm}测试概念}
 
 Concepts are Boolean predicates that are valid constant-expressions. Therefore, given a concept C and some types T1, T2, ... that model the concept, we can statically assert that observation:
 
@@ -24,7 +24,7 @@ Is the basic set of operations assumed by the template unique? For example, can 
 
 Here, too, the notion of archetypes (see Section 28.3 on page 655) can be useful.
 
-\subsubsubsection{E.4.2\hspace{0.2cm}Concept Granularity}
+\subsubsubsection{E.4.2\hspace{0.2cm}概念的粒度}
 
 With concepts becoming part of the C++ language, it is natural to want to build “libraries of concepts,” just as we built class libraries and template libraries as soon as those features were available. As with other libraries, it is also natural to want to layer our concepts in various ways. We briefly discussed the example of iterator categories, and it’s not a great leap to envision that we could build “range categories” alongside those and perhaps “sequence concepts” on top of those, and so on.
 
@@ -42,7 +42,7 @@ That is not recommended, however, because it is a concept that has no clear sema
 
 Instead, it appears that concepts are best designed to model real semantic notions that arise in the problem domain. Doing so in a disciplined fashion is bound to improve the overall design of our libraries, as it will bring consistency and clarity to the interfaces presented to our clients. That was very much the case when the Standard Template Library (STL) was added to the C++ standard library. Although it had no language-based “concepts” to work with, it was very much designed with a notion of concepts in mind (such as iterators and the iterator hierarchy), and the rest is history.
 
-\subsubsubsection{E.4.3\hspace{0.2cm}Binary Compatibility}
+\subsubsubsection{E.4.3\hspace{0.2cm}二进制兼容性}
 
 Experienced C++ programmers are aware that when certain entities (functions and member functions in particular) are compiled down to low-level machine code, a name is associated with them that combines the declared name with the type and scope of the entity. This name, commonly referred to as the mangled name of the entity, is what is used by the object code linker to resolve references to the entity (e.g., from other object files). For example, the mangled name of a function defined as
 

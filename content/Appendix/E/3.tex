@@ -18,7 +18,7 @@ int main()
 
 We could imagine a string-like type that supports integer-like computations. For example, if "6"\_NS and "7"\_NS are two literals for that type, multiplying those literals would produce the same value as "42"\_NS. Such a type might satisfy both IntegerLike and StringLike and, therefore, a call like print("42"\_NS) would be ambiguous.
 
-\subsubsubsection{E.3.1\hspace{0.2cm}Constraint Subsumption}
+\subsubsubsection{E.3.1\hspace{0.2cm}约束类型}
 
 Our first discussion of overloading function templates distinguished by constraints involved constraints that are expected to generally be mutually exclusive. For example, in our example with IntegerLike and StringLike, we could envision types that satisfy both concepts, but we expect that to be rare enough that our overloaded print templates remain useful.
 
@@ -79,7 +79,7 @@ Clearly, in our example, BidirectionalIterator<T> subsumes ForwardIterator<T>, a
 
 
 
-\subsubsubsection{E.3.2\hspace{0.2cm}Constraints and Tag Dispatching}
+\subsubsubsection{E.3.2\hspace{0.2cm}约束和标签调度}
 
 
 Recall that in Section 20.2 on page 467, we addressed the issue of overloading the advanceIter() algorithm using tag dispatching. That method can be integrated in constrained templates in a fairly elegant way. For example, input iterators and forward iterators are not distinguishable through their syntactic interfaces. So instead, we can reach to tags to define one in terms of the other:

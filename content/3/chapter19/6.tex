@@ -352,7 +352,7 @@ struct HasVariousT<T, std::void_t<decltype(std::declval<T>().begin()),
 
 检测特定语法有效性的特性非常强大，允许模板根据特定操作的存在或不存在来定制行为。这些特征将再次作为SFINAE友好特征的一部分(第19.4.4节)和协助基于类型属性的重载(第20章)。
 
-\subsubsubsection{19.6.4\hspace{0.2cm}使用泛型Lambdas检测成员}
+\subsubsubsection{19.6.4\hspace{0.2cm}使用泛型Lambda检测成员}
 
 在第19.4.3节中介绍的isValid Lambda提供了一种更紧凑的技术来检查成员的特征，有助于避免使用宏来处理成员名称。
 

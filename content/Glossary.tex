@@ -71,224 +71,223 @@
 \noindent
 \textbf{集合类(collection class)}
 
-A class that is used to manage a group of objects. In C++, collection classes are also called containers.
+用于管理一组对象的类。在C++中，集合类也称为容器。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{编译器(compiler)}
 
-A program or library component that translates the source code in a translation unit into object code (machine code with symbolic annotations that allow a linker to resolve references across translation units).
+将翻译单元中的源代码转换为目标代码的程序或库组件(带有符号注释的机器代码，允许链接器跨翻译单元解析引用)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{完整的类型(complete type)}
 
-Any type that is not incomplete: a defined class, an array of complete elements and known size, an enumeration type with defined underlying type, and any fundamental data type except void (optionally with const and/or volatile).
+已定义的类、包含完整元素和已知大小的数组、具有已定义底层类型的枚举类型，以及除void(可选使用const和/或volatile)之外的基本数据类型。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{概念(concept)}
 
-A named set of constraints that can be applied to one or more template parameters. See Appendix E.
+可应用于一个或多个模板参数的命名约束集。请参阅附录E。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{常量表达式(constant-expression)}
 
-An expression whose value can be computed at compile time by the compiler. We sometimes call this a true constant to avoid confusion with constant expression (without hyphen). The latter includes expressions that are constant but cannot always be computed at compile time by the compiler.
+编译器可以在编译时计算表达式的值。有时称它为真常量，以避免与常量表达式(没有连字符)混淆。后者包含常量表达式，但编译器在编译时不一定会计算这些表达式。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{常量成员函数(const member function)}
 
-A member function that can be called for constant and temporary objects because it does not normally modify members of the *this object.
+可以为常量和临时对象调用的成员函数，通常不修改*this对象的成员。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{容器(container)}
 
-See collection class.
+参见集合类(collection class)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{转换函数(conversion function)}
 
-A special member function that defines how an object can implicitly (or explicitly) be converted to an object of another type. It is declared using the form operator type().
+一种特殊的成员函数，定义了如何隐式(或显式)的将对象转换为另一类型的对象。它使用函数操作符的形式声明。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{转换操作符(conversion operator)}
 
-A synonym for conversion function. The latter is the standard term, but the former is also commonly
-used.
+转换函数的同义词。后者是标准术语，但前者也常用。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{CPP文件(CPP file)}
 
-A file in which definitions of variables and noninline functions are located. Most of the executable  (as opposed to declarative) code of a program is normally placed in CPP files. They are named CPP files because they are usually named with the suffix .cpp. But for historical reasons the suffix also might be .C, .c, .cc, or .cxx. See also header file and translation unit.
+存放变量和非内联函数定义的文件。程序的大多数可执行(与声明性相反)代码通常放在CPP文件中，之所以命名为CPP文件，是因为通常以. CPP后缀命名。但由于历史原因，后缀也可以是.C、.c、.cc或.cxx。参见头文件和翻译单元。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{奇异递归模板模式(CRTP)}
 
-An acronym for curiously recurring template pattern. This refers to a code pattern where a class X derives from a base class that has X as a template argument.
+奇异递归模板模式的缩写。这指的是一种代码模式，其中类X派生自具有X作为模板参数的基类。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{奇异递归模板模式(curiously recurring template pattern)}
 
-See CRTP.
+参见CRTP。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{衰变(decay)}
 
-The implicit conversion of an array or a function to a pointer. For example, the string literal "Hello" has type char const[6], but in many C++ contexts, it is implicitly converted to a pointer of type char const* (which points to the first character of the string).
+数组或函数到指针的隐式转换。例如，字符串字面值"Hello"具有char类型const[6]，但在许多C++中，会隐式转换为char类型const*指针(指向字符串的第一个字符)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{声明(declaration)}
 
-A C++ construct that introduces or reintroduces a name into a C++ scope. See also definition.
+C++作用域中引入或重新引入名称的C++构造。参见定义(definition)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{推导(deduction)}
 
-The process that implicitly determines template arguments from the context in which templates are used. The complete term is template argument deduction.
+使用模板隐式确定模板参数的过程，完整的术语是模板参数推导。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{定义(definition)}
 
-A declaration that makes the details of the declared entity known or, in the case of variables, that forces storage space to be reserved for the declared entity. For class types and function definitions, this amounts to declarations that include a brace-enclosed body. For external variable declarations, this means either a declaration with no extern keyword or a declaration with an initializer.
+一种形式的声明，使已声明的实体为人所知。如果是变量，则强制为已声明实体保留存储空间。对于类类型和函数定义，这相当于包含大括号括起来的主体的声明。对于外部变量声明，要么声明没有extern关键字，要么声明有初始化式。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{相关基类(dependent base class)}
+\textbf{依赖基类(dependent base class)}
 
-A base class that depends on a template parameter. Special care must be taken to access members of dependent base classes. See also two-phase lookup.
+依赖于模板参数的基类。必须特别注意访问从属基类的成员。另请参见两阶段查找。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{相关名称(dependent name）}
+\textbf{依赖名称(dependent name)}
 
-A name the meaning of which depends on a template parameter. For example, A<T>::x is a dependent name when A or T is a template parameter. The name of a function in a function call is also dependent if any of the arguments in the call has a type that depends on a template parameter. For example, f in f((T*)0) is dependent if T is a template parameter. The name of a template parameter is not considered dependent, however. See also two-phase lookup.
+其含义依赖于模板参数的名称。例如，当A或T是模板参数时，A<T>::x是一个依赖名称。如果函数调用中的实参类型依赖于模板形参，那么函数调用中的函数名也依赖于模板形参。例如，f((T*)0)中的f是依赖于T是模板参数的。但是，模板参数的名称不是依赖，请参见两阶段查找。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{有向图(digraph)}
 
-A combination of two consecutive characters that are equivalent to another single character in C++ code. The purpose of digraphs is to allow the input of C++ source code with keyboards that lack certain characters. Although it is used relatively rarely, the digraph <: is sometimes accidentally formed when a left angle bracket is followed by a scope resolution operator (::) without the required intervening whitespace. C++11 introduced a lexical hack to disable digraph interpretation under those circumstances.
+C++代码中相当于另一个字符的两个连续字符的组合。有向图的目的是用缺少某些字符的键盘输入C++源代码。虽然很少使用，但当左尖括号后面跟着一个范围解析操作符(::)而没有必要的中间空格时，有时会意外地形成有向图<:。C++11引入了一个词法黑客，在这种情况下禁用有向图解释。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{空基类优化(EBCO)}
 
-An acronym for empty base class optimization. An optimization performed by most modern compilers whereby an “empty” base class subobject does not occupy any storage.
+由大多数现代编译器执行的优化，其中“空”基类子对象不占用存储空间。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{空基类优化(empty base class optimization)}
 
-See EBCO.
+参见EBCO。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{显式实例化指令(explicit instantiation directive)}
 
-A C++ construct whose sole purpose is to create a point of instantiation (POI).
+一个C++构造，其唯一目的是创建一个实例化点(POI)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{显式特化(explicit specialization)}
 
-A construct that declares or defines an alternative definition for a substituted template. The original (generic) template is called the primary template. If the alternative definition still depends on one or more template parameters, it is called a partial specialization. Otherwise, it is a full specialization.
+为替换模板声明或定义替代定义的构造，原始(通用)模板称为主模板。如果替代定义仍然依赖于一个或多个模板形参，则称为偏特化。否则，就是全特化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{表达式模板(expression template)}
 
-A class template used to represent a part of an expression. The template itself represents a particular kind of operation. The template parameters stand for the kinds of operands to which the operation applies.
+用来表示表达式一部分的类模板，模板本身表示一种特定的操作。模板参数表示操作所应用的操作数类型。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{转发引用(forwarding reference)}
 
-One of two terms for rvalue references of the form T\&\& where T is a deducible template parameter. Special rules that differ from ordinary rvalue references apply (see Section 6.1 on page 91). The term was introduced by C++17 as replacement for universal reference, because the primary use of such a reference is to forward objects. However, note that it does not automatically forward. That is, the term does not describe what it is but for what it is typically used for.
+T\&\&的右值引用的两个术语之一，其中T是一个可推导的模板参数。适用不同于普通右值引用的特殊规则(参见第6.1节)。这个术语由C++17引入，因为引用的主要用途是转发对象，所以作为通用引用的替代。但请注意，它不会自动转发。这个术语并不描述它具体是什么，而是通常用于做什么。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{友元名称注入(friend name injection)}
 
-The process that makes a function name visible when its only declaration is a friend declaration.
+当函数名的唯一声明是友元声明时，使函数名可见的过程。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{全特化(full specialization)}
 
-See explicit specialization.
+参见显示特化(explicit specialization)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{函数对象(function object)}
 
-An object that can be called using function call syntax. In C++, these are pointers to functions, classes with an overloaded operator() (see functor), and classes with a conversion function yielding a pointer to function or reference to function.
+可以使用函数调用语法调用的对象。C++中，这些指针是指向函数的指针、带有重载函数操作符的类(参见functor)，以及带有转换函数的类，这些转换函数产生指向函数的指针或指向函数的引用。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{函数模板(function template)}
 
-A construct that represents a family of functions. It specifies a pattern from which actual functions can be generated by substituting the template parameters by specific entities. Note that a function template is a template and not a function. Function templates are sometimes called parameterized functions.
+表示函数族的构造，其指定了一个模式，通过使用特定的参数替换模板参数，可以从该模式生成实际的函数。注意，函数模板是模板，不是函数。函数模板有时称为参数化函数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{函子/仿函数(functor)}
 
-An object of a class type with an overloaded operator(), which can be called using function call syntax. This includes the closure type of a lambda expression.
+具有重载函数操作符的类类型对象，可以使用函数调用的方式调用它。包括Lambda表达式的闭包类型。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{glvalue}
+\textbf{广义可本地化值(glvalue)}
 
-A category of expressions that produces a location for a stored value (generalized localizable value). A glvalue can be an lvalue or an xvalue. See value category and Section B.2 on page 674.
+为存储值(广义可本地化值)生成位置的一类表达式。glvalue可以是左值或xvalue。参见值类别章节和B.2节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{头文件(header file)}
 
-A file meant to become part of a translation unit through a \#include directive. Such files often contain declarations of variables and functions that are referred to from more than one translation unit, as well as definitions of types, inline functions, templates, constants, and macros. They are usually named with a suffix like .hpp, .h, .H, .hh, or .hxx. They are also called include files. See also CPP file and translation unit.
+通过\#include指令成为翻译单元的一部分的文件。这些文件通常包含从多个翻译单元引用的变量和函数的声明，以及类型、内联函数、模板、常量和宏的定义。通常以.hpp、.h、.H、.hh或.hxx等后缀命名，也称为包含文件。参见CPP文件和翻译单元。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{国际信息技术标准委员会(INCITS)}
 
-An acronym for InterNational Committee for Information Technology Standards, which is a U.S. standards development organization (formerly known a X3) accredited by ANSI. A subcommittee called J16 is a driving force behind the standardization of C++. It cooperates closely with the International Organization for Standardization (ISO).
+国际信息技术标准委员会(InterNational Committee for Information Technology Standards)是ANSI认可的美国标准开发组织(原名X3)的缩写。名为J16的小组委员会是C++标准化背后的驱动力,它与国际标准化组织(ISO)合作密切。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{包含文件(include file)}
 
-See header file.
+参见头文件(header file)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{不完整类型(incomplete type)}
 
-A class that is declared but not defined, an array of incomplete element type or of unknown size, an enumeration type without the underlying type defined, or void (optionally with const and/or volatile).
+声明但未定义的类、元素类型不完整或大小未知的数组、未定义底层类型的枚举类型或void(可选使用const和/或volatile)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{间接调用(indirect call)}
 
-A function call for which the called function is not known until the call actually occurs (at run time).
+在调用实际发生之前(在运行时)，调用的函数是未知的。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{初始化式(initializer)}
 
-A construct that specifies how to initialize an object. For example, the initializers are = 1.0 and (0.0, 1.0) in
+指定如何初始化对象的构造。例如，初始化式为 = 1.0和(0.0,1.0)
 \begin{lstlisting}[style=styleCXX]
 std::complex<float> z1 = 1.0, z2(0.0, 1.0);
 \end{lstlisting}
@@ -297,337 +296,337 @@ std::complex<float> z1 = 1.0, z2(0.0, 1.0);
 \noindent
 \textbf{初始化列表(initializer list)}
 
-A comma-separated list of expressions enclosed in braces used to initialize objects and references. Initializer lists are commonly used to initialize variables but also, for example, to initialize members and base classes in constructor definitions. This initialization may happen directly or via an intermediate std::initializer\_list object.
+用大括号括起来的以逗号分隔的表达式列表，用于初始化对象和引用。初始化列表通常用于初始化变量，也用于(例如)初始化构造函数定义中的成员和基类。初始化可以直接进行，也可以通过std::initializer\_list对象进行。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{类名称注入(injected class name)}
 
-The name of a class as visible in its own definition scope. For class templates, the name of the template is treated within the scope of the template as a class name if the name is not followed by a template argument list.
+类的称在它自己的定义范围内可见。对于类模板，如果模板名后面没有模板参数列表，则模板名在模板的作用域内作为类名。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{实例(instance)}
 
-The term instance has two meanings in C++ programming: The meaning that is taken from the object-oriented terminology is an instance of a class: an object that is the realization of a class. For example, in C++, std::cout is an instance of the class std::ostream. The other meaning (and the one that is almost always intended in this book) is a template instance: a class, a function, or a member function obtained by substituting all the template parameters by specific values. In this sense, an instance is also called a specialization, although the latter term is often mistaken for explicit specialization.
+实例一词在C++编程中有两层含义。源自面向对象术语的含义是类的实例:是类的实现的对象。例如，C++中std::cout是std::ostream类的一个实例。另一种含义是模板实例:通过用特定值替换所有模板参数获得的类、函数或成员函数。所以，实例也称为特化，尽管后一个术语经常误认为是显式特化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{实例化(instantiation)}
 
-The replacement of the template parameters in a template definition to create a concrete entity (function, class, variable, or alias). If only the declaration of a template but not its definition is substituted, the term partial template instantiation is sometimes used. See also substitution. The alternative sense of creating an instance (object) of a class is not used in this book (see instance).
+在模板定义中替换模板参数，以创建具体实体(函数、类、变量或别名)。如果只替换模板的声明而不替换模板的定义，则有时会使用术语“部分模板实例化”。参见替换。创建类的实例(对象)的另一种含义在本书中没有提及(参见instance)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{国际标准化组织(ISO)}
 
-Worldwide acronym for International Organization for Standardization. An ISO workgroup called WG21 is a driving force behind the efforts to standardize and develop C++.
+国际标准化组织的全球首字母缩写，名为WG21的ISO工作组是标准化和开发C++的幕后推手。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{迭代器(iterator)}
 
-An object that knows how to traverse a sequence of elements. Often, these elements belong to a collection (see collection class).
+了解如何遍历元素序列的对象，这些元素属于一个集合(参见集合类)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{可链接的对象(linkable entity)}
 
-Any of the following: a function or member function, a global variable or a static data member, including any such things generated from a template, as visible to the linker.
+以下任何一种:函数或成员函数、全局变量或静态数据成员，包括从模板生成的，并对链接器可见。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{连接器(linker)}
 
-A program or operating system service that links together compiled translation units and resolves references to linkable entities across those translation units.
+一种程序或操作系统服务，将已编译的翻译单元链接在一起，并跨翻译单元对可链接的实体进行引用和解析。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{左值(lvalue)}
 
-A category of expressions that produces a location for a stored value that is not assumed to be movable (i.e., glvalues that are no xvalues). Typical examples are expressions denoting named objects (variables or members) and string literals. See value category and Section B.1 on page 673.
+一种表达式的类别，为假定不可移动的存储值(即非xvalue的glvalues)产生一个位置。典型的例子是表示命名对象(变量或成员)和字符串字面符的表达式。参见的值类别章节和B.1节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{成员类模板(member class template)}
 
-A construct that represents a family of member classes. It is a class template declared inside another class or class template definition. It has its own set of template parameters (unlike a member class of a class template).
+一个表示成员类族的类型，在另一个类或类模板定义中声明的类模板。并有自己的一组模板参数(不像类模板的成员类)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{成员函数模板(member function template)}
 
-A construct that represents a family of member functions. It has its own set of template parameters (unlike a member function of a class template). It is very similar to a function template, but when all the template parameters are substituted, the result is a member function (instead of an ordinary function). Member function templates cannot be virtual.
+表示一组成员函数的构造，有自己的一组模板参数形参(与类模板的成员函数不同)。它非常类似于函数模板，但当替换所有模板参数时，结果是一个成员函数(而不是普通函数)。成员函数模板不能为虚模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{成员模板(member template)}
 
-A member class template, member function template, or static data member template.
+成员类模板、成员函数模板或静态数据成员模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{现代C++(Modern C++)}
 
-The phrase used in this book to refer to the language as standardized in C++11 or later (i.e., C++11, C++14, or C++17).
+本书中指的是C++11或更高版本(即C++11、C++14或C++17)的标准化语言。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{不相关名称(nondependent name)}
 
-A name that is not dependent on a template parameter. See dependent name and two-phase lookup.
+不依赖于模板参数的名称。参见依赖名称和两阶段查找。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{单一定义规则(ODR)}
 
-An acronym for one-definition rule. This rule places some restrictions on the definitions that appear in a C++ program. See Section 10.4 on page 154 and Appendix A for details.
+单一定义规则的首字母缩略词，该规则对C++程序中出现的定义施加了一些限制。详细信息请参见第10.4节和附录A。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{单一定义规则(one-definition rule)}
 
-See ODR.
+参见单一定义规则(ODR)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{重载解析(overload resolution)}
 
-The process that selects which function to call when several candidates (usually all having the same name) exist. See also Appendix C.
+当存在多个候选函数(通常都有相同的名称)时，描述了选择调用哪个函数的过程。参见附录C。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{参数(parameter)}
 
-A placeholder entity that is meant to be substituted with an actual “value” (an argument) at some point. For macro parameters and template parameters, the substitution occurs at compile time. For function call parameters, it happens at run time. In some programming communities, parameters are called formal parameters (whereas arguments are called actual parameters). See also argument and template argument.
+占位符实体，某些时候会使用实际“值”(参数)替换。对于宏参数和模板参数，替换发生在编译时。对于函数调用参数，发生在运行时。在一些编程社区中，参数会称为形式参数(而实参称为实际参数)。参见参数和模板参数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{参数化类(parameterized class)}
 
-A class template or a class nested in a class template. Both are parameterized because they do not correspond to a unique class until the template arguments have been specified.
+类模板或嵌套在类模板中的类。因为在指定模板参数之前，都不对应于唯一的类，所以这两个类都是参数化的。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{参数化函数(parameterized function)}
 
-A function or member function template or a member function of a class template. All are parameterized because they do not correspond to a unique function (or member function) until the template arguments have been specified.
+一个函数或成员函数模板或类模板的成员函数。因为在指定模板实参之前，并不对应于唯一的函数(或成员函数)，所以所有函数都是参数化的。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{偏特化(partial specialization)}
 
-A construct that declares or defines an alternative definition for certain substitutions of a template. The original (generic) template is called the primary template. The alternative definition still depends on template parameters. Currently, this construct exists only for class templates. See also explicit specialization.
+为模板的某些替换声明或定义替代定义的构造，原始(通用)模板称为主模板，另一种定义仍然依赖于模板参数。目前，这个构造只存在于类模板中。另请参见显式特化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{普通的旧数据(POD)}
 
-An acronym for “plain old data (type).” POD types are types that can be defined without certain C++ features (like virtual member functions, access keywords, and so forth). For example, every ordinary C struct is a POD.
+“普通旧数据(类型)”的缩写。POD类型可以在没有某些C++特性(如虚成员函数、访问关键字等)的情况下定义。例如，每个普通的C结构体都是一个POD。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{实例化点(POI)}
 
-An acronym for point of instantiation. A POI is a location in the source code where a template (or a member of a template) is conceptually expanded by substituting template parameters with template arguments. In practice, this expansion does not need to occur at every POI. See also explicit instantiation directive.
+实例化点的缩写。POI是源代码中的一个位置，模板(或模板的成员)在这里通过用模板参数替换模板参数，从而在概念上展开。实践中，这种扩展并不需要在每个POI中都发生。另请参见显式实例化指令。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{实例化点(point of instantiation)}
 
-See POI.
+参见实例化点(POI)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{策略类(policy class)}
 
-A class or class template the members of which describe configurable behavior for a generic component. Policies are normally passed as template arguments. For example, a sorting template may have an ordering policy. Policy classes are also called policy templates or just policies. See also traits template.
+类或类模板，其成员描述泛型组件的可配置行为。策略通常作为模板参数传递。例如，排序模板可能有一个排序策略。策略类也称为策略模板或策略。参见特性模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{多态性(polymorphism)}
 
-The ability of an operation (which is identified by its name) to apply to objects of different kinds. In C++, the traditional object-oriented concept of polymorphism (also called run-time or dynamic polymorphism) is achieved through virtual functions that are overridden in derived classes. In addition, C++ templates enable static polymorphism.
+操作(由其名称确定)应用于不同类型对象的能力。C++中，传统的面向对象的多态性概念(也称为运行时或动态多态性)是通过在派生类中重写的虚函数实现的。另外，C++模板也支持静态多态性。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{预编译头文件(precompiled header)}
 
-A processed form of source code that can quickly be loaded by the compiler. The source code underlying a precompiled header must be the first part of a translation unit (i.e., it cannot start somewhere in the middle of a translation unit). Often, a precompiled header corresponds to a number of header files. Using precompiled headers can substantially reduce the time needed to build a large application written in C++.
+编译器可以快速加载的一种经过处理的源代码形式。预编译头文件的源代码必须是翻译单元的第一部分(不能从翻译单元中间的某个地方开始)。通常，预编译头文件对应许多头文件。使用预编译头文件可以大大减少构建用C++编写的大型应用程序所需的时间。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{主模板(primary template)}
 
-A template that is not a partial specialization.
+非偏特化的模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{prvalue}
+\textbf{纯右值(prvalue)}
 
-A category of expressions that perform initializations. Prvalues can be assumed to designate pure mathematical value such as 1 or true and temporaries (especially values returned by value). Any rvalue before C++11 is a prvalue in C++11. See value category and Section B.2 on page 674.
+执行初始化的一类表达式。预值可以假定为指定纯数值，如1或true和临时值(特别是由值返回的值)。C++11前的右值在，C++11中都是纯右值。参见值类别和B.2节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{限定名(qualified name)}
 
-A name containing a scope qualifier (::).
+包含作用域限定符(::)的名称。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{引用计数(reference counting)}
 
-A resource management strategy that keeps count of how many entities are referring to a particular resource. When the count drops to zero, the resource can be disposed of.
+一种资源管理策略，记录有多少实体引用了特定的资源。当计数下降到0时，可以回收资源。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{右值(rvalue)}
 
-A category of expressions that are not lvalues. An rvalue can be a prvalue (such as a temporary) or an xvalue (e.g., an lvalue marked with std::move()). What was called a rvalue before C++11 is called a prvalue in C++11. See value category and Section B.2 on page 674.
+不是左值的一类表达式。右值可以是prvalue(例如临时值)或xvalue(例如，用std::move()标记的左值)。C++11之前的右值，C++11中为纯右值。参见674页的值类别和B.2节。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{替换失败不为过(SFINAE)}
 
-An acronym for substitution failure is not an error. A mechanism that silently discards templates instead of triggering compilation errors when attempting to substitute template arguments in invalid ways. Other templates in an overload set then get a chance to be selected if their substitution is successful.
+替换失败不为过的缩写。当以无效的方式替换模板参数时，一种静默丢弃模板的机制，而不是触发编译错误。如果替换成功，重载集中的其他模板就有机会选中。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{源文件(source file)}
 
-A header file or a CPP file.
+头文件或CPP文件。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{特化(specialization)}
 
-The result of substituting template parameters with actual values. A specialization may be created by an instantiation or by an explicit specialization. This term is sometimes mistakenly equated with explicit specialization. See also instance.
+用实际值替换模板参数的结果。特化可以通过实例化创建，也可以通过显式特化创建。这个术语有时会错误地等同于显式特化。参见实例。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{静态数据成员模板(static data member template)}
 
-A variable template that is a member of a class or class template.
+作为类或类模板成员的变量模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{替换(substitution)}
 
-The process of replacing template parameters in templated entities by actual types, values, or templates. The extent of the substitution depends on the context. During overload resolution, for example, only the minimum amount of substitution to establish the type of a candidate function is performed, and if that substitution leads to invalid constructs, the SFINAE rules apply. See also instantiation.
+将模板实体中的模板参数替换为实际类型、值或模板的过程。替换的程度取决于上下文。例如，在重载解析期间，只执行建立候选函数类型的最小替换，如果该替换导致无效构造，则应用SFINAE规则。参见实例化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板(template)}
 
-A construct that represents a family of types, functions, member functions, or variables. It specifies a pattern from which actual types, functions, member functions, or variables can be generated by substituting the template parameters by specific entities. In this book, the term does not include functions, classes, static data members, and type aliases that are parameterized only by virtue of being members of a class template. See alias template, variable template, class template, parameterized class, function template, and parameterized function.
+表示一系列类型、函数、成员函数或变量的方式，指定了一个模式，通过使用特定的实体替换模板参数，可以从该模式生成实际的类型、函数、成员函数或变量。本书中，这个术语不包括函数、类、静态数据成员和仅作为类模板成员而参数化的类型别名。请参见别名模板、变量模板、类模板、参数化类、函数模板和参数化函数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板参数(template argument)}
 
-The “value” substituted for a template parameter. This value is usually a type, although certain constant values and templates can be valid template arguments too. See also argument.
+替换模板参数的“值”。这个值通常是一个类型，某些常量值和模板也可以是有效的模板参数。参见参数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板参数推导(template argument deduction)}
 
-See deduction.
+参见推导(deduction)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板标识(template-id)}
 
-The combination of a template name followed by template arguments specified between angle brackets (e.g., std::list<int>).
+模板名后跟尖括号中指定的模板参数的组合(例如，std::list<int>)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板参数(template parameter)}
 
-A generic placeholder in a template. The most common kind of template parameter are type parameters, which represent types. Nontype parameters represent constant values of a certain type, and template template parameters represent type templates. See also parameter.
+模板中的通用占位符。最常见的模板参数是类型参数。非类型参数表示某一类型的常量值，模板模板参数表示类型模板。参见参数。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{模板化实体(templated entity)}
 
-A template or an entity defined or created in a template. The latter includes things like an ordinary member function of a class template or the closure type of a lambda expression appearing in a template.
+模板中定义或创建的模板或实体。后者包括类模板的普通成员函数或模板中出现的Lambda闭包类型。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{特征模板(traits template)}
 
-A class template with members that describe characteristics (traits) of the template arguments. Usually the purpose of traits templates is to avoid an excessive number of template parameters. See also policy class.
+一种类模板，其成员描述模板参数的特征。通常特征模板的目的是避免模板参数过多。请参见策略类。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{翻译单元(translation unit)}
 
-A CPP file with all the header files and standard library headers it includes using \#include directives, minus the program text that is excluded by conditional compilation directives such as \#if. For simplicity, it can also be thought of as the result of preprocessing a CPP file. See CPP file and header file.
+包含所有头文件和标准库头文件的CPP文件，使用\#include指令，减去条件编译指令(如\#if)排除的程序文本。简单起见，也可以认为是对CPP文件进行预处理的结果。参见CPP文件和头文件。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{真常量(true constant)}
 
-An expression whose value can be computed at compile time by the compiler. See constant-expression.
+编译器可以在编译时计算其值的表达式。参见常数表达式。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{元组(tuple)}
 
-A generalization of the C struct concept such that members can be accessed by number.
+C结构体概念的泛化，成员可以通过编号访问。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{两阶段查找(two-phase lookup)}
 
-The name lookup mechanism used for names in templates. The two phases are (1) the processing of the template definition, and (2) the instantiation of the template for specific template arguments. Nondependent names are looked up only in the first phase, nondependent base classes are not considered during that phase. Dependent names with a scope qualifier (::) are looked up only in the second phase. Dependent names without a scope qualifier may be looked up in both phases, but in the second phase, only argument-dependent lookup is performed.
+用于模板中名称的名称查找机制。这两个阶段是(1)处理模板定义，(2)为特定的模板参数实例化模板。非依赖名称只在第一阶段查找，在该阶段不考虑非依赖基类。具有作用域限定符(::)的相关名称只在第二阶段查找。在两个阶段中都可以查找没有作用域限定符的相关名称，但是在第二个阶段中，只执行与参数相关的查找。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{类型别名(type alias)}
 
-An alternative name for a type, introduced using a typedef declaration, an alias declaration, or the instantiation of an alias template.
+类型的另一种名称，使用typedef声明、别名声明或别名模板的实例化引入。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{类型模板(type template)}
 
-A class template, member class template, or alias template.
+类模板、成员类模板或别名模板。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{通用引用(universal reference)}
 
-One of two terms for rvalue references of the form T\&\& where T is a deducible template parameter. Special rules that differ from ordinary rvalue references apply (see Section 6.1 on page 91). The term was coined by Scott Meyers as a common term for both lvalue reference and rvalue reference. Because “universal” was, well, too universal, the C++17 standard introduced the term forwarding reference instead.
+T\&\&右值引用的两个术语之一，其中T是一个可演绎的模板参数。适用不同于普通右值引用的特殊规则(参见第6.1节)。这个术语是由Scott Meyers创造的，作为左值引用和右值引用的共同术语。因为“通用”太通用了，所以在C++17中引入了转发引用。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{用户定义的转换(user-defined conversion)}
 
-A type conversion defined by the programmer. It can be a constructor that can be called with one argument or a conversion function. Unless the constructor or conversion function is declared with the keyword explicit, the type conversion can occur implicitly.
+由开发者定义的类型转换，可以是用一个参数或转换函数调用的构造函数。除非构造函数或转换函数使用关键字explicit声明，否则可以隐式地进行类型转换。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{值类别(value category)}
 
-A classification of expressions. The traditional value categories lvalues and rvalues were inherited from C. C++11 introduced alternative categories: glvalues (generalized lvalues), whose evaluation identifies stored objects, and prvalues (pure rvalues), whose evaluation initialize objects. Additional categories subdivide glvalues into lvalues (localizable values) and xvalues (eXpiring values). In addition, in C++11 rvalues serve as a general category for both xvalues and prvalues (before C++11, rvalues were what prvalues are in C++11). See Appendix B for details.
+表达式的分类。传统的值类别左值和右值是从C继承而来的。C++11引入了替代类别:glvalue(广义左值)，其求值标识存储的对象，以及prvalue(纯右值)，其求值初始化对象。其他类别将glvalue细分为lvalue(可本地化值)和xvalue(过期值)。此外，在C++11中，右值作为xvalue和prvalue的一般类别(C++11之前，右值就是C++11中的prvalue)。详见附录B。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{变量模板(variable template)}
 
-A construct that represents a family of variables or static data members. It specifies a pattern from which actual variables and static data members can be generated by substituting the template parameters by specific entities.
+表示一组变量或静态数据成员的构造，指定了一种模式，通过使用特定的实体替换模板参数，可以从该模式生成实际变量和静态数据成员。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{空白(whitespace)}
 
-In C++, this is the space that delimits the tokens (identifiers, literals, symbols, and so on) in source code. Besides the traditional blank space, new line, and horizontal tabulation characters, this also includes comments. Other whitespace characters (e.g., the page feed control character) are sometimes also valid whitespace.
+C++中，这是在源代码中分隔标记(标识符、文字、符号等)的空格。除了传统的空格、新行和制表字符外，还包括注释。其他空白字符(例如，页面提要控制字符)有时也是有效的。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{xvalue}
+\textbf{过期值(xvalue)}
 
-A category of expressions that produce a location for a stored object that can be assumed to be no longer needed. A typical example is an lvalue marked with std::move(). See value category and Section B.2 on page 674.
+为存储的对象生成位置的一类表达式，该对象可以假定不再需要。一个典型的例子是用std::move()标记的左值。参见值类别和B.2节。
 
 
 

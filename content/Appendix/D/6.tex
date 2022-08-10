@@ -1,17 +1,17 @@
 
-In most contexts, multiple type trait predicates can be combined by using logical operators. However, in some contexts of template metaprogramming, this is not enough:
+大多数上下文中，可以使用逻辑操作符组合多个类型特征谓词。然而，模板元编程的上下文中，这并不够:
 
 \begin{itemize}
 \item 
-If you have to deal with traits that might fail (e.g., due to incomplete types).
+必须处理可能失败的特征(例如，不完整的类型)。
 
 \item 
-If you want to combine type trait definitions.
+组合类型特征定义。
 \end{itemize}
 
-The type traits std::conjunction<>, std::disjunction<>, and std::negation<> are provided for this purpose. 
+为此提供了类型特征std::conjunction<>， std::disjunction<>和std::negation<>。
 
-One example is that these helpers short-circuit Boolean evaluations (abort the evaluation after the first false for \&\& or first true for ||, respectively). For example, if incomplete types are used:
+这些辅助函数会短路布尔值的计算(分别在\&\&和||的第一个false后中止计算，或第一个true后中止计算)。例如，若使用不完整类型:
 
 \begin{lstlisting}[style=styleCXX]
 struct X {
@@ -20,7 +20,7 @@ struct X {
 struct Y; // incomplete type
 \end{lstlisting}
 
-the following code might not compile because is\_constructible results in undefined behavior for incomplete types (some compilers accept this code, though):
+因为is\_constructible会导致(不完整类型的)未定义行为(尽管有些编译器接受这段代码)，所以以下代码可能无法编译:
 
 \begin{lstlisting}[style=styleCXX]
 // undefined behavior:
@@ -29,7 +29,7 @@ static_assert(std::is_constructible<X,int>{}
 			"can’t init X or Y from int");
 \end{lstlisting}
 
-Instead, the following is guaranteed to compile, since the evaluation of is\_constructible<X,int> already yields true:
+因为is\_constructible<X，int>已经产生了true，所以以下语句保证可以编译:
 
 \begin{lstlisting}[style=styleCXX]
 // OK:
@@ -38,7 +38,7 @@ static_assert(std::disjunction<std::is_constructible<X, int>,
 			"can’t init X or Y from int");
 \end{lstlisting}
 
-The other application is an easy way to define new type traits by logically combining existing type traits. For example, you can easily define a trait that checks whether a type is “not a pointer” (neither a pointer, nor a member pointer, nor a null pointer):
+另一个是通过逻辑组合现有类型特征，来定义新类型特征的一种简单方法。例如，可以容易地定义一个特性来检查一个类型是否“不是指针”(既不是指针，也不是成员指针，也不是空指针):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -49,7 +49,7 @@ struct isNoPtrT : std::negation<std::disjunction<std::is_null_pointer<T>,
 };
 \end{lstlisting}
 
-Here we can’t use the logical operators, because we combine the corresponding trait classes. With this definition, the following is possible:
+因为结合了相应的特征类，所以这里不能使用逻辑操作符。根据这个定义，以下方式是可用的:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << isNoPtrT<void*>::value << ’\n’; // false
@@ -58,21 +58,21 @@ auto np = nullptr;
 std::cout << isNoPtrT<decltype(np)>::value << ’\n’; // false
 \end{lstlisting}
 
-And with a corresponding variable template:
+并配以相应的变量模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 constexpr bool isNoPtr = isNoPtrT<T>::value;
 \end{lstlisting}
 
-we can write:
+可以这样写:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << isNoPtr<void*> << ’\n’; // false
 std::cout << isNoPtr<int> << ’\n’; // true
 \end{lstlisting}
 
-As a last example, the following function template is only enabled if all its template arguments are neither classes not unions:
+最后一个例子，下面的函数模板只有在所有模板参数既不是类，也不是联合时才启用:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts>
@@ -85,56 +85,53 @@ print(Ts...)
 }
 \end{lstlisting}
 
-Note that the ellipsis is placed behind each negation so that it applies to each element of the parameter pack.
+注意，省略号放在std::negation后面，以便用于参数包的每个元素。
 
 \begin{table}[H]
 	\begin{center}
 	\begin{tabular}{l|l}
 		\hline
-		\textbf{Trait}                            & \textbf{Effect}                                   \\ \hline
-		conjunction\textless{}B... \textgreater{} & Logical and for Boolean traits B... (since C++17) \\ \hline
-		disjunction\textless{}B... \textgreater{} & Logical or for Boolean traits B... (since C++17)  \\ \hline
-		negation\textless{}B \textgreater{}       & Logical not for Boolean trait B (since C++17)     \\ \hline
+		\textbf{特性}                            & \textbf{作用}                                   \\ \hline
+		conjunction\textless{}B... \textgreater{} & 逻辑\textbf{和}布尔特征B…(C++17) \\ \hline
+		disjunction\textless{}B... \textgreater{} & 逻辑\textbf{或}布尔特征B…(C++17)  \\ \hline
+		negation\textless{}B \textgreater{}       & 逻辑\textbf{非}布尔特征B(C++17)     \\ \hline
 	\end{tabular}
 	\end{center}
 \end{table}
 
 \begin{center}
-Table D.8. Type Traits to Combine Other Type Traits
+表D.8. 组合其他类型特征
 \end{center}
 
-std::conjunction < B... >::value
+std::conjunction<B...>::value
 
-std::disjunction < B... >::value
+std::disjunction<B...>::value
 
 \begin{itemize}
 \item 
-Yields whether all or one of the passed Boolean traits B... yield(s) true.
+至传入的特性B...中少有一个或全部为布尔特征时，生成true
 
 \item 
-Logically applies operator \&\& or ||, respectively, to the passed traits.
+逻辑上分别对传入的特征使用操作符\&\&或||。
 
 \item 
-Both traits short-circuit (abort the evaluation after the first false or true). See the motivating example above.
+这两个特性都会短路(第一个false或true之后中止计算)。
 
 \item 
-Available since C++17.
+自C++17后可用
 \end{itemize}
 
-std::negation < B >::value
+std::negation<B>::value
 
 \begin{itemize}
 \item 
-Yields whether the passed Boolean trait B yields false.
+传入的B是布尔特征则生成false。
 
 \item 
-Logically applies operator ! to the passed trait.
+对传入的特性使用逻辑非运算符。
 
 \item 
-See the motivating example above.
-
-\item 
-Available since C++17.
+自C++17后可用
 \end{itemize}
 
 

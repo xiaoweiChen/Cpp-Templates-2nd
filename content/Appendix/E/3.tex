@@ -1,12 +1,12 @@
 
-Let’s assume for a moment that we have defined concepts IntegerLike<T> and StringLike<T>, and we decide to write templates to print out values of types of either concept. We could do that as follows:
+假设已经定义了概念IntegerLike<T>和StringLike<T>，并且决定编写模板来打印出这两个概念类型的值。可以这样做:
 
 \begin{lstlisting}[style=styleCXX]
 template<IntegerLike T> void print(T val); // #1
 template<StringLike T> void print(T val); // #2
 \end{lstlisting}
 
-If it weren’t for the differing constraints, these two declarations would declare the same template. However, the constraints are part of the template signature and allow the templates to be distinguishable during overload resolution. In particular, if both templates are found to be viable candidates, but only template \#1 has its constraints satisfied, then overload selects the satisfied template. For example, assuming int satisfies IntegerLike and std::string satisfies StringLike, but not vice versa:
+若没有不同的约束，这两个声明将声明相同的模板。但约束是模板签名的一部分，为了在重载解析期间区分模板。特别是，若发现两个模板都是可行的候选模板，但只有模板\#1满足其约束，那么重载会选择满足条件的模板。例如，假设int满足IntegerLike, std::string满足StringLike，但反之不行:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -16,26 +16,26 @@ int main()
 }
 \end{lstlisting}
 
-We could imagine a string-like type that supports integer-like computations. For example, if "6"\_NS and "7"\_NS are two literals for that type, multiplying those literals would produce the same value as "42"\_NS. Such a type might satisfy both IntegerLike and StringLike and, therefore, a call like print("42"\_NS) would be ambiguous.
+可以想象一个类似字符串的类型，支持类似整数的计算。若"6"\_NS和"7"\_NS是该类型的两个字面值，将这些字面值相乘将产生与"42"\_NS相同的值。这样的类型可能同时满足IntegerLike和StringLike，因此，像print("42"\_NS)这样的调用将有歧义。
 
 \subsubsubsection{E.3.1\hspace{0.2cm}约束类型}
 
-Our first discussion of overloading function templates distinguished by constraints involved constraints that are expected to generally be mutually exclusive. For example, in our example with IntegerLike and StringLike, we could envision types that satisfy both concepts, but we expect that to be rare enough that our overloaded print templates remain useful.
+第一次讨论重载函数模板时，所涉及的约束通常互斥。例如，在使用IntegerLike和StringLike的示例中，可以设想同时满足这两个概念的类型，但希望这种情况比较罕见，以便重载打印模板仍然可用。
 
-There are, however, sets of concepts that are never mutually exclusive but where one “subsumes” the other. The classical examples of this are the standard library iterator categories: input iterator, forward iterator, bidirectional iterator, random access iterator, and, in C++17, contiguous iterator.
+然而，有些概念从来不相互排斥，而是“包容”的。经典的例子是标准库的迭代器类别:输入迭代器、前向迭代器、双向迭代器、随机访问迭代器，以及C++17中的连续迭代器。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}Contiguous iterators are a refinement of random access iterators introduced in C++17. No std::contiguous\_iterator\_tag was added for them because existing algorithms that rely on std::random\_access\_iterator\_tag would no longer be selected if the tag were changed.
+\hspace*{0.75cm}连续迭代器是C++17中引入的随机访问迭代器改进版。如果标签被更改，因为依赖于std::random\_access\_iterator\_tag的现有算法将不再选择，所以没有为它们添加std::continuous\_iterator\_tag。
 \end{tcolorbox}
 
-Suppose we have a definition for ForwardIterator:
+假设这里有一个ForwardIterator的定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 	concept ForwardIterator = ...;
 \end{lstlisting}
 
-Then the “more refined” concept BidirectionalIterator might be defined as follows:
+那么“更精细的”概念BidirectionalIterator可以这样定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -46,9 +46,9 @@ template<typename T>
 		};
 \end{lstlisting}
 
-That is, we add the ability to apply prefix operator-- on top of the capabilities already provided by forward iterators.
+在前向迭代器已经提供的功能基础上，添加加了前缀减法操作符的功能。
 
-Consider now the std::advance() algorithm (which we’ll call advanceIter()), overloaded for forward and bidirectional iterators using constrained templates:
+考虑std::advance()算法(我们将称之为advanceIter())，重载了使用受限模板的前向和双向迭代器:
 
 \begin{lstlisting}[style=styleCXX]
 template<ForwardIterator T, typename D>
@@ -69,20 +69,17 @@ void advanceIter(T& it, D n)
 }
 \end{lstlisting}
 
-When calling advanceIter() with a plain forward iterator (i.e., one that is not a bidirectional iterator), only the constraints of the first template will be satisfied, and overload resolution is straightforward: The first template is selected. However, a bidirectional iterator will satisfy the constraints of both templates. In cases like that, when overload resolution does not otherwise prefer one candidate over another, it will prefer the candidate whose constraints subsume the constraints of the other candidate, while the reverse is not true. The exact definition of subsumption is a little beyond this introductory appendix, but suffice it to know that if a constraint C2<Ts...> is defined by requiring a constraint C1<Ts...> and additional constraints (i.e., \&\&), then the former subsumes the latter.
+当使用普通的前向迭代器(即非双向迭代器)调用advanceIter()时，只有第一个模板的约束条件满足，重载解析很简单:选择第一个模板。然而，双向迭代器将满足两个模板的约束条件。这种情况下，当重载解析在其他方面并不偏好某个候选时，将偏好其约束包含其他候选约束的候选，而反之则不成立。包容的确切定义超出了这个介绍性附录的范畴，但只要知道约束C2<Ts...>定义为要求约束C1<Ts...>和其他约束(即\&\&)，则前者包含后者，即可。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}The specification being proposed for standardization is a little more powerful than this. It breaks down constraints into sets of “atomic components” (including the parts of requires expressions) and analyzes those sets to see if one is clearly a strict subset of the other.
+\hspace*{0.75cm}用于标准化的规范比这更强大。其将约束分解为“原子组件”的集合(包括require表达式的部分)，并分析这些集合，看看其中一个是否是另一个的严格子集。
 \end{tcolorbox}
 
-Clearly, in our example, BidirectionalIterator<T> subsumes ForwardIterator<T>, and hence the second advanceIter() template is preferred when called with a bidirectional iterator.
-
-
+我们的示例中，BidirectionalIterator<T>包含ForwardIterator<T>，因此使用双向迭代器调用时，首选第二个advanceIter()模板。
 
 \subsubsubsection{E.3.2\hspace{0.2cm}约束和标签调度}
 
-
-Recall that in Section 20.2 on page 467, we addressed the issue of overloading the advanceIter() algorithm using tag dispatching. That method can be integrated in constrained templates in a fairly elegant way. For example, input iterators and forward iterators are not distinguishable through their syntactic interfaces. So instead, we can reach to tags to define one in terms of the other:
+第20.2节中，讨论了使用标记调度重载advanceIter()算法的问题。该方法以一种相当优雅的方式集成到受限模板中。例如，输入迭代器和前向迭代器不能通过语法接口加以区分。所以，可以使用标签来定义其中之一:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -95,7 +92,7 @@ requires {
 };
 \end{lstlisting}
 
-With that, ForwardIterator<T> subsumes InputIterator<T>, and we can now overload templates constrained for both iterator categories.
+这样，ForwardIterator<T>包含了InputIterator<T>，现在可以重载两个迭代器类别的约束模板。
 
 
 

@@ -62,28 +62,29 @@ std::common\_type<T...>::type
 
 \begin{itemize}
 \item
-Yields the “common type” of the given types T1, T2, ..., Tn.
+生成给定T1, T2, ..., Tn类型的“共同类型”。
 
 \item
-The computation of a common type is a little more complex than we want to cover in this appendix. Roughly speaking, the common type of two types U and V is the type produced by the conditional operator ?: when its second and third operands are of those types U and V (with reference types used only to determine the value category of the two operands); there is no common type if that is invalid. decay\_t (see page 731) is applied to this result. This default computation may be overridden by user specialization of std::common\_type<U, V> (in the C++ standard library, partial specialization exists for durations and time points).
+普通类型的计算比本附录中讨论的要复杂一些。粗略地说，当第二个和第三个操作数是U和V类型时(引用类型仅用于确定两个操作数的值类别)，U和V两种类型是条件三元操作符产生的类型;如果该类型无效，则没有共同类型。decay\_t应用于此结果。这个计算可以通过特化重写为std::common\_type<U, V>(C++标准库中，偏特化存在于持续时间和时间点)。
 
 \item
-If no type is given or no common type exists, there is no type member defined, so that using it is an error (which might SFINAE out a function template using it).
+若没有给出类型或没有公共类型存在，则没有定义类型成员，因此使用会出错(可能会导致SFINAE输出使用它的函数模板)。
 
 \item
-If a single type is given, the result is the application of decay\_t to that type.
+如果给出单类型，结果是对该类型为decay\_t。
 
 \item
-For more than two types, common\_type recursively replaces the first two types T1 and T2 by their common type. If at any time that process fails, there is no common type.
+对于两个以上的类型，common\_type递归地用公共类型替换前两个类型T1和T2。若该进程失败，则没有通用类型。
 
 \item
-While processing the common type, the passed types are decays, so that the trait always yields a decayed type (see Section D.4 on page 731).
+处理普通类型时，传递的类型是衰变类型，因此特性总是产生衰变类型(参见D.4节)。
 
 \item
-See Section 1.3.3 on page 12 for a discussion and example of the application of this trait.
+参见第1.3.3节对该特性应用的讨论和示例。
 
 \item
-The core of the primary template of this trait is usually implemented by something like the following (here using only two parameters):
+这个特性的主模板通常是通过以下方式实现的(这里只使用两个参数):
+
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
 struct common_type<T1,T2> {
@@ -93,28 +94,28 @@ struct common_type<T1,T2> {
 \end{lstlisting}
 \end{itemize}
 
-std::aligned\_union < MIN\_SZ, T... >::type
+std::aligned\_union<MIN\_SZ, T...>::type
 
 \begin{itemize}
 \item
-Yields a plain old datatype (POD) usable as uninitialized storage that has a size of at least MIN\_SZ and is suitable to hold any of the given types T1, T2, ..., Tn.
+生成一个普通的旧数据类型(POD)可用作未初始化存储，大小至少为MIN\_SZ，适合保存给定的类型T1, T2，…Tn。
 
 \item
-In addition, it yields a static member alignment\_value whose value is the strictest alignment of all the given types, which for the result type is equivalent to
+此外，还可以生成一个静态成员alignment\_value，其值表示所有给定类型中需要严格对齐于该值，对于结果类型来说等价于
 
 \begin{itemize}
 \item[-]
-std::alignment\_of\_v<type>::value (see Section D.3.1 on page 715)
+std::alignment\_of\_v<type>::value (详见D.3.)
 
 \item[-]
 alignof(type)
 \end{itemize}
 
 \item
-Requires that at least one type is provided.
+要求至少提供一种类型。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 using POD_T = std::aligned_union_t<0, char,
 								std::pair<std::string,std::string>>;
@@ -125,22 +126,22 @@ std::cout << std::aligned_union<0, char,
 		<< ’\n’;
 \end{lstlisting}
 
-Note the use of aligned\_union instead of aligned\_union\_t to get the value for the alignment instead of the type.
+注意使用aligned\_union来获取对齐值，而不是使用aligned\_union\_t获取类型。
 \end{itemize}
 
-std::aligned\_storage < MAX\_TYPE\_SZ >::type
+std::aligned\_storage<MAX\_TYPE\_SZ>::type
 
-std::aligned\_storage < MAX\_TYPE\_SZ, DEF\_ALIGN >::type
+std::aligned\_storage<MAX\_TYPE\_SZ, DEF\_ALIGN>::type
 
 \begin{itemize}
 \item
-Yields a plain old data type (POD) usable as uninitialized storage that has a size to hold all possible types with a size up to MAX\_TYPE\_SZ, taking the default alignment or the alignment passed as DEF\_ALIGN into account.
+生成一个普通的旧数据类型(POD)可用作未初始化的存储，其大小可容纳所有可能的类型，其大小最大为MAX\_TYPE\_SZ，并需要考虑到默认对齐或传递DEF\_ALIGN的对齐情况。
 
 \item
-Requires that MAX\_TYPE\_SZ is greater than zero and the platform has at least one type with the alignment value DEF\_ALIGN.
+要求MAX\_TYPE\_SZ大于0，平台至少要有一种对齐值为DEF\_ALIGN的类型。
 
 \item
-For example:
+例如:
 \begin{lstlisting}[style=styleCXX]
 using POD_T = std::aligned_storage_t<5>;
 \end{lstlisting}

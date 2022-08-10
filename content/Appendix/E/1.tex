@@ -1,11 +1,11 @@
 
-Let’s first examine how to use concepts in client code (i.e., the code that defines templates without necessarily defining the concepts that apply to the template parameters).
+首先研究一下如何在用户代码中使用概念(即，定义模板的代码不必定义应用于模板参数的概念)。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Dealing with Requirements}
+\textbf{处理需求}
 
-Here is our habitual two-parameter max() template equipped with a constraint:
+下面是我们的双参数max()模板，它带有一个约束条件:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> requires LessThanComparable<T>
@@ -14,19 +14,19 @@ T max(T a, T b) {
 }
 \end{lstlisting}
 
-The only addition is the requires clause
+增加了一条requires子句
 
 \begin{lstlisting}[style=styleCXX]
 requires LessThanComparable<T>
 \end{lstlisting}
 
-which assumes that we have previously declared—most likely through a header inclusion—the concept LessThanComparable.
+它假设之前已经声明了——很可能是通过头文件包含——LessThanComparable的概念。
 
-Such a concept is a Boolean predicate (i.e., an expression producing a value of type bool) that evaluates to a constant-expression. That is important because the constraints are evaluated at compile time and therefore produce no overhead in terms of the generated code: This constrained template will produce code that is just as fast as the unconstrained versions we have discussed elsewhere.
+这样的概念是布尔谓词(即产生bool类型值的表达式)，其计算结果为常量表达式。因为约束是在编译时计算的，因此就生成的代码而言，不会产生多余的开销:这个受约束的模板生成的代码，与我们在其他地方讨论的不受约束的版本性能一样好。
 
-When we attempt to use this template, it will not be instantiated until the requires clause has been evaluated and found to produce a true value. If it produces a false value, an error might be emitted explaining which part of the requirement failed (or, a matching overloaded template that doesn’t fail the requirements might be selected).
+当尝试使用该模板时，其不会实例化，直到对requires子句进行了计算，并生成了true。若产生的是false，则可能会产生一个错误，解释需求的哪一部分失败了(或者，可能会选择一个匹配的重载模板，但是没有满足需求)。
 
-Requires clauses do not have to be expressed in terms of concepts (although doing so is good practice and tends to produce better diagnostics): Any Boolean constant-expression can be used. For example, as discussed in Section 6.5 on page 103, the following code ensures that a template constructor can’t be used as copy constructor:
+require子句不必用概念来表示(这样做是很好的实践，会产生更好的诊断信息):可以使用布尔常量表达式。如6.5节所讨论的，下面的代码确保模板构造函数不能用作复制构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 class Person
@@ -44,19 +44,19 @@ class Person
 };
 \end{lstlisting}
 
-Here, not using a named concept (see Section E.2 on page 742) can be appropriate, because the ad hoc Boolean expression (using a type trait in this case)
+因为特别的布尔表达式(在这种情况下使用类型特征)，所以这里不使用命名概念(参见第E.2节)可能合理
 
 \begin{lstlisting}[style=styleCXX]
 std::is_convertible_v<STR,std::string>
 \end{lstlisting}
 
-is used to fix the problem that a template constructor might be used instead of a copy constructor. Details of how to organize concepts and constraints are still an active field of exploration by the C++ community, and will likely evolve over time, but there seems to be general agreement that concepts should reflect what code means and not whether it compiles.
+用于修复可能使用模板构造函数，而不是复制构造函数的问题。如何组织概念和约束的细节仍然是C++社区探索的领域，并且可能会随着时间的推移而演变，但似乎有一个共识，即概念应该反映代码的含义，而不是它是否可以编译。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Dealing with Multiple Requirements}
+\textbf{处理多种需求}
 
-In the example above, there is only one requirement, but it’s not uncommon to have multiple requirements. For example, one might imagine a Sequence concept that describes a sequence of element values (matching the same notion in the standard) and a template find() that, given a sequence and a value, returns an iterator referring to the first occurrence of the value in that sequence (if any). That template might be defined as follows:
+上例中，只有一个需求，但是有多个需求的情况并不少见。可以想象一个描述元素值序列的Sequence概念(与标准中相同的概念相匹配)和一个模板find()，给定一个序列和一个值，返回一个指向该序列中第一个出现的值的迭代器(如果有的话)。该模板可以定义如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Seq>
@@ -69,9 +69,9 @@ template<typename Seq>
 }
 \end{lstlisting}
 
-Here, any call to this template will first check each requirement in turn and only if all requirements produce true values can the template be selected for the call and be instantiated (provided, of course, overload resolution does not discard the template for other reasons, such as another template being a better match).
+对该模板的调用都将首先依次检查每个需求，并且只有当所有需求产生true时，才能为调用选择模板，并实例化模板(当然，若重载解析不会因为其他原因丢弃模板)。
 
-It is also possible to express “alternative” requirements using ||. This is rarely needed and should not be done too casually because excessive use of the || operator in requires clauses may potentially tax compilation resources (i.e., make compilation noticeably slower). However, it can be quite convenient in some situations. For example:
+也可以使用||来表达“替代”需求。很少需要这样做，因为在require子句中过度使用||操作符可能会占用编译资源(使编译速度明显变慢)。然而，在某些情况下，这会非常方便。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -80,7 +80,7 @@ template<typename T>
 T power(T b, T p);
 \end{lstlisting}
 
-A single requirement can also involve multiple template parameters, and a single concept can express a predicate over multiple template parameters. For example:
+单需求也可以涉及多个模板参数，而单概念可以表达多个模板参数上的谓词。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename U>
@@ -88,13 +88,13 @@ template<typename T, typename U>
 auto f(T x, U y) -> decltype(x+y)
 \end{lstlisting}
 
-Thus, concepts can impose a relationship between type parameters.
+因此，概念可以在类型参数之间建立关系。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{Shorthand Notation for Single Requirements}
+\textbf{单个需求的快捷方式}
 
-To lighten the notational overhead of requires clauses, a syntactic shortcut is available when a constraint only involves one parameter at a time. This is perhaps most easily illustrated by using the shorthand for the declaration of our constrained max() template above:
+为了减少require子句的符号开销，当约束只涉及一个参数时，可以使用一种语法快捷方式。可以通过使用上面max()模板声明的简写:
 
 \begin{lstlisting}[style=styleCXX]
 template<LessThanComparable T>
@@ -103,9 +103,9 @@ T max(T a, T b) {
 }
 \end{lstlisting}
 
-This is functionally equivalent to the prior definition of max(). When redeclaring a constrained template, however, the same form must be used as the original declaration (in that sense it is functionally equivalent, but not equivalent).
+功能上等价于前面的max()定义。然而，当重新声明一个受约束的模板时，必须使用与原始声明的形式相同(从这个意义上说，它们只在功能上等价)。
 
-We can use the same shorthand for one of the two requirements in the find() template:
+可以在find()模板中对这两个需求之一使用相同的简写方式:
 
 \begin{lstlisting}[style=styleCXX]
 template<Sequence Seq>
@@ -117,7 +117,7 @@ typename Seq::iterator find(Seq const& seq,
 }
 \end{lstlisting}
 
-Again, this is equivalent to the prior definition of the find() template for sequence types.
+同样，这等价于前面为序列类型定义的find()模板。
 
 
 

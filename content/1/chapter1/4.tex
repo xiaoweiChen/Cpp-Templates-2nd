@@ -1,17 +1,18 @@
-还可以为模板参数定义默认值。这些值被称为默认模板参数，可以用于任何类型的模板。
+还可以为模板参数定义默认值。这些值称为默认模板参数，可以用于任何类型的模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}在C++11之前，因为历史原因，默认模板参数只允许在类模板中使用。
+\hspace*{0.75cm}C++11前，因为历史原因，默认模板参数只允许在类模板中使用。
 \end{tcolorbox}
 
 甚至可能引用前面的模板参数。
 
-例如，如果希望定义返回类型的方法与具有多个参数类型的能力结合起来(如前一节所述)，那么可以为返回类型引入一个模板参数RT，将两个参数的公共类型作为默认类型。同样，有多种选择:
+若希望定义返回类型的方法与具有多个参数类型的能力结合起来(如前一节所述)，那么可以为返回类型引入模板参数RT，将两个参数的公共类型作为默认类型。同样，有多种选择:
 
 \begin{enumerate}
 \item 
 可以直接使用三元操作符。但在使用三元操作符之前，只能使用参数的类型:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/maxdefault1.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -28,7 +29,7 @@ RT max (T1 a, T2 b)
 注意std::decay\_t<>的用法以确保返回的不是引用类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}同样，在C++11中，必须使用typename std::decay<…>::type，而非std::decay\_t<…>(见第2.8节)。
+\hspace*{0.75cm}C++11中，必须使用typename std::decay<…>::type，而非std::decay\_t<…>(见第2.8节)。
 \end{tcolorbox}
 
 此实现要求能够为传递的类型调用默认构造函数。还有另一种解决方案，使用std::declval，但是这会使声明更加复杂。参见第11.2.3节中的示例。
@@ -36,6 +37,7 @@ RT max (T1 a, T2 b)
 \item
 也可以使用std::common\_type<>来指定返回类型的默认值:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/maxdefault3.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -58,13 +60,13 @@ RT max (T1 a, T2 b)
 auto a = ::max(4, 7.2);
 \end{lstlisting}
 
-或者显式地在所有其他参数类型之后指定返回的类型:
+或者显式地指定返回的类型:
 
 \begin{lstlisting}[style=styleCXX]
 auto b = ::max<double,int,long double>(7.2, 4);
 \end{lstlisting}
 
-不过，必须指定三种类型才能只指定返回类型。所以，我们需要将返回类型作为第一个模板参数，这样就可以对其类型进行推断。原则上，即使后面没有默认参数，导函数模板参数也可以有默认的类型:
+不过，必须指定三种类型才能只指定返回类型。所以，需要将返回类型作为第一个模板参数，这样就可以对其类型进行推导。原则上，即使后面没有默认参数，推导的函数模板参数也可以有默认的类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename RT = long, typename T1, typename T2>
@@ -74,7 +76,7 @@ RT max (T1 a, T2 b)
 }
 \end{lstlisting}
 
-通过定义，你这样使用:
+通过定义，可以这样使用:
 
 \begin{lstlisting}[style=styleCXX]
 int i;
@@ -84,6 +86,6 @@ max(i, l); // 返回long(返回类型的模板默认类型)
 max<int>(4, 42); // 显式返回int
 \end{lstlisting}
 
-但这种方法只有在模板参数有默认值的情况下才有意义。这里，需要模板参数的默认值依赖于之前的模板参数。原则上，这是可能的，在26.5.1节中会进行讨论，但是这种技术依赖于类型特征，并会使定义复杂化。
+但这种方法只有在模板参数有默认值的情况下才有意义。这里，需要模板参数的默认值依赖于之前的模板参数。原理上这可能可行(在26.5.1节中会进行讨论)，但是这种技术依赖于类型特征，并会使定义复杂化。
 
 由于所有这些原因，最好和最简单的解决方案是让编译器推导出第1.3.2节中提出的返回类型。

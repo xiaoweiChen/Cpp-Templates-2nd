@@ -138,7 +138,7 @@ Variant<Types...>::visit(Visitor&& vis) && {
 
 实现直接委托给variantVisitImpl，传递Variant本身，转发访问器，并提供完整的类型列表。这三种实现之间唯一的区别是，它们是否将Variant本身作为Variant\&、Variant const\&或Variant\&\&进行传递。
 
-\subsubsubsection{26.5.1\hspace{0.2cm}访问结果类型}
+\subsubsubsection{26.5.1\hspace{0.2cm}结果类型}
 
 visit()的结果类型仍然是一个谜。给定的访问器可能具有不同的函数操作符重载，以产生不同的结果类型，结果类型依赖于其形参类型的模板函数操作符，或者某种组合。看看下面的泛型Lambda:
 

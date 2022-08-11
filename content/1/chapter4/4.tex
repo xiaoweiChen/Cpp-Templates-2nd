@@ -1,7 +1,7 @@
 
 参数包还可以出现在其他地方，例如表达式、类模板、using声明，甚至推导策略。第12.4.2节有一个完整的列表。
 
-\subsubsubsection{4.4.1\hspace{0.2cm}可变参的表达式}
+\subsubsubsection{4.4.1\hspace{0.2cm}表达式}
 
 不仅仅是转发所有参数，可以使用它们进行计算。也就是，可以使用参数包中的参数进行计算。
 
@@ -71,7 +71,7 @@ isHomogeneous("hello", " ", "world", "!")
 
 会产生true，因为传递的参数都推导为char const*(因为调用参数按值传递，所以参数类型衰变)。
 
-\subsubsubsection{4.4.2\hspace{0.2cm}可变参的索引}
+\subsubsubsection{4.4.2\hspace{0.2cm}索引}
 
 下面的函数使用可变索引列表来访问传递给第一个参数的对应元素:
 
@@ -115,7 +115,7 @@ printIdx<2,0,3>(coll);
 
 这与前面的例子有相同的效果。
 
-\subsubsubsection{4.4.3\hspace{0.2cm}可变参的类模板}
+\subsubsubsection{4.4.3\hspace{0.2cm}类模板}
 
 可变参数模板也可以是类模板，其中任意数量的模板参数指定了相应成员的类型:
 
@@ -174,7 +174,7 @@ printByIdx(t, Indices<0, 1, 2>());
 
 这只元编程的开始，会在第8.1节和第23章中讨论。
 
-\subsubsubsection{4.4.4\hspace{0.2cm}可变参的推导策略}
+\subsubsubsection{4.4.4\hspace{0.2cm}推导策略}
 
 推导策略(参见第2.9节)也可以是可变参的。例如，C++标准库定义了以下std::arrays的推导策略:
 
@@ -206,7 +206,7 @@ is_same_v<T, U1> && is_same_v<T, U2> && is_same_v<T, U3> ...
 
 如果结果不为true(即并非所有元素类型都相同)，则丢弃推导策略，整体推导失败。标准库确保所有元素具有相同的类型时，推导策略才能成功执行。
 
-\subsubsubsection{4.4.5\hspace{0.2cm}可变参基类和using}
+\subsubsubsection{4.4.5\hspace{0.2cm}基类和using}
 
 看看下面的例子:
 

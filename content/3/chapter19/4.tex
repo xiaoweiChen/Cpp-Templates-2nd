@@ -3,7 +3,7 @@ SFINAE原则(替换失败不为过;参见第8.4节和第15.7节)将模板参数�
 
 实现基于SFINAE特性的两种主要方法是SFINAE排除函数重载和SFINAE排除偏特化。
 
-\subsubsubsection{19.4.1\hspace{0.2cm}SFINAE去除函数重载}
+\subsubsubsection{19.4.1\hspace{0.2cm}去除函数重载}
 
 对基于SFINAE的特征的第一次尝试说明，使用带有函数重载的SFINAE来确定类型是否默认可构造的基本技术，这样就可以创建不需要初始化值的对象。对于给定的类型T，像T()这样的表达式必须有效。
 
@@ -201,7 +201,7 @@ struct IsDefaultConstructibleT : IsDefaultConstructibleHelper<T>::Type {
 
 若第一个test()函数模板无效，会因为SFINAE而禁用，IsDefaultConstructibleHelper::Type由test()回退的返回类型初始化，也就是std::false\_type。结果，IsConvertibleT<…>派生自std::false\_type。
 
-\subsubsubsection{19.4.2\hspace{0.2cm}SFINAE去除偏特化}
+\subsubsubsection{19.4.2\hspace{0.2cm}去除偏特化}
 
 实现基于SFINAE的特征的第二种方法使用偏特化。同样，可以使用这个例子来找出T类型是否默认可构造:
 
@@ -266,7 +266,7 @@ C++14开始，C++标准化委员会建议编译器和标准库通过定义一致
 
 显然，这种定义类型特征的方法看起来比重载函数模板的第一种方法更简洁，但需要在模板参数声明中明确条件的能力。使用带有函数重载的类模板，使我们能够使用助手函数或类型。
 
-\subsubsubsection{19.4.3\hspace{0.2cm}SFINAE使用Lambda}
+\subsubsubsection{19.4.3\hspace{0.2cm}使用Lambda}
 
 无论使用哪种技术，总是需要一些样板代码来定义特征:重载和调用两个test()成员函数或实现多个偏特化。接下来，将展示在C++17中如何通过在泛型Lambda中指定要检查的条件，来最小化这个样板代码。
 

@@ -1,7 +1,7 @@
 
 基于SFINAE的特征的另一个尝试涉及创建一个特征(或者更确切地说，一组特征)，可以确定给定的类型T是否具有给定名称X的成员(类型成员还是非类型成员)。
 
-\subsubsubsection{19.6.1\hspace{0.2cm}检测成员类型}
+\subsubsubsection{19.6.1\hspace{0.2cm}检查成员类型}
 
 首先定义一个特征，可以确定给定类型T是否有成员类型size\_type:
 
@@ -99,7 +99,7 @@ static_assert(HasSizeTypeT<Sizeable>::value,
 
 因为size\_type引入自己的名称作为成员类型，并且继承该名称，所以后一个静态断言成功。如果没有成功，这就是编译器的一个缺陷。
 
-\subsubsubsection{19.6.2\hspace{0.2cm}检测成员类型}
+\subsubsubsection{19.6.2\hspace{0.2cm}检查成员类型}
 
 定义像HasSizeTypeT这样的特征会引发一个问题，即如何将特征参数化，以便能够检查成员类型名。
 
@@ -154,7 +154,7 @@ int main()
 }
 \end{lstlisting}
 
-\subsubsubsection{19.6.3\hspace{0.2cm}检测非类型成员}
+\subsubsubsection{19.6.3\hspace{0.2cm}检查非类型成员}
 
 可以修改特征来检查数据成员和(单个)成员函数:
 
@@ -219,7 +219,7 @@ int main()
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{检测成员函数}
+\textbf{检查成员函数}
 
 注意，HasMember特征只检查是否存在一个具有相应名称的成员。如果存在两个成员，特征也会失败，如果检查重载的成员函数，就可能发生这种情况。例如:
 
@@ -265,7 +265,7 @@ decltype(std::declval<T>().begin())
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{检测其他表达式}
+\textbf{检查其他表达式}
 
 可以将上述技术用于其他类型的表达式，甚至组合多个表达式。例如，可以测试给定类型T1和T2，是否为这些类型的值定义了小于操作符:
 
@@ -352,7 +352,7 @@ struct HasVariousT<T, std::void_t<decltype(std::declval<T>().begin()),
 
 检测特定语法有效性的特性非常强大，允许模板根据特定操作的存在或不存在来定制行为。这些特征将再次作为SFINAE友好特征的一部分(第19.4.4节)和协助基于类型属性的重载(第20章)。
 
-\subsubsubsection{19.6.4\hspace{0.2cm}使用泛型Lambda检测成员}
+\subsubsubsection{19.6.4\hspace{0.2cm}使用泛型Lambda检查成员}
 
 在第19.4.3节中介绍的isValid Lambda提供了一种更紧凑的技术来检查成员的特征，有助于避免使用宏来处理成员名称。
 

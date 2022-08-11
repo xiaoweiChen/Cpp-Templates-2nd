@@ -39,7 +39,7 @@ C++标准库定义了几个类似的特征，以确定类型的主要类型和�
 
 参见第D.2.1节和第D.2.2节的详细信息。
 
-\subsubsubsection{19.8.1\hspace{0.2cm}确定基本类型}
+\subsubsubsection{19.8.1\hspace{0.2cm}基本类型}
 
 首先，开发一个模板来确定一个类型是否是基本类型。默认情况下，假设一个类型不是基本类型，我们专门化了基础模板:
 
@@ -148,7 +148,7 @@ T is not a fundamental type
 
 C++标准库使用了比只检查类型是否是基本类型更细粒度的方法。首先定义了主要类型类别，其中每个类型精确匹配一个类型类别(参见第的D.2.1节)，然后是复合类型类别，如std::is\_integral或std::is\_fundamental(参见第706页的D.2.2节)。
 
-\subsubsubsection{19.8.2\hspace{0.2cm}确定复合类型}
+\subsubsubsection{19.8.2\hspace{0.2cm}复合类型}
 
 复合类型是由其他类型构造而成的类型。简单复合类型包括指针类型、左值和右值引用类型、成员指针类型和数组类型，由一个或两个基础类型构造而成。类类型和函数类型也是复合类型，但组合可能涉及任意数量的类型(用于参数或成员)。枚举类型在此分类中也被视为非简单复合类型，尽管它们不是多种基础类型的复合类型。可以使用偏特化对简单的复合类型进行分类。
 
@@ -293,7 +293,7 @@ struct IsPointerToMemberT<T C::*> : std::true_type { // partial specialization
 
 C++标准库提供了更具体的特征，std::is\_member\_object\_pointer<>和std::is\_member\_function\_pointer<>，在第D.2.1节中描述，以及std::is\_member\_pointer<>，在第D.2.2节中描述。
 
-\subsubsubsection{19.8.3\hspace{0.2cm}确定函数类型}
+\subsubsubsection{19.8.3\hspace{0.2cm}函数类型}
 
 函数类型很有趣，除了结果类型之外，还有任意数量的参数。因此，匹配函数类型的偏特化中，使用一个参数包来捕获所有的参数类型:
 
@@ -384,7 +384,7 @@ struct IsFunctionT<R (Params..., ...) const&> : std::true_type {
 
 C++标准库提供特征std::is\_function<>，将在第D.2.1节中描述。
 
-\subsubsubsection{19.8.4\hspace{0.2cm}确定类类型}
+\subsubsubsection{19.8.4\hspace{0.2cm}类类型}
 
 与其他复合类型不同，我们没有专门匹配类类型的偏特化模式。也不可能像基本类型那样枚举所有类类型。不过，我们需要使用间接方法来标识类类型，方法是提出对所有类类型(而不是其他类型)有效的某种类型或表达式。对于这种类型或表达，可以应用于第19.4节中的SFINAE。
 
@@ -421,7 +421,7 @@ C++标准库提供了特征std::is\_class<>和std::is\_union<>，在第D.2.1节�
 \hspace*{0.75cm}大多数编译器支持像\_\_is\_union这样的内在操作符，以帮助标准库实现各种特征模板。甚至对于一些可以使用本章中的技术实现的特性也是如此，因为这些特性可以提高编译性能。
 \end{tcolorbox}
 
-\subsubsubsection{19.8.5\hspace{0.2cm}确定枚举类型}
+\subsubsubsection{19.8.5\hspace{0.2cm}枚举类型}
 
 还没有特征分类的类型是枚举类型。枚举类型的测试可以通过编写基于SFINAE的特征直接执行，该特征检查会转换为整型类型(比如int)，并显式排除基本类型、类类型、引用类型、指针类型和指向成员的指针类型，所有这些类型都可以转换为整型类型，但不是枚举类型。
 

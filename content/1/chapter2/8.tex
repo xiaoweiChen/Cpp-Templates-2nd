@@ -1,11 +1,11 @@
 
-通过为整个类型定义一个新名称，可以使类模板更就简单。
+通过为整个类型定义一个新名称，可以使类模板使用起来更简单。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{类型定义和别名声明}
 
-类型定义新名称，有两种方法:
+有两种方法类型定义新名称:
 
 \begin{enumerate}
 \item
@@ -52,7 +52,7 @@ IntStack和Stack<int>是同一类型的两种名称。
 
 作为为现有类型定义新名称的通用术语，可以用其来声明别名。因此，新名称就是原类型的别名。
 
-将已定义的类型名放在=左边(总是)阅读起来更容易，所以在本书声明类型别名时，我们更倾向使用别名声明语法。
+将已定义的类型名放在等号左边，阅读起来更容易，所以在本书声明类型别名时，更倾向使用别名声明语法。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -112,19 +112,19 @@ MyTypeIterator<int> pos;
 
 而不像下面这样:
 
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}因为成员是类型，所以typename是必要的。参见5.1节。
-\end{tcolorbox}
-
 \begin{lstlisting}[style=styleCXX]
 typename MyType<T>::iterator pos;
 \end{lstlisting}
+
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}因为成员是类型，所以typename是必要的。参见5.1节。
+\end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{类型特征后缀\_t}
 
-C++14后，标准库使用这种方式为标准库中的所有类型定义了快捷方式。比如：
+C++14后，标准库使用这种方式为库中的所有类型定义了快捷方式。比如:
 
 \begin{lstlisting}[style=styleCXX]
 std::add_const_t<T> // since C++14

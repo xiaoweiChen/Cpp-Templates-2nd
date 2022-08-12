@@ -1,6 +1,6 @@
 可以为某些模板参数特化类模板。类似于函数模板的重载(参见第1.5节)，特化类模板允许优化特定类型的实现，或者为类模板的实例化修复特定类型的错误行为。但若特化类模板，则必须特化所有成员函数。虽然可以特化类模板的单个成员函数，但若这样做了，就不能再特化该特化成员所属的整个类模板实例。
 
-要特化类模板，必须用前导template<>和类模板特化的类型规范声明类。这些类型可用作模板参数，必须直接在类名之后指定:
+要特化类模板，必须用template<>和类模板特化的类型声明类。这些类型可用作模板参数，必须直接在类名之后指定:
 
 \begin{lstlisting}[style=styleCXX]
 template<>
@@ -9,7 +9,7 @@ class Stack<std::string> {
 };
 \end{lstlisting}
 
-对于这些特化，成员函数的定义都必须是一个“普通”成员函数，每次出现T都会使用特化类型替换:
+对于这些特化，成员函数的定义必须是一个“普通的”成员函数，每次出现T都会使用特化类型替换:
 
 \begin{lstlisting}[style=styleCXX]
 void Stack<std::string>::push (std::string const& elem)
@@ -18,8 +18,9 @@ void Stack<std::string>::push (std::string const& elem)
 }
 \end{lstlisting}
 
-下面是std::string类型的Stack<>特化示例:
+下面是std::string类型的Stack<>特化:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stack2.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -59,9 +60,9 @@ std::string const& Stack<std::string>::top () const
 }
 \end{lstlisting}
 
-例子中，特化使用引用语义将字符串参数传递给push()，这对这个特定类型更有意义(不过，应该更好地传递转发引用，这将在第6.1节中讨论)。
+例子中，特化使用引用语义将字符串参数传递给push()，这对这个特定类型有意义(不过，应该更好地传递转发引用，将在第6.1节中讨论)。
 
-另一个区别是使用deque(而非vector)来管理堆栈内的元素。尽管这在这里没有什么区别，但说明了特化实现可能与主模板实现有很大的不同。
+另一个区别是使用deque(而非vector)来管理堆栈内的元素。尽管这在这里没有什么区别，但说明了特化实现可能与主模板实现完全不同。
 
 
 

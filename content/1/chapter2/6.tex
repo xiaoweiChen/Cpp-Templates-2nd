@@ -1,5 +1,6 @@
-类模板可偏特化。可以为特定的情况提供特殊的实现，但是一些模板参数仍需要由用户定义。例如，可以为指针定义Stack<>类的特殊实现:
+类模板可偏特化。可以为特定的情况提供特殊的实现，但有些模板参数仍需要由用户定义。例如，可以为指针定义Stack<>类的特殊实现:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stackpartspec.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -49,9 +50,9 @@ class Stack<T*> {
 };
 \end{lstlisting}
 
-之类定义了一个类模板，仍然参数化了T，但特化了指针(Stack<T*>)。
+先定义了一个类模板，仍然参数化了T，但特化了指针(Stack<T*>)。
 
-特可能提供(略微)不同的接口。例如，这里的pop()返回存储的指针，当用new创建值时，用户就可以使用delete删除：
+特化可能提供(略微)不同的接口。例如，这里的pop()返回存储的指针，当用new创建值时，用户就可以使用delete删除:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int*> ptrStack; // stack of pointers (special implementation)
@@ -74,7 +75,7 @@ class MyClass {
 };
 \end{lstlisting}
 
-以下是可能的偏特化:
+以下几种可能的偏特化:
 
 \begin{lstlisting}[style=styleCXX]
 // partial specialization: both template parameters have same type
@@ -105,7 +106,7 @@ MyClass<float,int> mfi; // uses MyClass<T,int>
 MyClass<int*,float*> mp; // uses MyClass<T1*,T2*>
 \end{lstlisting}
 
-如果多个偏特化都匹配，则声明有二义性:
+若多个偏特化都匹配调用，则声明有歧义:
 
 \begin{lstlisting}[style=styleCXX]
 MyClass<int,int> m; // ERROR: matches MyClass<T,T>
@@ -114,7 +115,7 @@ MyClass<int*,int*> m; // ERROR: matches MyClass<T,T>
 					  // and MyClass<T1*,T2*>
 \end{lstlisting}
 
-要解决二义性，可以为相同类型的指针提供偏特化实现:
+要解决歧义，可以为相同类型的指针提供偏特化实现:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

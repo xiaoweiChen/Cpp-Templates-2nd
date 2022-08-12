@@ -1,5 +1,5 @@
 
-聚合类(不由用户提供的、显式的或继承的构造函数的类/结构，没有私有的或受保护的非静态数据成员，没有虚函数，也没有虚的、私有的或受保护的基类)也可以是模板。例如:
+聚合类(不由用户提供、显式或继承的构造函数的类/结构，没有private或protected的非静态数据成员，没有虚函数，也没有virtual、private或protected基类)也可以是模板。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -9,7 +9,7 @@ struct ValueWithComment {
 };
 \end{lstlisting}
 
-定义一个聚合，参数化了它保存的值val的类型。可以像其他类模板一样声明对象，并且将其用作聚合:
+定义一个聚合，参数化了value的类型。可以像其他类模板一样声明对象，并且可以以聚合的方式进行使用:
 
 \begin{lstlisting}[style=styleCXX]
 ValueWithComment<int> vc;

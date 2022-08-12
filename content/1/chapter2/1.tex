@@ -1,6 +1,7 @@
 
-与函数模板一样，我们在头文件中声明并定义Stack<>类，如下所示:
+与函数模板一样，在头文件中声明并定义Stack<>类，如下所示:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stack1.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -42,11 +43,11 @@ T const& Stack<T>::top () const
 }
 \end{lstlisting}
 
-类模板使用C++标准库的类模板vector<>实现。因此，不必实现内存管理、复制构造函数和赋值操作符，可以专注于该类模板的接口。
+类模板使用C++标准库的vector<>实现。因此，不必实现内存管理、复制构造函数和赋值操作符，可以专注于该类模板的接口。
 
 \subsubsubsection{2.1.1\hspace{0.2cm}声明类模板}
 
-声明类模板类似于声明函数模板:在声明之前，必须将一个或多个标识符声明为类型参数。同样，T通常作为标识符:
+声明类模板类似于声明函数模板。声明前，必须将一个或多个标识符声明为类型参数。同样，T作为常用标识符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -55,7 +56,7 @@ class Stack {
 };
 \end{lstlisting}
 
-这里，关键字class也可以用typename替换:
+这里，关键字class也可以替换typename:
 
 \begin{lstlisting}[style=styleCXX]
 template<class T>
@@ -82,7 +83,7 @@ public:
 };
 \end{lstlisting}
 
-这个类的类型是Stack<T>，T是模板参数。因此，只要在使用该类的类型，就必须使用Stack<T>声明，可以推导模板参数的情况除外。但在类模板中，使用类名后不带模板实参的类，表示将模板参数作为参数的类型(详见第13.2.3节)。
+这个类的类型是Stack<T>，T是模板参数。因此，只要在使用该类的类型，就必须使用Stack<T>声明，可以推导模板参数的情况除外。但在类模板中使用类名(不带模板参数)，表明这个内部类的模板参数类型和模板类的参数类型相同(详见第13.2.3节)。
 
 例如，必须声明自定义的复制构造函数和赋值操作符:
 
@@ -110,20 +111,20 @@ class Stack {
 
 通常<T>表示特殊模板参数，所以最好使用第一种方式。
 
-还需要:
+这里，
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 bool operator== (Stack<T> const& lhs, Stack<T> const& rhs);
 \end{lstlisting}
 
-在需要类名而不是类类型的地方，只能使用Stack。当指定构造函数的名称(而不是参数)和析构函数时，这种情况尤其特别。
+在需要类名而不是类类型的地方，只能使用Stack。尤其是，指定构造函数的名称(而不是参数)和析构函数时。
 
 与非模板类不同，不能在函数或块作用域内声明或定义类模板。通常，模板只能在全局/命名空间作用域或类中声明内部定义(参见12.1节了解详细信息)。
 
-\subsubsubsection{2.1.2\hspace{0.2cm}实现成员函数}
+\subsubsubsection{2.1.2\hspace{0.2cm}成员函数}
 
-要定义类模板的成员函数，必须将其指定为模板，并且使用类模板对类型进行限定。因此，Stack<T>类型的成员函数push()的实现如下所示:
+要定义类模板的成员函数，必须将其指定为模板，并且使用类模板对类型进行限定。因此，Stack<T>类型的成员函数push()实现如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -135,7 +136,7 @@ void Stack<T>::push (T const& elem)
 
 使用vector的push\_back()，将元素添加到vector的末尾。
 
-注意，vector的pop\_back()会删除最后一个元素，但不返回这个元素，这种行为的原因是异常安全的。pop()的完全异常安全版本来返回删除元素是不可能的(这个主题由Tom Cargill在[CargillExceptionSafety]中首次讨论，并在[sutterexception]中的第10项中讨论)。但这里忽略这个危险，我们可以实现一个pop()，返回刚刚删除的元素。为此，只需使用T声明元素类型的局部变量即可:
+注意，vector的pop\_back()会删除最后一个元素，但不返回这个元素，这种行为是异常安全的。使用pop()的完全异常安全版本，来返回删除元素是不可能的(这个问题由Tom Cargill在[CargillExceptionSafety]中首次提出，并在[sutterexception]中的第10项中进行讨论)。这里可以忽略这个危险，可以实现pop()返回刚刚删除的元素。为此，只需使用T声明元素类型的局部变量即可:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -148,7 +149,7 @@ T Stack<T>::pop ()
 }
 \end{lstlisting}
 
-因为当vector中没有元素时，back()(返回最后一个元素)和pop\_back()(删除最后一个元素)会导致未定义行为，所以先检查堆栈是否为空。如果为空，则触发断言，因为在空堆栈上调用pop()是一个使用错误。top()也会这样做，当试图删除一个不存在的top元素时，top()会返回但不删除top元素:
+当vector中没有元素时，back()(返回最后一个元素)和pop\_back()(删除最后一个元素)会导致未定义行为，所以先检查堆栈是否为空。如果为空，则触发断言，因为在空堆栈上调用pop()是一个使用错误。top()也是这样，当试图删除一个不存在的top元素时，top()会返回但不删除top元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -159,7 +160,7 @@ T const& Stack<T>::top () const
 }
 \end{lstlisting}
 
-当然，对于成员函数，也可以在类声明中以直接内联的形式实现类模板的成员函数。例如:
+当然，对于成员函数，可以在类声明中以内联的形式，实现类模板的成员函数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

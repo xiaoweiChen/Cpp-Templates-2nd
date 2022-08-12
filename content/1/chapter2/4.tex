@@ -1,5 +1,5 @@
 
-使用printOn()打印堆栈内容，不如为堆栈实现<<操作符。然而，通常<<操作符会实现为非成员函数，然后内联调用printOn():
+使用printOn()打印堆栈内容，不如为堆栈实现<{}<操作符。然而，通常<{}<操作符会实现为非成员函数，然后内联调用printOn():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -16,17 +16,17 @@ class Stack {
 };
 \end{lstlisting}
 
-注意，这意味着用于类Stack<>的<<操作符不是一个函数模板，而是在需要时用类模板实例化的“普通”函数。
+这意味着用于类Stack<>的<{}<操作符不是一个函数模板，而是在需要时用类模板实例化的“普通”函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}其是一个模板实体，参见12.1节。
 \end{tcolorbox}
 
-但是，当试图声明友元函数并实现时，事情会变得更加复杂。事实上，这里有两种选择:
+但当试图声明友元函数并实现时，事情会变得更加复杂。这里有两种选择:
 
 \begin{enumerate}
 \item 
-可以隐式声明一个新的函数模板，但要使用不同的模板参数，比如U:
+隐式声明一个新的函数模板，但要使用不同的模板参数，比如U:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -60,10 +60,10 @@ class Stack {
 };
 \end{lstlisting}
 
-注意“函数名”操作符<<后面的<T>。因此，需要将非成员函数模板的特化声明为友元。如果没有<T>，需要声明一个新的非模板函数。详细信息请参见12.5.2。
+注意“函数名”操作符<{}<后面的<T>。因此，需要将非成员函数模板的特化声明为友元。若没有<T>，需要声明新的非模板函数。详细信息请参见12.5.2。
 \end{enumerate}
 
-其他情况下，仍可以对没有定义<<操作符的元素使用这个类。只有对这个堆栈调用操作符<<时才会出现错误:
+其他情况下，可以对没有定义<{}<操作符的元素使用这个类。只有对这个堆栈调用操作符<{}<时才会出现错误:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<std::pair<int,int>> ps; // std::pair<> has no operator<< defined

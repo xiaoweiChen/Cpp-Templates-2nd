@@ -1,5 +1,6 @@
-对于函数模板，可以为类模板形参定义默认值。例如，在Stack<>类中，可以将用于管理元素的容器定义为第二个模板参数，并使用std::vector<>作为默认值:
+对于函数模板，可以为类模板参数设置默认值。例如，在Stack<>类中，可以将用于管理元素的容器定义为第二个模板参数，并使用std::vector<>作为默认值:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stack3.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -41,7 +42,7 @@ T const& Stack<T,Cont>::top () const
 }
 \end{lstlisting}
 
-注意，现在有了两个模板参数，因此成员函数的每个定义都必须用这两个参数定义:
+现在有了两个模板参数，因此成员函数的每个定义都必须用这两个参数定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Cont>
@@ -51,7 +52,7 @@ void Stack<T,Cont>::push (T const& elem)
 }
 \end{lstlisting}
 
-可以像以前那样使用这个堆栈。因此，如果将第一个也是唯一的参数作为元素类型传递，这样会使用vector来管理该类型的元素:
+可以像以前那样使用这个堆栈。若将第一个也是唯一的参数作为元素类型传递，则会使用vector来管理该类型的元素:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Cont = std::vector<T>>
@@ -62,8 +63,9 @@ private:
 };
 \end{lstlisting}
 
-另外，当在程序中声明Stack对象时，可以指定元素的容器类型:
+当在程序中声明Stack对象时，可以指定元素的容器类型:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stack3test.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -95,7 +97,7 @@ int main()
 Stack<double,std::deque<double>>
 \end{lstlisting}
 
-上面的代码声明一个双精度浮点数栈，使用std::deque<>在内部管理元素。
+上面的代码声明一个double数的栈，使用std::deque<>在内部管理元素。
 
 
 

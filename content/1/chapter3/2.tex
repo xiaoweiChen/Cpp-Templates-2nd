@@ -1,5 +1,6 @@
 还可以为函数模板定义非类型参数。例如，下面的函数模板定义了一组函数，可以为其加一个数:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/addvalue.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -10,7 +11,7 @@ T addValue (T x)
 }
 \end{lstlisting}
 
-如果函数或操作当作参数，这些类型的函数可能很有用。例如，使用C++标准库，可以通过函数模板的实例化来给集合的每个元素加一个数:
+如果函数或操作当作参数，这些类型的函数可能很有用。例如使用C++标准库，可以通过函数模板的实例化来给集合的每个元素加一个数:
 
 \begin{lstlisting}[style=styleCXX]
 std::transform (source.begin(), source.end(), // start and end of source
@@ -20,9 +21,9 @@ addValue<5,int>); // operation
 
 最后一个参数实例化函数模板addValue<>()，将5加到传入的int值上。对source中的每个元素调用生成的函数，同时将其转换为目标dest。
 
-注意，必须为模板形参addValue<>()指定参数int。推导仅适用于即时调用，而std::transform()需要完整的类型来推导其第四个参数的类型。不支持只替换/推导一些模板参数，并查看哪些参数适合，然后推导剩下的参数。
+注意，必须为模板参数addValue<>()指定为int。推导仅适用于即时调用，而std::transform()需要完整的类型来推导其第四个参数的类型。不支持只替换/推导一些模板参数，并查看哪些参数适合，然后推导剩下的参数。
 
-同样，也可以指定模板参数是从前面的参数推导出来的。例如，要从传递的非类型派生返回类型:
+同样，也可以指定模板参数是从前面的参数推导出来的。例如，从传递的非类型派生返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<auto Val, typename T = decltype(Val)>

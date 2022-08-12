@@ -1,7 +1,8 @@
-与前几章的栈实现不同，这里可以通过使用固定大小的元素数组来实现栈。这种方法的优点是避免了内存管理开销。但是，这为堆栈确定最佳容量带来了困难。指定的容量越小，堆栈越有可能快速填满。指定的容量越大，有可能会浪费内存。好的解决方案是让堆栈的用户指定数组的大小，作为堆栈的最大容量。
+与前几章的栈实现不同，这里可以通过使用固定大小的元素数组来实现栈。这种方法的优点是避免了内存管理开销，但这为堆栈确定最佳容量带来了困难。指定的容量越小，堆栈越有可能快速填满。指定的容量越大，有可能会浪费内存。好的解决方案是让堆栈的用户指定数组的大小，作为堆栈的最大容量。
 
 为此，可以将size定义为模板参数:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stacknontype.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -56,18 +57,18 @@ T const& Stack<T,Maxsize>::top () const
 }
 \end{lstlisting}
 
-第二个模板形参Maxsize是int类型，指定了堆栈元素的内部数组的容量:
+第二个模板形参Maxsize是int类型，指定了堆栈元素内部数组的容量:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t Maxsize>
 class Stack {
-	private:
+private:
 	std::array<T,Maxsize> elems; // elements
 	...
 };
 \end{lstlisting}
 
-另外，在push()中使用它来检查堆栈是否已满:
+另外，在push()中，可以使用它来检查堆栈是否已满:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t Maxsize>
@@ -81,6 +82,7 @@ void Stack<T,Maxsize>::push (T const& elem)
 
 要使用这个类模板，必须同时指定元素类型和最大容量:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stacknontype.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -106,7 +108,7 @@ int main()
 }
 \end{lstlisting}
 
-注意，每个模板实例化都是独立的类型。因此，int20Stack和int40Stack是两种不同的类型。因此，不能使用其中一个来代替另一个，也不能将其中一个分配给另一个。
+每个模板实例化都是独立的类型。因此，int20Stack和int40Stack是两种不同的类型。不能使用其中一个来代替另一个，也不能将其中一个分配给另一个。
 
 同样，可以指定模板参数的默认值:
 
@@ -117,7 +119,7 @@ class Stack {
 };
 \end{lstlisting}
 
-但从良好设计的角度来看，这样的写法在本例中可能不太合适。默认参数应该是正确的。但是对于一般的堆栈类型来说，int类型和最大容量为100似乎都不直观。因此，最好显式地指定这两个值，以便在声明期间进行记录。
+但从设计的角度来看，这样的写法在本例中可能不太合适。默认参数是正确的，但对于一般的堆栈类型来说，int类型和最大容量为100似乎都不直观。因此，最好显式地指定这两个值，以便在声明期间进行记录。
 
 
 

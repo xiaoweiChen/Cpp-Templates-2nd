@@ -1,5 +1,6 @@
-C++17后，可以定义非类型模板参数。使用这个特性，可以实现一个更通用的确定大小的堆栈类:
+C++17后，可以定义非类型模板参数。使用这个特性，可以实现一个确定大小的堆栈类:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stackauto.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -66,7 +67,7 @@ class Stack {
 };
 \end{lstlisting}
 
-通过使用占位符类型auto，可以将Maxsize定义为尚未指定类型的值。它可以是任何允许为非类型模板形参类型的类型。
+通过使用占位符类型auto，可以将Maxsize定义为尚未指定类型的值，可以是任何允许为非类型模板参数的类型。
 
 内部可以同时使用这两个值:
 
@@ -88,7 +89,7 @@ size_type size() const { // return current number of elements
 }
 \end{lstlisting}
 
-C++14后，也可以在这里使用auto作为返回类型，让编译器找到返回类型:
+C++14后，也可以在这里使用auto作为返回类型，让编译器确定返回类型:
 
 \begin{lstlisting}[style=styleCXX]
 auto size() const { // return current number of elements
@@ -98,6 +99,7 @@ auto size() const { // return current number of elements
 
 通过这个类声明，当使用堆栈时，元素数量由使用类型定义:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/stackauto.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -169,7 +171,7 @@ if (!std::is_same_v<decltype(size1), decltype(size2)>) {
 }
 \end{lstlisting}
 
-对非类型模板形参类型的其他约束仍然有效。特别是，第3.3节中讨论的非类型模板参数的类型限制仍然适用。例如:
+对非类型模板参数类型的其他约束仍然有效。特别是，第3.3节中讨论的非类型模板参数类型的限制仍然适用。例如:
 
 \begin{lstlisting}[style=styleCXX]
 Stack<int,3.14> sd; // ERROR: Floating-point nontype argument
@@ -177,6 +179,7 @@ Stack<int,3.14> sd; // ERROR: Floating-point nontype argument
 
 并且，可以将字符串作为常量数组传递(C++17中甚至是静态的局部声明;见第3.3节):
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/message.cpp}
 \begin{lstlisting}[style=styleCXX]

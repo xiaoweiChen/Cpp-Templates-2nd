@@ -1,6 +1,6 @@
-非类型模板参数有一些限制。通常，只能是整型常量值(包括枚举)，指向对象/函数/成员的指针，指向对象或函数的左值引用，或者std::nullptr\_t(nullptr的类型)。
+非类型模板参数有一些限制，只能是整型常量值(包括枚举)，指向对象/函数/成员的指针，指向对象或函数的左值引用，或者std::nullptr\_t(nullptr的类型)。
 
-浮点数和类型对象不允许作为非类型模板形参:
+浮点数和类型对象不允许作为非类型模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<double VAT> // ERROR: floating-point values are not
@@ -15,7 +15,7 @@ class MyClass { // allowed as template parameters
 };
 \end{lstlisting}
 
-当向指针或引用传递模板参数时，对象不能是字符串字面值、临时对象或数据成员和其他子对象。因为在C++17前，每个C++版本都放宽了这些限制，所以还有其他的限制:
+当向指针或引用传递模板参数时，对象不能是字符串字面值、临时对象或数据成员和其他子对象。在C++17前，每个C++版本都放宽了这些限制，所以还有其他的限制:
 
 \begin{itemize}
 \item 
@@ -25,7 +25,7 @@ C++11中，对象必须具有外部链接。
 C++14中，对象必须具有外部或内部链接。
 \end{itemize}
 
-因此，以下情况是错误的:
+因此，以下情况会报错:
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* name>
@@ -50,7 +50,7 @@ int main()
 }
 \end{lstlisting}
 
-在这三种情况下，常量字符数组都由"hello"初始化，该对象被用作用char const*声明的模板形参。若对象具有外部链接(s03)，这在所有C++版本中都是有效的;若对象具有内部链接(s11)，则在C++11和C++14中也是有效的;若对象完全没有链接，则从C++17才开始支持。
+三种情况下，常量字符数组都由"hello"初始化，该对象用作用char const*声明的模板参数。若对象具有外部链接(s03)，这在所有C++版本中都有效;若对象具有内部链接(s11)，则在C++11和C++14中也是有效的;若对象没有链接，则需要C++17的支持。
 
 请参阅第12.3.3节和第17.2节讨论了该领域在未来变化的可能。
 
@@ -58,7 +58,7 @@ int main()
 \noindent
 \textbf{避免无效的表达式}
 
-非类型模板形参的实参可以是编译时表达式。例如:
+非类型模板参数可以是编译时表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<int I, bool B>

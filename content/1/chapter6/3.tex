@@ -22,25 +22,25 @@ void foo() {
 }
 \end{lstlisting}
 
-也就是说，std::enable\_if<>是一种类型特征，它计算作为其(第一个)模板参数传递的给定编译时表达式:
+也就是说，std::enable\_if<>是一种类型特征，计算作为其(第一个)模板参数传递的给定编译时表达式:
 
 \begin{itemize}
 \item 
-如果表达式结果为true，其类型成员类型将产生一个类型:
+若表达式结果为true，其类型成员类型将产生一个类型:
 
 \begin{itemize}
 \item[-]
-如果没有传递第二个模板参数，则该类型为void。
+若没有传递第二个模板参数，则该类型为void。
 	
 \item[-]
 否则，该类型就是第二个模板参数类型。
 \end{itemize}
 
 \item 
-如果表达式结果为false，则没有定义成员类型。由于稍后将介绍的名为SFINAE的模板特性(替换失败不为过)(请参阅8.4节)，这将忽略使用enable\_if表达式的函数模板。
+若表达式结果为false，则没有定义成员类型。由于名为SFINAE的模板特性(替换失败不为过)(请参阅8.4节)，这将忽略使用enable\_if表达式的函数模板。
 \end{itemize}
 
-对于自C++14以来产生类型的类型特征，有一个对应的别名模板std::enable\_if\_t<>，允许跳过typename和::type(请参阅第2.8节了解详细信息)。因此，从C++14起就可以使用了
+对于自C++14产生类型的类型特征，有一个对应的别名模板std::enable\_if\_t<>，允许跳过typename和::type(请参阅第2.8节了解详细信息)。因此，从C++14起就使用
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -65,7 +65,7 @@ foo() {
 MyType foo();
 \end{lstlisting}
 
-注意，在声明中间使用enable\_if表达式非常笨拙。由于这个原因，使用std::enable\_if<>的常见方法是使用一个带有默认值的函数模板参数: 
+在声明中间使用enable\_if表达式非常笨拙。由于这个原因，使用std::enable\_if<>的常见方法是使用带有默认值的函数模板参数: 
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T,
@@ -85,7 +85,7 @@ void foo() {
 
 当sizeof(T) > 4时。
 
-如果感觉仍然太笨拙，并且你=想让需求/约束更明确，可以使用别名模板为它定义名字:
+若感觉还是太笨拙，并且想让需求/约束更明确，可以使用别名模板为它命名:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

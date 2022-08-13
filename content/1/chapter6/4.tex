@@ -1,15 +1,15 @@
 可以使用enable\_if<>来解决在6.2节中引入的构造函数模板的问题。
 
-必须解决的问题是禁用模板构造函数的声明
+必须解决的问题是，禁用模板构造函数的声明
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR>
 Person(STR&& n);
 \end{lstlisting}
 
-若传递的参数STR具有正确的类型(即std::string或可转换为std::string的类型)。
+若传递的参数STR具有正确的类型(即std::string，或可转换为std::string的类型)。
 
-为此，使用另一个标准类型std::is\_convertible<FROM,TO>。在C++17中，相应的声明如下所示:
+为此，使用另一个标准类型std::is\_convertible<FROM,TO>。C++17中，相应的声明如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename STR,
@@ -26,7 +26,7 @@ template<typename STR,
 Person(STR&& n);
 \end{lstlisting}
 
-如果STR类型不能转换为std::string类型，则整个函数模板将忽略。
+如果STR类型不能转换为std::string类型，将忽略整个函数模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}为什么不检查STR是否“不可转换为Person”？我们正在定义一个函数，该函数可能允许将字符串转换为Person。因此构造函数必须知道它是否启用，这取决于是否可转换，而可转换取决于是否启用，循环往复。永远不要在影响enable\_if使用的条件的地方使用enable\_if。这是编译器不一定能检测到的逻辑错误。
@@ -43,8 +43,9 @@ template<typename STR, typename = EnableIfString<STR>>
 Person(STR&& n);
 \end{lstlisting}
 
-因此，整个Person类如下所示:
+因此，Person类如下所示:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/specialmemtmpl3.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -81,6 +82,7 @@ public:
 
 现在，所有行为都符合预期:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/specialmemtmpl3.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -115,7 +117,7 @@ using EnableIfString
 
 但这些现在都隐藏在EnableIfString<>的定义中。
 
-因为它要求类型是隐式可转换的，所以使用std::is\_convertible<>还有另一种选择。通过使用std::is\_constructible<>，允许显式转换用于初始化。然而，在这种情况下，参数的顺序反的:
+因为它要求类型是隐式可转换的，所以使用std::is\_convertible<>还有另一种选择。通过使用std::is\_constructible<>，允许显式转换用于初始化。然而，在这种情况下，参数的顺序是反的:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -142,7 +144,7 @@ public:
 };
 \end{lstlisting}
 
-当请求一个C的副本时，预定义的复制构造函数仍然会使用:
+当请求一个C的副本时，预定义的复制构造函数仍然可以使用:
 
 \begin{lstlisting}[style=styleCXX]
 C x;
@@ -155,7 +157,7 @@ C y{x}; // still uses the predefined copy constructor (not the member template)
 
 不过，有一个解决方案:
 
-可以为texttt{const volatile}参数声明一个复制构造函数，并将其标记为“已删除”(即用= delete修饰)。这样做可以防止隐式声明另一个复制构造函数。有了这些，就可以定义一个构造函数模板，对于非易失性类型，该构造函数将优先于(已删除的)复制构造函数:
+可以为const volatile参数声明复制构造函数，并将其标记为“已删除”(即用= delete修饰)。这样做可以防止隐式声明另一个复制构造函数。有了这些，就可以定义一个构造函数模板，对于非volatile类型，该构造函数将优先于(已删除的)复制构造函数:
 
 \begin{lstlisting}[style=styleCXX]
 class C
@@ -182,7 +184,7 @@ C x;
 C y{x}; // uses the member template
 \end{lstlisting}
 
-在模板构造函数中，以使用enable\_if<>进行约束。例如，若模板参数是整型，为了防止复制类模板C<>的对象，可以实现以下方法:
+在模板构造函数中，可以使用enable\_if<>进行约束。例如，若模板参数是整型，为了防止复制类模板C<>的对象，可以实现以下方法:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

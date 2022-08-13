@@ -1,7 +1,8 @@
 成员函数模板也可以用作特殊的成员函数，包括用作构造函数，但这可能会导致意想不到的结果。
 
-看下下面的例子:
+看看下面的例子:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/specialmemtmpl1.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -44,7 +45,7 @@ int main()
 
 \begin{itemize}
 \item 
-我们提供了仍然需要的string的构造函数，其名称由传递参数的副本进行初始化:
+提供了string的构造函数，其名称由传递参数的副本进行初始化:
 
 \begin{lstlisting}[style=styleCXX]
 Person(std::string const& n) : name(n) {
@@ -53,7 +54,7 @@ Person(std::string const& n) : name(n) {
 \end{lstlisting}
 
 \item 
-我们提供了一个可移动string对象的构造函数，使用std::move()来“窃取”下面的值:
+提供了一个可移动string对象的构造函数，使用std::move()来“窃取”下面的值:
 
 \begin{lstlisting}[style=styleCXX]
 Person(std::string&& n) : name(std::move(n)) {
@@ -70,7 +71,7 @@ Person p1(s); // init with string object => calls copying string-CONSTR
 Person p2("tmp"); // init with string literal => calls moving string-CONSTR
 \end{lstlisting}
 
-除了这些构造函数之外，这个示例还对复制和移动构造函数有特定的实现，以查看Person作为一个整体何时复制/移动:
+除了这些构造函数之外，示例还对复制和移动构造函数有特定的实现，以确定Person作为一个整体何时复制/移动:
 
 \begin{lstlisting}[style=styleCXX]
 Person p3(p1); // copy Person => calls COPY-CONSTR
@@ -79,6 +80,7 @@ Person p4(std::move(p1)); // move Person => calls MOVE-CONSTR
 
 现在用一个泛型构造函数替换两个需要传入string的构造函数，完美转发的参数将传递给成员name:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/specialmemtmpl2.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -107,7 +109,7 @@ public:
 };
 \end{lstlisting}
 
-传递string的构造工作正常:
+传递string的构造函数工作正常:
 
 \begin{lstlisting}[style=styleCXX]
 std::string s = "sname";
@@ -115,7 +117,7 @@ Person p1(s); // init with string object => calls TMPL-CONSTR
 Person p2("tmp"); // init with string literal => calls TMPL-CONSTR
 \end{lstlisting}
 
-注意，在这种情况下p2的构造并没有创建临时字符串，参数STR推导为char const[4]。将std::forward<STR>应用于构造函数的指针参数没有太大的效果，因此name成员是由一个以null结尾的字符串构造的。
+在这种情况下p2的构造并没有创建临时字符串，参数STR推导为char const[4]。将std::forward<STR>应用于构造函数的指针参数没有太大的效果，因此name成员是由一个以null结尾的字符串(进行构造)。
 
 但当我们试图调用复制构造函数时，会得到一个错误:
 
@@ -129,7 +131,7 @@ Person p3(p1); // ERROR
 Person p4(std::move(p1)); // OK: move Person => calls MOVE-CONST
 \end{lstlisting}
 
-注意，复制一个常量Person也可以正常工作:
+复制一个常量Person也可以正常工作:
 
 \begin{lstlisting}[style=styleCXX]
 Person const p2c("ctmp"); // init constant object with string literal
@@ -157,7 +159,7 @@ STR只是替换为Person\&，而对于复制构造函数，需要转换为const�
 Person (Person& p)
 \end{lstlisting}
 
-然而，这只是部分解决方案，对于派生类的对象，成员模板仍然是更好的匹配。当传递的参数是Person或可以转换为Person的表达式时，这里真正需要的是禁用成员模板。这可以通过使用std::enable\_if<>来进行，这将在下一节中介绍。
+这只是部分的解决方案，对于派生类的对象，成员模板仍然是更好的匹配。当传递的参数是Person或可以转换为Person的表达式时，这里需要的是禁用成员模板。这可以通过使用std::enable\_if<>来禁用，这将在下一节中介绍。
 
 
 

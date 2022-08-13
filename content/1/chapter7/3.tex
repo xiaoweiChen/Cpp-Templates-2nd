@@ -11,7 +11,7 @@ printT(s); // pass s by reference
 printT(std::cref(s)); // pass s “as if by reference”
 \end{lstlisting}
 
-注意std::cref()不会改变模板中参数的处理。相反，使用了一个技巧:用一个引用的对象来包装传递的参数。事实上，创建了一个std::reference\_wrapper<>类型的对象，引用原始参数并按值传递了这个对象。包装器或多或少只支持一种操作:返回原始类型的隐式类型转换，生成原始对象。
+注意std::cref()不会改变模板中参数的处理，之类使用了一个技巧:用一个引用的对象来包装传递的参数。事实上，这会创建了一个std::reference\_wrapper<>类型的对象，引用原始参数，并按值传递了这个对象。包装器或多或少支持一种操作:返回原始类型的隐式类型转换，生成原始对象。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}还可以在引用包装器上调用get()并将其用作函数对象。
@@ -19,6 +19,7 @@ printT(std::cref(s)); // pass s “as if by reference”
 
 因此，只要对传递的对象有有效的操作符，就可以使用引用包装器。例如:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/cref.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -47,7 +48,7 @@ int main()
 
 最后一次调用通过值传递std::reference\_wrapper<string const>类型的对象到参数arg，然后传递并转换回其底层类型std::string。
 
-注意，编译器必须知道返回原始类型的隐式转换是必要的。因此，只有通过泛型代码传递对象时，std::ref()和std::cref()才能正常工作。例如，因为没有为std::reference\_wrapper<>定义输出操作符，直接尝试输出传递的泛型类型T对象将失败:
+编译器必须知道返回原始类型必要的隐式转换。因此，只有通过泛型代码传递对象时，std::ref()和std::cref()才能正常工作。例如，因为没有为std::reference\_wrapper<>定义输出操作符，直接尝试输出传递的泛型类型T对象将失败:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -86,7 +87,7 @@ bool isless(T arg1, T arg2)
 
 因为当编译器试图为arg1和arg2推导T时，类型会冲突。
 
-因此，类std::reference\_wrapper<>的作用是能够将引用用作“第一个类对象”，可以复制，并通过值传递给函数模板。也可以在类中使用它，例如：保存容器中对象的引用。但是最终总是需要转换回基础类型。
+因此，类std::reference\_wrapper<>的作用是将引用用作“第一个类对象”，可以复制，并通过值传递给函数模板。也可以在类中使用它，例如：保存容器中对象的引用。但是最终需要转换回基础类型。
 
 
 

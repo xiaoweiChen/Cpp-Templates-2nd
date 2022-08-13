@@ -1,5 +1,5 @@
 
-来讨论一下引用传递的不同风格。所有情况下，都不会创建副本(因为参数只引用传递的实参)。另外，传递参数永不衰变。然而，有些传递是不可行的，如果传递对这种参数进行了，那么在某些情况下，参数的结果类型可能会出现问题。
+来讨论一下引用传递的不同风格。所有情况下，都不会创建副本(因为参数只引用传递的实参)。另外，传递参数永不衰变。然而，有些传递是不可行的，若传递对这种参数进行了，在某些情况下，参数的结果类型可能会出现问题。
 
 \subsubsubsection{7.2.1\hspace{0.2cm}传递常量引用}
 
@@ -12,7 +12,7 @@ void printR (T const& arg) {
 }
 \end{lstlisting}
 
-通过这样的声明，传递的对象永远不会去创建副本:
+通过这样的声明，传递的对象永远不会创建副本:
 
 \begin{lstlisting}[style=styleCXX]
 std::string returnString();
@@ -32,7 +32,7 @@ int i = 42;
 printR(i); // passes reference instead of just copying i
 \end{lstlisting}
 
-会让printR()实例化为:
+printR()会实例化为:
 
 \begin{lstlisting}[style=styleCXX]
 void printR(int const& arg) {
@@ -40,19 +40,19 @@ void printR(int const& arg) {
 }
 \end{lstlisting}
 
-底层中，通过引用传递参数是通过传递参数地址实现的。地址编码紧凑时，将地址从调用方传递给被调用方的效率很高。然而，在编译代码时，传递地址会给编译器带来不确定性:使用该地址做什么?理论上，可以对该地址“可达”的值进行修改。因此，编译器必须假设其可能缓存的值(通常在机器寄存器中)在调用之后都无效。重新加载这些值的成本可能非常高。有些读者可能会认为我们传递的是常量引用:难道编译器不能推断出这样的数值其实不会发生更改的吗?不幸的是，情况并非如此，因为调用者可以通过自己的非常量引用修改引用的对象。
+底层实现中，通过引用传递参数是通过传递参数地址实现的。地址编码紧凑时，将地址从调用方传递给被调用方的效率很高。然而，在编译代码时，传递地址会给编译器带来不确定性:使用该地址做什么?理论上，可以对该地址“可达”的值进行修改。因此，编译器必须假设其可能缓存的值(通常在机器寄存器中)在调用之后都无效。重新加载这些值的成本可能非常高。有些读者可能会认为我们传递的是常量引用:难道编译器不能推断出这样的数值其实不会发生更改的吗?不幸的是，情况并非如此，因为调用者可以通过自己的非常量引用修改引用的对象。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}使用const\_cast是另一种显式修改引用对象的方法。
 \end{tcolorbox}
 
-内联可以缓和一下这个坏消息:如果编译器可以内联展开调用，就可以推断调用和被调用在一起，并且在许多情况下“可以看到”地址，除了传递底层值外，没有其他用途。函数模板通常很短，因此可能用于内联扩展。但若模板封装了更复杂的算法，内联就不太可能了。
+内联可以缓和一下:如果编译器可以内联展开调用，就可以推断调用和被调用在一起，并且在许多情况下“看到”地址，除了传递底层值外，没有其他用途。函数模板通常很短，因此可以用于内联扩展。但若模板封装了更复杂的算法，就不太可能使用内联了。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
 \textbf{传递引用类型不会衰变}
 
-当通过引用将参数进行传递时，就不会衰变。从而，不会将数组转换为指针，并且不删除const和volatile等限定符。因为调用参数声明为T const\&，所以模板参数T本身并没有推导为const。例如:
+当通过引用将参数进行传递时，就不会衰变。从而不会将数组转换为指针，并且不删除const和volatile等限定符。因为调用参数声明为T const\&，所以模板参数T本身并没有推导为const。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -69,13 +69,13 @@ int arr[4];
 printR(arr); // T deduced as int[4], arg is int const(&)[4]
 \end{lstlisting}
 
-因此，在printR()中使用T类型声明的局部对象不是常量。
+因此，printR()中使用T类型声明的局部对象不是常量。
 
 \subsubsubsection{7.2.2\hspace{0.2cm}传递非常量引用}
 
-当通过传递的参数作为返回值时(例如，想使用out或inout参数时)，必须使用非常量引用(除非通过指针传递)。同样，在传递参数时，不会创建副本。被调用函数模板的参数只能直接访问传递的参数。
+当通过传递的参数作为返回值时(例如，使用out或inout参数时)，必须使用非常量引用(除非通过指针传递)。在传递参数时，不会创建副本，被调用函数模板的参数只能直接访问传递的参数。
 
-来看下以下代码：
+来看看以下代码：
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -84,7 +84,7 @@ void outR (T& arg) {
 }
 \end{lstlisting}
 
-注意，通常不允许对一个临时的(prvalue)或一个通过std::move() (xvalue)传递的现有对象调用outR():
+通常不允许对一个临时的(prvalue)或一个通过std::move()(xvalue)传递的现有对象调用outR():
 
 \begin{lstlisting}[style=styleCXX]
 std::string returnString();
@@ -114,7 +114,7 @@ void outR (T& arg) {
 }
 \end{lstlisting}
 
-然而，模板在这里有点棘手。如果传递const参数，可能导致arg变成一个常量引用的声明，这意味着允许传递右值，但这里需要左值:
+然而，模板在这里有点棘手。若传递const参数，可能导致arg变成一个常量引用的声明，这意味着允许传递右值，但这里需要左值:
 
 \begin{lstlisting}[style=styleCXX]
 std::string const c = "hi";
@@ -128,7 +128,7 @@ outR("hi"); // OK: T deduced as char const[3]
 \hspace*{0.75cm}当传递std::move(c)时，std::move()首先将c转换为std::string const\&\&，然后将T推导为std::string const。
 \end{tcolorbox}
 
-在这种情况下，修改函数模板中传递的参数的尝试都是错误的。在表达式中传递常量对象是可能的，但当函数完全实例化时(这可能发生在编译的后期)，修改该值的尝试都将触发错误(然而，这可能发生在被调用模板的内部;见9.4节)。
+这种情况下，修改函数模板中传递的参数是错误的。在表达式中传递常量对象是可能的，但当函数完全实例化时(这可能发生在编译的后期)，修改该值的尝试都将触发错误(然而，这可能发生在被调用模板的内部;见9.4节)。
 
 如果想禁用将常量对象传递给非常量引用，可以这样做:
 
@@ -170,7 +170,7 @@ void outR (T& arg) {
 
 \subsubsubsection{7.2.3\hspace{0.2cm}通过转发引用进行传递}
 
-使用引用调用的原因是能够完美地转发参数(参见第6.1节)。但请记住，当使用转发引用(定义为模板形参的右值引用)时，需要使用特殊的规则。考虑以下代码:
+使用引用调用的原因是能够完美地转发参数(参见第6.1节)。但当使用转发引用(定义为模板形参的右值引用)时，需要使用特殊的规则。考虑以下代码:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -179,7 +179,7 @@ void passR (T&& arg) { // arg declared as forwarding reference
 }
 \end{lstlisting}
 
-可以把所有的东西都传递给转发引用，和通常的通过引用传递一样，不会创建副本:
+可以把所有的东西都传递给转发引用，和通过引用传递一样，不会创建副本:
 
 \begin{lstlisting}[style=styleCXX]
 std::string s = "hi";

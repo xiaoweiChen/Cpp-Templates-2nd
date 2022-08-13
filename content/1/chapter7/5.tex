@@ -1,6 +1,6 @@
 
 
-对于返回值，还可以决定是通过值返回还是通过引用返回。但返回引用可能是麻烦的来源，因为引用的东西超出了控制范围。一些情况下，返回引用却又是常见的编程实践:
+对于返回值，还可以决定是通过值返回，还是通过引用返回。但返回引用可能是麻烦的来源，因为引用的东西超出了控制范围。一些情况下，返回引用是常见的编程实践:
 
 \begin{itemize}
 \item 
@@ -10,12 +10,12 @@
 授予类成员写访问权限
 
 \item 
-返回链式调用的对象(流的operator<<和operator>>，类对象的operator=)
+返回链式调用的对象(流的operator<{}<和operator>{}>，类对象的operator=)
 \end{itemize}
 
-此外，通过返回const引用来授予成员的读权限。
+此外，通过返回const引用来授予成员读权限。
 
-若使用不当，所有这些情况都可能产生麻烦。例如:
+若使用不当，可能会产生麻烦。例如:
 
 \begin{lstlisting}[style=styleCXX]
 std::string* s = new std::string("whatever");
@@ -24,7 +24,7 @@ delete s;
 std::cout << c; // run-time ERROR
 \end{lstlisting}
 
-这里，获得了一个字符串元素的引用，但是当使用这个引用时，底层的字符串已经不存在了(创建了一个悬空引用)，并且出现了未定义的行为。这个例子有些做作(有经验的程序员可能马上就会注意到问题)，但是事情很容易变得不那么明显。例如:
+这里，获得了一个字符串元素的引用，但是当使用这个引用时，底层字符串已经不存在了(创建了一个悬空引用)，并且出现了未定义行为。这个例子有些做作(有经验的程序员可能马上就会注意到问题)，但是事情可能会变得不那么明显。例如:
 
 \begin{lstlisting}[style=styleCXX]
 auto s = std::make_shared<std::string>("whatever");
@@ -56,7 +56,7 @@ int x;
 retV<int&>(x); // retT() instantiated for T as int&
 \end{lstlisting}
 
-为了安全起见，这里有两个选择:
+安全起见，这里有两个选择:
 
 \begin{itemize}
 \item 

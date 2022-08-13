@@ -29,7 +29,7 @@ print(7.5 + 7.5,
 	std::complex<float>(4,2) + std::complex<float>(4,2);
 \end{lstlisting}
 
-如果只是想给每个参数加1，请注意省略号中的点不能直接跟在数字后面:
+如果想给每个参数加1，请注意省略号中的点不能直接跟在数字后面:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... T>
@@ -63,7 +63,7 @@ isHomogeneous(43, -1, "hello")
 std::is_same<int,int>::value && std::is_same<int,char const*>::value
 \end{lstlisting}
 
-而结果是false
+结果是false
 
 \begin{lstlisting}[style=styleCXX]
 isHomogeneous("hello", " ", "world", "!")
@@ -148,7 +148,7 @@ struct Indices {
 };
 \end{lstlisting}
 
-这可以用来定义函数，该函数在编译时对给定索引使用get<>()访问std::array或std::tuple的元素调用print():
+可以用来定义函数，该函数在编译时对给定索引使用get<>()访问std::array或std::tuple的元素调用print():
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t... Idx>
@@ -172,11 +172,11 @@ auto t = std::make_tuple(12, "monkeys", 2.0);
 printByIdx(t, Indices<0, 1, 2>());
 \end{lstlisting}
 
-这只元编程的开始，会在第8.1节和第23章中讨论。
+这只元编程的开始，在第8.1节和第23章中会更加详细的讨论元编程。
 
 \subsubsubsection{4.4.4\hspace{0.2cm}推导策略}
 
-推导策略(参见第2.9节)也可以是可变参的。例如，C++标准库定义了以下std::arrays的推导策略:
+推导策略(参见第2.9节)也可以应用于可变参数。例如，C++标准库定义了以下std::arrays的推导策略:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -198,18 +198,19 @@ std::array a{42,45,77};
 std::array<int, 3> a{42,45,77};
 \end{lstlisting}
 
-第一个数组参数的std::enable\_if<>表达式是一个折叠表达式(正如在章节4.4.1中引入的isHomogeneous())展开为:
+第一个数组参数的std::enable\_if<>表达式是一个折叠表达式(4.4.1节中引入的isHomogeneous())展开为:
 
 \begin{lstlisting}[style=styleCXX]
 is_same_v<T, U1> && is_same_v<T, U2> && is_same_v<T, U3> ...
 \end{lstlisting}
 
-如果结果不为true(即并非所有元素类型都相同)，则丢弃推导策略，整体推导失败。标准库确保所有元素具有相同的类型时，推导策略才能成功执行。
+若结果不为true(即并非所有元素类型都相同)，则丢弃推导策略，从而整体推导失败。标准库需要所有元素具有相同的类型时，推导策略才能成功执行。
 
 \subsubsubsection{4.4.5\hspace{0.2cm}基类和using}
 
 看看下面的例子:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/varusing.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -255,7 +256,7 @@ int main()
 }
 \end{lstlisting}
 
-这里，首先定义了一个类Customer和一些独立的函数对象，用于哈希和比较Customer对象。
+首先定义了一个类Customer和一些独立的函数对象，用于计算哈希值和比较Customer对象。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Bases>
@@ -271,9 +272,9 @@ struct Overloader : Bases...
 using CustomerOP = Overloader<CustomerHash,CustomerEq>;
 \end{lstlisting}
 
-使用这个特性从CustomerHash和CustomerEq派生CustomerOP，并在派生类中同时启用函数操作符的实现。
+使用这个特性从CustomerHash和CustomerEq派生CustomerOP，并在派生类中启用函数操作符的实现。
 
-参见第26.4节了解该技术的另一种应用。
+参见第26.4节了解该技术的另一种应用场景。
 
 
 

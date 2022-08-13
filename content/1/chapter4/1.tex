@@ -4,8 +4,9 @@
 
 \subsubsubsection{4.1.1\hspace{0.2cm}示例}
 
-例如，可以使用print()来获取可变类型的参数:
+可以使用print()来获取可变类型的参数:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/varprint1.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -23,7 +24,7 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-如果传递了一个或多个参数，则使用函数模板，通过指定第一个参数，允许在递归调用其余参数的print()之前打印第一个参数。剩下的args是一个函数参数包:
+若传递了一个或多个参数，则使用函数模板，通过指定第一个参数，可以在递归调用其余参数的print()前，打印第一个参数。剩下的args是一个函数参数包:
 
 \begin{lstlisting}[style=styleCXX]
 void print (T firstArg, Types... args)
@@ -63,7 +64,7 @@ print<double, char const*, std::string> (7.5, "hello", s);
 firstArg的值为7.5，因此类型T是一个double类型
 
 \item 
-args是可变参数模板参数，其值为char const*类型的"hello"和std::string类型的"world"。
+args是可变参数模板参数，其值为char const*型的"hello"和std::string型的"world"。
 \end{itemize}
 
 将7.5作为firstArg打印后，再次对其余参数调用print()，然后展开为:
@@ -74,13 +75,13 @@ print<char const*, std::string> ("hello", s);
 
 \begin{itemize}
 \item 
-firstArg的值为"hello"，所以T类型是char const*
+firstArg的值为"hello"，所以T的类型是char const*
 
 \item 
-args是可变参数模板参数，其值类型为std::string。
+args是可变参数，其值类型为std::string。
 \end{itemize}
 
-在将"hello"作为firstArg打印后，再次对其余参数调用print()，然后展开为:
+将"hello"作为firstArg打印后，再次对其余参数调用print()，然后展开为:
 
 \begin{lstlisting}[style=styleCXX]
 print<std::string> (s);
@@ -94,12 +95,13 @@ firstArg 的值为“world”，所以类型T现在是std::string
 args是空的可变参数模板参数。
 \end{itemize}
 
-因此，在将"world"打印作为firstArg之后，调用print()时不带参数，这将调用print()的非模板重载，从而不进行任何操作。
+因此，在将"world"打印作为firstArg之后，调用print()时不带参数，这将调用print()的非模板重载。
 
 \subsubsubsection{4.1.2\hspace{0.2cm}重载可变和非可变模板}
 
-注意，也可以这样实现上面的例子:
+也可以这样实现上面的例子:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/varprint2.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -122,14 +124,14 @@ void print (T firstArg, Types... args)
 若两个函数模板的区别仅在于末尾参数包的不同，则首选没有末尾参数包的函数模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}最初，在C++11和C++14中，这是一个不明确的问题，后来得到了解决(参见[CoreIssue1395])，但所有版本的编译器都会这样处理。
+\hspace*{0.75cm}起初在C++11和C++14中，这是一个不明确的问题，后来得到了解决(参见[CoreIssue1395])，并且所有版本的编译器都会这样处理。
 \end{tcolorbox}
 
 C.3.1节解释了这里应用的重载解析规则。
 
 \subsubsubsection{4.1.3\hspace{0.2cm}操作符sizeof...}
 
-C++11还为可变参模板引入了一种新的sizeof操作符:sizeof...，其值为参数包包含的元素数量。因此,
+C++11还为可变参模板引入了一种新的操作符:sizeof...，其值为参数包包含的元素数量。因此,
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
@@ -143,7 +145,7 @@ void print (T firstArg, Types... args)
 
 传递给print()的第一个参数之后，输出剩余两次参数的数量。对于模板参数包和函数参数包可以使用sizeof...。
 
-我们可能会认为，在递归结束时可以跳过该函数，在没有参数的情况下不调用它:
+我们可能会认为，递归结束时可以跳过该函数，并在没有参数的情况下不调用它:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename... Types>
@@ -156,9 +158,9 @@ void print (T firstArg, Types... args)
 }
 \end{lstlisting}
 
-但因为函数模板中所有if的两个分支都要实例化，实例化的代码是否运行是一个运行时决策，而调用的实例化是一个编译时决策。因此，如果为一个(最后一个)参数使用print()函数模板，则调用print(args...)的语句在没有参数的情况下仍然会实例化，如果没有参数的情况下没有提供print()函数，则会出错。
+但因为函数模板中所有if的两个分支都要实例化。这里，是否运行是运行时确定，而调用的实例化是编译时确定。因此，如果为一个(最后一个)参数使用print()函数模板，则调用print(args...)的语句在没有参数的情况下仍然会实例化，若没有参数的情况下不提供print()函数，则会报错。
 
-但请注意，由于C++17提供了编译时if，就可以实现了这里的期望，但在语法上略有不同。这将在第8.5节中讨论。
+但请注意，由于C++17提供了编译时if，就可以实现了这里的期望，但在语法上略有不同，这将在第8.5节中讨论。
 
 
 

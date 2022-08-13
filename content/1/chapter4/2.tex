@@ -10,13 +10,12 @@ auto foldSum (T... s) {
 }
 \end{lstlisting}
 
-如果参数包为空，表达式通常是错误格式的(除了操作符\&\&的值为true，操作符||的值为false，逗号操作符空形参包的值为void())。
+若参数包为空，表达式通常是错误格式的(除了操作符\&\&的值为true，操作符||的值为false，逗号操作符空参数包的值为void())。
 
 表4.1列出了可能的折叠表达式。
 
-\begin{center}
-	
 \begin{table}[H]
+	\centering
 	\begin{tabular}{|l|l|}
 		\hline
 		\textbf{折叠表达式}                                                                                                      & \textbf{展开}                                                                                                                                                                                                     \\ \hline
@@ -24,11 +23,13 @@ auto foldSum (T... s) {
 	\end{tabular}
 \end{table}
 
+\begin{center}
 表4.1. 折叠表达式(C++17)
 \end{center}
 
-几乎所有的二元运算符都可以用于折叠表达式(详见12.4.6节)。例如，可以使用折叠表达式来遍历一个二叉树的路径，使用操作符\texttt{->*}:
+几乎所有的二元运算符都可以使用折叠表达式(详见12.4.6节)。例如，可以使用折叠表达式来遍历一个二叉树的路径，使用操作符\texttt{->*}:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/foldtraverse.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -82,8 +83,9 @@ void print (Types const&... args)
 }
 \end{lstlisting}
 
-但注意，无法成为参数包中的每个元素输出在打印时添加空格。要做到这一点，需要一个额外的类模板，确保参数的任何输出都会添加一个空格扩展:
+但无法为参数包中的每个元素输出添加打印空格。要添加空格，需要一个额外的类模板，确保参数的输出都会添加一个空格:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/addspace.hpp}
 \begin{lstlisting}[style=styleCXX]

@@ -11,7 +11,7 @@ auto sp = std::make_shared<std::complex<float>>(4.2, 7.7);
 \end{lstlisting}
 
 \item 
-将参数传递给一个由线程库启动的线程:
+将参数传递给由线程库启动的线程:
 \begin{lstlisting}[style=styleCXX]
 std::thread t (foo, 42, "hello"); // call foo(42,"hello") in a separate thread
 \end{lstlisting}
@@ -26,7 +26,7 @@ v.emplace("Tim", "Jovi", 1962); // insert a Customer initialized by three argume
 
 \end{itemize}
 
-通常，参数使用移动语义“完美转发”(见第6.1节)，相应的声明例如:
+通常，参数使用移动语义“完美转发”(见第6.1节)，相应的声明为:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {

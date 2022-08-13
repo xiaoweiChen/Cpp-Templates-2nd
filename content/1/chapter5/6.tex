@@ -1,7 +1,7 @@
 C++14后，变量也可以通过特定类型参数化，成为做变量模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}是的，我们有非常相似的术语来描述非常不同的事情:变量模板是一个变量，它是一个模板(变量在这里是一个名词)。可变参数模板是用于可变数量模板参数的模板(可变参数在这里是形容词)。
+\hspace*{0.75cm}我们有非常相似的术语来描述非常不同的事情:变量模板是一个变量，它是一个模板(变量在这里是一个名词)。可变参数模板是用于可变数量模板参数的模板(可变参数在这里是形容词)。
 \end{tcolorbox}
 
 例如，可以使用以下代码定义$\pi$的值，而不定义值的类型:
@@ -11,7 +11,7 @@ template<typename T>
 constexpr T pi{3.1415926535897932385};
 \end{lstlisting}
 
-注意，与所有模板一样，此声明不能出现在函数或块作用域内。
+与所有模板一样，此声明不能出现在函数或块作用域内。
 
 要使用变量模板，必须指定它的类型。例如，下面的代码使用了声明pi<>作用域的两个不同变量:
 
@@ -20,7 +20,7 @@ std::cout << pi<double> << '\n';
 std::cout << pi<float> << '\n';
 \end{lstlisting}
 
-也可以声明用于不同转译单元的变量模板:
+也可以声明用于不同翻译单元的变量模板:
 
 \begin{lstlisting}[style=styleCXX]
 // header.hpp:
@@ -44,7 +44,7 @@ void print()
 }
 \end{lstlisting}
 
-变量模板也可以有默认的模板参数:
+变量模板也可以有默认模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T = long double>
@@ -86,7 +86,7 @@ int main()
 }
 \end{lstlisting}
 
-同样需要注意的是，即使在不同的转译单元中对同一变量std::array<int,10> arr进行初始化和迭代时，仍使用全局作用域。
+同样需要注意的是，即使在不同的翻译单元中对同一变量std::array<int,10> arr进行初始化和迭代时，仍使用全局作用域。
 
 \hspace*{\fill} \\ %插入空行
 \noindent

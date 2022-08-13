@@ -8,7 +8,7 @@ void foo()
 }
 \end{lstlisting}
 
-现在，如果编写模板，并想让模板类型的变量用默认值初始化，就会遇到一个问题，简单的定义对内置类型并没有进行初始化:
+若编写模板，并想让模板类型的变量用默认值初始化，就会遇到一个问题，简单的定义对内置类型并没有进行初始化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -30,7 +30,7 @@ void foo()
 
 这种初始化方式称为值初始化，要么调用提供的构造函数，要么对对象进行零初始化。即使构造函数是显式的，也可以这样做。
 
-C++11前，确保正确初始化的语法是
+C++11前，正确初始化的语法是
 
 \begin{lstlisting}[style=styleCXX]
 T x = T(); // x is zero (or false) if T is a built-in type
@@ -39,10 +39,10 @@ T x = T(); // x is zero (or false) if T is a built-in type
 C++17前，这种机制(现在仍受支持)只有在为复制初始化选择的构造函数不是显式的情况下才有效。在C++17中，省略了强制复制，从而避免了这种限制，而且两种语法都有效。但若没有默认构造函数，带大括号的初始化表示法可以使用初始化列表构造函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}对于某种类型X，参数类型为std::initializer\_list<X>的构造函数。
+\hspace*{0.75cm}对于某种类型X，有参数类型为std::initializer\_list<X>的构造函数。
 \end{tcolorbox}
 
-为了确保将类型参数化的类模板成员初始化，可以定义一个默认构造函数，使用带大括号的初始化式来初始化成员:
+为了确保将类型参数化的类模板成员初始化，可以定义默认构造函数，使用带大括号的初始化式来初始化成员:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -63,7 +63,7 @@ MyClass() : x() { // ensures that x is initialized even for built-in types
 }
 \end{lstlisting}
 
-在后续的标准中使用，仍然有效。
+在后续标准中使用，仍然有效。
 
 C++11后，还可以为非静态成员提供默认初始化，这样也可以实现以下操作:
 

@@ -1,4 +1,4 @@
-关键字typename是在C++标准化过程中引入的，目的是澄清模板内的标识符是类型。比如下面的例子:
+关键字typename是在C++标准化过程中引入的，目的是说明模板内的标识符是类型。比如下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -11,7 +11,7 @@ class MyClass {
 };
 \end{lstlisting}
 
-这里，第二个typename用于澄清SubType是在类T中定义的类型。因此，ptr是指向类型T::SubType的指针。
+这里，第二个typename用于说明SubType是在类T中定义的类型。因此，ptr是指向类型T::SubType的指针。
 
 若没有typename, SubType将假定为非类型成员(例如，静态数据成员或枚举数常量)。因此，表达式
 
@@ -19,11 +19,11 @@ class MyClass {
 T::SubType* ptr
 \end{lstlisting}
 
-将是类T的静态SubType成员与ptr的乘积，这不是一个错误，因为对于MyClass<>的某些实例化，这可能是有效的。
+表示的是类T的静态SubType成员与ptr的乘积，这不是一个错误，因为对于MyClass<>的某些实例化，这可能有效。
 
-当依赖于模板参数名称是类型时，必须使用typename。这将在第13.3.2节中详细讨论。
+当模板参数是类型时，必须使用typename。这将在第13.3.2节中详细讨论。
 
-typename的一中应用是在泛型代码中声明标准容器的迭代器:
+typename的一种应用是在泛型代码中声明标准容器的迭代器:
 
 \noindent
 \textit{basics/printcoll.hpp}
@@ -54,13 +54,13 @@ class stlcontainer {
 };
 \end{lstlisting}
 
-因此，要访问模板类型T的const\_iterator类型，必须用前导的typename进行限定:
+因此，要访问模板类型T的const\_iterator类型，必须用typename进行限定:
 
 \begin{lstlisting}[style=styleCXX]
 typename T::const_iterator pos;
 \end{lstlisting}
 
-有关在C++17之前需要typename的更多细节，请参阅第13.3.2节。注意，C++20在许多常见情况下可能会删除对typename的需要(请参阅第17.1节了解详细信息)。
+有关在C++17前需要typename的更多细节，请参阅第13.3.2节。注意，C++20在许多常见情况下可能会删除对typename的需要(请参阅第17.1节了解详细信息)。
 
 
 

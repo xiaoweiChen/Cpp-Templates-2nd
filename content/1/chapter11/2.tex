@@ -3,7 +3,7 @@ std::invoke()只是标准库为实现泛型库提供的有用实用程序的一�
 
 \subsubsubsection{11.2.1\hspace{0.2cm}类型特征}
 
-标准库提供了各种称为类型特征的工具，允许计算和修改类型。支持泛型，即代码必须适应实例化类型的功能或对其作出反应。例如:
+标准库提供了各种类型特征工具，允许计算和修改类型。支持泛型，即代码必须适应实例化类型的功能或对其作出反应。例如:
 
 \begin{lstlisting}[style=styleCXX]
 #include <type_traits>
@@ -29,9 +29,9 @@ public:
 };
 \end{lstlisting}
 
-正如这个例子所演示的，通过检查某些条件，可以在模板的不同实现之间进行选择。这里，使用编译时if特性，从C++17开始就可用了(请参阅8.5节)，但也可以使用std::enable\_if、偏特化或SFINAE来启用或禁用助手模板(请参阅第8章的详细信息)。
+正如这个例子所示，通过检查某些条件，可以在不同的模板实现之间进行选择。这里，使用编译时if特性，从C++17开始就可用了(请参阅8.5节)，但也可以使用std::enable\_if、偏特化或SFINAE来启用或禁用助手模板(请参阅第8章的详细信息)。
 
-注意必须特别小心地使用类型特征:其行为可能与(菜鸟期的)开发者所期望有所不同。例如:
+必须特别小心地使用类型特征:其行为可能与(菜鸟期)开发者所期望有所不同。例如:
 
 \begin{lstlisting}[style=styleCXX]
 std::remove_const_t<int const&> // yields int const&
@@ -52,7 +52,7 @@ std::remove_reference_t<std::remove_const_t<int const&>> // int const
 std::decay_t<int const&> // yields int
 \end{lstlisting}
 
-但也可以将数组和函数转换为相应的指针类型。还有一些情况下，类型特征是有限制的，不满足这些条件会导致未定义行为。
+但也可以将数组和函数转换为相应的指针类型。有一些情况下，类型特征是有限制的，不满足这些条件会导致未定义行为。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}有人建议C++17，要求违反类型特征的前提条件必须导致编译时错误。然而，因为一些类型特征有过度约束的条件，例如总是需要完整的类型，这种建议还未完全付诸于行动。
@@ -73,7 +73,7 @@ add_rvalue_reference_t<int const> // int const&&
 add_rvalue_reference_t<int const&> // int const& (lvalue-ref remains lvalue-ref)
 \end{lstlisting}
 
-这里可能期望add\_rvalue\_reference总是进行右值引用，但是C++的引用折叠规则(参见第277页的15.6.1节)导致左值引用和右值引用的组合产生左值引用。
+这里可能期望add\_rvalue\_reference总是进行右值引用，但是C++的引用折叠规则(参见第15.6.1节)导致左值引用和右值引用的组合产生左值引用。
 
 另一个例子：
 
@@ -96,7 +96,7 @@ is_swappable_v<int&,int&> // yields true (equivalent to the previous check)
 is_swappable_with_v<int,int> // yields false (taking value category into account)
 \end{lstlisting}
 
-请仔细注意类型特征的准确定义，我们在附录D中详细描述了标准的情况。
+请仔细注意类型特征的准确定义，附录D中详细描述了标准的情况。
 
 \subsubsubsection{11.2.2\hspace{0.2cm}std::addressof()}
 

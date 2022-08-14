@@ -10,7 +10,7 @@ public:
 };
 \end{lstlisting}
 
-这个类可以与不完整类型一起使用。这很有用，例如：当类引用自己类型的元素时:
+这个类可以与不完整类型一起使用。例如：当类引用自己类型的元素时:
 
 \begin{lstlisting}[style=styleCXX]
 struct Node
@@ -39,7 +39,7 @@ public:
 
 这里，使用特征std::conditional(参见D.5节)来决定成员函数foo()的返回类型是T\&\&还是T\&。这取决于模板参数类型T是否支持移动语义。
 
-问题是特性std::is\_move\_constructible要求参数是一个完整的类型(不是void或未知边界的数组;参见的D.3.2节)。因此，在foo()的这个声明中，struct Node的声明失败了。
+问题是特性std::is\_move\_constructible要求参数是一个完整的类型(不是void或未知边界的数组;参见的D.3.2节)。在foo()的这个声明中，struct Node的声明失败了。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}如果std::is\_move\_constructible是一个完整的类型，并不是所有的编译器都会产生错误。因为对于这种错误，不需要进行诊断。所以，在需要平台移植时需要考虑这个问题。
@@ -61,7 +61,7 @@ public:
 };
 \end{lstlisting}
 
-现在，特性依赖于模板形参D(默认为T，我们想要的值)，编译器必须等到foo()调，如Node之前，再评估特性(那时Node是一个完整的类型，只是在定义时不完整)。
+现在，特性依赖于模板参数D(默认为T，我们想要的值)，编译器必须等到foo()调，如Node之前，再评估特性(那时Node是一个完整的类型，只是在定义时不完整)。
 
 
 

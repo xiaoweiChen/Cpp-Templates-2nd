@@ -1,9 +1,9 @@
 
-许多库包括客户端代码向其传递必须“调用”的接口。示例包括必须在另一个线程上调度的操作、如何将散列值存储在散列表中的函数、对集合中的元素排序的顺序的对象，以及提供默认参数值的通用包装器。标准库在这里也不例外:定义了许多使用此类的组件。
+许多库包括外部代码向其传递接口。示例包括必须在另一个线程上调度的操作、如何将哈希值存储在哈希表中的函数、对集合中的元素排序的顺序的对象，以及提供默认参数值的通用包装器。标准库在这里也不例外，定义了许多使用此类的组件。
 
-这种情况下使用的术语是回调，这个术语作为函数调用参数传递的实体保留的(与模板参数相反)，我们保持了这个传统。例如，sort函数可以包含一个回调参数作为“排序条件”，调用该参数来确定一个元素是否在所需排序顺序的另一个元素之前。
+这种情况下使用的术语是回调，作为函数调用参数传递的实体(与模板参数相反)，我们保持了这个传统。例如，sort函数可以包含一个回调参数作为“排序条件”，调用该参数来确定一个元素是否在所需排序顺序的另一个元素之前。
 
-C++中，有几种类型可以很好地用于回调，因为它们既可以作为函数调用参数传递，也可以以f(…)方式直接调用:
+C++中，有几种类型可以很好地用于回调，它们既可以作为函数调用参数传递，也可以以f(…)方式直接使用:
 
 \begin{itemize}
 \item 
@@ -18,14 +18,15 @@ C++中，有几种类型可以很好地用于回调，因为它们既可以作�
 
 这些类型统称为函数对象类型，这种类型的值就是函数对象。
 
-C++标准库引入了更宽泛的可调用类型概念，可以是函数对象类型或成员指针。可调用类型的对象是可调用对象，方便起见，这里将其称为可调用对象。
+C++标准库引入了更宽泛的可调用类型概念，可以是函数对象类型或成员指针。可调用类型的对象是可调用对象，这里将其称为可调用对象。
 
 泛型代码通常是能够接受任何类型的可调用代码。
 
 \subsubsubsection{11.1.1\hspace{0.2cm}函数对象}
 
-来看看标准库的for\_each()算法是如何实现的(使用我们自己的“foreach”以避免名称冲突，并为跳过返回):
+来看看标准库的for\_each()算法是如何实现的(使用我们的“foreach”以避免名称冲突):
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/foreach.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -41,6 +42,7 @@ void foreach (Iter current, Iter end, Callable op)
 
 下面的程序演示了该模板与各种函数对象的使用:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/foreach.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -80,33 +82,33 @@ int main()
 }
 \end{lstlisting}
 
-让我们来仔细看看每种情况:
+来仔细看看每种情况:
 
 \begin{itemize}
 \item 
-当将函数名作为函数参数传递时，实际上传递的不是函数本身，而是指向函数的指针或引用。与数组一样(参见7.4节)，函数实参在按值传递时衰变为指针，对于模板形参类型的形参，将推导出指向函数的指针类型。
+将函数名作为函数参数传递时，实际上传递的不是函数本身，而是指向函数的指针或引用。与数组一样(参见7.4节)，函数实参在按值传递时衰变为指针，对于模板参数类型，将推导出指向函数的指针类型。
 
-就像数组一样，函数可以通过引用传递，但函数类型不能用const限定。如果用可调用的const\&类型声明foreach()的最后一个形参，那么const将会忽略。(主流C++编码中很少使用函数引用。)
+就像数组一样，函数可以通过引用传递，但函数类型不能用const限定。若用可调用的const\&类型声明foreach()的最后一个参数，那么const将会忽略。(主流C++编码中很少使用函数引用。)
 
 \item 
 第二个调用通过传递函数名的地址显式接受函数指针。这相当于第一次调用(其中函数名隐式衰变为指针值)，但可能更清晰一些
 
 \item 
-传递函子时，将类类型对象作为可调用对象传递。通过类类型调用通常相当于调用其operator()。因此,调用
+传递函子时，将类类型对象作为可调用对象传递。通过类类型调用通常相当于调用其函数操作符。因此，
 
 \begin{lstlisting}[style=styleCXX]
 op(*current);
 \end{lstlisting}
 
-通常被转化为
+通常会转化为
 
 \begin{lstlisting}[style=styleCXX]
 op.operator()(*current); // call operator() with parameter *current for op
 \end{lstlisting}
 
-注意，定义operator()时，应该将其定义为常量成员函数。否则，当框架或库希望此调用不会改变传递对象的状态时，就会发生微妙的错误消息(详见9.4节)。
+定义函数操作符时，应该将其定义为常量成员函数。否则，当框架或库希望此调用不会改变传递对象的状态时，就会产生错误消息(详见9.4节)。
 
-类类型对象也可以隐式转换为指向代理调用函数的指针或引用(在C.3.5节讨论)。在这种情况下，调用
+类类型对象也可以隐式转换为指向代理调用函数的指针或引用(在C.3.5节讨论)。这种情况下，调用
 
 \begin{lstlisting}[style=styleCXX]
 op(*current);
@@ -121,17 +123,18 @@ op(*current);
 其中F是类类型对象可以转换为的函数指针或函数引用的类型。
 
 \item 
-Lambda表达式产生函子(称为闭包)，因此这种情况与函子情况没有区别。然而，Lambda是引入函子的一种非常方便的速记符号。C++11后，经常出现在C++代码中。
+Lambda表达式产生函子(称为闭包)，这种情况与函子情况没有区别。然而，Lambda是引入函子的一种非常方便的快捷方式。C++11后，经常出现在C++代码中。
 
-有趣的是，以[]开头的Lambda(没有捕获)产生到函数指针的转换操作符。但是，从来没将其作为代理调用函数，因为闭包的普通operator()会匹配得更好。
+有趣的是，以[]开头的Lambda(没有捕获)产生到函数指针的转换操作符。因为因为闭包的普通函数操作符会匹配得更好，所以从来没将其作为代理函数。
 \end{itemize}
 
 \subsubsubsection{11.1.2\hspace{0.2cm}处理成员函数和附加函数}
 
 前面的例子中没有使用的实体:成员函数。这是因为调用非静态成员函数通常需要使用object.memfunc(…)或ptr->memfunc(…)这样的语法指定调用的对象，而这与通常的模式function-object(…)不匹配。
 
-C++17后，标准库提供了一个实用工具std::invoke()，会将这种情况与普通的函数调用语法情况统一起来，从而允许以单一形式调用可调用对象。以下foreach()模板的实现使用了std::invoke():
+C++17后，标准库提供了一个实用工具std::invoke()，会将这种情况与普通的函数调用语法统一，从而允许以单一形式调用可调用对象。以下foreach()模板的实现使用了std::invoke():
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/foreachinvoke.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -149,7 +152,7 @@ void foreach (Iter current, Iter end, Callable op, Args const&... args)
 }
 \end{lstlisting}
 
-这里，除了可调用的形参外，还接受任意数量的附加形参。然后，foreach()模板使用给定的可调用对象调用std::invoke()，再加上附加的给定参数和所引用的元素。std::invoke()处理如下:
+这里除了可调用的参数外，还接受任意数量的附加参数。然后，foreach()模板使用给定的可调用对象调用std::invoke()，再加上附加的给定参数和所引用的元素。std::invoke()处理如下:
 
 \begin{itemize}
 \item 
@@ -159,7 +162,7 @@ void foreach (Iter current, Iter end, Callable op, Args const&... args)
 否则，所有附加参数都只是作为参数传递给可调用对象。
 \end{itemize}
 
-注意，我们不能在这里对可调用参数或附加参数使用完美转发:第一次调用可能“窃取”它们的值，导致在后续迭代中调用op时可能会出现意外行为。
+不能在这里对可调用参数或附加参数使用完美转发:第一次调用可能“窃取”值，导致在后续迭代中调用op时可能会出现意外行为。
 
 有了这个实现，仍然可以编译上面对foreach()的调用。另外，还可以向可调用对象传递额外的参数，可调用对象也可以是成员函数。
 
@@ -167,8 +170,9 @@ void foreach (Iter current, Iter end, Callable op, Args const&... args)
 \hspace*{0.75cm}std::invoke()允许将指向数据成员的指针作为回调类型。它不调用函数，而是返回附加参数引用的对象中相应数据成员的值。
 \end{tcolorbox}
 
-下面的客户端代码说明了这一点:
+下面的代码说明了这一点:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/foreachinvoke.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -203,14 +207,15 @@ int main()
 }
 \end{lstlisting}
 
-foreach()的第一次调用将其第四个参数(字符串字面量"-value:")传递给Lambda的第一个形参，而vector中的当前元素绑定到Lambda的第二个形参。第二次调用传递成员函数memfunc()作为传递obj作为第四个参数的第三个参数。
+foreach()的第一次调用将其第四个参数(字符串字面量"- value: ")传递给Lambda的第一个参数，而vector中的当前元素绑定到Lambda的第二个参数。第二次调用传递成员函数memfunc()作为传递obj作为第四个参数的第三个参数。
 
 有关产生std::invoke()是否可以使用可调用对象的类型特征，请参见D.3.1节。
 
 \subsubsubsection{11.1.3\hspace{0.2cm}使用包装函数}
 
-std::invoke()的一个常见应用是封装单个函数调用(例如，记录调用，测量它们的持续时间，或准备一些上下文，例如启动一个新线程)。现在，可以通过完美转发可调用参数和所有传递的参数来支持移动语义:
+std::invoke()的一个常见应用是封装单个函数调用(例如，记录调用，测量持续时间，或准备一些上下文，例如启动一个新线程)。现在，可以通过完美转发可调用参数和传递参数来支持移动语义:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/invoke.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -225,7 +230,7 @@ decltype(auto) call(Callable&& op, Args&&... args)
 }
 \end{lstlisting}
 
-另一个有趣的方面是如何处理被调用函数的返回值，以便将其“完美地”转发回调用者。为了支持返回引用(比如std::ostream\&)，必须使用decltype(auto)而不是auto:
+另一个有趣的地方在于，如何处理调用函数的返回值，以便将其“完美地”转发回调用者。为了支持返回引用(比如std::ostream\&)，必须使用decltype(auto)而不是auto:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Callable, typename... Args>
@@ -234,7 +239,7 @@ decltype(auto) call(Callable&& op, Args&&... args)
 
 decltype(auto)(C++14)是一个占位符类型，根据相关表达式的类型(初始化器、返回值或模板参数)确定变量、返回类型或模板参数的类型。详见15.10.3节。
 
-如果想将std::invoke()返回的值临时存储在变量中，以便在执行其他操作(例如，处理返回值或记录调用结束)后返回它，还必须使用decltype(auto)声明临时变量:
+若将std::invoke()返回的值临时存储在变量中，以便在执行其他操作(例如，处理返回值或记录调用结束)后返回，还必须使用decltype(auto)声明临时变量:
 
 \begin{lstlisting}[style=styleCXX]
 decltype(auto) ret{std::invoke(std::forward<Callable>(op),
@@ -243,13 +248,13 @@ decltype(auto) ret{std::invoke(std::forward<Callable>(op),
 return ret;
 \end{lstlisting}
 
-注意，用auto\&\&声明ret并不正确。作为一个引用，auto\&\&扩展返回值的生命周期直到作用域结束(参见第167页11.3节)，但不超出函数调用者的返回语句。
+注意，用auto\&\&声明ret并不正确。作为一个引用，auto\&\&扩展返回值的生命周期直到作用域结束(参见第11.3节)，但不超出函数调用者的返回语句。
 
-然而，使用decltype(auto)也有一个问题:如果可调用对象的返回类型为void，则不允许将ret初始化为decltype(auto)，因为void是一个不完整的类型。现在，有以下选择:
+使用decltype(auto)也有一个问题:若可调用对象的返回类型为void，则不允许将ret初始化为decltype(auto)，因为void是一个不完整的类型。现在，有以下选择:
 
 \begin{itemize}
 \item 
-在语句的前一行声明一个对象，它的析构函数执行希望实现的可观察行为。例如:
+在语句的前一行声明一个对象，其析构函数执行希望实现的可观察行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
 struct cleanup {
@@ -264,6 +269,7 @@ return std::invoke(std::forward<Callable>(op),
 \item 
 以不同的方式实现void和非void的情况:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/invokeret.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -296,7 +302,7 @@ decltype(auto) call(Callable&& op, Args&&... args)
 if constexpr(std::is_same_v<std::invoke_result_t<Callable, Args...>, void>)
 \end{lstlisting}
 
-在编译时测试调用的返回类型Args…是否有void。有关std::invoke\_result<>的详细信息，请参阅D.3.1节。
+编译时测试调用的返回类型Args…是否有void。有关std::invoke\_result<>的详细信息，请参阅D.3.1节。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}C++17起可用std::invoke\_result<>。C++11起，要获得返回类型，可以使用:typename std::result\_of<Callable(Args…)>::type
@@ -304,7 +310,7 @@ if constexpr(std::is_same_v<std::invoke_result_t<Callable, Args...>, void>)
 
 \end{itemize}
 
-未来的C++可能会有希望避免对void的特殊处理(参见17.7节)。
+未来的C++可能会避免对void的特殊处理(参见17.7节)。
 
 
 

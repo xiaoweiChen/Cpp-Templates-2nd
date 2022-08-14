@@ -1,5 +1,6 @@
-虽然模板类型形参不常见，但它可以成为引用类型。例如:
+虽然模板类型参数不常见，但它可以成为引用类型。例如:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/tmplparamref.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -21,15 +22,16 @@ int main()
 }
 \end{lstlisting}
 
-即使引用变量传递给tmplParamIsReference()，模板形参T也会推导为所引用类型的类型(因为，对于引用变量v，表达式v具有所引用的类型;表达式的类型绝不是引用)。但是，可以通过显式指定T的类型来强制使用引用情况:
+即使引用变量传递给tmplParamIsReference()，模板参数T也会推导为所引用类型的类型(因为，对于引用变量v，表达式v具有所引用的类型;表达式的类型绝不是引用)。但是，可以通过显式指定T的类型来强制使用引用:
 
 \begin{lstlisting}[style=styleCXX]
 tmplParamIsReference<int&>(r);
 tmplParamIsReference<int&>(i);
 \end{lstlisting}
 
-这样做可以从根本上改变模板的行为，而且模板在设计时很可能没有考虑到这种可能性，从而触发错误或意外行为。考虑下面的例子:
+这样做可以从根本上改变模板的行为，而且模板在设计时可能没有考虑到这种情况，从而触发错误或意外行为。考虑下面的例子:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/referror1.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -58,7 +60,7 @@ int main()
 }
 \end{lstlisting}
 
-这里，有一个具有模板形参类型T成员的类，用非类型模板形参Z初始化，Z具有初始值为零的默认值。用int类型实例化类符合预期。然而，当试图用引用实例化它时，麻烦出现了:
+这里，有一个具有模板参数类型T成员的类，用非类型模板参数Z初始化，Z具有初始值的默认值为零。用int类型实例化类符合预期。然而，当试图用引用其实例化时，麻烦出现了:
 
 \begin{itemize}
 \item 
@@ -71,8 +73,9 @@ int main()
 因为非静态引用成员的类已经删除了默认的赋值操作符，赋值操作符不再可用。
 \end{itemize}
 
-此外，对非类型模板形参使用引用类型很麻烦，可能会很危险。考虑一下这个例子:
+此外，对非类型模板参数使用引用类型很麻烦，可能会很危险。考虑一下这个例子:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/referror2.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -106,7 +109,7 @@ int main()
 }
 \end{lstlisting}
 
-这里，为引用类型的元素实例化Arr的尝试，会导致std::vector<>类代码的错误，因为它不能用引用作为元素实例化:
+这里，为引用类型的元素实例化Arr的尝试，会导致std::vector<>类的错误，因为它不能用引用作为元素实例化:
 
 \begin{lstlisting}[style=styleCXX]
 Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
@@ -114,7 +117,7 @@ Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
 
 这个错误经常会形成在9.4节中看到的“错误小说”，编译器提供了从初始化原因到检测到错误实际模板定义的整个模板实例化过程。
 
-更糟糕的可能是由于将size参数作为引用而导致的运行时错误:其允许记录的size值在容器不知道的情况下发生变化(也就是说，size值可能会失效)。因此，使用size的操作(如print()成员)必然会出现未定义的行为(导致程序崩溃，或更糟):
+更糟糕的可能是由于将size参数作为引用而导致的运行时错误:其允许记录的size值在容器不知道的情况下发生变化(也就是说，size值可能会失效)。因此，使用size的操作(如print()成员)必然会出现未定义行为(导致程序崩溃，或更糟):
 
 \begin{lstlisting}[style=styleCXX]
 int int size = 10;
@@ -124,9 +127,9 @@ size += 100; // OOPS: modifies SZ in Arr<>
 x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
 \end{lstlisting}
 
-注意，将模板形参SZ更改为int const\&类型并不能解决这个问题，因为size本身可以修改。
+将模板参数SZ更改为int const\&类型并不能解决这个问题，因为size本身可以修改。
 
-这个例子有些牵强。然而，在更复杂的情况下，这样的问题确实会发生。另外，C++17中可以推导出非类型形参。例如:
+这个例子有些牵强。在更复杂的情况下，这样的问题确实会发生。另外，C++17中可以推导出非类型参数。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, decltype(auto) SZ>
@@ -139,7 +142,7 @@ class Arr;
 
 \begin{itemize}
 \item 
-为了在模板形参为引用实例化时仍然具有赋值操作符，std::pair<>和std::tuple<>类实现了赋值操作符，而不是使用默认行为。例如:
+为了在模板参数为引用实例化时仍然具有赋值操作符，std::pair<>和std::tuple<>类实现了赋值操作符，而不是使用默认行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -177,7 +180,7 @@ class optional
 
 \end{itemize}
 
-引用类型通常与其他类型不同，并且受几种独特的语言规则的约束。例如，这会影响调用参数的声明(参见第7节)，以及定义类型特征的方式(参见第19.6.1节)。
+引用类型通常与其他类型不同，并且受几种语言规则的约束。这会影响调用参数的声明(参见第7节)，以及定义类型特征的方式(参见第19.6.1节)。
 
 
 

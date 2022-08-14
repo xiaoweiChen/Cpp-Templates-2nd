@@ -1,6 +1,6 @@
-偏特化化、SFINAE和std::enable\_if允许从整体上启用或禁用模板。C++17引入了编译时if语句，允许根据编译时条件启用或禁用特定语句。使用if constexpr(…)语法，编译器使用编译时表达式来决定是应用then部分，还是else部分(如果有的话)。
+偏特化、SFINAE和std::enable\_if允许从整体上启用或禁用模板。C++17引入了编译时if语句，允许根据编译时条件启用或禁用特定语句。使用if constexpr(…)语法，编译器使用编译时表达式来决定是应用then部分，还是else部分(如果有的话)。
 
-作为第一个例子，4.1.1节中介绍的可变参数函数模板print()，使用递归打印它的参数(任意类型)。与提供一个单独的函数来结束递归不同，constexpr if特性决定是否继续递归:
+作为第一个例子，4.1.1节中介绍的可变参数函数模板print()，使用递归打印参数(任意类型)。与提供一个单独的函数来结束递归不同，constexpr if特性决定是否继续递归:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}虽然代码读取if constexpr，但该特性称为constexpr if，因为它是if的“constexpr”形式(由于历史原因)。
@@ -17,9 +17,9 @@ void print (T const& firstArg, Types const&... args)
 }
 \end{lstlisting}
 
-这里，如果只对一个参数调用print()， args将成为空形参包，因此sizeof…(args)将变为0。结果，print()的递归调用变成了一个被丢弃的语句，代码没有被实例化。因此，相应的函数不需要存在，递归结束。
+这里，若只对一个参数调用print()， args将成为空的参数包，因此sizeof…(args)将变为0。结果，print()的递归调用变成了一个丢弃的语句，代码没有实例化。因此，相应的函数不需要存在，递归结束。
 
-代码没有实例化意味着只执行第一个翻译阶段(定义时间)，检查正确的语法和不依赖于模板参数的名称(参见第6页的1.1.3节)。
+代码没有实例化意味着只执行第一个翻译阶段，检查正确的语法和不依赖于模板参数的名称(参见第1.1.3节)。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -39,7 +39,7 @@ void foo(T t)
 }
 \end{lstlisting}
 
-注意，如果constexpr可以用于任何函数，而不仅在模板中。只需要一个产生布尔值的编译时表达式。例如:
+若constexpr可以用于任何函数，而不仅在模板中。只需要一个产生布尔值的编译时表达式。例如:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -56,7 +56,7 @@ int main()
 }
 \end{lstlisting}
 
-有了这个特性，若给定的大小不是质数，可以使用在第8.2节中引入的isPrime()编译时函数执行额外的代码:
+有了这个特性，若给定的大小不是质数，可以使用第8.2节中的isPrime()在编译时执行:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t SZ>

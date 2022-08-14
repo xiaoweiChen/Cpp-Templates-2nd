@@ -1,7 +1,8 @@
-C++11引入了一个新特性constexpr，极大地简化了各种形式的编译时计算。特别是，如果有输入适当，可以在编译时对constexpr函数求值。虽然在C++11中引入的constexpr函数有严格限制(例如，每个constexpr函数本质上都需要包含一个return语句)，但在C++14中，这些限制大部分都删除了。当然，成功地计算constexpr函数仍然需要所有的计算步骤在编译时是可行的和有效的:目前，这排除了堆分配或抛出异常的情况。
+C++11引入了一个新特性constexpr，简化了各种形式的编译时计算。特别是，如果有输入适当，可以在编译时对constexpr函数求值。虽然在C++11中引入constexpr函数有严格限制(每个constexpr函数本质上都需要包含一个return语句)，但在C++14中，这些限制大部分都取消了。当然，成功地计算constexpr函数仍然需要所有的计算步骤，在编译时是可行和有效的:这排除了堆分配或抛出异常的情况。
 
-我们测试一个数字是否是素数的例子可以在C++11中有如下实现:
+我们测试一个数字是否是素数的例子，可以使用C++11进行如下实现:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/isprime11.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -19,10 +20,11 @@ constexpr bool isPrime (unsigned p)
 }
 \end{lstlisting}
 
-由于只有一条语句的限制，只能使用条件操作符作为选择机制，并且需要递归来遍历元素。但其语法是普通的C++函数代码，这使得它比依赖于模板实例化的第一个版本更容易访问。
+由于只有一条语句的限制，只能使用条件操作符作为选择机制，并且需要递归来遍历元素。但其语法是普通的C++函数代码，这使得它比依赖于模板实例化的第一个版本更容易使用。
 
-C++14中，constexpr函数可以使用大多数通用C++代码中可用的控制结构。因此，不用编写笨拙的模板代码或有些神秘的单行程序，现在只使用普通的for循环:
+C++14中，constexpr函数可以使用通用C++代码中的控制结构。因此，不用编写笨拙的模板代码或有些“奇怪的”单行程序，现在只使用普通的for循环:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/isprime14.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -43,10 +45,10 @@ constexpr bool isPrime (unsigned int p)
 isPrime(9)
 \end{lstlisting}
 
-找出9是否为质数。注意，可以在编译时这样做，但不一定要这样做。在需要编译时值的上下文中(例如，数组长度或非类型模板参数)，编译器将尝试在编译时计算对constexpr函数的调用。若无法计算，则会产生错误(因为最后必须生成一个常量)。其他上下文中，编译器在编译时可能尝试，也可能不尝试求值，但若这样的求值失败，是不会产生错误信息，而是将问题留给运行时。
+找出9是否为质数。可以在编译时这样做，但不一定要这样做。在需要编译时值的上下文中(例如，数组长度或非类型模板参数)，编译器将尝试在编译时计算对constexpr函数的调用。若无法计算，则会产生错误(因为最后必须生成一个常量)。其他上下文中，编译器在编译时可能尝试或不尝试求值，但若这样的求值失败，是不会产生错误信息，而是将问题留给运行时。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}在2017年写这本书的时候，编译器似乎确实在尝试编译时求值，即使不严格的情况下。
+\hspace*{0.75cm}2017年写这本书的时候，编译器似乎确实在尝试编译时求值，即使不严格的情况下。
 \end{tcolorbox}
 
 例如：
@@ -55,16 +57,16 @@ isPrime(9)
 constexpr bool b1 = isPrime(9); // evaluated at compile time
 \end{lstlisting}
 
-在编译时计算该值，也适用于
+编译时计算该值，也适用于
 
 \begin{lstlisting}[style=styleCXX]
 const bool b2 = isPrime(9); // evaluated at compile time if in namespace scope
 \end{lstlisting}
 
-假设b2是全局定义的或在命名空间中定义的。在块作用域，编译器可以决定是在编译时计算，还是在运行时计算。
+假设b2是全局定义的或在命名空间中定义的。块作用域中，编译器可以决定是在编译时计算，还是在运行时计算。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}理论上，即使使用了constexpr，编译器也可以决定在运行时计算b的初始值。编译器只需要在编译时检查它是否可以计算。
+\hspace*{0.75cm}理论上，即使使用了constexpr，编译器也可以决定在运行时计算b的初始值。编译器只需要在编译时检查它是否可计算即可。
 \end{tcolorbox}
 
 例如，这样:
@@ -75,7 +77,7 @@ bool fiftySevenIsPrime() {
 }
 \end{lstlisting}
 
-编译器可能会在编译时计算对isPrime的调用，也可能不会。
+编译器可能会在编译时计算对isPrime的调用。
 
 另外：
 

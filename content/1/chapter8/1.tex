@@ -1,13 +1,14 @@
-模板在编译时实例化(与动态语言相反，动态语言在运行时处理泛型)。C++模板的一些特性可以与实例化过程结合，是C++中的一种递归“编程语言”。
+模板在编译时实例化(与动态语言相反，动态语言在运行时处理泛型)。C++模板的一些特性可以与实例化过程结合，成为一种递归“编程语言”。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}事实上，是Erwin Unruh通过在编译时展示计算素数的程序第一个发现的。详见第23.7节。
+\hspace*{0.75cm}Erwin Unruh通过在编译时计算素数，成为第一个发现编译时计算的人。详见第23.7节。
 \end{tcolorbox}
 
 因此，模板可以用来“计算”。第23章将详细介绍所有功能，这里只是举一个简单的例子。
 
-下面的代码在编译时找出给定的数字是否为素数:
+下面的代码，在编译时找出给定的数字是否为素数:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{basics/isprime.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -38,7 +39,7 @@ template<>
 struct IsPrime<3> { static constexpr bool value = true; };
 \end{lstlisting}
 
-IsPrime<>模板返回成员值，无论传递的模板参数p是否是一个素数。为了实现这一点，实例化DoIsPrime<>，其递归地展开为一个表达式，检查p/2和2之间的每个除数d是否能整除p。
+IsPrime<>模板返回成员值，无论传递的模板参数p是否是一个素数。为了实现，实例化DoIsPrime<>，其递归地展开为一个表达式，检查p/2和2之间的每个除数d是否能整除p。
 
 例如，表达式为
 
@@ -82,7 +83,7 @@ DoIsPrime<9,4>::value
 当d等于2时，DoIsPrime<>的偏特化作为结束递归。
 \end{itemize}
 
-注意，所有这些都是在编译时完成的。也就是说,
+注意，所有这些都在编译时完成。也就是说,
 
 \begin{lstlisting}[style=styleCXX]
 IsPrime<9>::value
@@ -90,7 +91,7 @@ IsPrime<9>::value
 
 在编译时展开为false。
 
-模板语法可以说是笨拙的，但类似的代码自C++98(或更早)以来就一直有效，并且可以提高相当多库的效率。
+模板语法可以说是笨拙的，但类似的代码自C++98(或更早)就一直有效，并且可以提高运行库的效率。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}C++11前，通常将值成员声明为枚举数常量，而不是静态数据成员，以避免静态数据成员需要在类外定义(参见第23.6节了解详细信息)。例如:

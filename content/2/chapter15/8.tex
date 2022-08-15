@@ -16,7 +16,7 @@
 如果A类型是指针或成员指针类型，则可以通过限定转换转换为替换的P类型(换句话说，就是添加const和/或volatile限定符的转换)。
 
 \item 
-除非对转换操作符模板进行涂掉，否则替换的P类型可以是A类型的基类类型，或者是指向A为基类类型的指针。例如:
+除非对转换操作符模板进行推导，否则替换的P类型可以是A类型的基类类型，或者是指向A为基类类型的指针。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -35,7 +35,7 @@ void g(D<long> dl)
 \end{lstlisting}
 \end{itemize}
 
-如果P在推导的上下文中不包含模板参数，那么所有隐式转换都是可以进行。例如:
+若P在推导的上下文中不包含模板参数，那么所有隐式转换都是可以进行。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> int f(T, typename T::X);
@@ -52,7 +52,7 @@ int r = f(v, 7.0); // OK: T is deduced to int through the first parameter,
 
 只有在不能精确匹配的情况下才考虑宽松匹配要求。即便如此，只有找到一个替换使A类型与添加了这些转换的P类型相匹配，推导才会成功。
 
-注意，这些规则的作用范围非常窄，忽略了(例如)可以应用于函数参数以使调用成功的各种转换。例如，考虑下面对max()函数模板的调用，如15.1节所示:
+这些规则的作用范围非常窄，忽略了(例如)可以应用于函数参数以使调用成功的各种转换。例如，下面对max()函数模板的调用，如15.1节所示:
 
 \begin{lstlisting}[style=styleCXX]
 std::string maxWithHello(std::string s)
@@ -61,7 +61,7 @@ std::string maxWithHello(std::string s)
 }
 \end{lstlisting}
 
-这里由第一个参数推导的模板参数将T推导为std::string，而由第二个参数推导的模板实参数T推导为char[6]，因此模板参数推导失败，因为两个参数使用相同的模板参数。这个失败可能令人惊讶，因为字符串字面量“hello”隐式转换为std::string和调用
+这里由第一个参数推导的模板参数，将T推导为std::string，而由第二个参数推导的模板参数T推导为char[6]，因此模板参数推导失败，因为两个参数使用相同的模板参数。这个失败可能令人惊讶，因为字符串字面量“hello”可以隐式转换为std::string
 
 \begin{lstlisting}[style=styleCXX]
 ::max<std::string>(s, "hello")
@@ -93,7 +93,7 @@ S x(12); // ERROR before C++17: the class template parameter T was not deduced f
 
 \subsubsubsection{15.8.3\hspace{0.2cm}默认调用参数}
 
-默认函数调用参数可以在函数模板中指定，就像在普通函数一样:
+默认函数调用参数可以在函数模板中指定，就像普通函数一样:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -103,7 +103,7 @@ void init (T* loc, T const& val = T())
 }
 \end{lstlisting}
 
-正如这个例子所示，默认函数调用参数可以依赖于模板参数。这种依赖的默认参数只有在没有提供显式参数的情况下，才会实例化——这一原则使得下面的例子有效:
+这个例子所示，默认函数调用参数可以依赖于模板参数。这种依赖的默认参数只有在没有提供显式参数的情况下，才会实例化——这一原则使得下面的例子有效:
 
 \begin{lstlisting}[style=styleCXX]
 class S {
@@ -122,7 +122,7 @@ int main()
 }
 \end{lstlisting}
 
-即使不依赖默认调用参数，也不能用它来推导模板参数。这意味着以下代码无效:
+即使不依赖默认调用参数，也不能用它来推导模板参数。所以，以下代码无效:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -138,7 +138,7 @@ int main()
 
 \subsubsubsection{15.8.4\hspace{0.2cm}异常规范}
 
-与默认调用参数一样，异常规范只在需要时才实例化。它们不参与模板参数推导。例如:
+与默认调用参数一样，异常规范只在需要时才实例化，不参与模板参数推导。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -152,7 +152,7 @@ void test(int i)
 }
 \end{lstlisting}
 
-\#1的函数中的noexcept规范试图调用一个不存在的函数。通常，在函数模板声明中直接出现这样的错误，会触发模板参数推导失败(SFINAE)，通过选择\#2的匹配较小的函数(与省略号形参匹配从重载解析的角度来看，是最糟糕的匹配类型;详见附录C)但是，由于异常说明不参与模板参数推导，所以重载解析选择\#1，当noexcept后来实例化时，程序就会呈现出一种病态的形式。
+\#1的函数中的noexcept规范试图调用一个不存在的函数。通常，在函数模板声明中直接出现这样的错误，会触发模板参数推导失败(SFINAE)，通过选择\#2的匹配较小的函数(与省略号参数匹配从重载解析的角度来看，是最糟糕的匹配类型;详见附录C)但是，由于异常说明不参与模板参数推导，所以重载解析选择\#1，当noexcept实例化时，程序就会呈现出一种病态的形式。
 
 相同的规则适用于潜在异常类型的异常规范：
 

@@ -1,14 +1,15 @@
 
-C++目前支持四种基本模板:类模板、函数模板、变量模板和别名模板。这些模板类型中的每一种都可以出现在名称空间范围中，也可以出现在类范围中。在类作用域中，作为嵌套的类模板、成员函数模板、静态数据成员模板和成员别名模板。这些模板的声明与普通的类、函数、变量和类型别名(或类成员)非常相似，不过需要通过参数化语句引入
+C++目前支持四种基本模板:类模板、函数模板、变量模板和别名模板。这些模板类型都可以出现在名称空间中，也可以出现在类中。在类作用域中，作为嵌套的类模板、成员函数模板、静态数据成员模板和成员别名模板。这些模板的声明与普通的类、函数、变量和类型别名(或类成员)相似，不过需要参数化
 
 \begin{lstlisting}[style=styleCXX]
 template<parameters here>
 \end{lstlisting}
 
-C++17引入了另一个通过参数化子句引入的构造:推导策略(请参阅2.9节和15.12.1节)。在本书中，它们不叫做模板(例如，没有实例化)，但是选择它的语法是为了让人联想到函数模板。
+C++17引入了通过参数化子句引入的构造:推导策略(请参阅2.9节和15.12.1节)。本书中，它们不叫做模板(例如，没有实例化)，但是选择这个语法是为了让人联想到函数模板。
 
-将在后面的章节中返回到实际的模板参数声明。首先，使用一些示例展示这四种模板，其可以出现在命名空间作用域中(全局或在一个命名空间中)，如下所示:
+将在后面的章节中回到模板参数声明。首先，使用一些示例展示这四种模板，其可以出现在命名空间中(全局或在一个命名空间中):
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{details/definitions1.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -34,10 +35,11 @@ template<typename T> // a namespace scope alias template
 using DataList = Data<T*>;
 \end{lstlisting}
 
-在本例中，静态数据成员Data<T>::copyable不是变量模板，尽管是通过类模板Data的参数化间接参数化的。但是，变量模板可以出现在类范围中(下一个示例将演示)，所以其是一个静态数据成员模板。
+本例中，尽管是通过类模板Data的参数化间接参数化的，但静态数据成员Data<T>::copyable不是变量模板。变量模板可以出现在类中，所以其是一个静态数据成员模板。
 
 下面的例子展示了，四种模板作为成员，在如何在父类中进行定义:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{details/definitions2.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -61,10 +63,11 @@ class Collection {
 };
 \end{lstlisting}
 
-C++17中，变量(包括静态数据成员)和变量模板可以“内联”，它们的定义可以跨翻译单元进行重复。这对于变量模板来说是多余的，因为变量模板可以定义在多个翻译单元中。然而，与成员函数不同的是，在封闭类中定义的静态数据成员不会使其内联:关键字inline必须指定。
+C++17中，变量(包括静态数据成员)和变量模板可以“内联”，定义可以跨翻译单元进行重复。这对于变量模板来说是多余的，因为变量模板可以定义在多个翻译单元中。但与成员函数不同，在封闭类中定义的静态数据成员不会使其内联:必须使用关键字inline指定。
 
 最后，下面的代码演示了如何在类外定义非别名模板的成员模板:
 
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{details/definitions3.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -101,7 +104,7 @@ template<typename T> // out-of-class static data member template definition
 U List<T>::zero = 0;
 \end{lstlisting}
 
-定义在类外的成员模板需要多个template<...>参数化子句：每个外围作用域的类模板一个，成员模板本身也需要一个。子句从类模板最外层开始逐行展示。
+定义在类外的成员模板需要多个template<...>参数化子句：每个外围作用域的类模板一个，成员模板本身也需要一个，子句从类模板最外层开始逐行展示。
 
 构造函数模板(一种特殊的成员函数模板)禁用默认构造函数的隐式声明(因为只有在没有声明其他构造函数的情况下，才会隐式声明)。添加默认声明
 
@@ -115,7 +118,7 @@ List() = default;
 \noindent
 \textbf{联合模板}
 
-联合模板也可用(是一种类模板):
+联合模板也可用(一种类模板):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -127,7 +130,7 @@ union AllocChunk {
 
 \hspace*{\fill} \\ %插入空行
 \noindent
-\textbf{默认调用参数}
+\textbf{默认参数}
 
 函数模板可以像普通函数声明一样有默认的参数:
 
@@ -139,14 +142,14 @@ template<typename T>
 void fill (Array<T>&, T const& = T{}); // T{} is zero for built-in types
 \end{lstlisting}
 
-后面的声明表明默认调用实参可以依赖于模板形参，也可以定义为(C++ 11之前唯一的方法，参见5.2节)
+后面的声明表明默认参数可以依赖于模板参数，也可以定义为(C++11前唯一的方法，参见5.2节)
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 void fill (Array<T>&, T const& = T()); // T() is zero for built-in types
 \end{lstlisting}
 
-当调用fill()时，如果提供了第二个函数调用参数，则不会实例化默认参数。这确保了默认调用实参不能为特定的T实例化，从而不会出错。例如:
+当使用fill()时，若提供了第二个函数调用参数，则不会实例化默认参数。这确保了默认参数不能为特定的T进行实例化，从而不会出现错误。例如:
 
 \begin{lstlisting}[style=styleCXX]
 class Value {
@@ -166,7 +169,7 @@ void init (Array<Value>& array)
 \noindent
 \textbf{类模板的非模板成员}
 
-除了在类内部声明的四种基本模板之外，还可以通过成为类模板的一部分来将普通类成员参数化，(错误地)也称为成员模板。尽管可以进行参数化，但这样的定义并不是一级模板。其参数完全由它们所属的模板决定。例如:
+除了在类内部声明的四种基本模板之外，还可以通过成为类模板的一部分来将普通类成员参数化，(错误地)也称为成员模板。尽管可以进行参数化，但这样的定义并不是模板，其参数完全由所属的模板决定。例如:
 
 \begin{lstlisting}[style=styleCXX]
 template<int I>
@@ -179,7 +182,7 @@ class CupBoard
 };
 \end{lstlisting}
 
-因为它不是模板，所以对应的定义只为父类模板指定参数化子句(参数化子句与出现在最后一个::之后的名称相关联):
+因为不是模板，所以对应的定义只为父类模板指定参数化子句(参数化子句与出现在最后一个::之后的名称相关联):
 
 \begin{lstlisting}[style=styleCXX]
 emplate<int I> // definition of ordinary class in class template
@@ -212,13 +215,13 @@ class CupBoard
 };
 \end{lstlisting}
 
-尽管这种参数化的定义通常称为模板，但这个术语并不适用于。对这些实体的一个术语是temploid。C++17起，标准确实定义了模板化实体的概念，包括模板和temploid，以及递归地在模板化实体中定义或创建的实体(例如，包括在类模板中定义的友元函数(参见2.4节)或模板中出现的Lambda表达式的闭包类型)。目前，temploid和模板实体都没有获得太多的关注，但在将来可以使用这些使用这些术语，在讨论与C++模板的话题时进行精确的表达。
+尽管这种参数化的定义通常称为模板，但这个术语并不适用于。对这些实体的一个术语是temploid。C++17起，标准确实定义了模板化实体的概念，包括模板和temploid，以及递归地在模板化实体中定义或创建的实体(例如，包括在类模板中定义的友元函数(参见2.4节)或模板中出现的Lambda表达式的闭包类型)。目前，temploid和模板实体都没有获得太多的关注，但将来可以使用这些使用这些术语，在讨论与C++模板的话题时进行精确的表达。
 
 \subsubsubsection{12.1.1\hspace{0.2cm}虚拟成员函数}
 
-成员函数模板不能进行虚声明。这个约束是因为虚函数调用机制的实现，是使用一个固定大小的表，每个虚函数只有一个条目。但是，成员函数模板的实例化数直到整个程序翻译后才固定。因此，支持虚成员函数模板需要在C++编译器和链接器中支持一套全新的机制。
+成员函数模板不能进行虚声明。这个约束是因为虚函数调用机制的实现，是使用一个固定大小的表，每个虚函数只有一个条目。但成员函数模板的实例化，直到整个程序翻译后才固定。因此，支持虚成员函数模板需要在C++编译器和链接器中支持一套全新的机制。
 
-相反，类模板的普通成员可以为虚函数，因为在实例化类时其数量固定:
+因为在实例化类时其数量固定，所以类模板的普通成员可以为虚函数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -233,9 +236,9 @@ class Dynamic {
 };
 \end{lstlisting}
 
-\subsubsubsection{12.1.2\hspace{0.2cm}链接的模板}
+\subsubsubsection{12.1.2\hspace{0.2cm}链接模板}
 
-每个模板都必须有一个名字，并且这个名字在其作用域内必须是唯一的，除了函数模板可以重载(参见第16章)。与类类型不同，类模板不能与其他类型的实体共享名称:
+每个模板都必须有一个名字，并且这个名字在其作用域内必须唯一(除了函数模板可以重载(参见第16章))。与类类型不同，类模板不能与其他类型的实体共享名称:
 
 \begin{lstlisting}[style=styleCXX]
 int C;
@@ -293,11 +296,11 @@ struct {
 } x;
 \end{lstlisting}
 
-注意，由于后一个成员模板没有链接，所以必须在未命名的类中定义，因为没有办法在类之外提供定义。
+注意，由于后一个成员模板没有链接，因为没有办法在类之外提供定义，所以必须在未命名的类中定义。
 
 目前模板不能在函数作用域或局部类作用域内声明，但是泛型Lambda(请参阅15.10.6节)可以出现在局部作用域中，具有包含成员函数模板的相关闭包，这是一种局部成员函数模板。
 
-模板实例的链接就是模板的链接。例如，从上面声明的模板内部实例化的函数internal<void>()将进行内部链接。对于变量模板，有一个有趣的结果，看下下面的例子:
+模板实例链接就是模板链接。从上面声明的模板内部实例化的函数internal<void>()将进行内部链接。对于变量模板，有一个有趣的结果，看看下面的例子:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> T zero = T{};
@@ -319,7 +322,7 @@ template<typename T> int const max_volume = 11;
 
 \subsubsubsection{12.1.3\hspace{0.2cm}主模板}
 
-模板的普通声明声明了主模板。这样的模板声明就不会在模板名称后加上尖括号中的模板参数:
+模板的普通声明为主模板，就不需要模板名称后加上尖括号中的模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> class Box; // OK: primary template
@@ -332,7 +335,7 @@ template<typename T> constexpr T zero = T{}; // OK: primary template
 template<typename T> constexpr T zero<T> = T{}; // ERROR: does not specialize
 \end{lstlisting}
 
-非主模板是在声明类或变量模板的偏特化时发生的。这些将在第16章中讨论。函数模板必须始终是主模板(参见17.3节的讨论)。
+非主模板是在声明类或变量模板的偏特化时发生，这些将在第16章中讨论。并且函数模板必须是主模板(参见17.3节的讨论)。
 
 
 

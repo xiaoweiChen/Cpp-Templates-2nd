@@ -14,7 +14,7 @@
 
 这些基本类型的模板参数都可以作为模板参数包的基础(参见12.2.4节)。
 
-模板形参在模板声明的介绍性参数化子句中进行声明。
+模板参数在模板声明的介绍性参数化子句中进行声明。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}C++14以来的例外是泛型Lambda的隐式模板类型参数，参见15.10.6节。
@@ -27,7 +27,7 @@ template<typename, int>
 class X; // X<> is parameterized by a type and an integer
 \end{lstlisting}
 
-当然，如果参数在模板中引用，则需要参数名。还要注意，模板形参的名称可以在后续的形参声明中引用(但不能在前面引用):
+若参数在模板中引用，则需要参数名。模板参数名称可以在后续的参数声明中引用(但不能在前面引用):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, // the first parameter is used
@@ -41,12 +41,12 @@ class Structure;
 类型参数是通过关键字typename或关键字class引入的:两者等价。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}关键字class并不意味着替换参数应该是类类型。还可以是一个可访问的类型。
+\hspace*{0.75cm}关键字class并不意味着替换参数应该是类类型，还可以是一个可访问的类型。
 \end{tcolorbox}
 
 关键字后面必须跟着一个简单的标识符，该标识符后面必须跟着一个逗号，表示下一个参数声明的开始，一个结束尖括号(>)表示参数化子句的结束，或者一个等号(=)表示默认模板参数的开始。
 
-模板声明中，类型形参的作用类似于类型别名(参见2.8节)。例如，当T是模板参数时，不能使用参数T的名称:
+模板声明中，类型形参的作用类似于类型别名(参见2.8节)。当T是模板参数时，不能使用参数T的名称:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Allocator>
@@ -62,7 +62,7 @@ class List {
 非类型模板参数表示可在编译或链接时确定的常量。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}模板形参也不表示类型，但它们不同于非类型形参。这也是个历史问题:双重模板形参在类型参数和非类型参数之后添加。
+\hspace*{0.75cm}模板参数也不表示类型，但不同于非类型参数。这也是个历史问题:双重模板参数在类型参数和非类型参数之后添加。
 \end{tcolorbox}
 
 这样的参数类型(换句话说，代表的类型)必须是下列之一:
@@ -93,7 +93,7 @@ std::nullptr\_t
 
 所有其他类型目前都排除在外(尽管浮点类型可能会在将来添加，参见17.2节)。
 
-非类型模板参数的声明，在某些情况下也使用关键字typename开头:
+非类型模板参数的声明，某些情况下也使用关键字typename开头:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, // a type parameter
@@ -108,7 +108,7 @@ template<class X*> // a nontype parameter of pointer type
 class Y;
 \end{lstlisting}
 
-这两种情况很容易区分，因为第一个后面跟着一个简单的标识符，然后是一段标记('='表示默认实参，''表示后面跟着另一个模板参数，或者用>结束模板参数列表)。5.1节和的13.3.2节解释了在第一个非类型参数中使用typename关键字的必要性。
+这两种情况很容易区分，因为第一个后面跟着一个简单的标识符，然后是一段标记('='表示默认实参，','表示后面跟着另一个模板参数，或者用>结束模板参数列表)。5.1节和的13.3.2节解释了，在第一个非类型参数中使用typename关键字的必要性。
 
 函数和数组类型可以指定，但会隐式衰变为指针类型:
 
@@ -120,14 +120,14 @@ template<int fun()> struct FuncWrap; // fun really has pointer to
 template<int (*)()> struct FuncWrap; // OK: this is a redeclaration
 \end{lstlisting}
 
-非类型模板参数的声明很像变量，但是它们不能有静态、可变等非类型修饰符。它们可以有const和volatile限定符，但是如果这样的限定符出现在参数类型的最外层，就会被忽略:
+非类型模板参数的声明很像变量，但它们不能有静态、可变等非类型修饰符。它们可以有const和volatile限定符，但若这样的限定符出现在参数类型的最外层，就会忽略:
 
 \begin{lstlisting}[style=styleCXX]
 template<int const length> class Buffer; // const is useless here
 template<int length> class Buffer; // same as previous declaration
 \end{lstlisting}
 
-最后，非引用非类型参数在表达式中使用时始终是prvalue。 
+最后，非引用非类型参数在表达式中使用时，始终是prvalue。 
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}参见附录B中关于值类别的讨论，比如右值和左值。
@@ -160,7 +160,7 @@ template<template<typename X> union C> // ERROR: union not valid here
 void f(C<int>* p);
 \end{lstlisting}
 
-C++17允许使用typename，而非class。这种改变的原因是:双重模板参数不仅可以使用类模板替换，还可以使用别名模板(别名模板实例化为任意类型)替换。因此，在C++17中，上面的例子也可以写成
+C++17允许使用typename，而非class。因为双重模板参数不仅可以使用类模板替换，还可以使用别名模板(别名模板实例化为任意类型)替换。C++17中，上面的例子也可以写成
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename X> typename C> // OK since C++17
@@ -180,7 +180,7 @@ class Adaptation {
 };
 \end{lstlisting}
 
-T和A是模板参数Container的模板参数名。其只能在该模板参数的其他参数声明中使用。下面的模板说明了这个概念:
+T和A是模板参数Container的模板参数名，只能在该模板参数的其他参数声明中使用:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename T, T*> class Buf> // OK
@@ -190,7 +190,7 @@ class Lexer {
 };
 \end{lstlisting}
 
-然而，通常一个模板参数名在声明其他模板形参时是不需要的，因此可以不命名。例如，之前的Adaptation模板的声明可以这样写:
+然而，通常模板参数名在声明其他模板参数时是不需要的，因此可以不命名。例如，之前的Adaptation模板的声明可以这样写:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename,
@@ -203,14 +203,14 @@ class Adaptation {
 
 \subsubsubsection{12.2.4\hspace{0.2cm}模板参数包}
 
-C++11后，任何类型的模板参数都可以通过在模板参数名之前引入省略号(…)来转换为模板参数包，如果模板参数未命名，则需要对模板参数进行命名:
+C++11后，任何类型的模板参数都可以通过在模板参数名之前引入省略号(…)转换为模板参数包。若板参数未命名，需要对模板参数进行命名:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types> // declares a template parameter pack named Types
 class Tuple;
 \end{lstlisting}
 
-模板参数包的行为与其底层模板参数相似，但有一个关键的区别:普通模板参数只能匹配一个模板参数，而模板参数包可以匹配任意数量的模板参数。所以，上面声明的Tuple类模板接受任意数量(可能是不同的)类型作为模板参数:
+模板参数包的行为与其底层模板参数相似，但有一个关键区别:普通模板参数只能匹配一个模板参数，而模板参数包可以匹配任意数量的模板参数。所以，上面声明的Tuple类模板接受任意数量(可能是不同的)的类型作为模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 using IntTuple = Tuple<int>; // OK: one template argument
@@ -219,7 +219,7 @@ using IntTriple = Tuple<int, int, int>; // OK: three template arguments
 using EmptyTuple = Tuple<>; // OK: zero template arguments
 \end{lstlisting}
 
-类似地，非类型参数和模板参数包可以分别接受任意数量的非类型参数和模板参数:
+类似地，非类型参数和模板参数包可以接受任意数量的非类型参数和模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, unsigned... Dimensions>
@@ -231,9 +231,9 @@ template<typename T, template<typename,typename>... Containers>
 void testContainers(); // OK: declares a template template parameter pack
 \end{lstlisting}
 
-MultiArray要求所有非类型模板参数具有无符号类型。C++17引入了推导非类型模板参数的可能性，在一定程度上可以绕过这个限制——请参阅15.10.1节了解详细信息。
+MultiArray要求所有非类型模板参数具有无符号类型。C++17引入了推导非类型模板参数的可能，在一定程度上可以绕过这个限制——请参阅15.10.1节了解详细信息。
 
-主模板、变量模板和别名模板最多可以有一个模板参数包，如果模板参数包必须是最后一个模板参数包。函数模板有一个较弱的限制:允许多个模板参数包，只要模板参数包后面的每个模板参数要么有一个默认值(参见下一节)，要么可以推导(参见第15章):
+主模板、变量模板和别名模板最多可以有一个模板参数包。若模板参数包是最后一个模板参数，则函数模板有一个较弱的限制:允许多个模板参数包，只要模板参数包后面的每个模板参数要么有一个默认值(参见下一节)，要么可以推导(参见第15章):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types, typename Last>
@@ -251,7 +251,7 @@ auto compose(Tensor<Dims1...>, Tensor<Dims2...>);
 
 最后一个例子使用了返回类型推导——C++14的特性。请参见第15.10.1节。
 
-类和变量模板的偏特化声明(参见第16章)可以有多个参数包，与主模板对应的参数包不同。这是因为偏特化是通过推导过程选择的，该推导过程与函数模板的推导过程相同。
+类和变量模板的偏特化声明(参见第16章)可以有多个参数包。与主模板对应的参数包不同，这是因为偏特化是通过推导选择的，该推导过程与函数模板的推导过程相同。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename...> Typelist;
@@ -269,7 +269,7 @@ template<typename... Ts, Ts... vals> struct StaticValues {};
 // ERROR: Ts cannot be expanded in its own parameter list
 \end{lstlisting}
 
-然而，嵌套模板可以创建类似，且有效情况:
+然而，嵌套模板可以创建类似且有效的代码:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Ts> struct ArgList {
@@ -278,18 +278,18 @@ template<typename... Ts> struct ArgList {
 ArgList<int, char, char>::Vals<3, ’x’, ’y’> tada;
 \end{lstlisting}
 
-包含模板参数包的模板称为可变参数模板，因为能接受可变数量的模板参数。第4章和第12.4节在描述了可变参数模板的使用。
+因为能接受可变数量的模板参数，所以包含模板参数包的模板称为可变参数模板。第4章和第12.4节在描述了可变参数模板的使用。
 
 \subsubsubsection{12.2.5\hspace{0.2cm}默认模板参数}
 
-非模板参数包中的模板参数都可以配备一个默认参数，必须在类型上与相应的参数匹配(例如，类型参数不能有非类型的默认参数)。默认参数不能依赖于它自己的参数，因为参数名直到默认参数之后才在作用域中。但是，它可能取决于前面的参数:
+非模板参数包中的模板参数都可以配备一个默认参数，必须在类型上与相应的参数匹配(例如，类型参数不能有非类型的默认参数)。默认参数不能依赖于自己的参数，因为参数名直到默认参数之后才在作用域中。但是，其可能取决于之前的参数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Allocator = allocator<T>>
 class List;
 \end{lstlisting}
 
-只有在后续参数也提供了默认参数的情况下，类模板、变量模板或别名模板的模板参数才可以有默认模板参数。(对于默认函数调用参数也存在类似的约束。)随后的默认值通常在同一个模板声明中提供，但它们可以在该模板前面的声明中进行声明。下面的例子说明了这一点:
+只有在后续参数也提供了默认参数的情况下，类模板、变量模板或别名模板的模板参数才可以有默认模板参数(对于默认函数调用参数也存在类似的约束)。随后的默认值通常在同一个模板声明中提供，但可以在该模板的声明中进行声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2, typename T3,
@@ -309,7 +309,7 @@ class Quintuple; // ERROR: T1 cannot have a default argument
 函数模板的参数，默认模板参数不需要后续模板参数有默认值:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}后续模板参数的模板参数，仍可以通过模板参数推导来确定，参见第15章。
+\hspace*{0.75cm}后续模板参数的模板参数，可以通过模板参数推导来确定，参见第15章。
 \end{tcolorbox}
 
 \begin{lstlisting}[style=styleCXX]
@@ -372,7 +372,7 @@ struct S {
 \end{lstlisting}
 
 \item 
-友元函数模板声明，除非是一个定义，并且在编译单元的其他地方没有它的声明:
+友元函数模板声明，除非是一个定义，并且在编译单元的其他地方没有声明:
 
 \begin{lstlisting}[style=styleCXX]
 struct S {

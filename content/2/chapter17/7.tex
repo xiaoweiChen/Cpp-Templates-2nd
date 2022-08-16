@@ -1,4 +1,4 @@
-编写模板时，规则性是一种优点:如果单一构造可以覆盖所有情况，会使模板更简单。我们的程序有一点不规则，那就是类型。例如，考虑以下情况:
+编写模板时，规则性是一种优点:若单一构造可以覆盖所有情况，会使模板更简单。我们的程序有一点不规则，那就是类型。例如，考虑以下情况:
 
 \begin{lstlisting}[style=styleCXX]
 auto&& r = f(); // error if f() returns void
@@ -18,7 +18,7 @@ void并不是唯一的非规范类型:函数类型和引用类型在某些方面
 void g(void); // same as void g();
 \end{lstlisting}
 
-然而，在大多数方式中，void会成为一个完整的值类型。例如，可以声明void变量和引用:
+在大多数方式中，void会成为一个完整的值类型。可以声明void变量和引用:
 
 \begin{lstlisting}[style=styleCXX]
 void v = void{};

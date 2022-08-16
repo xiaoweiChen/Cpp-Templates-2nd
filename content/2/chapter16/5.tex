@@ -1,4 +1,4 @@
-当变量模板添加到C++ 11标准草案中时，忽略了规范的几个方面，其中一些问题仍然没有解决。然而，实际的实现通常会对这些问题进行处理。
+当变量模板添加到C++11标准草案中时，忽略了规范的几个方面，其中一些问题仍然没有解决。然而，实际的实现通常会对这些问题进行处理。
 
 也许这些问题中最令人惊讶的是，标准提到了偏特化变量模板的能力，但它没有描述如何声明它们或它们的含义。因此，下面的内容是基于实践中的C++实现(确实允许这样的偏特化)，而不是基于C++标准。
 
@@ -10,7 +10,7 @@ template<typename T> constexpr std::size_t SZ = sizeof(T);
 template<typename T> constexpr std::size_t SZ<T&> = sizeof(void*);
 \end{lstlisting}
 
-与变量模板的全特化一样，偏特化的类型不需要匹配主模板的类型:
+与变量模板的全特化一样，偏特化的类型不需要匹配主模板类型:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T> typename T::iterator null_iterator;

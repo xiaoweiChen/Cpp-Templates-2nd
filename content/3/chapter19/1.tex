@@ -3,13 +3,13 @@
 
 \subsubsubsection{19.1.1\hspace{0.2cm}固化特征}
 
-首先，假设要计算的sum的值存储在一个数组中，并有一个指向要累计的第一个元素的指针和一个指向要累计的最后一个元素的下一位置的指针。因为本书是关于模板的，所以希望编写一个适用于多种类型的模板。现在看来，似乎很简单:
+首先，假设要计算的sum的值存储在一个数组中，并有一个指向要累计的第一个元素的指针和一个指向要累计的最后一个元素的下一位置的指针。因为本书专注于模板，所以希望编写一个适用于多种类型的模板。现在看来，似乎很简单:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}为了简单起见，本节中的大多数示例都使用普通指针。显然，工业化的接口可能更偏向使用C++标准库的迭代器(参见[JosuttisStdLib])。
 \end{tcolorbox}
 
-%\hspace*{\fill} \\ %插入空行
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{traits/accum1.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -30,11 +30,11 @@ T accum (T const* beg, T const* end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-这里唯一的决定是如何创建正确的0值类型来求和。我们使用值初始化(使用{…}符号)，在第5.2节中介绍。局部对象total要么由其默认构造函数初始化，要么由0初始化(指针为nullptr，布尔值为false)。
+这里唯一的决定是如何创建正确的0值类型来求和。我们使用值初始化(使用\{…\})，在第5.2节中介绍。局部对象total要么由其默认构造函数初始化，要么由0初始化(指针为nullptr，布尔值为false)。
 
-这是我们的第一个特征模板，下面的代码使用了accum():
+这是我们的第一个特征模板，代码使用了accum():
 
-%\hspace*{\fill} \\ %插入空行
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{traits/accum1.cpp}
 \begin{lstlisting}[style=styleCXX]
@@ -70,7 +70,7 @@ int num[] = { 1, 2, 3, 4, 5 };
 accum(num0, num+5)
 \end{lstlisting}
 
-然后，只需将所得和除以数组中值的数量，即可获得整数值的平均值。
+然后，将所得和除以数组中值的数量，即可获得整数值的平均值。
 
 后半部分尝试对单词"templates"中的所有字母执行相同的操作(前提是从a到z的字符在实际字符集中形成一个连续的序列，这对ASCII是成立的，但对EBCDIC不成立)。结果应该位于a的值和z的值之间。大多数平台上，这些值是由ASCII码决定的:a编码为97，z编码为122。因此，我们可以预期结果在97和122之间。但在我们的平台上，程序的输出为:
 
@@ -79,17 +79,17 @@ the average value of the integer values is 3
 the average value of the characters in "templates" is -5
 \end{tcblisting}
 
-这里的问题是，我们的模板是为char类型实例化的，结果是对于相对较小的值的积累来说，其范围太小。显然，可以通过引入一个额外的模板参数AccT来解决这个问题，该参数描述了变量total使用的类型(以及返回类型)。然而，这将给模板的所有用户带来额外的负担:他们将在每次调用模板时指定额外的类型。在例子中，可能需要这样写:
+这里的问题是，我们的模板为char类型实例化，结果是对于相对较小的值的积累来说，其范围太小。显然，可以通过引入一个模板参数AccT来解决这个问题，该参数描述了变量total使用的类型(以及返回类型)。然而，这将给模板的所有用户带来负担:在每次调用模板时指定额外的类型。例子中，可能需要这样:
 
 \begin{lstlisting}[style=styleCXX]
 accum<int>(name,name+5)
 \end{lstlisting}
 
-这并不是过分的约束，但可以避免。
+这个约束并不过分，但可以避免。
 
 使用额外参数的另一种方法是，在调用accum()的每个类型T与应该用于保存累积值的对应类型之间创建关联。这种关联可以认为是T类型的特征，因此计算总和的类型有时称为T的特征。事实证明，关联可以编码为模板的特化形式:
 
-%\hspace*{\fill} \\ %插入空行
+\hspace*{\fill} \\ %插入空行
 \noindent
 \textit{traits/accumtraits2.hpp}
 \begin{lstlisting}[style=styleCXX]
@@ -122,9 +122,9 @@ struct AccumulationTraits<float> {
 };
 \end{lstlisting}
 
-AccumulationTraits模板称为特征模板，因为它保存了一个与其参数类型相同的特征(可以有不止一个特征和不止一个参数)。我们选择不提供该模板的泛型定义，因为不知道累积类型是什么时，没有方法来选择累积类型。然而，可以认为T本身通常是这种类型的一个候选者。
+AccumulationTraits模板称为特征模板，它保存了一个与其参数类型相同的特征(可以有不止一个特征和参数)。我们选择不提供该模板的泛型定义，因为不知道累积类型是什么时，没有方法来选择累积类型。然而，可以认为T本身是这种类型的一个候选。
 
-考虑到这一点，可以这样重写accum()模板:
+可以重写accum()模板:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}C++11中，必须声明类似AccT类型的返回类型。
@@ -155,18 +155,18 @@ auto accum (T const* beg, T const* end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-然后，示例程序的输出就会变成我们期望的结果:
+然后，示例程序的输出就会成为我们期望的结果:
 
 \begin{tcblisting}{commandshell={}}
 the average value of the integer values is 3
 the average value of the characters in "templates" is 108
 \end{tcblisting}
 
-我们添加了一个非常有用的机制来定制算法，不过变化不是很显著。此外，如果出现了与accum()一起使用的新类型，只需声明AccumulationTraits模板的显式特化，就可以将适当的AccT与其关联起来。注意，这可以用于任何类型:基本类型、在其他库中声明的类型等。
+我们添加了一个非常有用的机制来定制算法，但变化不是很显著。此外，若出现了与accum()一起使用的新类型，只需声明AccumulationTraits模板的显式特化，就可以将适当的AccT与其关联起来。这可以用于任何类型:基本类型、在其他库中声明的类型等。
 
 \subsubsubsection{19.1.2\hspace{0.2cm}值特征}
 
-目前为止，已经了解了特征表示与给定的“主”类型相关的额外类型信息。本节中，将说明这些额外的信息不需要局限于类型。常量和其他值类也可以与类型关联。
+已经了解了特征表示与给定的“主”类型相关的类型信息。本节中，将说明这些信息不需要局限于类型，常量和其他值类也可以与类型关联。
 
 原来的accum()模板使用返回值的默认构造函数来初始化结果变量，希望其值是一个类似于0的值:
 
@@ -176,9 +176,9 @@ AccT total{}; // assume this actually creates a zero value
 return total;
 \end{lstlisting}
 
-显然，不能保证这能产生一个好的值来启动积累循环。类型AccT甚至可能没有默认构造函数。
+显然，不能保证这能产生一个值来启动积累循环。类型AccT甚至可能没有默认构造函数。
 
-同样，特征也能起到帮助作用。例子中，可以在AccumulationTraits中添加一个新的值特征:
+同样，特征也能起到帮助作用。例子中，可以在AccumulationTraits中添加一个新值特征:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -253,7 +253,7 @@ struct AccumulationTraits<float> {
 };
 \end{lstlisting}
 
-但是，const和constexpr都不允许以这种方式初始化非字符类型。例如，，因为它通常在堆上分配，用户定义的BigInt类型可能不是字符类型;或者只是因为所需的构造函数不是constexpr。下面的特化是错误的:
+但const和constexpr都不允许以这种方式初始化非字符类型。例如，因为它通常在堆上分配，用户定义的BigInt类型可能不是字符类型;或者，只是因为所需的构造函数不是constexpr。所以以下特化错误:
 
 \begin{lstlisting}[style=styleCXX]
 class BigInt {
@@ -284,7 +284,7 @@ struct AccumulationTraits<BigInt> {
 BigInt const AccumulationTraits<BigInt>::zero = BigInt{0};
 \end{lstlisting}
 
-尽管这样可以工作，但缺点是更冗长(必须在两个地方添加代码)，而且效率更低，因为编译器通常不知道其他文件中的定义。
+尽管这样可以工作，但缺点是代码更冗长(必须在两个地方添加代码)，而且效率更低，因为编译器通常不知道其他文件中的定义。
 
 C++17中，可以通过内联变量来解决:
 
@@ -296,13 +296,13 @@ struct AccumulationTraits<BigInt> {
 };
 \end{lstlisting}
 
-C++17前，一种可行的替代方法是对值特征使用内联成员函数，这些值特征并不总是产生整数值。同样，如果该函数返回字符类型，则可以将其声明为constexpr。
+C++17前，一种可行的替代方法是对值特征使用内联成员函数，这些值特征并不总是产生整数值。同样，若该函数返回字符类型，则可以将其声明为constexpr。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}大多数现代C++编译器都可以“看懂”简单内联函数的调用。此外，使用constexpr可以在表达式必须为常量的上下文中使用值特征(例如，在模板参数中)。
 \end{tcolorbox}
 
-例如，可以这样重写AccumulationTraits:
+可以这样重写AccumulationTraits:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -353,7 +353,7 @@ struct AccumulationTraits<float> {
 ..
 \end{lstlisting}
 
-然后，将这些特征扩展到我们自己的类型上:
+将这些特征扩展到我们的类型上:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -374,11 +374,11 @@ struct AccumulationTraits<BigInt> {
 AccT total = AccumulationTraits<T>::zero(); // init total by trait function
 \end{lstlisting}
 
-显然，特征不仅仅是类型。示例中，可以作为一种机制，提供accum()所需调用元素类型的所有必要信息。这是特征概念的关键:特征为泛型计算提供了配置具体元素(主要是类型)的途径。
+显然，特征不仅仅是类型。可以作为一种机制，提供accum()所需调用元素类型的所有必要信息。这是特征概念的关键:特征为泛型计算提供了配置具体元素(主要是类型)的途径。
 
 \subsubsubsection{19.1.3\hspace{0.2cm}参数化特征}
 
-前面章节accum()中对特征的使用称为固化的，当定义了解耦的特征，就不能在算法中替换。在某些情况下，这种重写是可取的。例如，可能知道一组浮点值可以安全地求和为一个相同类型的变量，这样做可能提高效率。
+前面章节accum()中是对特征的固化使用，当定义了解耦的特征，就不能在算法中替换。在某些情况下，这种重写是可行的。可能知道一组浮点值可以安全地求和为一个相同类型的变量，这样做可能提高效率。
 
 可以通过为特征添加一个模板参数AT来解决这个问题，AT的默认值由特征模板决定:
 
@@ -405,7 +405,7 @@ auto accum (T const* beg, T const* end)
 #endif // ACCUM_HPP
 \end{lstlisting}
 
-通过这种方式，许多用户可以省略不必要的模板参数，但那些有更特殊需求的用户可以指定预置累积类型的替代方案。该模板的大多数用户永远不需要显式地提供第二个模板参数，因为可以通过第一个参数推导出的每个类型配置适当的默认值。
+通过这种方式，许多用户可以省略不必要的模板参数，但那些有更特殊需求的用户可以指定预置累积类型的替代方案。因为可以通过第一个参数推导出的每个类型配置适当的默认值，所以该模板的大多数用户永远不需要显式地提供第二个模板参数。
 
 
 

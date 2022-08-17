@@ -1,5 +1,5 @@
 
-有时，能够知道模板参数是内置类型、指针类型、类类型等很有用。下面的部分中，将开发一组类型特征，允许确定给定类型的各种属性。因此，可以编写特定于某些类型的代码:
+有时，能够提前知道模板参数是内置类型、指针类型、类类型。下面的部分中，将开发一组类型特征，允许确定给定类型的各种属性。因此，可以编写特定于某些类型的代码:
 
 \begin{lstlisting}[style=styleCXX]
 if (IsClassT<T>::value) {
@@ -15,7 +15,7 @@ if constexpr (IsClass<T>) {
 }
 \end{lstlisting}
 
-或者，通过使用偏特化:
+或者，通过偏特化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, bool = IsClass<T>>
@@ -41,7 +41,7 @@ C++标准库定义了几个类似的特征，以确定类型的主要类型和�
 
 \subsubsubsection{19.8.1\hspace{0.2cm}基本类型}
 
-首先，开发一个模板来确定一个类型是否是基本类型。默认情况下，假设一个类型不是基本类型，我们专门化了基础模板:
+首先，开发一个模板来确定一个类型是否是基本类型。默认情况下，假设一个类型不是基本类型，我们特化了基础模板:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -110,7 +110,7 @@ template<> struct IsFundaT<bool> : std::true_type {
 };
 \end{lstlisting}
 
-下面的程序演示了该模板的可能用法:
+下面的程序演示了该模板的用法:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -144,13 +144,13 @@ T is a fundamental type
 T is not a fundamental type
 \end{tcblisting}
 
-以同样的方式，可以定义类型函数IsIntegralT和IsFloatingT来识别这些类型中哪些是整型标量类型，哪些是浮点标量类型。
+同样的方式，可以定义类型函数IsIntegralT和IsFloatingT来识别这些类型中哪些是整型标量类型，哪些是浮点标量类型。
 
-C++标准库使用了比只检查类型是否是基本类型更细粒度的方法。首先定义了主要类型类别，其中每个类型精确匹配一个类型类别(参见第的D.2.1节)，然后是复合类型类别，如std::is\_integral或std::is\_fundamental(参见第706页的D.2.2节)。
+C++标准库使用了比只检查类型是否是基本类型更细粒度的方法。首先，定义了主要类型类别，其中每个类型精确匹配一个类型类别(参见第的D.2.1节)，然后是复合类型类别，如std::is\_integral或std::is\_fundamental(参见第D.2.2节)。
 
 \subsubsubsection{19.8.2\hspace{0.2cm}复合类型}
 
-复合类型是由其他类型构造而成的类型。简单复合类型包括指针类型、左值和右值引用类型、成员指针类型和数组类型，由一个或两个基础类型构造而成。类类型和函数类型也是复合类型，但组合可能涉及任意数量的类型(用于参数或成员)。枚举类型在此分类中也被视为非简单复合类型，尽管它们不是多种基础类型的复合类型。可以使用偏特化对简单的复合类型进行分类。
+由其他类型构造而成的类型。简单复合类型包括指针类型、左值和右值引用类型、成员指针类型和数组类型，由一个或两个基础类型构造而成。类类型和函数类型也是复合类型，但组合可能涉及任意数量的类型(用于参数或成员)。枚举类型在此分类中也可视为非简单复合类型，尽管它们不是多种基础类型的复合类型。可以使用偏特化对简单的复合类型进行分类。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -172,9 +172,9 @@ struct IsPointerT<T*> : std::true_type { // partial specialization for pointers
 };
 \end{lstlisting}
 
-主模板是一个非指针类型的案例，提供value常量false，通过基类std::false\_type，表明该类型不是指针。偏特化可以捕获任何类型的指针(T*)，并将value置为true，来指示所提供的类型是指针。此外，还提供了一个类型成员BaseT，该成员描述指针所指向的类型。注意，该类型成员仅在原始类型为指针时可用，使其成为SFINAE友好型的类型特征(参见第19.4.4节)。
+主模板是一个非指针类型的案例，提供value常量false，通过基类std::false\_type，表明该类型不是指针。偏特化可以捕获指针(T*)，并将value置为true，来指示所提供的类型是指针。此外，还提供了一个类型成员BaseT，该成员描述指针所指向的类型。注意，该类型成员仅在原始类型为指针时可用，使其成为SFINAE友好型的类型特征(参见第19.4.4节)。
 
-C++标准库提供了相应的特征std::is\_pointer<>，但是，不提供指针所指向类型的成员。在第D.2.1节中有描述。
+C++标准库提供了相应的特征std::is\_pointer<>，但不提供指针所指向类型的成员。在第D.2.1节中有描述。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -231,7 +231,7 @@ class IsReferenceT
 };
 \end{lstlisting}
 
-实现中，使用IfThenElseT(19.7.1节)来选择IsLValueReference<T>或IsRValueReference<T>作为基类，使用元函数转发(19.3.2节讨论)。如果T是左值引用，则继承IsLValueReference<T>以获得适当的值和BaseT成员。否则，继承IsRValueReference<T>，确定类型是否是右值引用(并在两种情况下提供适当的成员)。
+使用IfThenElseT(19.7.1节)来选择IsLValueReference<T>或IsRValueReference<T>作为基类，使用元函数转发(19.3.2节讨论)。如果T是左值引用，则继承IsLValueReference<T>以获得适当的值和BaseT成员。否则，继承IsRValueReference<T>，确定类型是否是右值引用(并在两种情况下提供适当的成员)。
 
 C++标准库提供了相应的特征std::is\_lvalue\_reference<>和std::is\_rvalue\_reference<>，在第D.2.1节中描述；以及std::is\_reference<>，在第D.2.2节中描述。同样，这些特征不会为引用所引用的类型提供成员。
 
@@ -264,7 +264,7 @@ struct IsArrayT<T[]> : std::true_type { // partial specialization for unbound ar
 };
 \end{lstlisting}
 
-多个附加成员提供了关于分类数组的信息:它们的基类型和大小(0表示未知大小)。
+多个成员提供了关于分类数组的信息:它们的基类型和大小(0表示未知大小)。
 
 C++标准库提供了相应的特征std::is\_array<>来检查类型是否为数组，这在第D.2.1节中有描述。此外，诸如std::rank<>和std::extent<>这样的特征可以查询它们的维数和特定维的大小(参见第D.3.1节)。
 
@@ -322,9 +322,9 @@ struct IsFunctionT<R (Params..., ...)> : std::true_type { // variadic functions
 };
 \end{lstlisting}
 
-注意，函数类型的每个部分都是公开的:type提供结果类型，而所有参数都作为ParamsT在一个类型列表中捕获(类型列表将在第24章中介绍)，variadic表示该函数类型是否使用了C风格的varargs。
+函数类型的每个部分都是公开的:type提供结果类型，而所有参数都作为ParamsT在一个类型列表中捕获(类型列表将在第24章中介绍)，variadic表示该函数类型是否使用了C风格的varargs。
 
-但IsFunctionT不能处理所有的函数类型，因为函数类型可以有const和volatile限定符，以及左值(\&)和右值(\&\&)引用限定符(在第C.2.1节中描述)。C++17后，没有任何限定符的情况除外。例如:
+但IsFunctionT不能处理所有的函数类型，因为函数类型可以有const和volatile限定符，以及左值(\&)和右值(\&\&)引用限定符(在第C.2.1节中描述)。C++17后，没有任何限定符的情况除外:
 
 \begin{lstlisting}[style=styleCXX]
 using MyFuncType = void (int&) const;
@@ -386,7 +386,7 @@ C++标准库提供特征std::is\_function<>，将在第D.2.1节中描述。
 
 \subsubsubsection{19.8.4\hspace{0.2cm}类类型}
 
-与其他复合类型不同，我们没有专门匹配类类型的偏特化模式。也不可能像基本类型那样枚举所有类类型。不过，我们需要使用间接方法来标识类类型，方法是提出对所有类类型(而不是其他类型)有效的某种类型或表达式。对于这种类型或表达，可以应用于第19.4节中的SFINAE。
+与其他复合类型不同，我们没有专门匹配类类型的偏特化模式。也不可能像基本类型那样枚举所有类类型。不过，需要使用间接方法来标识类类型，方法是提出对所有类类型(而不是其他类型)有效的某种类型或表达式。对于这种类型或表达，可以应用于第19.4节中的SFINAE。
 
 类类型最方便利用的属性是，只有类类型可以用作成员指针类型的基础。在X Y::*形式的类型构造中，Y只能是类类型。IsClassT<>利用了这个属性(将类型X选定为int):
 
@@ -406,7 +406,7 @@ struct IsClassT<T, std::void_t<int T::*>> // classes can have pointer-to-member
 };
 \end{lstlisting}
 
-C++语言指定Lambda表达式的类型是“唯一的、未命名的非联合类类型”。因此，检查Lambda表达式是否为类类型对象时，结果为true:
+C++语言指定Lambda表达式的类型是“唯一、未命名的非联合类类型”。因此，检查Lambda表达式是否为类类型对象时，结果为true:
 
 \begin{lstlisting}[style=styleCXX]
 auto l = []{};
@@ -415,10 +415,10 @@ static_assert<IsClassT<decltype(l)>::value, "">; // succeeds
 
 表达式int T::*对于联合类型也是有效的(根据C++标准，其也是类类型)。
 
-C++标准库提供了特征std::is\_class<>和std::is\_union<>，在第D.2.1节中有描述。然而，这些特征需要编译器支持，因为目前无法使用任何标准的核心语言技术来区分类和结构体与联合体类型。
+C++标准库提供了特征std::is\_class<>和std::is\_union<>，在第D.2.1节中有描述。因为目前无法使用标准的核心语言技术来区分类和结构体与联合体类型，所以这些特征需要编译器支持。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}大多数编译器支持像\_\_is\_union这样的内在操作符，以帮助标准库实现各种特征模板。甚至对于一些可以使用本章中的技术实现的特性也是如此，因为这些特性可以提高编译性能。
+\hspace*{0.75cm}大多数编译器支持像\_\_is\_union这样的内在操作符，以帮助标准库实现各种特征模板。甚至对于一些可以使用本章中的技术实现的特性也是如此，这些特性可以提高编译性能。
 \end{tcolorbox}
 
 \subsubsubsection{19.8.5\hspace{0.2cm}枚举类型}
@@ -426,7 +426,7 @@ C++标准库提供了特征std::is\_class<>和std::is\_union<>，在第D.2.1节�
 还没有特征分类的类型是枚举类型。枚举类型的测试可以通过编写基于SFINAE的特征直接执行，该特征检查会转换为整型类型(比如int)，并显式排除基本类型、类类型、引用类型、指针类型和指向成员的指针类型，所有这些类型都可以转换为整型类型，但不是枚举类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}本书的第一版就是这样描述枚举类型检测的。但是，它检查了到整型的隐式转换，这对于C++98标准来说足够了。语言中引入作用域枚举类型(没有这种隐式转换)使枚举类型的检测变得更加复杂。
+\hspace*{0.75cm}本书的第一版就是这样描述枚举类型检测的。但它检查了到整型的隐式转换，这对于C++98标准来说足够了。语言中引入作用域枚举类型(没有这种隐式转换)使枚举类型的检测变得更加复杂。
 \end{tcolorbox}
 
 不过，可以通过“不属于其他类别的类型都必须是枚举类型”的方式来实现:
@@ -447,7 +447,7 @@ struct IsEnumT {
 };
 \end{lstlisting}
 
-C++标准库提供特征std::is\_enum<>，在第D.2.1节中描述。通常，为了提高编译性能，编译器会直接提供对这种特征的支持”。
+C++标准库提供特征std::is\_enum<>，在第D.2.1节中描述。为了提高编译性能，编译器会直接提供对这种特征的支持。
 
 
 

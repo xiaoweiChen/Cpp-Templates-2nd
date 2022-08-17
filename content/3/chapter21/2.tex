@@ -1,5 +1,5 @@
 
-另一个模式是奇异递归模板模式(CRTP)。这个命名奇怪的模式指的是一中通用的技术类，包括将一个派生类作为模板参数传递给自己的基类。这种模式最简单的C++代码如下:
+另一个模式是奇异递归模板模式(CRTP)。这个命名奇怪的模式指的是一种通用的技术类，包括将一个派生类作为模板参数传递给自己的基类。这种模式最简单的C++代码如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Derived>
@@ -28,7 +28,7 @@ class CuriousTemplate : public CuriousBase<CuriousTemplate<T>> {
 
 通过模板参数将派生类向下传递给基类，基类可以自定义派生类的行为，而不需要使用虚函数。这使得CRTP可以分解出只能是成员函数(例如，构造函数、析构函数和下标操作符)或依赖于派生类标识的实现。
 
-CRTP简单应用包括跟踪创建了多少特定类类型的对象，这很容易通过在每个构造函数中递增一个整型静态数据成员，并在析构函数中递减来实现。但是，必须在每个类中提供这样的代码就很烦，并且通过单个(非CRTP)基类实现此功能会混淆不同派生类的对象计数。不过，可以这些编写模板:
+CRTP的简单应用包括跟踪创建了多少特定类类型的对象，这很容易通过在每个构造函数中递增一个整型静态数据成员，并在析构函数中递减来实现。但必须在每个类中提供这样的代码就很烦，并且通过单个(非CRTP)基类实现此功能会混淆不同派生类的对象计数。不过，可以这样编写模板:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -37,9 +37,10 @@ CRTP简单应用包括跟踪创建了多少特定类类型的对象，这很容�
 #include <cstddef>
 template<typename CountedType>
 class ObjectCounter {
-	private:
+private:
 	inline static std::size_t count = 0; // number of existing objects
-	protected:
+
+protected:
 	
 	// default constructor
 	ObjectCounter() {
@@ -61,7 +62,7 @@ class ObjectCounter {
 		--count;
 	}
 
-	public:
+public:
 	// return number of existing objects:
 	static std::size_t live() {
 		return count;
@@ -69,7 +70,7 @@ class ObjectCounter {
 };
 \end{lstlisting}
 
-注意，使用内联是为了能够在类结构内部定义和初始化count成员。C++17前，必须在类模板外定义:
+使用内联是为了能够在类结构内部，定义和初始化count成员。C++17前，必须在类模板外定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename CountedType>
@@ -84,7 +85,7 @@ template<typename CountedType>
 std::size_t ObjectCounter<CountedType>::count = 0;
 \end{lstlisting}
 
-如果想计算某个类类型的活(即未销毁)对象的数量，从ObjectCounter模板派生类就足够了。例如，可以这样定义和使用一个经过计数的字符串类:
+若想计算某个类类型的活(即未销毁)对象的数量，从ObjectCounter模板派生类就足够了。可以这样定义和使用用于计数的字符串类:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -119,7 +120,7 @@ int main()
 
 并且在大多数编译器中无法使用命名空间。
 
-为了说明这一点，假设一个类模板Array，希望为其定义相等operator==。一种可能是将操作符声明为类模板的成员，但这不是很好的实践方式，因为第一个参数(绑定到this指针)要遵守与第二个参数不同的转换规则。因为operator==相对于参数对称，所以最好将其声明为命名空间作用域的函数。其实现方法大致如下所示:
+假设一个类模板Array，希望为其定义相等operator==。一种可能是将操作符声明为类模板的成员，但这不是很好的实践方式，因为第一个参数(绑定到this指针)要遵守与第二个参数不同的转换规则。因为operator==参数对称，所以最好将其声明为命名空间作用域的函数。其实现方法大致如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -135,7 +136,7 @@ bool operator== (Array<T> const& a, Array<T> const& b)
 }
 \end{lstlisting}
 
-但若函数模板不能重载，就会出现一个问题:不能在该作用域中声明其他operator==模板，而其他类模板很可能需要这样的模板。Barton和Nackman将类中的操作符定义为普通友元函数，解决了这个问题:
+但若函数模板不能重载，就会出现一个问题:不能在该作用域中声明其他operator==模板，而其他类模板很可能需要这样的模板。Barton和Nackman将类中的操作符定义为友元函数，解决了这个问题:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -150,7 +151,7 @@ class Array {
 };
 \end{lstlisting}
 
-假设这个版本的Array实例化为float类型。然后，友元操作符函数声明为该实例化的结果，但该函数本身不是函数模板的实例化，其只是一个普通的非模板函数，作为实例化过程的副作用注入到全局作用域中。因为它是非模板函数，所以即使在向语言中添加函数模板重载之前，也可以使用operator==的其他声明重载。Barton和Nackman将此称为限制模板展开，因为它避免使用适用于所有类型T(换句话说，不受限制的展开)的模板operator==(T, T)。
+假设这个版本的Array实例化为float类型，友元操作符函数声明为该实例化的结果，但该函数本身不是函数模板的实例化，其只是普通的非模板函数，作为实例化过程的副作用注入到全局作用域中。因为是非模板函数，所以即使在向语言中添加函数模板重载之前，也可以使用operator==的其他声明重载。Barton和Nackman将此称为限制模板展开，因为它避免使用适用于所有类型T(换句话说，不受限制的展开)的模板operator==(T, T)。
 
 因为
 
@@ -160,7 +161,7 @@ operator== (Array<T> const&, Array<T> const&)
 
 是在类定义内部定义的，其隐式地认为是一个内联函数，因此我们决定将实现委托给一个不需要内联的静态成员函数areEqual。
 
-自1994年以来，友元函数定义的名称查找已经发生了变化，因此Barton-Nackman技巧在标准C++中并不那么有用。在它发明的时候，友元声明在类模板的外围作用域中可见，这个模板是通过一个名为友元名称注入的过程进行实例化。标准C++通过依赖于参数的查找来查找友元函数声明(具体细节请参阅第13.2.2节)，从而函数调用的至少一个参数，必须已含友元函数作为关联类的类。如果参数类的类型不相关，可以转换为包含友元的类，则无法找到友元函数。例如:
+自1994年以来，友元函数的名称查找已经发生了变化，因此Barton-Nackman技巧在标准C++中并不那么有用。在它发明的时候，友元声明在类模板的外围作用域中可见，这个模板是通过一个名为友元名称注入的过程进行实例化。标准C++通过依赖于参数的查找来查找友元函数声明(具体细节请参阅第13.2.2节)，从而函数调用的至少一个参数，必须已含友元函数作为关联类的类。若参数类的类型不相关，可以转换为包含友元的类，则无法找到友元函数。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -192,16 +193,16 @@ int main()
 这里，foo(w)是有效的，因为函数foo()是在Wrapper<S>中声明的友元，它是一个与参数w相关联的类。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}注意，S也是一个与w相关的类，因为它是w类型的模板参数。ADL的具体规则在第13.2.1节中讨论。
+\hspace*{0.75cm}S也是一个与w相关的类，因为它是w类型的模板参数。ADL的具体规则在第13.2.1节中讨论。
 \end{tcolorbox}
 
-然而，在调用foo(s)中，因为定义它的类Wrapper<S>与类型S的参数s不相关，所以函数foo(Wrapper<S> const\&)的友元声明不可见。因此，即使存在有效的从类型s到类型Wrapper<S>的隐式转换(通过Wrapper<S>的构造函数)，因为候选函数foo()在第一个地方没有找到，所以这种转换从未进行考虑。在Barton和Nackman发明他们的技巧时，友元名称注入将使友元函数foo()可见，并且调用foo(s)会成功。
+在调用foo(s)中，因为定义它的类Wrapper<S>与类型S的参数s不相关，所以函数foo(Wrapper<S> const\&)的友元声明不可见。即使存在有效的从类型s到类型Wrapper<S>的隐式转换(通过Wrapper<S>的构造函数)，因为候选函数foo()在第一个地方没有找到，所以这种转换从未进行考虑。在Barton和Nackman发明他们的技巧时，友元名称注入将使友元函数foo()可见，并且调用foo(s)会成功。
 
-现代C++中，在类模板中定义友元函数比简单地定义普通函数模板的优势是语法:友元函数定义可以访问其外围类的私有和受保护成员，并且不需要重述外围类模板的所有模板参数。但是，友元函数定义在与CRPT结合使用时可能会更好用，如下面一节描述的操作符实现所示。
+现代C++中，在类模板中定义友元函数比简单地定义普通函数模板的优势是语法:友元函数定义可以访问其外围类的私有和受保护成员，并且不需要重述外围类模板的所有模板参数。但友元函数定义在与CRPT结合使用时可能会更好，如下面一节描述的操作符实现所示。
 
 \subsubsubsection{21.2.2\hspace{0.2cm}实现操作符}
 
-实现提供重载操作符的类时，通常会为许多不同(但相关)的操作符提供重载。例如，实现相等操作符(==)的类可能还会实现不等操作符(!=)，而实现小于操作符(<)的类，也可能实现其他关系操作符(>，<=，>=)。这些操作符中只有一个的定义是有趣的，而其他操作符可以简单地用这个操作符定义。例如，类X的不等操作符可能定义为相等操作符:
+实现提供重载操作符的类时，通常会为许多不同(但相关)的操作符提供重载。实现相等操作符(==)的类，可能还会实现不等操作符(!=)，而实现小于操作符(<)的类，也可能实现其他关系操作符(>，<=，>=)。这些操作符中只需要定义一个，而其他操作符可以使用这个操作符定义。类X的不等操作符可能定义为相等操作符:
 
 \begin{lstlisting}[style=styleCXX]
 bool operator!= (X const& x1, X const& x2) {
@@ -218,7 +219,7 @@ bool operator!= (T const& x1, T const& x2) {
 }
 \end{lstlisting}
 
-C++标准库中也包含类似的定义，作为<utility>头文件的一部分。然而，当确定它们在命名空间std中可用时会导致问题时，这些定义(对于!=、>、<=和>=)在标准化期间降级到命名空间std::rel\_ops中。实际上，让这些定义可见会使类型看起来都有一个!=操作符(可能无法实例化)，并且该操作符对其两个参数总是精确匹配。虽然第一个问题可以通过使用SFINAE技术(请参阅第19.4节)来克服，这样!=定义将只对具有适当的==操作符的类型进行实例化，但第二个问题仍然存在:上面的!=定义将优于用户提供的定义，这些定义需要进行派生到基的转换，这就很诡异了。
+C++标准库中也包含类似的定义，作为<utility>头文件的一部分。当确定它们在命名空间std中可用时会导致问题时，这些定义(对于!=、>、<=和>=)在标准化期间降级到命名空间std::rel\_ops中。实际上，让这些定义可见会使类型看起来都有一个!=操作符(可能无法实例化)，并且该操作符对其两个参数总是精确匹配。虽然第一个问题可以通过使用SFINAE技术(请参阅第19.4节)来克服，这样!=定义将只对具有适当的==操作符的类型进行实例化，但第二个问题仍然存在:上面的!=定义将优于用户提供的定义，这些定义需要进行派生到基的转换，这就很诡异了。
 
 基于CRTP的这些操作符模板的另一种表达方式允许类选择通用操作符定义，提供了增加代码重用的优势，而没有过度通用操作符的副作用:
 
@@ -252,13 +253,13 @@ int main()
 
 这里，结合了CRTP和Barton-Nackman技巧!EqualityComparable<>使用CRTP提供一个操作符!根据派生类对operator==的定义，为其指定派生类。实际上，通过友元函数定义(Barton-Nackman技巧)提供了该定义，将两个参数提供给operator!=转换的等价行为。
 
-当将行为分解到基类中同时，保留最终派生类的标识时，CRTP可能很有用。除了Barton-Nackman技巧之外，CRTP还可以基于一些规范操作符提供一些操作符的一般定义。这些特性使使用Barton-Nackman技巧的CRTP成为C++模板库作者最喜欢的技术之一。
+当将行为分解到基类中同时，保留最终派生类的标识时，CRTP可能很有用。除了Barton-Nackman技巧之外，CRTP还可以基于一些规范操作符提供一些操作符的一般定义。这些特性使Barton-Nackman技巧的CRTP，成为C++模板库作者最喜欢的技术之一。
 
 \subsubsubsection{21.2.3\hspace{0.2cm}门面模式}
 
-使用CRTP和Barton-Nackman技巧来定义一些操作符是一种方便的快捷方式。可以进一步采用这种思想，这样CRTP基类就可以用CRTP派生类公开的一个小得多(但更容易实现)的接口来定义类的大部分或所有公共接口。这种模式称为门面模式，定义需要满足某些现有接口数字类型、迭代器、容器等要求的新类型时特别有用。
+使用CRTP和Barton-Nackman技巧来定义一些操作符是一种方便的快捷方式。可以进一步采用这种思想，这样CRTP基类就可以用CRTP派生类公开的一个小得多(但更容易实现)的接口来定义类的大部分或所有公共接口。这种模式称为门面模式，可以定义需要满足某些现有接口数字类型、迭代器、容器等要求的新类型。
 
-为了说明门面模式，我们将为迭代器实现一个门面模式，这将大大简化编写符合标准库要求的迭代器的过程。迭代器类型(特别是随机访问迭代器)所需的接口相当大。下面是类模板IteratorFacade的框架，演示了迭代器接口的需求:
+为了说明门面模式，我们将为迭代器实现一个门面模式，这将简化编写(符合标准库要求的)迭代器的过程。迭代器类型(特别是随机访问迭代器)所需的接口相当大。下面是类模板IteratorFacade的框架，演示了迭代器接口的需求:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -300,14 +301,14 @@ class IteratorFacade
 };
 \end{lstlisting}
 
-简洁起见，省略了一些声明，即使实现每个新迭代器列出的所有声明，也会相当繁琐。幸运的是，该接口可以总结为几个核心操作:
+简洁起见，省略了一些声明，即使实现每个新迭代器列出的所有声明，也相当繁琐。幸运的是，该接口可以总结为几个核心操作:
 
 \begin{itemize}
 \item 
 对于所有迭代器:
 \begin{itemize}
 \item [-]
-dereference():访问迭代器指向的值(通常通过操作符*和->使用)。
+dereference():访问迭代器指向的值(通常通过操作符*和\texttt{->}使用)。
 
 \item [-]
 increment():移动迭代器指向序列中的下一项。
@@ -334,7 +335,7 @@ measureDistance():确定序列中从一个迭代器到另一个迭代器的步�
 \end{itemize}
 \end{itemize}
 
-门面的作用是调整一个只实现那些核心操作的类型，以提供完整的迭代器接口。IteratorFacade的实现主要涉及将迭代器语法映射到最小的接口。下面的例子中，使用成员函数asDerived()来访问CRTP派生类:
+门面是调整一个只实现那些核心操作的类型，以提供完整的迭代器接口。IteratorFacade的实现主要涉及将迭代器语法映射到最小的接口。下面的例子中，使用成员函数asDerived()来访问CRTP派生类:
 
 \begin{lstlisting}[style=styleCXX]
 Derived& asDerived() { return *static_cast<Derived*>(this); }
@@ -349,7 +350,7 @@ Derived const& asDerived() const {
 \hspace*{0.75cm}为了简化表示，忽略代理迭代器的存在，因为代理迭代器的解引用操作不会返回真正的引用。迭代器外观的完整实现(如[BoostIterator]中的实现)将调整操作符的结果类型\texttt{—>}和操作符[]以考虑代理。
 \end{tcolorbox}
 
-这里，只举例说明输入迭代器的一些要求的定义，其他迭代器也相同。
+这里，只举例说明输入迭代器的一些要求的定义，其他迭代器的情况也相同。
 
 \begin{lstlisting}[style=styleCXX]
 reference operator*() const {
@@ -390,7 +391,7 @@ class ListNode
 };
 \end{lstlisting}
 
-使用IteratorFacade，可以以一种简单的方式定义列表迭代器:
+使用IteratorFacade，可以以一种简单的方式定义链表迭代器:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -422,7 +423,7 @@ ListNodeIterator提供了充当前向迭代器所需的所有正确操作符和�
 \noindent
 \textbf{隐藏接口}
 
-ListNodeIterator实现的缺点是，需要作为公共接口公开操作dereference()、advance()和equals()。为了消除这个需求，可以重写IteratorFacade，通过单独的访问类IteratorFacadeAccess在派生的CRTP类上执行所有操作:
+ListNodeIterator实现的缺点是，需要作为公共接口公开操作dereference()、advance()和equals()。为了消除这个需求，可以重写IteratorFacade，通过单独的访问类IteratorFacadeAccess，在派生的CRTP类上执行所有操作:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -520,13 +521,13 @@ auto project(Iterator iter, T Base::* member) {
 }
 \end{lstlisting}
 
-每个投射迭代器存储两个值:iter和member，前者是底层序列(Base值)的迭代器，后者是指向数据的成员，描述投射哪个成员。考虑到这点，可以考虑为IteratorFacade的基类提供模板参数。第一个是ProjectionIterator(用于启用CRTP)，第二个(T)和第四个(T\&)参数是投射迭代器的值和引用类型，将其定义为一个由T值组成的序列。
+每个投射迭代器存储两个值:iter和member，前者是底层序列(Base值)的迭代器，后者是指向数据的成员，描述投射哪个成员。可以考虑为IteratorFacade的基类提供模板参数：第一个是ProjectionIterator(用于启用CRTP)，第二个(T)和第四个(T\&)参数是投射迭代器的值和引用类型，将其定义为一个由T值组成的序列。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}为了简化示例，假定底层迭代器返回的是引用，而不是代理。
 \end{tcolorbox}
 
-第三和第五个参数仅传递底层迭代器的类别和不同类型。因此，当迭代器是输入迭代器时，投射迭代器将是输入迭代器;当iterator是双向迭代器时，投射迭代器将是双向迭代器，以此类推。project()函数可以方便地构建投射迭代器。
+第三和第五个参数仅传递底层迭代器的类别和不同类型。当迭代器是输入迭代器时，投射迭代器将是输入迭代器;当iterator是双向迭代器时，投射迭代器将是双向迭代器，以此类推。project()函数可以方便地构建投射迭代器。
 
 唯一缺少的部分是IteratorFacade核心需求的实现。最有趣的是dereference()，它对底层迭代器进行解引用，然后通过指向数据的指针成员进行投射:
 
@@ -536,7 +537,7 @@ T& dereference() const {
 }
 \end{lstlisting}
 
-剩下的操作是底层迭代器实现的:
+剩下的操作由底层迭代器实现:
 
 \begin{lstlisting}[style=styleCXX]
 void increment() {
@@ -550,7 +551,7 @@ void decrement() {
 }
 \end{lstlisting}
 
-简单起见，我们省略了随机访问迭代器的定义，其类似于下面的定义。。
+简单起见，这里省略了随机访问迭代器的定义，其类似于下面的定义。
 
 就是这样!使用投射迭代器，可以打印出vector中Person对象的名字:
 

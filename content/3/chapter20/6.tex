@@ -2,9 +2,9 @@ C++标准库为输入、输出、前向、双向和随机访问迭代器标签�
 
 C++11标准库std::enable\_if类模板提供了与EnableIfT类模板相同的功能。唯一的区别是标准使用了名为type的小写成员类型，而不是大写类型。
 
-C++标准库的很多地方都使用了特化算法。例如，std::advance()和std::distance()都有几个基于其迭代器参数类别的版本。尽管最近一些已经采用std::enable\_if来实现这种特化算法，但大多数标准库实现倾向于使用标签调度。此外，许多C++标准库实现也在内部使用这些技术来实现各种标准算法的特化算法。例如，std::copy()可以特化来实现std::memcpy()或std::memmove()，当迭代器指向连续的内存并且它们的值类型有普通的复制赋值操作符时。类似地，可以对std::fill()进行优化，以实现std::memset()，并且当已知类型具有普通析构函数时，各种算法可以避免调用析构函数。这些特化算法不像std::advance()或std::distance()那样由C++标准强制规定，但是实现者出于效率的原因会有选择的进行提供。
+C++标准库的很多地方都使用了特化算法。std::advance()和std::distance()都有几个基于其迭代器参数类别的版本。尽管最近一些已经采用std::enable\_if来实现这种特化算法，但大多数标准库实现倾向于使用标签调度。许多C++标准库实现，也在内部使用这些技术来实现各种标准算法的特化算法。std::copy()可以实现std::memcpy()或std::memmove()，当迭代器指向连续的内存并且它们的值类型有普通的复制赋值操作符时。可以对std::fill()进行优化，以实现std::memset()，并且当已知类型具有普通析构函数时，各种算法可以避免调用析构函数。这些特化算法不像std::advance()或std::distance()那样由C++标准强制规定，但是实现者出于效率的原因会有选择的进行提供。
 
-正如在第8.4节中介绍的那样，C++标准库还在其要求中使用std::enable\_if<>或类似的基于SFINAE的技术。例如，std::vector有一个构造函数模板，允许从迭代器序列构建vector:
+正如在第8.4节中介绍的那样，C++标准库还在其要求中使用std::enable\_if<>或类似的基于SFINAE的技术。std::vector有一个构造函数模板，允许从迭代器序列构建vector:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename InputIterator>
@@ -12,7 +12,7 @@ vector(InputIterator first, InputIterator second,
 		allocator_type const& alloc = allocator_type());
 \end{lstlisting}
 
-要求“如果构造函数调用的，是不符合输入迭代器条件的InputIterator类型，那么构造函数将不参与重载解析”(参见[C++11]23.2.3第14段)。这个措辞足够模糊，可以使用当时最有效的技术来实现它，在将它添加到标准中时，应该会使用std::enable\_if<>实现。
+要求“若构造函数调用的，是不符合输入迭代器条件的InputIterator类型，那么构造函数将不参与重载解析”(参见[C++11]23.2.3第14段)。这个措辞非常模糊，可以使用当时最有效的技术来实现它，在将它添加到标准中时，应该会使用std::enable\_if<>实现。
 
 
 

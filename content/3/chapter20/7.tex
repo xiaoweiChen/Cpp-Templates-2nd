@@ -1,4 +1,4 @@
-标签调度在C++中存在很久了，其用于STL的原始实现中(参见[StepanovLeeSTL])，并且经常与特征一起使用。SFINAE和EnableIf的使用比较新:本书的第一版(参见[VandevoordeJosuttisTemplates1st])介绍了术语SFINAE，并用于检测成员类型的存在。
+标签调度在C++中存在很久了，其用于STL的原始实现中(参见[StepanovLeeSTL])，并且经常与特征一起使用。SFINAE和EnableIf比较新:本书的第一版(参见[VandevoordeJosuttisTemplates1st])介绍了术语SFINAE，并用于检测成员类型的存在。
 
 “enable if”技术和术语最早是由Jaakko Jarvi、Jeremiah Will-cock、Howard Hinnant和Andrew Lumsdaine在[OverloadingProperties]中提出的，描述了EnableIf模板，如何用EnableIf(和DisableIf)对实现函数重载，以及如何用类模板偏特化来使用EnableIf。从那时起，EnableIf和类似的技术在高级模板库(包括C++标准库)的实现中无处不在。此外，这些技术的流行激发了C++11扩展SFINAE的行为(参见15.7节)。Peter Dimov是第一个注意到函数模板的默认模板参数(另一个C++11特性)使得可以在构造函数模板中使用EnableIf，而无需引入另一个函数参数。
 

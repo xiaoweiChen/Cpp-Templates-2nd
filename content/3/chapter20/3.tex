@@ -1,7 +1,7 @@
 
 算法特化包括提供根据模板参数的属性选择的不同函数模板，函数模板的部分排序(16.2.2节)和重载解析(附录C)都不足以表达更高级的算法特化形式。
 
-C++标准库为此提供了std::enable\_if(第6.3节)。本节讨论如何通过引入相应的别名模板来进行实现一个助手类，我么将其称为EnableIf以避免名称冲突。
+C++标准库为此提供了std::enable\_if(第6.3节)。本节讨论如何通过引入相应的别名模板来进行实现一个辅助类，将其称为EnableIf(以避免名称冲突)。
 
 与std::enable\_if一样，EnableIf别名模板可以用于在特定条件下启用(或禁用)特定函数模板。advanceIter()算法的随机访问版本可以这样实现:
 
@@ -19,7 +19,7 @@ advanceIter(Iterator& x, Distance n) {
 }
 \end{lstlisting}
 
-EnableIf特化用于迭代器是一个随机访问迭代器时，启用advanceIter()的相应版本。EnableIf的两个参数是一个布尔条件，指示是否应该启用该模板，以及当条件为真时由EnableIf展开生成的类型。上面的例子中，使用类型特征IsConvertible(第19.5节和第19.7.3节中介绍)作为条件，定义了类型特征IsRandomAccessIterator。因此，当Iterator的具体类型可用作随机访问迭代器时，才会考虑advanceIter()实现的这个版本(即其与一个可转换为std::random\_access\_iterator\_tag的标记相关联)。
+EnableIf特化用于随机访问迭代器时，启用advanceIter()的相应版本。EnableIf的两个参数是一个布尔条件，指示是否应该启用该模板，以及当条件为true时,由EnableIf展开生成的类型。上面的例子中，使用类型特征IsConvertible(第19.5节和第19.7.3节中介绍)作为条件，定义了类型特征IsRandomAccessIterator。当Iterator的具体类型可用作随机访问迭代器时，才会考虑advanceIter()实现的这个版本(即其与一个可转换为std::random\_access\_iterator\_tag的标记相关联)。
 
 EnableIf有一个相当简单的实现:
 
@@ -40,15 +40,15 @@ template<bool Cond, typename T = void>
 using EnableIf = typename EnableIfT<Cond, T>::Type;
 \end{lstlisting}
 
-EnableIf展开为一个类型，因此实现为一个别名模板。我们希望对其实现使用偏特化(参见第16章)，但是别名模板不能偏特化。这里，可以引入助手类模板EnableIfT，其可以完成相应的实际工作，并使用别名模板EnableIf从助手模板中简单地选择结果类型。当条件为真时，EnableIfT<…>::Type(因此EnableIf<…>)只计算第二个模板参数T。当条件为假时，EnableIf不会产生一个有效的类型，因为EnableIfT的主类模板没有Type成员。通常，这将是一个错误，但在SFINAE(替换失败不是过，在第15.7节中描述)上下文中——例如函数模板的返回类型——会导致模板参数推导失败，从而忽略函数模板。
+EnableIf展开为一个类型，因此实现为一个别名模板。我们希望对其实现使用偏特化(参见第16章)，但是别名模板不能偏特化。这里，可以引入辅助类模板EnableIfT，其可以完成相应的实际工作，并使用别名模板EnableIf从辅助模板中简单地选择结果类型。当条件为true时，EnableIfT<…>::Type只计算第二个模板参数T。当条件为false时，EnableIf不会产生一个有效的类型，因为EnableIfT的主类模板没有Type成员。这将是一个错误，但在SFINAE(替换失败不是过，在第15.7节中描述)上下文中——函数模板的返回类型——会导致模板参数推导失败，从而忽略函数模板。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}EnableIf也可以放在默认的模板参数中，这比放在结果类型中更有优势。参见第20.3.2节关于EnableIf位置的讨论。
 \end{tcolorbox}
 
-对于advanceIter()，使用EnableIf意味着，当Iterator参数是随机访问迭代器时，函数模板可用(并且返回类型为void)，当Iterator参数不是随机访问迭代器时，函数模板将从考虑对象中移除。可以把EnableIf看作是一种“保护”模板，当模板参数不满足模板实现要求的时，才实例化的方法。因为这个advanceIter()只能用随机访问迭代器实例化，所以相应的操作只能在随机访问迭代器上使用。虽然以这种方式使用EnableIf并不绝对可靠——用户可以断言某个类型是随机访问迭代器，而不需要提供必要的操作——但它可以帮助及早的诊断错误。
+对于advanceIter()，使用EnableIf意味着，当Iterator参数是随机访问迭代器时，函数模板可用(并且返回类型为void)，当Iterator参数不是随机访问迭代器时，函数模板将从对象中移除。可以把EnableIf看作是一种“保护”模板，当模板参数不满足模板实现要求的时，才实例化的方法。因为这个advanceIter()只能用随机访问迭代器实例化，所以相应的操作只能在随机访问迭代器上使用。虽然以这种方式使用EnableIf并不绝对可靠——用户可以断言某个类型是随机访问迭代器，而不需要提供必要的操作——但它可以帮助及早的诊断错误。
 
-现在已经建立了显式地“激活”所应用类型的更特化的模板。然而，这还不够:还必须“停用”不太特化的模板，因为编译器无法对这两个模板进行“排序”，如果两个版本都适用，就会出现歧义错误。幸运的是，实现这一点并不困难:只需要在不太特化的模板上使用相同的EnableIf模式，只需要对条件表达式求反。这样做可以确保激活Iterator类型两个模板中的一个。因此，advanceIter()的非随机访问迭代器版本如下所示:
+现在已经建立了显式地“激活”所应用类型的更特化的模板，这还不够:还必须“停用”不太特化的模板，因为编译器无法对这两个模板进行“排序”，若两个版本都适用，就会出现歧义错误。不过，实现这一点并不困难:只需要在不太特化的模板上使用相同的EnableIf模式，对条件表达式求反即可。这样做可以确保激活Iterator类型两个模板中的一个。因此，advanceIter()的非随机访问迭代器版本如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iterator, typename Distance>
@@ -64,15 +64,15 @@ advanceIter(Iterator& x, Distance n)
 
 \subsubsubsection{20.3.1\hspace{0.2cm}多个特化版本}
 
-前面的模式可以推广到需要两个以上不同实现的情况:为每个实现提供EnableIf构造，其条件对一组具体模板参数互斥。这些条件通常会利用各种特征表达的属性。
+前面的模式可以推广到需要两个以上不同实现:为每个实现提供EnableIf构造，其条件对一组具体模板参数互斥。这些条件通常会利用各种特征表达的属性。
 
 例如，引入advanceIter()算法的第三种实现:这次希望通过指定负距离来允许“后退”移动。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}通常，算法特化只用于在计算时间或资源使用方面提供效率增益。然而，一些算法的特化也提供了更多的功能，例如(在本例中)按顺序向后移动的能力。
+\hspace*{0.75cm}算法特化只用于在计算时间或资源使用方面提供效率增益。然而，一些算法的特化也提供了更多的功能，例如(在本例中)按顺序向后移动的能力。
 \end{tcolorbox}
 
-这对于输入迭代器无效，但对于随机访问迭代器有效。但标准库还包含双向迭代器的概念，其允许向后移动，而不需要随机访问。实现这种情况需要复杂一点的逻辑:每个函数模板必须使用EnableIf和一个条件，该条件与表示算法不同实现的所有其他函数模板的条件互斥。这将需要以下一组条件:
+这对于输入迭代器无效，但对于随机访问迭代器有效。标准库还包含双向迭代器的概念，其允许向后移动，而不需要随机访问。实现这种情况需要复杂一点的逻辑:每个函数模板必须使用EnableIf和一个条件，该条件与表示算法不同实现的所有其他函数模板的条件互斥。这将需要以下一组条件:
 
 \begin{itemize}
 \item 
@@ -136,7 +136,7 @@ advanceIter(Iterator& x, Distance n) {
 
 通过使每个函数模板的EnableIf条件与其他每个函数模板的EnableIf条件互斥，可以确保对于给定的参数集，最多有一个函数模板能成功推导模板参数。
 
-示例说明了将EnableIf用于算法特化的缺点之一:每次引入算法的新实现时，都需要重新访问所有算法实现的条件，以确保所有实现都互斥。相反，使用标签调度(20.2节)引入双向迭代器变体只需要使用标记std::bidirectional\_iterator\_tag添加一个新的advanceIterImpl()重载即可。
+示例说明了将EnableIf用于算法特化的缺点之一:每次引入算法的新实现时，都需要重新访问所有算法实现的条件，以确保所有实现都互斥。而使用标签调度(20.2节)引入双向迭代器变体，只需要使用标记std::bidirectional\_iterator\_tag添加一个新的advanceIterImpl()重载即可。
 
 标签调度和EnableIf这两种技术很有用:标签调度支持基于分层标签的简单调度，而EnableIf支持基于由类型特征确定的属性集的高级调度。
 
@@ -145,10 +145,10 @@ advanceIter(Iterator& x, Distance n) {
 EnableIf用于函数模板的返回类型。但这种方法不适用于构造函数模板或转换函数模板，因为没有指定的返回类型。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}虽然转换函数模板确实有返回类型，但转换到该类型的模板参数必须是可推导的(参见第15章)，这样转换函数模板才能正常工作。
+\hspace*{0.75cm}虽然转换函数模板确实有返回类型，但转换到该类型的模板参数必须可推导(参见第15章)，这样转换函数模板才能正常工作。
 \end{tcolorbox}
 
-此外，EnableIf的使用会使返回类型很难阅读，所以可以将EnableIf嵌入到默认的模板参数中，如下所示:
+此外，EnableIf的使用会使返回类型很难阅读，所以可以将EnableIf嵌入到默认的模板参数中:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -178,7 +178,7 @@ class Container {
 };
 \end{lstlisting}
 
-然而，若试图添加另一个重载(一个更高效的随机访问迭代器Container构造函数版本)，将会导致错误:
+若添加另一个重载(更高效的随机访问迭代器Container构造函数版本)，将会导致错误:
 
 \begin{lstlisting}[style=styleCXX]
 // construct from an input iterator sequence:
@@ -247,9 +247,9 @@ void advanceIter(Iterator& x, Distance n) {
 }
 \end{lstlisting}
 
-这就清楚多了。更特化的代码路径(用于随机访问迭代器)会支持它们的类型实例化。因此，只要操作使用if constexpr保护，那么代码中包含并非所有迭代器中都有的操作(例如+=)是安全的。
+这就清楚多了！更特化的代码路径(用于随机访问迭代器)会支持它们的类型实例化。因此，只要操作使用if constexpr保护，那代码中包含并非所有迭代器中都有的操作(例如+=)就是安全的。
 
-然而，其也有缺点。只有当通用组件中的差异完全可以在函数模板体中表达时，才可能使用constexpr if。下面的情况中，仍然需要EnableIf:
+然而，其也有缺点。当通用组件中的差异完全可以在函数模板体中表达时，才可能使用constexpr if。下面的情况中，仍然需要EnableIf:
 
 \begin{itemize}
 \item
@@ -262,7 +262,7 @@ void advanceIter(Iterator& x, Distance n) {
 对于某些模板参数列表，不存在有效的实例化。
 \end{itemize}
 
-很容易用下面的模式来处理最后一种情况:
+可以用下面的模式来处理最后一种情况:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -277,7 +277,7 @@ void f(T p) {
 }
 \end{lstlisting}
 
-这样做并不可取，因为其不适用于SFINAE:函数f<T>()没有从候选列表中删除，因此可能会抑制另一个重载解析的结果。替代方案中，使用EnableIf f<T>()将删除EnableIf<…>失败情况的替换。
+不过这样做并不可取，因为其不适用于SFINAE:函数f<T>()没有从候选列表中删除，因此可能会抑制另一个重载解析的结果。替代方案中，使用EnableIf f<T>()将删除EnableIf<…>失败情况的替换。
 
 \subsubsubsection{20.3.4\hspace{0.2cm}概念}
 
@@ -309,9 +309,9 @@ class Container {
 };
 \end{lstlisting}
 
-require子句(在E.1节中讨论)描述了模板的需求。如果没有满足要求，该模板就不认为是候选模板。因此，它是EnableIf思想的更直接的表达，语言本身也支持这种表达。
+require子句(在E.1节中讨论)描述了模板的需求。若没有满足要求，该模板就不认为是候选模板。因此，其是EnableIf思想的更直接的表达，语言本身也支持这种表达。
 
-与EnableIf相比，requires子句有更多的优点。约束包含(在第E.3.1节)提供了模板之间的排序，只在require子句中有所不同，从而消除了标签调度的需要。此外，可以将require子句附加到非模板上。例如，仅当类型T可使用小于操作符进行比较时，才提供sort()成员函数:
+与EnableIf相比，requires子句有更多的优点。约束包含(在第E.3.1节)提供了模板之间的排序，只在require子句中有所不同，从而消除了标签调度的需要。此外，可以将require子句附加到非模板上。仅当类型T可使用小于操作符进行比较时，才提供sort()成员函数:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

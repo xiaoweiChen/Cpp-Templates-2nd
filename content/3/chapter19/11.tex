@@ -10,6 +10,6 @@ Boost提供了一套相当完整的类型分类模板(参见[BoostTypeTraits])�
 
 第一次标准化工作期间描述类型推演和替代规则时，就注意到SFINAE原则用于类型分类的目的。然而，这没有正式的文档记录，后来花费了大量的精力创建本章中描述的一些技术。本书的第一版是这种技术最早的来源之一，介绍了术语SFINAE。这一领域的另一位著名的早期贡献者是Andrei Alexandrescu，他普及了sizeof操作符来确定重载解析的结果。使这种技术变得流行，以至于2011年的标准将SFINAE的范围从简单的类型错误，扩展为函数模板的错误(参见[SpicerSFINAE])。这个扩展结合了decltype、右值引用和可变参数模板的添加，极大地扩展了在特征中测试特定属性的能力。
 
-使用像isValid这样的泛型Lambda来提取SFINAE条件，是Louis Dionne在2015年引入的一种技术，Boost.Hana使用了这种技术(参见[boostana])，一个适合在编译时对类型和值进行计算的元编程库。
+使用像isValid这样的泛型Lambda来提取SFINAE条件，是Louis Dionne在2015年引入的一种技术，Boost.Hana使用了这种技术(参见[boostana]，一个适合在编译时对类型和值进行计算的元编程库)。
 
 策略类是由许多开发者开发的。Andrei Alexandrescu使策略类这个术语流行起来，他的书《现代C++设计》比我们的简短介绍(参见[AlexandrescuDesign])更加详细地介绍了策略类。

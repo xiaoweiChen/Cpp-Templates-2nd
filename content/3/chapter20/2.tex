@@ -1,5 +1,5 @@
 
-算法特化的方法是通过唯一“标记”来识别不同的实现。例如，为了处理刚介绍的advanceIter()问题，可以使用标准库的迭代器类别标签类型(定义如下)来识别advanceIter()算法的两个实现变体:
+算法特化的方法是通过唯一“标记”来识别不同的实现，为了处理advanceIter()的问题，可以使用标准库的迭代器类别标签类型(定义如下)来识别advanceIter()算法的两个实现变体:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iterator, typename Distance>
@@ -18,7 +18,7 @@ void advanceIterImpl(Iterator& x, Distance n,
 }
 \end{lstlisting}
 
-然后，advanceIter()函数模板本身只是简单地转发参数和相应的标签:
+advanceIter()函数模板只是简单地转发参数和相应的标签:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Iterator, typename Distance>
@@ -46,9 +46,9 @@ namespace std {
 }
 \end{lstlisting}
 
-有效利用标签调度的关键在于标签之间的关系。advanceIterImpl()的两个变体标记为std::input\_iterator\_tag和std::random\_access\_iterator\_tag，并且因为std::random\_access\_iterator\_tag继承自std::input\_iterator\_tag，所以使用随机访问迭代器调用advanceIterImpl()时，普通函数都会优先使用更特化的算法版本(使用std::random\_access\_iterator\_tag)。因此，标签调度依赖于从单一的、主要的函数模板委派到一组\_impl变体，对这些变体进行标记，这样普通的函数重载将选择适用于给定模板参数最特化的算法。
+利用标签调度的关键在于标签之间的关系。advanceIterImpl()的两个变体标记为std::input\_iterator\_tag和std::random\_access\_iterator\_tag，并且std::random\_access\_iterator\_tag继承自std::input\_iterator\_tag，所以使用随机访问迭代器调用advanceIterImpl()时，普通函数都会优先使用更特化的算法版本(使用std::random\_access\_iterator\_tag)。标签调度依赖于从单一的、主要的函数模板委派到一组\_impl变体，对这些变体进行标记，这样普通的函数重载将选择适用于给定模板参数最特化的算法。
 
-当算法使用的属性有层次结构，以及提供这些标记值的现有特征集时，标签调度工作得很好。当算法特化依赖于特定的类型属性时，就不那么方便了，比如类型T是否具有普通的复制赋值操作符。因此，我们需要更强大的技术。
+当算法使用的属性具有体系结构，以及提供这些标记值的现有特征集时，标签调度工作得很好。当算法特化依赖于特定的类型属性时，就不那么方便了，比如类型T是否具有普通的复制赋值操作符。因此，我们需要更强大的技术。
 
 
 

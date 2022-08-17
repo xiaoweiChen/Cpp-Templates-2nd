@@ -27,7 +27,7 @@ void test(DequeStack<int> intStack)
 }
 \end{lstlisting}
 
-第一次调用(对f1())中，在intStack类型中使用别名模板DequeStack对推导没有影响:指定的类型DequeStack<int>可视为其替代类型Stack<int, std::deque<int>>。第二次和第三次调用具有相同的涂掉行为，因为f2()中的DequeStack<T>和f3()中的替代形式与Stack<T, std::deque<T>>相同。对模板参数推导的目标来说，模板别名是透明的:可以用来区分和简化代码，但是对于推导如何进行却不会产生效果。
+第一次调用(对f1())中，在intStack类型中使用别名模板DequeStack对推导没有影响:指定的类型DequeStack<int>可视为其替代类型Stack<int, std::deque<int>{}>。第二次和第三次调用具有相同的涂掉行为，因为f2()中的DequeStack<T>和f3()中的替代形式与Stack<T, std::deque<T>{}>相同。对模板参数推导的目标来说，模板别名是透明的:可以用来区分和简化代码，但是对于推导如何进行却不会产生效果。
 
 因为别名模板不能特化(参见第16章关于模板特化主题的详细信息)，所以这是可能的。假设以下代码可行:
 

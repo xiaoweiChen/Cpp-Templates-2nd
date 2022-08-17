@@ -170,7 +170,7 @@ S y{s1};
 S z(s1);
 \end{lstlisting}
 
-已经知道x的类型是S<int>，但是x和y的类型应该是什么?直观产生的两种类型是S<S<int>>和S<int>。委员会决定，两种情况下都应该是S<int>，这有点争议。为什么会引起争议?考虑一个类似的vector类型的例子:
+已经知道x的类型是S<int>，但是x和y的类型应该是什么?直观产生的两种类型是S<S<int>{}>和S<int>。委员会决定，两种情况下都应该是S<int>，这有点争议。为什么会引起争议?考虑一个类似的vector类型的例子:
 
 \begin{lstlisting}[style=styleCXX]
 std::vector v{1, 2, 3}; // vector<int>, not surprising
@@ -333,13 +333,13 @@ Tuple c{x, x};
 Tuple d{x};
 \end{lstlisting}
 
-第一个示例(x)只能匹配第一个指引，因此产生Tuple<Tuple<int, int>，Tuple<int, int>>。这表明，第二个示例应该推导d为Tuple<tuple<int>>类型。不过，其使用了复制的方式进行构造(首选第二个隐式指引)。这也发生在函数功能符类型的转换中:
+第一个示例(x)只能匹配第一个指引，因此产生Tuple<Tuple<int, int>，Tuple<int, int>{}>。这表明，第二个示例应该推导d为Tuple<tuple<int>{}>类型。不过，其使用了复制的方式进行构造(首选第二个隐式指引)。这也发生在函数功能符类型的转换中:
 
 \begin{lstlisting}[style=styleCXX]
 auto e = Tuple{x};
 \end{lstlisting}
 
-这里，e推导为一个Tuple<int, int>，而不是Tuple<Tuple<int>>。
+这里，e推导为一个Tuple<int, int>，而不是Tuple<Tuple<int>{}>。
 
 \hspace*{\fill} \\ %插入空行
 \noindent

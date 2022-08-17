@@ -2,12 +2,12 @@
 因为历史原因，C++一开始只通过结合使用继承和虚函数来支持多态。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}严格地说，宏也可以认为是静态多态性的早期形式。但是，这里不对宏进行讨论，因为它们大多与其他语言机制不相关。
+\hspace*{0.75cm}严格地说，宏也可以认为是静态多态性的早期形式。但这里不对宏进行讨论，因为它们大多与其他语言机制不相关。
 \end{tcolorbox}
 
 多态设计的艺术包括在相关对象类型中标识一组公共功能，并将它们声明为公共基类中的虚函数接口。
 
-这种设计方法的代表是管理几何形状，并允许以某种方式(例如，在屏幕上)呈现的应用程序。这样的应用程序中，可以识别一个抽象基类(ABC)GeoObj，声明了适用于几何对象的常见操作和属性。然后，特定几何对象的每个具体类都派生自GeoObj(见图18.1):
+这种设计方法的代表是管理几何图形，并允许以某种方式(例如，在屏幕上)呈现的应用程序。这样的应用程序中，可以识别一个抽象基类(ABC)GeoObj，声明了适用于几何对象的常见操作和属性。然后，特定几何对象的每个具体类都派生自GeoObj(见图18.1):
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter18/images/1.png} \\
@@ -101,7 +101,7 @@ int main()
 }
 \end{lstlisting}
 
-关键的多态接口是函数draw()和center\_of\_gravity()，二者都是虚成员函数。示例演示了它们在函数mydraw()、distance()和drawElems()中的用法，后面的函数使用基类型GeoObj中的实现。这种方法的结果是，在编译时通常不知道必须调用哪个版本的draw()或center\_of\_gravity()。但在运行时，将访问虚函数调用的对象的完整动态类型，以调用相应函数。
+关键的多态接口是函数draw()和center\_of\_gravity()，二者都是虚成员函数。示例演示了在函数mydraw()、distance()和drawElems()中的用法，后面的函数使用基类型GeoObj中的实现。这种方法的结果是，在编译时通常不知道必须调用哪个版本的draw()或center\_of\_gravity()。但在运行时，将访问虚函数调用的对象的完整动态类型，以调用相应函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}也就是说，多态基类子对象的编码包括一些(大部分是隐藏的)支持运行时分配。
@@ -109,7 +109,7 @@ int main()
 
 因此，根据几何对象的实际类型，会执行相应的操作:如果对Line对象调用mydraw()，则表达式obj.draw()会调用Line::draw()，而对Circle对象调用Circle::draw()函数。类似地，使用distance()，调用适合于参数对象的成员函数center\_of\_gravity()。
 
-这种动态多态最引人注目的特性，可能是处理异构对象集合的能力。drawElems()可以很好的说明这个概念：
+这种动态多态的特点，可能是处理异构对象集合的能力。drawElems()可以很好的说明：
 
 \begin{lstlisting}[style=styleCXX]
 elems[i]->draw()

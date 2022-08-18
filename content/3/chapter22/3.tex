@@ -1,4 +1,4 @@
-FunctorBridge类模板负责底层函数对象的所有权和操作。其实现为一个抽象基类，是FunctionPtr动态多态性的基础:
+FunctorBridge类模板负责底层函数对象的所有权和操作，实现为一个抽象基类，是FunctionPtr动态多态性的基础:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -18,7 +18,7 @@ class FunctorBridge
 FunctorBridge提供了通过虚函数操作存储函数对象所需的基本操作:析构函数、执行复制的clone()操作和调用。操作调用基础函数对象。不要忘记将clone()和invoke()定义为const成员函数。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}将invoke()设为const是防止通过const函数ptr对象调用非const操作符()重载的一种安全措施，这将违背开发者的预期。
+\hspace*{0.75cm}将invoke()设为const，为的是避免通过const函数ptr对象调用非const操作符()重载，这与开发者的预期不符。
 \end{tcolorbox}
 
 使用这些虚函数，可以实现FunctionPtr的复制构造函数和函数调用操作符:

@@ -1,4 +1,4 @@
-最早记录元程序的例子是Erwin Unruh，当时他是C++标准化委员会中西门子的代表。他注意到模板实例化过程的计算完整性，并通过开发第一个元程序证明了他的观点。他使用Metaware编译器并诱导它发出包含连续素数的错误消息。以下是在1994年C++委员会会议上流传的代码(经过修改，现在可以在符合标准的编译器上编译):
+最早记录元程序的例子是Erwin Unruh，当时他在C++标准化委员会中作为西门子的代表。他注意到模板实例化过程的计算完整性，并通过开发第一个元程序证明了他的观点。他使用Metaware编译器并诱导它发出包含连续素数的错误消息。以下是在1994年C++委员会会议上流传的代码(经过修改，现在可以在符合标准的编译器上编译):
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -66,11 +66,7 @@ int main()
 }
 \end{lstlisting}
 
-如果编译这个程序，当在Prime\_print::f()中，d的初始化失败时，编译器将打印错误消息。当初始值为1时就会发生这种情况，因为只有void*的构造函数，只有0有到void*的有效转换。例如，在一个编译器上，我们得到(其他几个消息中)以下错误信息:
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}由于编译器中的错误处理不同，有些编译器可能会在打印第一个错误消息后停止。
-\end{tcolorbox}
+若编译这个程序，当在Prime\_print::f()中，d的初始化失败时，编译器将打印错误消息。当初始值为1时就会发生这种情况，因为只有void*的构造函数，只有0有到void*的有效转换。在某个编译器上，我们得到(其他几个消息中)以下错误信息:
 
 {\footnotesize
 \begin{tcblisting}{commandshell={}}
@@ -84,9 +80,13 @@ unruh.cpp:39:14: error: no viable conversion from ’const int’ to ’D<2>’
 \end{tcblisting}
 }
 
-C++模板元编程作为一种严肃的编程工具的概念，是由Todd Veldhuizen在他使用C++模板元程序的论文(参见[VeldhuizenMeta95])中首次发表(并在某种程度上形式化)的。Todd在Blitz++(C++的数字数组库，参见[Blitz++])方面的工作还对元编程(以及表达式模板技术，在第27章中介绍)进行了许多改进和扩展。
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}由于编译器中的错误处理不同，有些编译器可能会在打印第一个错误消息后停止。
+\end{tcolorbox}
 
-这本书的第一版和Andrei Alexandrescu的《现代C++设计》(参见[AlexandrescuDesign])通过对至今仍在使用的基本技术进行编码，促进了利用基于模板的元编程的C++库的爆火(Boost项目(参见[Boost])控制了这次爆火的场面)。早期的这些技术引入了MPL(元编程库)，为类型元编程定义了一致的框架，这种框架也通过Abrahams和Gurtovoy的书《C++模板元编程》(参见[BoostMPL])而流行起来。
+C++模板元编程作为一种编程工具的概念，是由Todd Veldhuizen在他使用C++模板元程序的论文(参见[VeldhuizenMeta95])中首次发表(并在某种程度上形式化)的。Todd在Blitz++(C++的数字数组库，参见[Blitz++])方面的工作还对元编程(以及表达式模板技术，在第27章中介绍)进行了许多改进和扩展。
+
+本书的第一版和Andrei Alexandrescu的《现代C++设计》(参见[AlexandrescuDesign])通过对至今仍在使用的基本技术进行编码，促进了利用基于模板的元编程的C++库的爆火(Boost项目(参见[Boost])控制了这次爆火的场面)。早期的这些技术引入了MPL(元编程库)，为类型元编程定义了一致的框架，这种框架也通过Abrahams和Gurtovoy的书《C++模板元编程》(参见[BoostMPL])而流行起来。
 
 Louis Dionne在使元编程在语法上更容易访问方面取得了其他重要进展，特别是通过他的Boost.Hana库(参见[boostana])。Louis和Andrew Sutton、Herb Sutter、David Vandevoorde等人现在正在标准化委员会中努力，为语言使用元编程提供一流的支持。这项工作的一个重要基础是探索哪些程序属性应该通过反射可用;Mat\'{u}\v{s}\ Chochl\'{i}k, Axel Naumann和David Sankel是该领域的主要贡献者。
 

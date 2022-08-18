@@ -1,4 +1,4 @@
-FunctorBridge的每个实例都是抽象类，因此其派生类负责提供虚函数的实现。为了支持潜在函数对象的完整范围(一个无界集合)，需要无界的派生类。可以通过对派生类存储的函数对象类型，进行参数化来实现这一点:
+FunctorBridge的每个实例都是抽象类，因此其派生类负责提供虚函数的实现。为了支持潜在函数对象的完整范围(无界集合)，需要无界的派生类。可以通过对派生类存储的函数对象类型，进行参数化来实现:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -38,15 +38,15 @@ FunctionPtr<R(Args...)>::FunctionPtr(F&& f)
 }
 \end{lstlisting}
 
-注意，虽然FunctionPtr构造函数在函数对象类型F上模板化的，但该类型只有特定的SpecificFunctorBridge特化才知晓(由Bridge类型别名描述)。当为新Bridge实例分配数据成员bridge，因为类型从Bridge *到FunctorBridge<R, Args...> *，所以关于特定类型F的信息将丢失。
+虽然FunctionPtr构造函数在函数对象类型F上模板化的，但该类型只有特定的SpecificFunctorBridge特化才知晓(由Bridge类型别名描述)。当为新Bridge实例分配数据成员bridge，因为类型从Bridge *到FunctorBridge<R, Args...> *，所以关于特定类型F的信息将丢失。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}虽然类型可以通过dynamic\_cast查询，FunctionPtr类使bridge指针私有，所以FunctionPtr的外部代码不能访问类型本身。
+\hspace*{0.75cm}虽然类型可以通过dynamic\_cast查询，FunctionPtr类使bridge指针私有化，所以FunctionPtr的外部代码不能访问类型本身。
 \end{tcolorbox}
 
-这种类型信息的丢失解释了，为什么经常使用术语类型擦除来描述静态和动态多态之间的桥接技术。
+这种类型信息的丢失解释了，为什么使用术语类型擦除，来描述静态和动态多态之间的桥接技术。
 
-该实现的一个特点是使用std::decay(请参阅第D.4节)来产生Functor类型，这使得推导类型F适合存储，例如：通过将对函数类型的引用转换成函数指针类型，并移除const、volatile和引用类型修饰。
+该实现的特点是使用std::decay(请参阅第D.4节)来产生Functor类型，这使得推导类型F适合存储，例如：通过将对函数类型的引用转换成函数指针类型，并移除const、volatile和引用类型的限定。
 
 
 

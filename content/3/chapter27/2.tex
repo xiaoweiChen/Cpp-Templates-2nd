@@ -1,5 +1,5 @@
 
-解决这个问题的关键是，在整个表达式之前(我们的示例中，调用赋值操作符之前)不要尝试计算表达式。因此，在求值之前，必须记录哪些操作应用于哪些对象。操作在编译时确定，因此可以对模板参数进行编码。
+解决这个问题的关键是，在整个表达式之前(示例中，调用赋值操作符之前)不要尝试计算表达式。在求值之前，必须记录哪些操作应用于哪些对象。操作在编译时确定，因此可以对模板参数进行编码。
 
 我们的示例表达式，
 
@@ -7,7 +7,7 @@
 1.2*x + x*y;
 \end{lstlisting}
 
-1.2*x的结果不是一个新数组，而是一个表示x的每个值乘以1.2的对象。类似地，x*y必须得到x中的每个元素乘以y中每个对应的元素。最后，当需要得到结果数组的值时，进行存储以备后续的计算。
+1.2*x的结果不是一个新数组，而是一个表示x的每个值乘以1.2的对象。类似地，x*y必须得到x中的每个元素乘以y中每个对应的元素。当需要得到结果数组的值时，进行存储以备后续的计算。
 
 这里设计一个具体的实现，实现对表达式进行求值
 
@@ -22,7 +22,7 @@ A_Add<A_Mult<A_Scalar<double>,Array<double>>,
 	  A_Mult<Array<double>,Array<double>>>
 \end{lstlisting}
 
-我们将新的基本数组类模板与类模板A\_Scalar、A\_Add和A\_Mult组合在一起。在个表达式对应的语法树中，可以找到一个前缀表示(参见图27.1)。这个嵌套的模板标识表示所涉及的操作，以及操作应该应用到的对象的类型。A\_Scalar稍后会出现，但实际上其只是数组表达式中标量的占位符。
+我们将新的基本数组类模板与类模板A\_Scalar、A\_Add和A\_Mult组合在一起。表达式对应的语法树中，可以找到一个前缀表示(参见图27.1)。这个嵌套的模板标识表示所涉及的操作，以及操作应该应用到的对象的类型。A\_Scalar稍后会出现，但其只是数组表达式中标量的占位符。
 
 \begin{center}
 \includegraphics[width=0.6\textwidth]{content/3/chapter27/images/1.png} \\
@@ -99,7 +99,7 @@ class A_Mult {
 
 这里添加了下标和大小查询操作，这些操作可以计算数组元素的大小和值，这些操作由在根部给定对象上的节点子树表示。
 
-对于只涉及数组的操作，结果的大小是两个操作数的大小。但是，对于同时涉及数组和标量的操作，结果的大小是数组操作数的大小。为了区分数组操作数和标量操作数，我们定义标量的大小为0。因此，A\_Scalar模板的定义如下:
+对于只涉及数组的操作，结果的大小是两个操作数的大小。对于同时涉及数组和标量的操作，结果的大小是数组操作数的大小。为了区分数组操作数和标量操作数，定义标量的大小为0。因此，A\_Scalar模板的定义如下:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -133,14 +133,14 @@ class A_Scalar {
 
 注意，标量还提供索引操作符。表达式内部，其表示一个数组，每个索引都具有相同的标量值。
 
-操作符类可能使用了一个辅助类A\_Traits来定义操作数的成员:
+操作符类可以使用辅助类A\_Traits来定义操作数的成员:
 
 \begin{lstlisting}[style=styleCXX]
 typename A_Traits<OP1>::ExprRef op1; // first operand
 typename A_Traits<OP2>::ExprRef op2; // second op
 \end{lstlisting}
 
-通常情况下，可以将它们声明为引用，因为大多数临时节点都绑定在顶层表达式中，因此直到整个表达式的计算结束为止都存在。唯一的例外是A\_Scalar节点，其绑定在操作符函数中，可能直到整个表达式求值结束才会存在。因此，为了避免成员引用不再存在的标量，必须按值复制A\_Scalar操作数。
+通常，可以将它们声明为引用，因为大多数临时节点都绑定在顶层表达式中，因此直到整个表达式的计算结束为止都存在。唯一的例外是A\_Scalar节点，其绑定在操作符函数中，可能直到整个表达式求值结束才会存在。为了避免成员引用不再存在的标量，必须按值复制A\_Scalar操作数。
 
 换句话说，我们需要这样的成员
 
@@ -187,24 +187,24 @@ class A_Traits<A_Scalar<T>> {
 };
 \end{lstlisting}
 
-注意，因为A\_Scalar对象引用顶层表达式中的标量，所以这些标量可以使用引用类型。也就是说，A\_Scalar<T>::s是引用成员变量。
+因为A\_Scalar对象引用顶层表达式中的标量，所以这些标量可以使用引用类型，从而A\_Scalar<T>::s是引用成员变量。
 
 \subsubsubsection{27.2.2\hspace{0.2cm}数组类型}
 
-有了使用轻量级表达式模板表达式的能力，现在必须创建一个Array类型，控制实际的存储，并且了解表达式模板。然而，对于工程目的来说，保持具有存储功能的真实数组的接口，与产生数组的表达式的表示的接口最好尽可能相似。为此，可以声明Array模板:
+有了使用轻量级表达式模板表达式的能力，现在必须创建一个Array类型，控制实际的存储，并且了解表达式模板。对于工程目的来说，保持具有存储功能的真实数组的接口，与产生数组的表达式的表示的接口最好尽可能相似。可以声明Array模板:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename Rep = SArray<T>>
 class Array;
 \end{lstlisting}
 
-如果Array是一个存储阵列，Rep类型可以是SArray，
+若Array是一个存储阵列，Rep类型可以是SArray，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}这里重用以前开发的SArray就很方便，但在工业强度的库中，一个特殊用途的实现可能更可取，因为其不会使用SArray的所有特性。
+\hspace*{0.75cm}这里重用以前开发的SArray就很方便，但在工业库中，因为其不会使用SArray的所有特性，所以特殊用途的实现可能更合适。
 \end{tcolorbox}
 
-或者它可以是嵌套的模板标识，如A\_Add或A\_Mult，其构建一个表达式。无论哪种方式，这里都在处理Array实例化，这简化了后面的处理操作。即使是Array模板的定义，尽管有些成员不能使用A\_Mult代替Rep这样的类型实例化，但也不需要特化来区分这两种情况。
+或者可以是嵌套的模板标识，如A\_Add或A\_Mult，其构建一个表达式。无论哪种方式，这里都在处理Array实例化，这简化了后面的处理操作。即使是Array模板的定义，尽管有些成员不能使用A\_Mult代替Rep这样的类型实例化，但也不需要特化来区分这两种情况。
 
 这是定义。该功能主要局限于SArray模板所提供的功能，在理解了代码意图后，添加该功能并不难:
 
@@ -276,9 +276,9 @@ class Array {
 };
 \end{lstlisting}
 
-许多操作可以转发至底层的Rep对象。但在复制另一个数组时，必须考虑到另一个数组实际上是在表达式模板上构建的可能。因此，可以根据底层表示参数化的复制操作。
+许多操作可以转发至底层的Rep对象。在复制另一个数组时，必须考虑到另一个数组实际上是在表达式模板上构建的可能。因此，可以根据底层表示参数化的复制操作。
 
-下标操作符需要更多的讨论，该操作符的const版本使用的是推导的返回类型，而不是传统的T const\&。这样做的原因是，若Rep代表是A\_Mult或A\_Add，其下标操作符需要返回一个临时值(即prvalue)，不能通过引用返回(decltype(auto)将为prvalue情况推导出非引用类型)。另一方面，如果Rep是SArray<T>，则底层下标操作符产生一个const左值，并且推导出的返回类型将是一个匹配的const引用。
+下标操作符需要更多的讨论，该操作符的const版本使用的是推导的返回类型，而不是传统的T const\&。若Rep代表是A\_Mult或A\_Add，其下标操作符需要返回一个临时值(即prvalue)，不能通过引用返回(decltype(auto)将为prvalue情况推导出非引用类型)。另一方面，若Rep是SArray<T>，则底层下标操作符产生一个const左值，并且推导出的返回类型将是匹配的const引用。
 
 \subsubsubsection{27.2.3\hspace{0.2cm}运算符}
 
@@ -319,7 +319,7 @@ operator* (T const& s, Array<T,R2> const& b) {
 ...
 \end{lstlisting}
 
-这些操作符的声明有些繁琐(从这些示例可以看出)，但这些函数实际上没有做太多工作。例如，两个数组的plus操作符首先创建一个A\_Add<>对象，该对象表示操作符和操作数
+这些操作符的声明有些繁琐(从这些示例可以看出)，但这些函数实际上没有做太多工作。两个数组的plus操作符首先创建一个A\_Add<>对象，该对象表示操作符和操作数
 
 \begin{lstlisting}[style=styleCXX]
 A_Add<T,R1,R2>(a.rep(),b.rep())
@@ -377,7 +377,7 @@ operator* (T const& s, Array<T,R2> const& b) {
 }
 \end{lstlisting}
 
-操作数类型为double和Array<double, SArray<double>>。因此，结果的类型为
+操作数类型为double和Array<double, SArray<double>{}>。因此，结果的类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double, A_Mult<double, A_Scalar<double>, SArray<double>>>
@@ -396,7 +396,7 @@ operator* (Array<T,R1> const& a, Array<T,R2> const& b) {
 }
 \end{lstlisting}
 
-操作数类型都是Array<double, SArray<double>>，因此结果类型为
+操作数类型都是Array<double, SArray<double>{}>，因此结果类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double, A_Mult<double, SArray<double>, SArray<double>>>
@@ -404,7 +404,7 @@ Array<double, A_Mult<double, SArray<double>, SArray<double>>>
 
 这次包装的A\_Mult对象引用了两个SArray<double>表示:一个是x，一个是y。
 
-最后，计算加法操作。这又是一个数组-数组操作，操作数类型是刚才推导的结果类型。因此，使用数组加法操作符:
+最后，计算加法操作。这又是一个数组-数组操作，操作数类型是刚才推导的结果类型，使用数组加法操作符:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, typename R1, typename R2>
@@ -427,7 +427,7 @@ R2可替换为
 A_Mult<double, SArray<double>, SArray<double>>
 \end{lstlisting}
 
-因此，赋值标记右侧的表达式类型为
+赋值标记右侧的表达式类型为
 
 \begin{lstlisting}[style=styleCXX]
 Array<double,
@@ -464,7 +464,7 @@ A_Add<double,
 	A_Mult<double, SArray<double>, SArray<double>>>>
 \end{lstlisting}
 
-仔细观察这个下标操作符可以发现，对于给定的下标idx，会进行计算
+仔细观察这个下标操作符可以发现，对于给定的下标idx，可进行计算
 
 \begin{lstlisting}[style=styleCXX]
 (1.2*x[idx]) + (x[idx]*y[idx])
@@ -474,7 +474,7 @@ A_Add<double,
 
 \subsubsubsection{27.2.5\hspace{0.2cm}表达式模板赋值}
 
-我们示例的A\_Mult和A\_Add表达式模板上，不可能构建一个Rep参数数组的实例化写操作。(事实上，a+b=c毫无意义)但完全可以编写其他表达式模板，对其结果赋值。例如，对整数值数组进行索引将对应于子集选择。换句话说，表达式
+我们示例的A\_Mult和A\_Add表达式模板上，不可能构建一个Rep参数数组的实例化写操作。(事实上，a+b=c毫无意义)但完全可以编写其他表达式模板，对其结果赋值，对整数值数组进行索引将对应于子集选择。换句话说，表达式
 
 \begin{lstlisting}[style=styleCXX]
 x[y] = 2*x[y];
@@ -488,7 +488,7 @@ for (std::size_t idx = 0; idx<y.size(); ++idx) {
 }
 \end{lstlisting}
 
-启用此功能意味着构建在表达式模板上，数组的行为类似于左值(即，是可写的)。这类操作的表达式模板组件与A\_Mult没有本质上的区别，只是提供了下标操作符的const版本和非const版本，可以返回左值(引用):
+启用此功能意味着构建在表达式模板上，数组的行为类似于左值(可写)。这类操作的表达式模板组件与A\_Mult没有本质上的区别，只是提供了下标操作符的const版本和非const版本，可以返回左值(引用):
 
 \hspace*{\fill} \\ %插入空行
 \noindent

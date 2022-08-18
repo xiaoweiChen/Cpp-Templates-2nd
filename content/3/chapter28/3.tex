@@ -21,9 +21,9 @@ int find(T const* array, int n, T const& value) {
 
 这个模板定义有两个问题，当某些在技术上满足模板要求，但行为与模板作者预期略有不同的模板参数时，这两个问题将表现为编译错误。我们将使用原型的概念，根据find()模板指定的需求来测试实现对模板参数的使用。
 
-原型是用户定义的类，可以用作模板参数来测试模板定义是否遵守其对相应模板参数施加的约束。原型是定制的，以满足模板的需求，而不提供任何无关的操作。如果将原型作为模板参数的模板定义实例化成功，那么就知道模板定义不会尝试使用模板没有明确要求的其他操作。
+原型是用户定义的类，可以用作模板参数来测试模板定义是否遵守其对相应模板参数施加的约束。原型是定制的，以满足模板的需求，而不提供任何无关操作。若将原型作为模板参数的模板定义实例化成功，那就知道模板定义不会尝试使用模板没有明确要求的其他操作。
 
-例如，下面是一个原型，用于满足find()算法文档中描述的EqualityComparable概念需求:
+下面是一个原型，用于满足find()算法文档中描述的EqualityComparable概念需求:
 
 \begin{lstlisting}[style=styleCXX]
 class EqualityComparableArchetype
@@ -43,16 +43,16 @@ operator==(EqualityComparableArchetype const&,
 
 EqualityComparableArchetype没有成员函数或数据，可以提供的唯一操作是重载operator==，以满足find()的相等性要求。operator==本身相当小，仅返回另一个原型ConvertibleToBoolArchetype，其唯一定义的操作是用户定义的到bool的转换。
 
-EqualityComparableArchetype显然满足了find()模板的要求，所以可以通过使用EqualityComparableArchetype实例化find()来检查find()的实现是否在约定末端有效:
+EqualityComparableArchetype显然满足了find()模板的要求，可以通过使用EqualityComparableArchetype实例化find()来检查find()的实现是否在约定末端有效:
 
 \begin{lstlisting}[style=styleCXX]
 template int find(EqualityComparableArchetype const*, int,
 EqualityComparableArchetype const&);
 \end{lstlisting}
 
-find<equalitycomparablearchetype>的实例化将失败，表明我们已经发现了第一个问题:EqualityComparable描述只需要operator==，但find()的实现依赖于将T对象与!=进行比较。所以，实现可以处理大多数用户定义的类型，可以将==和!=作为一对实现，但实际上这并不正确。原型旨在在模板库开发的早期发现这类问题。
+find<equalitycomparablearchetype>的实例化将失败，表明我们已经发现了第一个问题:EqualityComparable描述只需要operator==，但find()的实现依赖于将T对象与!=进行比较。实现可以处理大多数用户定义的类型，可以将==和!=作为一对实现，但实际上这并不正确。原型旨在在模板库开发的早期发现这类问题。
 
-改变find()的实现，使用相等来解决第一个问题，find()模板将成功地用原型编译:
+改变find()的实现，使用相等来解决第一个问题，find()模板将成功地(使用原型)编译:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}程序将编译，但不会链接，因为从未定义重载operator==。这是典型的原型，其通常只是作为编译时检查的辅助工具。
@@ -68,7 +68,7 @@ int find(T const* array, int n, T const& value) {
 }
 \end{lstlisting}
 
-使用原型展示find()中的第二个问题需要更多的技巧。注意，find()的新定义现在应用了operator!直接指向operator==的结果。在原型中，这依赖于用户定义的到bool的转换和内置的逻辑求反operator!。ConvertibleToBoolArchetype的实现会毒害operator!，使其不能恰当地使用:
+使用原型展示find()中的第二个问题需要更多的技巧。ind()的新定义现在应用了operator!直接指向operator==的结果。原型中，这依赖于用户定义的到bool的转换和内置的逻辑求反operator!。ConvertibleToBoolArchetype的实现会毒害operator!，使其不能恰当地使用:
 
 \begin{lstlisting}[style=styleCXX]
 class ConvertibleToBoolArchetype

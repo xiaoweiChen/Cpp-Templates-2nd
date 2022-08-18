@@ -1,5 +1,5 @@
 
-一个简单的Polygon类，由一系列Point组成:
+简单的Polygon类，由一系列Point组成:
 
 \begin{lstlisting}[style=styleCXX]
 class Point
@@ -19,7 +19,7 @@ class Polygon
 };
 \end{lstlisting}
 
-如果用户可以扩展与每个Point相关联的信息集，包括应用程序特定的数据，比如每个Point的颜色，或者可能将标签与每个Point相关联。使这个扩展成为可能的选项是，根据Point的类型参数化Polygon:
+若用户可以扩展与每个Point关联的信息，包括应用程序特定的数据，比如：每个Point的颜色，或者可能将标签与每个Point相关联。可以根据Point的类型参数化Polygon，使这个扩展成为可能:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename P>
@@ -44,11 +44,11 @@ class LabeledPoint : public Point
 };
 \end{lstlisting}
 
-这种实现有其缺点。首先，要求向用户公开Point类型，以便用户可以从它派生。此外，LabeledPoint的作者需要小心地提供与Point完全相同的接口(例如，继承或提供与Point相同的所有构造函数)，否则LabeledPoint将无法与Polygon一起工作。若Point从一个版本的Polygon模板更改为另一个，这个约束就会变得有问题:添加新的Point构造函数可能需要更新每个派生类。
+这种实现有其缺点。首先，要求向用户公开Point类型，以便用户可以从它派生。此外，LabeledPoint的作者需要小心地提供与Point完全相同的接口(例如，继承或提供与Point相同的所有构造函数)，否则LabeledPoint将无法与Polygon一起工作。若Point从一个版本的Polygon模板更改为另一个，这个约束就会有问题:添加新的Point构造函数可能需要更新每个派生类。
 
-混合类提供了另一种方法来定制类型的行为，而不用继承它。混合类本质上颠倒了继承的正常方向，因为新类作为类模板的基类“混合”到继承层次中，而不是作为新的派生类创建。这种方法允许引入新的数据成员和其他操作，而不需要复制任何接口。
+混合类提供了另一种方法来定制类型的行为，而不继承。混合类本质上颠倒了继承的方向，因为新类作为类模板的基类“混合”到继承层次中，而不是作为新的派生类创建。这种方法允许引入新的数据成员和其他操作，而不需要复制任何接口。
 
-支持混合的类模板通常会接受任意数量的额外类，并从中派生:
+支持混合的类模板通常会接受任意数量的类，并从中派生:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Mixins>
@@ -61,7 +61,7 @@ class Point : public Mixins...
 };
 \end{lstlisting}
 
-现在，我们可以“混合”一个包含标签的基类来生成一个LabeledPoint:
+现在，可以“混合”一个包含标签的基类来生成一个LabeledPoint:
 
 \begin{lstlisting}[style=styleCXX]
 class Label
@@ -86,7 +86,7 @@ class Color
 using MyPoint = Point<Label, Color>;
 \end{lstlisting}
 
-有了这个基于混合的Point，在不改变它的接口的情况下，可以很容易地向Point引入额外的信息，所以Polygon变得更容易使用和发展。用户只需要应用从Point特化到他们的混合类(上面的Label或Color)的隐式转换就可以访问该数据或接口。此外，Point类甚至可以隐藏，并将混合提供给Polygon类模板本身:
+有了这个基于混合的Point，在不改变接口的情况下，可以很容易地向Point引入其他信息，所以Polygon很容易使用和扩展。用户只需要将特化的Point隐式转换到自定义混合类(上面的Label或Color)，就可以访问该数据或接口。此外，Point类可以隐藏，并混合提供给Polygon类模板本身:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Mixins>
@@ -99,11 +99,11 @@ class Polygon
 };
 \end{lstlisting}
 
-模板需要进行少量定制的情况下，混合类非常有用——比如用用户指定的数据装饰内部存储对象——而不需要库公开和记录这些内部数据类型及其接口。
+模板需要进行少量定制的情况下，混合类很有用——比如适用用户指定的数据存储内部对象——而不需要库公开和记录这些内部数据类型及其接口。
 
 \subsubsubsection{21.3.1\hspace{0.2cm}奇怪的混合类}
 
-通过将混合类与第21.2节描述CRTP相结合，混合可以更强大。这里，每个混合实际上都是一个类模板，将与派生类的类型一起提供，从而允许对派生类进行定制。一个CRTP-混合版本的Point可以这样写:
+通过将混合类与第21.2节描述CRTP相结合，混合类可以更强大。每个混合实际上都是一个类模板，将与派生类的类型一起提供，从而可以对派生类进行定制。一个CRTP-混合版本的Point可以这样:
 
 \begin{lstlisting}[style=styleCXX]
 template<template<typename>... Mixins>
@@ -116,7 +116,7 @@ class Point : public Mixins<Point>...
 };
 \end{lstlisting}
 
-公式需要对将要混合的每个类做更多的工作，因此像Label和Color这样的类要成为类模板。但混合类可以根据混合到的派生类特定实例，调整它们的行为。例如，可以将前面讨论的ObjectCounter模板混合到Point中，以计算Polygon创建的点的数量，并将该混合与其他特定于应用程序的混合在一起。
+公式需要对要混合的每个类做更多工作，因此像Label和Color这样的类要成为类模板。但混合类可以根据混合到的派生类特定实例，调整其行为。可以将前面讨论的ObjectCounter模板混合到Point中，以计算Polygon创建的点的数量，并将该混合类与其他类混合在一起。
 
 \subsubsubsection{21.3.2\hspace{0.2cm}参数化的虚拟性}
 
@@ -165,7 +165,7 @@ int main()
 }
 \end{lstlisting}
 
-这种技术可以提供一种工具来设计类模板，该模板既可用于实例化具体类，也可用于使用继承进行扩展。然而，仅在一些成员函数上使用虚拟性来获得一个类还不够，这个类可以作为更好的基类来实现更特化的功能。这种开发方法需要更基本的设计决策，因此设计两个不同的工具(类或类模板层次结构)通常比尝试将全部集成到一个模板层次结构中更为实用。
+这种技术可以提供一种方式来设计类模板，该模板既可用于实例化具体类，也可用于使用继承进行扩展。然而，在一些成员函数上使用虚拟性来获得一个类还不够，这个类可以作为更好的基类来实现更特化的功能。这种开发方法需要更基本的设计决策，因此设计两个不同的工具(类或类模板架构)通常比将全部集成到一个模板结构中更为实用。
 
 
 

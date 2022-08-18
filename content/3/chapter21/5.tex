@@ -1,7 +1,7 @@
-Bill Gibbons是将EBCO引入C++编程语言的主要发起人。Nathan Myers使它流行起来，并提出了一个类似于我们的BaseMemberPair的模板来更好地利用它。Boost库包含相当复杂的模板，称为compressed\_pair，其解决了我们在本章中报告的MyClass模板的一些问题。boost::compressed\_pair也可以用来代替BaseMemberPair。
+Bill Gibbons是将EBCO引入C++编程语言的主要发起人。Nathan Myers使它流行起来，并提出了一个类似于BaseMemberPair的模板，从而可以更好地利用它。Boost库包含相当复杂的模板，称为compressed\_pair，其解决了我们在本章中MyClass模板的一些问题。boost::compressed\_pair也可以用来代替BaseMemberPair。
 
-CRTP至少从1991年开始使用。然而，James Coplien是第一个将它们正式描述为一种模式的人(参见[CoplienCRTP])。从那时起，CRTP的许多应用已经公开发表，参数化继承有时错误地等同于CRTP。正如我们所展示的，CRTP根本不要求对派生进行参数化，而且许多形式的参数化继承都不符合CRTP。CRTP有时也会与Barton-Nackman技巧相混淆(参见第21.2.1节)，因为Barton和Nackman技巧经常将CRTP与友元名注入结合使用(后者是Barton-Nackman技巧的重要组成部分)。我们使用CRTP和Barton-Nackman技巧来提供操作符实现，与Boost.Operators库([BoostOperators])使用相同的基本实现方法，其提供了一组通用的操作符定义。类似地，我们对迭代器门面的处理与Boost.Iterator 库([BoostIterator])类似，它为派生类型提供了丰富的、符合标准库的迭代器接口，派生类型提供了一些核心迭代器操作(相等、解引用、移动)，还解决了涉及代理迭代器的棘手问题(为了保证示例的简洁，我们在这里没有解决这个问题)。我们的ObjectCounter示例与Scott Meyers在[MeyersCounting]中使用的技术完全相同。
+CRTP至少从1991年开始使用。然而，James Coplien是第一个将它们正式描述为模式的人(参见[CoplienCRTP])。从那时起，CRTP的许多应用已经公开发表，参数化继承有时错误地等同于CRTP。CRTP根本不要求对派生进行参数化，而且许多形式的参数化继承不符合CRTP。因为Barton和Nackman技巧经常将CRTP与友元名注入结合使用(后者是Barton-Nackman技巧的重要组成部分)，所以CRTP有时会与Barton-Nackman技巧相混淆(参见第21.2.1节)。使用CRTP和Barton-Nackman技巧来提供操作符实现，与Boost.Operators库([BoostOperators])使用相同的实现方法，提供了一组通用的操作符定义。类似地，我们对迭代器门面的处理与Boost.Iterator 库([BoostIterator])类似，它为派生类型提供了丰富的、符合标准库的迭代器接口，派生类型提供了一些核心迭代器操作(相等、解引用、移动)，还解决了涉及代理迭代器的棘手问题(为了保证示例的简洁，我们在这里没有解决这个问题)。我们的ObjectCounter示例与Scott Meyers在[MeyersCounting]中使用的技术完全相同。
 
-至少从1986年([MoonFlavors])开始，混合的概念就出现在面向对象编程中，作为一种将小块功能引入OO类的方式。在第一个C++标准发布后不久，在C++中使用混合模板就开始流行起来，两篇论文([SmaragdakisBatoryMixins]和[EiseneckerBlinnCzarnecki])描述了目前常用的混合方法。从那时起，混合成为C++库设计中的一种流行技术。
+至少从1986年([MoonFlavors])开始，混合的概念就出现在面向对象编程中，作为一种将小块功能引入OO类的方式。在第一个C++标准发布后不久，在C++中使用混合类模板就开始流行起来，两篇论文([SmaragdakisBatoryMixins]和[EiseneckerBlinnCzarnecki])描述了目前常用的混合类方法。从那时起，混合类成为C++库设计中的一种流行技术。
 
-命名模板参数用于简化Boost库中的某些类模板。Boost使用元编程创建具有与PolicySelector类似属性的类型(但不使用虚拟继承)，这里介绍的更简单的替代方案是由Vandevoorde写的。
+命名模板参数用于简化Boost库中的某些类模板。Boost使用元编程创建具有与PolicySelector类似属性的类型(但不使用虚继承)，这里介绍的更简单的替代方案是由Vandevoorde编写。

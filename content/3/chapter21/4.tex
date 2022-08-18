@@ -1,4 +1,4 @@
-各种模板技术有时会导致类模板具有许多不同的模板类型参数。然而，这些参数中的许多通常都有合理的默认值。定义此类类模板的方法如下:
+模板技术有时会导致类模板具有许多不同的模板类型参数，这些参数中的许多都有合理的默认值。定义此类类模板的方法如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Policy1 = DefaultPolicy1,
@@ -10,15 +10,15 @@ class BreadSlicer {
 };
 \end{lstlisting}
 
-这样的模板通常可以使用BreadSlicer<>语法与默认模板参数值一起使用。但是，若必须指定非默认参数，那么前面的参数也必须指定(即使可能有默认值)。
+这样的模板通常可以使用BreadSlicer<>语法与默认模板参数值一起使用，若必须指定非默认参数，那么前面的参数也必须指定(即使可能有默认值)。
 
-显然，若能够使用类似于BreadSlicer<Policy3 = Custom>的构造，而不是使用BreadSlicer<DefaultPolicy1, DefaultPolicy2, Custom>的构造，将会很有吸引力。接下来，我们开发了一种技术来实现这一点。
+显然，若能够使用类似于BreadSlicer<Policy3 = Custom>的构造，而不是使用BreadSlicer<DefaultPolicy1, DefaultPolicy2, Custom>的构造，将会更有吸引力。接下来，我们开发了一种技术来实现这一点。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}注意，类似的函数调用参数的语言扩展在C++标准化过程中提出过(但被拒绝)(详见第17.4节)。
 \end{tcolorbox}
 
-技术包括将默认类型值放在基类中，并通过派生进行重写。通过辅助类提供类型参数，而不是直接指定类型参数。例如，可以使用BreadSlicer<Policy3\_is<Custom>>。因为每个模板参数可以描述任何策略，默认值相同。换句话说，每个模板参数都等价:
+技术包括将默认类型值放在基类中，并通过派生进行重写。通过辅助类提供类型参数，而不是直接指定类型参数，可以使用BreadSlicer<Policy3\_is<Custom>{}>。因为每个模板参数可以描述任何策略，默认值相同。换句话说，每个模板参数都等价:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename PolicySetter1 = DefaultPolicyArgs,
@@ -66,7 +66,7 @@ class DefaultPolicies {
 };
 \end{lstlisting}
 
-但若多次继承这个基类，则必须小心避免歧义。因此，需要确保基类是虚继承的:
+若多次继承这个基类，则必须小心避免歧义。因此，需要确保基类是虚继承的:
 
 \begin{lstlisting}[style=styleCXX]
 // class to define a use of the default policy values
@@ -103,7 +103,7 @@ class Policy4_is : virtual public DefaultPolicies {
 };
 \end{lstlisting}
 
-有了这些，我们的预期目标就实现了。下面例化一个BreadSlicer<>:
+有了这些，预期目标就实现了。下面例化一个BreadSlicer<>:
 
 \begin{lstlisting}[style=styleCXX]
 BreadSlicer<Policy3_is<CustomPolicy>> bc;
@@ -118,14 +118,14 @@ PolicySelector<Policy3_is<CustomPolicy>,
 				DefaultPolicyArgs>
 \end{lstlisting}
 
-在Discriminator<>类模板的帮助下，这会产生一个层次结构，其中所有模板参数都是基类(参见图21.4)。重点是这些基类
+在Discriminator<>类模板的帮助下，这会产生一个架构，其中所有模板参数都是基类(参见图21.4)。重点是这些基类
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/3/chapter21/images/4.png} \\
-图21.4. BreadSlicer<>::Policies具有层次结构的结果类型
+图21.4. BreadSlicer<>::Policies具有架构的结果类型
 \end{center}
 
-都有相同的虚基类DefaultPolicies，定义了P1、P2、P3和P4的默认类型。但是，P3在一个派生类中被重新定义——即在Policy3\_is<>中定义。根据控制规则，这个定义隐藏了基类的定义。因此，这里没有歧义。
+都有相同的虚基类DefaultPolicies，定义了P1、P2、P3和P4的默认类型，但P3在一个派生类中重新定义——即在Policy3\_is<>中定义。根据控制规则，这个定义隐藏了基类的定义，因此没有歧义。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}可以在第一个C++标准的10.2/6节(参见[C++98])中找到控制规则，并在[EllisStroustrupARM]的10.1.1节中对它进行了讨论。
@@ -147,7 +147,7 @@ class BreadSlicer {
 
 在inherit/namedtmpl.cpp中可以找到整个示例。
 
-我们开发了用于四个模板类型参数的技术，但显然可以扩展到任何合理数量的此类参数。请注意，我们从未实际实例化包含虚基类的辅助类对象。因此，它们是虚拟基类并不会导致性能或内存消耗的问题。
+我们开发了用于四个模板类型参数的技术，显然可以扩展到任何合理数量的此类参数，我们从未实例化包含虚基类的辅助类对象。因此，虚基类并不会导致性能或内存消耗的问题。
 
 
 

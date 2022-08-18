@@ -1,5 +1,5 @@
 
-类型列表提供了使用一组丰富的算法和操作描述，以及一系列操作类型的能力。其在处理编译时可以处理一组值，例如多维数组的边界或另一个类型列表的索引。
+类型列表提供了使用一组丰富的算法和操作描述，以及一系列操作类型的能力。其在处理编译时可以处理一组值，例如：多维数组的边界或另一个类型列表的索引。
 
 有几种方法可以生成编译时值的类型列表。一种简单的方法包括定义一个CTValue类模板(编译时值命名)，在一个类型列表中表示特定类型的值:
 
@@ -26,7 +26,7 @@ using Primes = Typelist<CTValue<int, 2>, CTValue<int, 3>,
 						CTValue<int, 11>>;
 \end{lstlisting}
 
-通过这种表示，可以对值的类型列表执行数值计算，例如计算这些质数的乘积。
+通过这种表示，可以对值的类型列表执行数值计算，例如：计算这些质数的乘积。
 
 首先，MultiplyT模板接受两个相同类型的编译时值，并生成一个相同类型的新的编译时值，将输入值相乘:
 
@@ -53,7 +53,7 @@ using Multiply = typename MultiplyT<T, U>::Type;
 Accumulate<Primes, MultiplyT, CTValue<int, 1>>::value
 \end{lstlisting}
 
-不过，类型列表和CTValue的这种用法相当繁琐，特别是对于所有值都相同类型的情况。可以通过引入一个别名模板CTTypelist来优化这种情况。提供了一个同类的值列表，描述为CTValues的类型列表:
+不过，类型列表和CTValue的这种用法相当繁琐，特别是对于所有值都相同类型的情况。可以通过引入一个别名模板CTTypelist进行优化。提供了一个同类的值列表，描述为CTValues的类型列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -63,13 +63,13 @@ template<typename T, T... Values>
 using CTTypelist = Typelist<CTValue<T, Values>...>;
 \end{lstlisting}
 
-现在可以使用CTTypelist编写一个等效的(但更简洁的)质数定义，如下所示:
+现在可以使用CTTypelist编写一个等效的(但更简洁的)质数定义:
 
 \begin{lstlisting}[style=styleCXX]
 using Primes = CTTypelist<int, 2, 3, 5, 7, 11>;
 \end{lstlisting}
 
-这种方法的唯一缺点是别名模板只是别名，因此错误消息可能最终会打印CTValueTypes的底层类型列表，比我们期望的更详细。为了解决这个问题，可以创建一个全新的类型列表类Valuelist，可以存储值:
+这种方法的唯一缺点是别名模板只是别名，因此错误消息可能最终会打印CTValueTypes的底层类型列表。为了解决这个问题，可以创建一个全新的类型列表类Valuelist，可以存储值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -106,7 +106,7 @@ struct PushBackT<Valuelist<T, Values...>, CTValue<T, New>> {
 };
 \end{lstlisting}
 
-通过提供IsEmpty, FrontT, PopFrontT和PushFrontT，已经使Valuelist成为好用的类型列表，并且可以在本章定义的算法中使用。PushBackT作为一种算法特化提供，以减少编译时此操作的成本。例如，Valuelist可以与之前定义的InsertionSort算法一起使用:
+通过提供IsEmpty，FrontT，PopFrontT和PushFrontT，已经使Valuelist成为好用的类型列表，并且可以在本章定义的算法中使用。PushBackT作为一种算法特化提供，以减少编译时此操作的成本。例如，Valuelist可以与之前定义的InsertionSort算法一起使用:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -131,7 +131,7 @@ void valuelisttest()
 }
 \end{lstlisting}
 
-注意，可以通过使用字面符操作符来初始化CTValue，例如，
+可以通过使用字面符操作符来初始化CTValue，
 
 \begin{lstlisting}[style=styleCXX]
 auto a = 42_c; // initializes a as CTValue<int,42>
@@ -141,7 +141,7 @@ auto a = 42_c; // initializes a as CTValue<int,42>
 
 \subsubsubsection{24.3.1\hspace{0.2cm}可推导的非类型参数}
 
-C++17中，CTValue可以通过使用单个可推导的非类型形参(用auto)来改进:
+C++17中，CTValue可以通过使用单个可推导的非类型形参(用auto)进行改进:
 
 \hspace*{\fill} \\ %插入空行
 \noindent

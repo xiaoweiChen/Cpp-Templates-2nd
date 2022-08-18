@@ -1,4 +1,4 @@
-类型列表是表示类型列表的类型，可以由模板元程序操作。提供了与列表相关联的操作:迭代列表中的元素(类型)、添加元素或删除元素。，类型列表与大多数运行时数据结构(如std::list)不同，其不允许修改。例如，向std::list中添加一个元素会改变列表本身，而这个改变会让程序中有权访问该列表的操作观察到。另一方面，向打字员添加一个元素不会改变原始的打字员:相反，向现有的类型列表员添加一个元素会创建一个新的类型列表，而非对原始类型列表的修改。熟悉函数式编程语言(如Scheme、ML和Haskell)的读者可能会感觉到，使用C++中的类型列表和使用这些语言中的列表非常相似。
+类型列表是表示列表的类型，可以由模板元程序操作。提供了与列表相关联的操作:迭代列表中的元素(类型)、添加元素或删除元素。类型列表与大多数运行时数据结构(如std::list)不同，其不允许修改。向std::list中添加一个元素会改变列表本身，而这个改变会让程序中有权访问该列表的操作观察到。另一方面，向类型列表添加一个元素不会改变原始的打字员:向现有的类型列表员添加一个元素会创建一个新的类型列表，而非对原始类型列表的修改。熟悉函数式编程语言(如Scheme、ML和Haskell)的读者可能会感觉到，使用C++中的类型列表和使用这些语言中的列表非常相似。
 
 类型列表通常实现为一个类模板特化，该特化在其模板参数中编码类型列表的内容(即它所包含的类型及其顺序)。类型列表的直接实现对参数包中的元素进行编码:
 
@@ -19,7 +19,7 @@ using SignedIntegralTypes =
 			Typelist<signed char, short, int, long, long long>;
 \end{lstlisting}
 
-操作这个类型列表通常需要将类型列表拆分成几个部分，通常是将列表中的第一个元素(头)与列表中的其余元素(尾)分开。例如，从Front元函数从类型表中提取第一个元素:
+操作这个类型列表通常需要将类型列表拆分成几个部分，通常是将列表中的第一个元素(头)与列表中的其余元素(尾)分开。从Front元函数从类型表中提取第一个元素:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -39,7 +39,7 @@ template<typename List>
 using Front = typename FrontT<List>::Type;
 \end{lstlisting}
 
-因此，FrontT<SignedIntegralTypes>::Type(简化地写成Front<SignedIntegralTypes>)将生成signed char。类似地，PopFront元函数从列表中删除第一个元素。它的实现将列表元素分为头和尾，然后从尾中的元素形成一个新的类型列表特化。
+因此，FrontT<SignedIntegralTypes>::Type(简化地写成Front<SignedIntegralTypes>)将生成signed char。类似地，PopFront元函数从列表中删除第一个元素，实现将列表元素分为头和尾，然后从尾中的元素形成一个新的类型列表特化。
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -64,7 +64,7 @@ PopFront<SignedIntegralTypes>会产生类型列表：
 Typelist<short, int, long, long long>
 \end{lstlisting}
 
-还可以通过将所有元素捕获到模板参数包中，然后创建一个包含所有这些元素的新的类型列表特化，从而将元素插入到类型列表的前面:
+还可以将所有元素捕获到模板参数包中，然后创建一个包含所有这些元素的新类型列表特化，从而将元素插入到类型列表的前面:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -89,7 +89,7 @@ using PushFront = typename PushFrontT<List, NewElement>::Type;
 PushFront<SignedIntegralTypes, bool>
 \end{lstlisting}
 
-产生了:
+生成了:
 
 \begin{lstlisting}[style=styleCXX]
 Typelist<bool, signed char, short, int, long, long long>

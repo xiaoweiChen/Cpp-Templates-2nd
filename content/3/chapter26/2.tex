@@ -1,5 +1,5 @@
 
-既然有了变量存储问题的解决方案，就可以设计Variant类型了。与Tuple类型一样，可以使用继承来为Types列表提供每个类型的行为。然而，与Tuple不同的是，这些基类不会存储。相反，每个基类都使用21.2节中讨论的奇异递归模板模式(CRTP)，通过派生最多的类型访问共享变量。
+既然有了变量存储问题的解决方案，就可以设计Variant类型了。与Tuple类型一样，可以使用继承来为Types列表提供每个类型的行为。与Tuple不同的是，这些基类不会存储。每个基类都使用21.2节中讨论的奇异递归模板模式(CRTP)，通过派生最多的类型访问共享变量。
 
 下面定义的类模板VariantChoice提供了在变量的活动值为(或将为)T类型时，对缓冲区进行操作所需的操作:
 
@@ -29,7 +29,7 @@ class VariantChoice {
 };
 \end{lstlisting}
 
-模板参数包Types将包含变体中的所有类型，其可以形成Derived类型(用于CRTP)，从而提供向下转换操作getDerived()。类型的第二个有趣用法是，在类型列表中查找特定类型T的位置，这可以通过元函数FindIndexOfT完成:
+模板参数包Types将包含变体中的所有类型，其可以形成Derived类型(用于CRTP)，从而提供向下转换操作getDerived()。类型的第二个有趣用法是，在类型列表中查找特定类型T的位置，可以通过元函数FindIndexOfT完成:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -74,19 +74,19 @@ class Variant
 };
 \end{lstlisting}
 
-如前所述，每个Variant都有一个单独的、共享的VariantStorage基类。
+每个Variant都有一个单独的、共享的VariantStorage基类。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}基类是私有的，因为它们不是公共接口的一部分。友元模板需要VariantChoice中的asDerived()函数，才能向下转换到Variant。
+\hspace*{0.75cm}基类是私有的，不是公共接口的一部分。友元模板需要VariantChoice中的asDerived()函数，才能向下转换到Variant。
 \end{tcolorbox}
 
-此外，还有一些VariantChoice基类，是由以下嵌套的包扩展产生的(参见第12.4.4节):
+还有一些VariantChoice基类，是由以下嵌套的包扩展产生的(参见第12.4.4节):
 
 \begin{lstlisting}[style=styleCXX]
 VariantChoice<Types, Types...>...
 \end{lstlisting}
 
-这个实例中，有两个展开:外层展开，通过展开对类型的第一个引用，为类型中的每个类型T生成VariantChoice基类；内部展开，展开了第二次出现的Types，另外还将Types中的所有类型传递给每个VariantChoice基类。对于
+实例中，有两个展开:外层展开，通过展开对类型的第一个引用，为类型中的每个类型T生成VariantChoice基类；内部展开，展开了第二次出现的Types，另外还将Types中的所有类型传递给每个VariantChoice基类。
 
 \begin{lstlisting}[style=styleCXX]
 Variant<int, double, std::string>
@@ -108,7 +108,7 @@ VariantChoice<std::string, int, double, std::string>
 
 标识值0是为Variant不包含值的情况保留，这是一种奇怪的状态，只有在赋值期间，抛出异常时才能观察到。对Variant的讨论中，将小心处理为0的辨别值(并在适当的时候进行设置)，我们将这种情况的讨论留到第26.4.3节。
 
-Variant的完整定义如下所示。下面几节将描述Variant每个成员的实现。
+Variant的完整定义如下所示，下面几节将描述Variant每个成员的实现。
 
 \hspace*{\fill} \\ %插入空行
 \noindent

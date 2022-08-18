@@ -1,11 +1,11 @@
 
 元组是一个容器，提供了访问和修改其每个元素的能力(通过get)，以及创建新的元组(直接或使用makeTuple())，并将元组分解为头部和尾部(getHead()和getTail())。这些基本构建块足以构建一套元组算法，例如从元组中添加或删除元素，重新排序元组中的元素，或选择元组中元素的某些子集。
 
-元组算法特别有趣，因为它们同时需要编译时和运行时计算。与第24章的类型列表算法相同，将算法应用到元组可能会得到完全不同类型的元组，这需要编译时计算。例如，对Tuple<int, double, string>进行反转会产生Tuple<string, double, int>。然而，就像同构容器的算法(例如，std::vector上的std::reverse())一样，元组算法实际上需要在运行时执行代码，所以需要注意生成代码的效率。
+元组算法特别有趣，因为同时需要编译时和运行时计算。与第24章的类型列表算法相同，将算法应用到元组可能会得到完全不同类型的元组，这需要编译时计算。对Tuple<int, double, string>进行反转会产生Tuple<string, double, int>，就像同构容器的算法(例如，std::vector上的std::reverse())一样，元组算法实际上需要在运行时执行代码，所以需要注意生成代码的效率。
 
 \subsubsubsection{25.3.1\hspace{0.2cm}元组作为类型列表}
 
-如果忽略Tuple模板的实际运行时组件，会发现它的结构与第24章中开发的类型列表模板完全相同:可以接受任意数量的模板类型参数。通过一些局部特化，可以将Tuple变成一个功能齐全的类型列表:
+若忽略Tuple模板的实际运行时组件，会发现其结构与第24章中开发的类型列表模板完全相同:可以接受任意数量的模板类型参数。通过一些局部特化，可以将Tuple变成一个功能齐全的类型列表:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -46,7 +46,7 @@ class PushBackT<Tuple<Types...>, Element> {
 };
 \end{lstlisting}
 
-现在，第24章中开发的所有类型列表算法，在Tuple和类型列表中也能工作，因此可以轻松地处理元组的类型。例如:
+第24章中开发的所有类型列表算法，在Tuple和类型列表中也能工作，可以轻松地处理元组的类型:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(17, 3.14, "Hello, World!");
@@ -79,7 +79,7 @@ pushFront(Tuple<Types...> const& tuple, V const& value)
 }
 \end{lstlisting}
 
-现有元组的前面添加一个新元素(称为值)要求以值为头，以现有元组作为尾。产生的元组类型是Tuple<V, Types...>。但是，我们选择使用类型列表算法PushFront来演示元组算法的编译时和运行时之间的紧密耦合:编译时PushFront计算需要构造的类型，以产生运行时的值。
+现有元组的前面添加一个新元素(称为值)要求以值为头，以现有元组作为尾。产生的元组类型是Tuple<V, Types...>。但我们选择使用类型列表算法PushFront来演示元组算法的编译时和运行时间的耦合关系:编译时PushFront计算需要构造的类型，以产生运行时的值。
 
 在现有元组的末尾添加新元素更为复杂，因为需要对元组进行递归遍历，并在遍历过程中构建修改后的元组。pushBack()实现的结构遵循第24.2.3节中类型列表pushBack()的递归公式:
 
@@ -104,7 +104,7 @@ pushBack(Tuple<Head, Tail...> const& tuple, V const& value)
 }
 \end{lstlisting}
 
-基本情况，通过生成只包含该值的元组，将值追加到零长度的元组。在递归的情况下，需要用列表头部的当前元素(tuple. gethead())并将新元素添加到列表尾部的结果(递归pushBack调用)，组成一个新的元组。虽然将构造的类型表示为Tuple<Head, Tail..., V>，这相当于在编译时使用PushBack<Tuple<Head, Tail...>, V>。
+基本情况，通过生成只包含该值的元组，将值追加到零长度的元组。在递归的情况下，需要用列表头部的当前元素(tuple. gethead())，并将新元素添加到列表尾部的结果(递归pushBack调用)，组成一个新的元组。虽然将构造的类型表示为Tuple<Head, Tail..., V>，这相当于在编译时使用PushBack<Tuple<Head, Tail...>, V>。
 
 另外，popFront()很容易实现:
 
@@ -120,7 +120,7 @@ popFront(Tuple<Types...> const& tuple)
 }
 \end{lstlisting}
 
-现在可以对25.3.1节中的示例进行编程，如下所示:
+现在可以对25.3.1节中的示例进行编程:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(17, 3.14, "Hello, World!");
@@ -136,7 +136,7 @@ std::cout << std::boolalpha << t2 << ’\n’;
 
 \subsubsubsection{25.3.3\hspace{0.2cm}反转}
 
-元组的元素可以用另一种递归元组算法进行反转，该算法的结构遵循第24.2.4节的类型列表反转:
+元组元素可以用另一种递归元组算法进行反转，该算法的结构遵循第24.2.4节的类型列表反转:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -156,7 +156,7 @@ Reverse<Tuple<Head, Tail...>> reverse(Tuple<Head, Tail...> const& t)
 }
 \end{lstlisting}
 
-基本情况很简单，而递归情况则反转列表的尾部，并将当前头部元素追加到反转的列表中。例如
+基本情况很简单，而递归情况则反转列表的尾部，并将当前头部元素追加到反转的列表中。
 
 \begin{lstlisting}[style=styleCXX]
 reverse(makeTuple(1, 2.5, std::string("hello")))
@@ -180,10 +180,10 @@ popBack(Tuple<Types...> const& tuple)
 
 \subsubsubsection{25.3.4\hspace{0.2cm}索引列表}
 
-上一节中，元组反转递归公式是正确，但在运行时效率低下。为了了解这个问题，我们引入了简单的类，其会计算复制自己的次数:
+上一节中，元组反转递归公式是正确，但在运行时效率很低。为了了解这个问题，我们引入了简单的类，其会计算复制自己的次数:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++17之前，不支持内联静态成员。因此，必须在一个翻译单元中初始化类结构外的numCopies。
+\hspace*{0.75cm}C++17前，不支持内联静态成员，必须在一个翻译单元中初始化类结构外的numCopies。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -202,7 +202,7 @@ struct CopyCounter
 };
 \end{lstlisting}
 
-然后，创建并反转一个CopyCounter实例元组:
+创建并反转一个CopyCounter实例元组:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -231,7 +231,7 @@ void copycountertest()
 4: 5 copies
 \end{tcblisting}
 
-这么多次复制!在元组反向的理想实现中，每个元素只会复制一次，从源元组直接复制到结果元组中的正确位置。我们可以通过引用(包括使用中间参数类型的引用)来实现这一目标，但会使实现变得相当复杂。
+这么多次复制!元组反向的理想实现中，每个元素只会复制一次就够了，从源元组直接复制到结果元组中的正确位置。我们可以通过引用(包括使用中间参数类型的引用)来实现这一目标，但会使实现变得相当复杂。
 
 为了在元组反向操作中消除多余的副本，考虑如何对已知长度的单个元组(如本例中为5个元素)实现一次性元组反向操作。可以简单地使用makeTuple()和get():
 
@@ -255,7 +255,7 @@ auto reversed = makeTuple(get<4>(copies), get<3>(copies),
 
 \subsubsubsection{25.3.5\hspace{0.2cm}使用索引列表进行反转}
 
-要使用索引列表对元组进行反转，首先需要索引列表。索引列表是一个类型列表，包含的值可以用作类型列表或异构数据结构的索引(参见第24.4节)。对于索引列表，将使用24.3节中开发的Valuelist类型。与上面的元组反转示例对应的索引列表是
+要使用索引列表对元组进行反转，首先需要索引列表，其是一个类型列表，包含的值可以用作类型列表或异构数据结构的索引(参见第24.4节)。对于索引列表，将使用24.3节中开发的Valuelist类型。与上面的元组反转示例对应的索引列表是
 
 \begin{lstlisting}[style=styleCXX]
 Valuelist<unsigned, 4, 3, 2, 1, 0>
@@ -331,14 +331,14 @@ auto reverse(Tuple<Elements...> const& t)
 
 reverseImpl()函数模板将Valuelist参数中的索引捕获到参数包indices中，然后返回调用makeTuple()的结果，其参数通过使用捕获的索引集(对元组调用get()获得)。
 
-reverse()算法本身仅形成相应的索引集，并将其提供给reverseImpl算法。索引作为模板元程序进行操作，不会产生运行时代码。唯一的运行时代码会在reverseImpl中生成，它使用makeTuple()构造产生元组，因此元组元素只复制一次。
+reverse()算法本身仅形成相应的索引集，并将其提供给reverseImpl算法。索引作为模板元程序进行操作，不会产生运行时代码。唯一的运行时代码会在reverseImpl中生成，使用makeTuple()构造产生元组，因此元组元素只复制一次。
 
 \subsubsubsection{25.3.6\hspace{0.2cm}打乱和选择}
 
 上一节中用于形成反向元组的reverseImpl()函数模板，实际上不包含与reverse()操作相关的代码。相反，它只是从现有元组中选择一组特定的索引，并使用它们来组成一个新的元组。Reverse()提供了一组反向索引，但许多算法可以建立在这个核心元组的select()算法基础上:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++11中，返回类型必须声明为-> decltype(makeTuple(get<indices>(t)…))。
+\hspace*{0.75cm}C++11中，返回类型必须声明为\texttt{->}decltype(makeTuple(get<indices>(t)…))。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -353,7 +353,7 @@ auto select(Tuple<Elements...> const& t,
 }
 \end{lstlisting}
 
-元组splat操作是建立在select()上的一个简单算法，其接受元组中的单个元素，将其复制并创建另一个元组，该元组具有该元素的一定数量的副本。例如:
+元组splat操作是建立在select()上的一个简单算法，其接受元组中的单个元素，将其复制并创建另一个元组，该元组具有该元素的一定数量的副本:
 
 \begin{lstlisting}[style=styleCXX]
 Tuple<int, double, std::string> t1(42, 7.7, "hello"};
@@ -361,16 +361,16 @@ auto a = splat<1, 4>(t);
 std::cout << a << ’\n’;
 \end{lstlisting}
 
-会产生一个Tuple<double, double, double, double>，其中每个值都是get<1>(t)的副本，所以它会输出
+会生成一个Tuple<double, double, double, double>，其中每个值都是get<1>(t)的副本，所以会输出
 
 \begin{lstlisting}[style=styleCXX]
 (7.7, 7.7, 7.7, 7.7)
 \end{lstlisting}
 
-给定一个元程序来生成一个“复制”索引集，该索引集由值I的N个副本组成，splat()是select()的直接应用:
+给定元程序来生成“复制”索引集，该索引集由值I的N个副本组成，splat()是select()的直接应用:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++11中，splat()的返回类型必须声明为-> decltype(return-expression)。
+\hspace*{0.75cm}C++11中，splat()的返回类型必须声明为\texttt{->}decltype(return-expression)。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -402,7 +402,7 @@ auto splat(Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-即使是复杂的元组算法，也可以通过索引列表上的模板元程序和一个select()应用来实现。例如，可以使用第24.2.7节中开发的插入排序，根据元素类型的大小对元组进行排序。给定这样一个sort()函数，其能接受一个比较元组元素类型的模板元函数进行比较操作，这里可以按大小对元组元素进行排序:
+即使是复杂的元组算法，也可以通过索引列表上的模板元程序和select()来实现，可以使用第24.2.7节中开发的插入排序，根据元素类型大小对元组进行排序。给定这样一个sort()函数，其能接受一个比较元组元素类型的模板元函数进行比较操作，这里可以按类型大小对元组元素进行排序:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -426,21 +426,21 @@ void testTupleSort()
 }
 \end{lstlisting}
 
-例如，输出可能如下所示:
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}结果的顺序取决于特定于平台。例如，double的大小可能比long long的大小更小、相同或更大
-\end{tcolorbox}
+输出可能如下所示:
 
 \begin{lstlisting}[style=styleCXX]
 (17, (42,77), c, 42, 7.7)
 sorted by size: (c, 42, 7.7, 17, (42,77))
 \end{lstlisting}
 
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}结果的顺序取决于特定于平台。例如，double的大小可能比long long的大小更小、相同或更大
+\end{tcolorbox}
+
 sort()实现包括使用InsertionSort和元组select():
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++11中，sort()的返回类型必须声明为-> decltype(return-expression)。
+\hspace*{0.75cm}C++11中，sort()的返回类型必须声明为\texttt{->}decltype(return-expression)。
 \end{tcolorbox}
 
 \hspace*{\fill} \\ %插入空行
@@ -470,7 +470,7 @@ auto sort(Tuple<Elements...> const& t)
 }
 \end{lstlisting}
 
-仔细查看InsertionSort的使用:要排序的实际类型列表是类型列表中的索引列表，并使用MakeIndexList<>构造。因此，插入排序的结果是元组中的一组索引，然后将其提供给select()。但是，因为InsertionSort对索引进行操作，所以它的比较操作是比较两个索引。当考虑std::vector的某种索引时，这个更容易理解，如下(非元编程)示例:
+仔细查看InsertionSort的使用:要排序的实际类型列表是类型列表中的索引列表，并使用MakeIndexList<>构造，插入排序的结果是元组中的一组索引，然后将其提供给select()。但因为InsertionSort对索引进行操作，所以比较操作是比较两个索引。当考虑std::vector的某种索引时，这个更容易理解，如下(非元编程)示例:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -491,9 +491,9 @@ int main()
 }
 \end{lstlisting}
 
-这里，索引包含vector字符串的索引。sort()操作对实际的索引进行排序，因此作为比较操作提供的Lambda接受两个无符号值(而不是字符串值)。但Lambda函数体可以使用无符号值作为字符串vector的索引，因此排序实际上是根据字符串内容进行的。排序的最后，索引提供字符串的索引，并根据字符串中的值排序。
+索引包含vector字符串的索引,sort()操作对实际的索引进行排序，因此作为比较操作提供的Lambda接受两个无符号值(而不是字符串值)。但Lambda函数体可以使用无符号值作为字符串vector的索引，因此排序实际上是根据字符串内容进行的。排序的最后，索引提供字符串的索引，并根据字符串中的值排序。
 
-我们对元组sort()的InsertionSort使用了相同的方法。适配器模板MetafunOfNthElementT提供了模板元函数(其嵌套的Apply)，该函数接受两个索引(CTValue特化)，并使用NthElement从类型列表参数中提取相应的元素。成员模板Apply“捕获”了提供给外围模板(MetafunOfNthElementT)的类型列表，与Lambda从其外围作用域捕获字符串vector的方式相同。然后Apply将提取的元素类型转发给底层元函数F，完成调整。
+我们对元组sort()的InsertionSort使用了相同的方法。适配器模板MetafunOfNthElementT提供了模板元函数(其嵌套的Apply)，该函数接受两个索引(CTValue特化)，并使用NthElement从类型列表参数中提取相应的元素。成员模板Apply“捕获”了提供给外围模板(MetafunOfNthElementT)的类型列表，与Lambda从其外围作用域捕获字符串vector的方式相同。然后，Apply将提取的元素类型转发给底层元函数F，完成调整。
 
 排序的所有计算都在编译时执行，直接形成结果元组，在运行时没有多余的值复制。
 

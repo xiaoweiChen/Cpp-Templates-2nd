@@ -1,6 +1,6 @@
 原则上，可以定义operator[]来访问元组的元素。然而，与std::vector不同，元组的元素类型可以有不同，因此元组的operator[]必须是一个模板，其结果类型根据元素的索引不同而不同。这要求每个索引具有不同的类型，因此可以使用索引的类型来确定元素类型。
 
-在第24.3节中介绍的类模板CTValue，可以在类型中编码数字索引。这里，可以用其将operator[]定义为Tuple的成员:
+在第24.3节中介绍的类模板CTValue，可以在类型中编码数字索引，可以用其将operator[]定义为Tuple的成员:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, T Index>
@@ -11,7 +11,7 @@ auto& operator[](CTValue<T, Index>) {
 
 这里，在CTValue参数的类型中传递索引值来进行相应的get<>()调用。
 
-现在可以这样使用这个类:
+可以这样使用这个类:
 
 \begin{lstlisting}[style=styleCXX]
 auto t = makeTuple(0, ’1’, 2.2f, std::string{"hello"});
@@ -103,7 +103,7 @@ constexpr auto operator"" _c() {
 \end{tcolorbox}
 \end{itemize}
 
-注意，解析器不处理浮点字面值，断言会导致编译时错误，因为这是一个不能在编译时上下文中使用的运行时特性。
+解析器不处理浮点字面值，断言会导致编译时错误，这是一个不能在编译时上下文中使用的运行时特性。
 
 现在，就可以这样使用元组了:
 

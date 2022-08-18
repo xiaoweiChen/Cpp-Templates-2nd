@@ -1,5 +1,5 @@
 
-is()和get()成员函数可以检查动态值是否为特定类型，并访问该类型的值。但是，检查变量中的所有可能类型很快就会变成冗长的if语句链。例如，下面打印了名为v的Variant<int, double, string>的值:
+is()和get()成员函数可以检查动态值是否为特定类型，并访问该类型的值。但检查变量中的所有可能类型很快就会变成冗长的if语句链。下面打印了名为v的Variant<int, double, string>的值:
 
 \begin{lstlisting}[style=styleCXX]
 if (v.is<int>()) {
@@ -45,7 +45,7 @@ int main() {
 }
 \end{lstlisting}
 
-对于一个简单的操作来说，这代码体积已经相当大了。为了简化，我们通过使用visit()操作扩展Variant来解决这个问题。然后，外部传入访问函数对象，该对象的函数操作符的调用将使用动态值。因为动态值可以是Variant的任何类型，所以这个函数操作符很可能是重载的，或者本身就是一个函数模板。例如，泛型Lambda提供了一个模板函数操作符，可以表示Variant v的打印操作:
+对于一个简单的操作来说，这代码体积已经相当大了。为了简化，通过使用visit()操作扩展Variant来解决这个问题。外部传入访问函数对象，该对象的函数操作符的调用将使用动态值。因为动态值可以是Variant的任何类型，所以这个函数操作符很可能是重载的，或者本身就是一个函数模板。泛型Lambda提供了一个模板函数操作符，可以表示Variant v的打印操作:
 
 \begin{lstlisting}[style=styleCXX]
 v.visit([](auto const& value) {
@@ -53,7 +53,7 @@ v.visit([](auto const& value) {
 		});
 \end{lstlisting}
 
-泛型Lambda大致等价于下面的函数对象，对于还不支持泛型Lambda的编译器也很有用:
+泛型Lambda大致等价于下面的函数对象，对于还不支持泛型Lambda的编译器也有用:
 
 \begin{lstlisting}[style=styleCXX]
 class VariantPrinter {
@@ -93,7 +93,7 @@ R variantVisitImpl(V&& variant, Visitor&& vis, Typelist<Head, Tail...>) {
 
 variantVisitImpl()是一个带有许多模板参数的非成员函数模板。模板参数R描述了访问操作的结果类型，在稍后返回。V是Variant类型，访问器是Visitor的类型。Head和Tail用于分解Variant中的类型，从而影响递归。
 
-第一个if执行(运行时)检查，以确定给定变量的活动值是否为Head类型:如果是，则通过get()从变量中提取值，并传递给visitor，终止递归。第二个if在需要考虑更多元素时执行递归。如果没有匹配的类型，则该Variant不包含值，
+第一个if执行(运行时)检查，以确定给定变量的活动值是否为Head类型:若是，则通过get()从变量中提取值，并传递给visitor，终止递归。第二个if在需要考虑更多元素时执行递归。若没有匹配的类型，则该Variant不包含值，
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}这个案例在第26.4.3节有详细的讨论
@@ -136,11 +136,11 @@ Variant<Types...>::visit(Visitor&& vis) && {
 }
 \end{lstlisting}
 
-实现直接委托给variantVisitImpl，传递Variant本身，转发访问器，并提供完整的类型列表。这三种实现之间唯一的区别是，它们是否将Variant本身作为Variant\&、Variant const\&或Variant\&\&进行传递。
+实现直接委托给variantVisitImpl，传递Variant本身，转发访问器，并提供完整的类型列表。这三种实现之间唯一的区别是，是否将Variant本身作为Variant\&、Variant const\&或Variant\&\&进行传递。
 
 \subsubsubsection{26.5.1\hspace{0.2cm}结果类型}
 
-visit()的结果类型仍然是一个谜。给定的访问器可能具有不同的函数操作符重载，以产生不同的结果类型，结果类型依赖于其形参类型的模板函数操作符，或者某种组合。看看下面的泛型Lambda:
+visit()的结果类型仍然是个谜。给定的访问器可能具有不同的函数操作符重载，以产生不同的结果类型，结果类型依赖于其形参类型的模板函数操作符，或者某种组合。看看下面的泛型Lambda:
 
 \begin{lstlisting}[style=styleCXX]
 [](auto const& value) {
@@ -148,9 +148,9 @@ visit()的结果类型仍然是一个谜。给定的访问器可能具有不同�
 }
 \end{lstlisting}
 
-这个Lambda的结果类型取决于输入类型:给定int型，则将产生int型值；给定double型，将产生double型值。如果这个泛型Lambda传递给了Variant<int, double>的visit()操作，结果类型应该是什么呢?
+这个Lambda的结果类型取决于输入类型:给定int型，则将产生int型值；给定double型，将产生double型值。若这个泛型Lambda传递给了Variant<int, double>的visit()操作，结果类型应该是什么?
 
-这里没有正确的答案，因此visit()操作允许提供结果类型。例如，在另一个Variant<int, double>中捕获结果。可以将结果类型指定为visit()作为第一个模板参数:
+这里没有正确的答案，因此visit()操作允许提供结果类型。在另一个Variant<int, double>中捕获结果，可以将结果类型指定为visit()作为第一个模板参数:
 
 \begin{lstlisting}[style=styleCXX]
 v.visit<Variant<int, double>>([](auto const& value) {
@@ -158,14 +158,14 @@ v.visit<Variant<int, double>>([](auto const& value) {
 							});
 \end{lstlisting}
 
-当没有通用解决方案时，指定结果类型就很重要。但要求在所有情况下指定结果类型可能会让代码显得非常冗长。因此，visit()使用默认模板参数和简单元程序组合提供了这两个选项。回顾visit()的声明:
+当没有通用解决方案时，指定结果类型就很重要。但要求在所有情况下指定结果类型可能会让代码显得非常冗长，visit()使用默认模板参数和简单元程序组合了这两个选项。回顾visit()的声明:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename R = ComputedResultType, typename Visitor>
 VisitResult<R, Visitor, Types&...> visit(Visitor&& vis) &;
 \end{lstlisting}
 
-上面的例子中显式地指定了模板参数R，它有一个默认参数，因此不需要总是指定。该默认参数是一个不完整的哨兵类型ComputedResultType:
+上面的例子中显式地指定了模板参数R，有一个默认参数，因此不需要总是指定。该默认参数是一个不完整的哨兵类型ComputedResultType:
 
 \begin{lstlisting}[style=styleCXX]
 class ComputedResultType;
@@ -204,9 +204,9 @@ class VisitResultT<ComputedResultType, Visitor, ElementTypes...>
 
 \subsubsubsection{26.5.2\hspace{0.2cm}常见的结果类型}
 
-当调用可能为每个变量的元素类型产生不同类型的访问器时，如何将这些类型组合成一个单独的结果类型用于visit()?有一些简答的情况——如果访问器为每个元素类型返回相同的类型，那么这应该是visit()的结果类型。
+当调用为每个变量的元素类型产生不同类型的访问器时，如何将这些类型组合成一个单独的结果类型用于visit()?有一些简单的情况——若访问器为每个元素类型返回相同的类型，应该是visit()的结果类型。
 
-C++已经有了合理结果类型的概念，在第1.3.3节中介绍过:三元表达式b ? x : y的类型是x和y类型之间的公共类型。例如，如果x有int类型，y有double类型，公共类型是double，因为int可以提升为double。也可以在类型特征中捕捉到共同类型的概念:
+C++已经有了合理结果类型的概念，在第1.3.3节中介绍过:三元表达式b ? x : y的类型是x和y类型之间的公共类型。若x有int类型，y有double类型，公共类型是double，因为int可以提升为double。也可以在类型特征中捕捉到共同类型的概念:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -252,9 +252,9 @@ class VisitResultT<ComputedResultType, Visitor, ElementTypes...>
 
 VisitResult的计算分两个阶段进行。首先，VisitElementResult计算调用访问器的值为T类型时，产生的结果类型。这个元函数应用于每个给定的元素类型，以确定访问器可以产生的所有结果类型，并在类型列表ResultTypes中进行捕获。
 
-接下来，计算使用24.2.6节中描述的Accumulate算法，将公共类型计算应用于结果类型的类型列表。其初始值(Accumulate的第三个参数)是第一个结果类型，通过CommonTypeT与ResultTypes类型列表剩余部分的连续值组合在一起。最终结果是通用类型，访问器的所有结果类型都可以转换为通用类型，如果结果类型不兼容，则会出现错误。
+接下来，计算使用24.2.6节中描述的Accumulate算法，将公共类型计算应用于结果类型的类型列表。其初始值(Accumulate的第三个参数)是第一个结果类型，通过CommonTypeT与ResultTypes类型列表剩余部分的连续值组合在一起。最终结果是通用类型，访问器的所有结果类型都可以转换为通用类型，若结果类型不兼容，则会出现错误。
 
-C++11后，标准库提供了一个相应的类型特征，std::common\_type<>，有效地结合了CommonTypeT和Accumulate，使用这种方法来生成任意数量传递类型的通用类型(参见D.5节)。通过使用std::common\_type<>，VisitResultT的实现可以更简单:
+C++11后，标准库提供了一个相应的类型特征，std::common\_type<>，有效地结合了CommonTypeT和Accumulate，使用这种方法生成任意数量传递类型的通用类型(参见D.5节)。通过使用std::common\_type<>，VisitResultT的实现可以更简单:
 
 \hspace*{\fill} \\ %插入空行
 \noindent

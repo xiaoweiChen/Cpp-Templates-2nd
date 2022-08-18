@@ -4,11 +4,11 @@ Variant可以通过多种方式进行初始化和赋值，包括默认构造、�
 \noindent
 \textbf{默认构造}
 
-Variant是否应该提供默认构造函数?若不这样做，Variant的使用可能会变得困难，因为总是需要一个初始值(即使初始值在编程上没有意义)。如果提供了默认构造函数，那么语义应该是什么?
+Variant是否应该提供默认构造函数?若不这样做，因为总是需要一个初始值(即使初始值在编程上没有意义)，所以Variant的使用可能会变得困难。若提供了默认构造函数，那么语义应该是什么?
 
-一种可能的语义是默认初始化没有存储值，由辨别器0表示。然而，空Variant通常没有用(例如，不能访问或找到任何值来提取)，并且将此作为默认初始化行为会将空Variant的异常状态(在第26.4.3节中描述)提升为普通状态。
+一种可能的语义是默认初始化没有存储值，由辨别器0表示。空Variant通常没有用(不能访问或找到任何值来提取)，并且将此作为默认初始化行为会将空Variant的异常状态(在第26.4.3节中描述)提升为普通状态。
 
-或者，默认构造函数可以构造某种类型的值。对于我们的Variant，我们遵循C++17的std::variant<>语义，并默认构造类型列表中的第一个类型的值:
+或者，默认构造函数可以构造某种类型的值。对于我们的Variant，遵循C++17的std::variant<>语义，并默认构造类型列表中的第一个类型的值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -20,7 +20,7 @@ Variant<Types...>::Variant() {
 }
 \end{lstlisting}
 
-这种方法简单且可预测，并避免在大多数使用中引入空Variant。这个行为可以在下面的程序中看到:
+这种方法简单可预测，并避免在大多数使用中引入空Variant。这个行为可以在下面的程序中看到:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -75,7 +75,7 @@ Variant<Types...>::Variant(Variant const& source) {
 }
 \end{lstlisting}
 
-移动构造函数与此类似，不同之处在于它在访问源变量时使用std::move，并根据源值进行移动赋值:
+移动构造函数与此类似，不同之处在于访问源变量时使用std::move，并根据源值进行移动赋值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -91,7 +91,7 @@ Variant<Types...>::Variant(Variant&& source) {
 }
 \end{lstlisting}
 
-基于访问器实现的一个有趣的方面是，其也适用于复制和移动操作的模板参数。例如，模板复制构造函数可以这样定义:
+基于访问器实现的一个有趣的方面是，其也适用于复制和移动操作的模板参数。模板复制构造函数可以这样定义:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -108,7 +108,7 @@ Variant<Types...>::Variant(Variant<SourceTypes...> const& source) {
 }
 \end{lstlisting}
 
-因为这段代码访问了source，所以对*this的赋值将在每个SourceTypes中发生。此赋值的重载解析将为每个SourceTypes找到最合适的目标类型，并根据需要进行隐式转换。下面的例子说明了不同Variant类型的构造和赋值:
+这段代码访问了source，所以对*this的赋值将在每个SourceTypes中发生。此赋值的重载解析将为每个SourceTypes找到最合适的目标类型，并根据需要进行隐式转换。下面的例子说明了不同Variant类型的构造和赋值:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -170,7 +170,7 @@ Variant<Types...>& Variant<Types...>::operator= (Variant const& source) {
 }
 \end{lstlisting}
 
-这里唯一有趣点是在else分支中:当source不包含值(由辨别器0表示)时，我们销毁目标Variant的值，隐式地将其辨别器设置为0。
+这里唯一有趣的是在else分支中:当source不包含值(由辨别器0表示)时，我们销毁目标Variant的值，隐式地将其辨别器设置为0。
 
 
 

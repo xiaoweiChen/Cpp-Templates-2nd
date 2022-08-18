@@ -1,6 +1,6 @@
-本书中，我们经常使用同构容器和类数组类型来说明模板的强大功能。这种同构结构扩展了C/C++数组的概念，在大多数应用程序中普遍存在。C++(和C)也有非同构的容器设施:类(或结构体)，本章探讨元组类似于类和结构的方式聚合数据。例如，包含int、double和std::string的元组类似于包含int、double和std::string成员的结构体，只是元组的元素是按位置引用的(如0、1、2)，而不是通过名称引用。位置接口和从类型列表轻松构造元组的能力，使元组比结构体更适合与模板元编程技术一起使用。
+本书中，我们经常使用同构容器和类数组类型来说明模板的强大功能。这种同构结构扩展了C/C++数组的概念，在大多数应用程序中普遍存在。C++(和C)也有非同构的容器设施:类(或结构体)，本章探讨元组类似于类和结构的方式聚合数据，包含int、double和std::string的元组类似于包含int、double和std::string成员的结构体，只是元组的元素是按位置引用的(如0、1、2)，而不是通过名称引用。位置接口和从类型列表轻松构造元组的能力，使元组比结构体更适合与模板元编程技术一起使用。
 
-元组的另一种方式是在可执行程序中显示类型列表。例如，Typelist<int, double, std::string>描述了可以在编译时操作的包含int, double和std::string的类型序列，Tuple<int, double, std::string>描述了可以在运行时操作的int, double和std::string的存储。例如，下面的程序创建这样一个元组的实例:
+元组的另一种方式是在可执行程序中显示类型列表，Typelist<int, double, std::string>描述了可以在编译时操作的包含int, double和std::string的类型序列，Tuple<int, double, std::string>描述了可以在运行时操作的int, double和std::string的存储。例如，下面的程序创建这样一个元组的实例:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename... Types>
@@ -11,7 +11,7 @@ class Tuple {
 Tuple<int, double, std::string> t(17, 3.14, "Hello, World!");
 \end{lstlisting}
 
-通常使用模板元编程和类型列表来生成可用于存储数据的元组。例如，即使在上面的例子中选择了int、double和std::string作为元素类型，也可以用元程序创建元组中存储的类型集。
+通常使用模板元编程和类型列表来生成可用于存储数据的元组，即使在上面的例子中选择了int、double和std::string作为元素类型，也可以用元程序创建元组中存储的类型集。
 
 本章，我们将探索Tuple类模板的实现和操作，是std::Tuple类模板的简化版本。
 

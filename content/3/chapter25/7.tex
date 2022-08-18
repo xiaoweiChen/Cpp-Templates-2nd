@@ -1,10 +1,10 @@
 
 元组构造模板的实现，是对模板应用的一个实例。Boost.Tuple库[BoostTuple]是C++中最流行的一种元组的实现方式，并最终发展成C++11中的std::tuple。
 
-C++11之前，许多元组的实现都是基于递归对结构的思想;本书的第一版[VandevoordeJosuttisTemplates1st]通过“递归组合”阐明了这种方法。Andrei Alexandrescu在[AlexandrescuDesign]中提出了一个有趣的替代方案。他用类型列表的概念(如第24章所讨论的)作为元组的基础，将元组中的类型列表和字段列表清晰地分离开来。
+C++11之前，许多元组的实现都是基于递归对结构的思想，本书的第一版[VandevoordeJosuttisTemplates1st]通过“递归组合”阐明了这种方法。Andrei Alexandrescu在[AlexandrescuDesign]中提出了一个有趣的替代方案，他用类型列表的概念(如第24章所讨论的)作为元组的基础，将元组中的类型列表和字段列表清晰地分离开来。
 
 C++11引入了可变参数模板，其中参数包可以捕获元组的类型列表，消除了递归对的需要。包扩展和索引列表的概念[GregorJarviPowellVariadicTemplates]使递归模板实例化为更为简单、更有效的模板实例，从而使元组的使用门槛更低。索引列表对元组和类型列表算法的性能具有关键性影响，以至于编译器有一个内部别名模板，如\_\_make\_integer\_seq<S, T, N>，会扩展为S<T, 0, 1, ..., N>，不需要额外的模板实例化，从而让std::make\_index\_sequence和make\_integer\_sequence使用起来更简单。
 
-Tuple是使用最广泛的异构容器，但它不是唯一的。Boost.Fusion库[BoostFusion]为通用容器提供了异构对应，如异构list、deque、set和map。并且，提供了一个为异构集合编写算法的框架，使用与C++标准库本身相同的抽象类型和术语(例如，迭代器、序列和容器)。
+Tuple是使用最广泛的异构容器，但它不唯一。Boost.Fusion库[BoostFusion]为通用容器提供了异构对应，如异构list、deque、set和map。提供了一个为异构集合编写算法的框架，使用与C++标准库本身相同的抽象类型和术语(例如，迭代器、序列和容器)。
 
 Boost.Hana[BoostHana]采纳了Boost中出现的许多想法。MPL Boost.MPL[BoostMPL]和Boost.Fusion，在C++11实现之前就设计和实现了，并且用C++11(和C++14)新的语言特性重新进行了设计，从而产生了一个优雅的库，其为异构计算提供了强大的和可组合的组件。

@@ -3,7 +3,7 @@
 
 \subsubsubsection{25.2.1\hspace{0.2cm}比较}
 
-元组是包含其他值的结构类型。要比较两个元组，比较它们的元素就足够了。因此，可以编写operator==的定义来比较两个定义的元素:
+元组是包含其他值的结构类型。要比较两个元组，比较元素就足够了，可以实现operator==的定义来比较两个定义的元素:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -28,7 +28,7 @@ bool operator==(Tuple<> const&, Tuple<> const&)
 
 \subsubsubsection{25.2.2\hspace{0.2cm}输出}
 
-本章中，将创建新的元组类型，因此能够在执行程序中看到这些元组是很有用的。以下操作符<<打印任何可打印的元组元素类型:
+本章将创建新的元组类型，因此能够在执行程序中看到这些元组是很有用的。以下操作符<{}<可以打印任何可打印的元组元素类型:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& strm, Tuple<Types...> const& t)
 }
 \end{lstlisting}
 
-现在，创建和显示元组就很容易。例如:
+现在，创建和显示元组就很容易：
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << makeTuple(1, 2.5, std::string("hello")) << ’\n’;

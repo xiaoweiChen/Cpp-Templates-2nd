@@ -15,7 +15,7 @@ bool Variant<Types...>::is() const
 
 给定变量v, v.is<int>()将确定v的动态值是否为int类型。检查很简单，将变量存储中的discriminator与对应VariantChoice基类的Discriminator值进行比较。
 
-如果正在寻找的类型(T)在列表中没有找到，VariantChoice基类将无法进行实例化，因为FindIndexOfT将不包含值成员，从而导致is<T>()中的(故意的)编译失败。这可以防止用户在请求不可能存储在变体中的类型时，报错进行提示。
+若正在寻找的类型(T)在列表中没有找到，VariantChoice基类将无法进行实例化，因为FindIndexOfT将不包含值成员，从而导致is<T>()中的(故意的)编译失败。这可以防止用户在请求不可能存储在变体中的类型时，报错进行提示。
 
 get()成员函数提取对存储值的引用。必须提供要提取的类型(例如，v.get<int>())，并且只有当变量的动态值确实为该类型时才有效:
 

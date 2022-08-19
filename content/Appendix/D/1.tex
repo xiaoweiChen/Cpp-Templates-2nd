@@ -9,7 +9,7 @@
 
 \begin{itemize}
 \item 
-对于产生类型的特征，可以如下方式访问该类型:
+对于产生类型的特征，使用如下方式访问该类型:
 \begin{lstlisting}[style=styleCXX]
 typename std::trait<...>::type
 std::trait_t<...> // since C++14
@@ -55,7 +55,7 @@ int main()
 
 \subsubsubsection{D.1.1\hspace{0.2cm}std::integral\_constant和std::bool\_constant}
 
-所有产生值的标准类型特征都派生自辅助类模板的实例std::integral\_constant:
+所有产生值的标准类型特征都派生自辅助类模板实例std::integral\_constant:
 
 \begin{lstlisting}[style=styleCXX]
 namespace std {
@@ -81,31 +81,31 @@ namespace std {
 可以使用value\_type成员来查询结果的类型。由于产生值的许多特征是谓词，value\_type通常是bool。
 
 \item 
-特征类型的对象具有隐式的类型转换，转换为由类型特征产生值的类型。
+特征类型的对象具有隐式类型转换，转换为类型特征产生值的类型。
 
 \item 
 C++14(以及以后的版本)中，类型特征的对象也可为函数对象(函子)，其中“函数调用”会产生值。
 
 \item 
-类型成员只生成底层的integral\_constant实例。
+类型成员只生成底层integral\_constant实例。
 \end{itemize}
 
-如果特征产生布尔值，也可以这样
-
-\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++17前，该标准不包括别名模板bool\_constant<>。std::true\_type和std::false\_type在C++11和C++14中确实存在，但它们分别指定为integral\_constant<bool,true>和integral\_constant<bool,false>。
-\end{tcolorbox}
+若特征产生布尔值，也可以这样
 
 \begin{lstlisting}[style=styleCXX]
-namespace std {
-	template<bool B>
-	using bool_constant = integral_constant<bool, B>; // since C++17
-	using true_type = bool_constant<true>;
-	using false_type = bool_constant<false>;
-}
+	namespace std {
+		template<bool B>
+		using bool_constant = integral_constant<bool, B>; // since C++17
+		using true_type = bool_constant<true>;
+		using false_type = bool_constant<false>;
+	}
 \end{lstlisting}
 
-以便这些布尔特征在特定属性适用时继承std::true\_type，否则继承std::false\_type，这也意味着它们对应的值成员等于true和false。为结果值设置不同的类型true和false，可以基于类型特征的结果进行标签调度(参见第19.3.3节和第20.2节)。
+\begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
+\hspace*{0.75cm}C++17前，该标准不包括别名模板bool\_constant<>。std::true\_type和std::false\_type在C++11和C++14中确实存在，但分别指定为integral\_constant<bool,true>和integral\_constant<bool,false>。
+\end{tcolorbox}
+
+以便这些布尔特征在特定属性适用时继承std::true\_type，否则继承std::false\_type，所以它们对应的值成员等于true和false。为结果值设置不同的类型true和false，可以基于类型特征的结果进行标签调度(参见第19.3.3节和第20.2节)。
 
 例如:
 
@@ -153,7 +153,7 @@ int main()
 
 \begin{itemize}
 \item 
-类型特征应用于类型，但decltype允许测试表达式、变量和函数的属性。不过，decltype只在变量或函数的命名没有附加括号的情况下才会产生类型;对于任何其他表达式，生成的类型也反映表达式的类型类别。例如:
+类型特征应用于类型，但decltype允许测试表达式、变量和函数的属性，decltype只在变量或函数的命名没有附加括号的情况下才会产生类型;对于任何其他表达式，生成的类型也反映表达式的类型类别。例如:
 
 \begin{lstlisting}[style=styleCXX]
 void foo (std::string&& s)
@@ -170,7 +170,7 @@ void foo (std::string&& s)
 详见第15.10.2节。
 
 \item 
-对于菜鸟开发者来说，有些特征可能具有非直觉的行为。参见第11.2.1节中的示例。
+对于菜鸟开发者来说，有些特征可能具有反直觉的行为。参见第11.2.1节中的示例。
 
 \item 
 有些特征是有要求或前提条件，违反这些前提条件会导致未定义行为。

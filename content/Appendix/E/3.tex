@@ -6,7 +6,7 @@ template<IntegerLike T> void print(T val); // #1
 template<StringLike T> void print(T val); // #2
 \end{lstlisting}
 
-若没有不同的约束，这两个声明将声明相同的模板。但约束是模板签名的一部分，为了在重载解析期间区分模板。特别是，若发现两个模板都是可行的候选模板，但只有模板\#1满足其约束，那么重载会选择满足条件的模板。例如，假设int满足IntegerLike, std::string满足StringLike，但反之不行:
+若没有不同的约束，这两个声明将声明相同的模板。但约束是模板签名的一部分，为了在重载解析期间区分模板。若发现两个模板都是可行的候选模板，但只有模板\#1满足其约束，那么重载会选择满足条件的模板。假设int满足IntegerLike, std::string满足StringLike，但反之不行:
 
 \begin{lstlisting}[style=styleCXX]
 int main()
@@ -20,12 +20,12 @@ int main()
 
 \subsubsubsection{E.3.1\hspace{0.2cm}约束类型}
 
-第一次讨论重载函数模板时，所涉及的约束通常互斥。例如，在使用IntegerLike和StringLike的示例中，可以设想同时满足这两个概念的类型，但希望这种情况比较罕见，以便重载打印模板仍然可用。
+第一次讨论重载函数模板时，所涉及的约束通常互斥。在使用IntegerLike和StringLike的示例中，可以设想同时满足这两个概念的类型，但希望这种情况比较罕见，以便重载打印模板仍然可用。
 
-然而，有些概念从来不相互排斥，而是“包容”的。经典的例子是标准库的迭代器类别:输入迭代器、前向迭代器、双向迭代器、随机访问迭代器，以及C++17中的连续迭代器。
+然而，有些概念从来不相互排斥，而是“包容”。例子是标准库的迭代器类别:输入迭代器、前向迭代器、双向迭代器、随机访问迭代器，以及C++17中的连续迭代器。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}连续迭代器是C++17中引入的随机访问迭代器改进版。如果标签被更改，因为依赖于std::random\_access\_iterator\_tag的现有算法将不再选择，所以没有为它们添加std::continuous\_iterator\_tag。
+\hspace*{0.75cm}连续迭代器是C++17中引入的随机访问迭代器改进版。若更改了标签，因为依赖于std::random\_access\_iterator\_tag的现有算法将不再选择，所以没有为其添加std::continuous\_iterator\_tag。
 \end{tcolorbox}
 
 假设这里有一个ForwardIterator的定义:
@@ -35,7 +35,7 @@ template<typename T>
 	concept ForwardIterator = ...;
 \end{lstlisting}
 
-那么“更精细的”概念BidirectionalIterator可以这样定义:
+“更精细的”概念BidirectionalIterator可以这样定义:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -46,9 +46,9 @@ template<typename T>
 		};
 \end{lstlisting}
 
-在前向迭代器已经提供的功能基础上，添加加了前缀减法操作符的功能。
+在前向迭代器已经提供的功能基础上，添加了前缀减法操作符的功能。
 
-考虑std::advance()算法(我们将称之为advanceIter())，重载了使用受限模板的前向和双向迭代器:
+考虑std::advance()算法(称之为advanceIter())，重载了使用受限模板的前向和双向迭代器:
 
 \begin{lstlisting}[style=styleCXX]
 template<ForwardIterator T, typename D>
@@ -69,17 +69,17 @@ void advanceIter(T& it, D n)
 }
 \end{lstlisting}
 
-当使用普通的前向迭代器(即非双向迭代器)调用advanceIter()时，只有第一个模板的约束条件满足，重载解析很简单:选择第一个模板。然而，双向迭代器将满足两个模板的约束条件。这种情况下，当重载解析在其他方面并不偏好某个候选时，将偏好其约束包含其他候选约束的候选，而反之则不成立。包容的确切定义超出了这个介绍性附录的范畴，但只要知道约束C2<Ts...>定义为要求约束C1<Ts...>和其他约束(即\&\&)，则前者包含后者，即可。
+当使用普通的前向迭代器(即非双向迭代器)调用advanceIter()时，只有第一个模板的约束条件满足，重载解析很简单:选择第一个模板，双向迭代器将满足两个模板的约束条件。这种情况下，当重载解析在其他方面并不偏好某个候选时，将偏好其约束包含其他候选约束的候选，反之不成立。包容的确切定义超出了这个介绍性附录的范畴，但只要知道约束C2<Ts...>定义为要求约束C1<Ts...>和其他约束(即\&\&)，则前者包含后者，即可。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}用于标准化的规范比这更强大。其将约束分解为“原子组件”的集合(包括require表达式的部分)，并分析这些集合，看看其中一个是否是另一个的严格子集。
+\hspace*{0.75cm}用于标准化的规范比这更强大。其将约束分解为“原子组件”的集合(包括require表达式的部分)，并分析这些集合，其中一个是否是另一个的严格子集。
 \end{tcolorbox}
 
-我们的示例中，BidirectionalIterator<T>包含ForwardIterator<T>，因此使用双向迭代器调用时，首选第二个advanceIter()模板。
+示例中，BidirectionalIterator<T>包含ForwardIterator<T>，因此使用双向迭代器调用时，首选第二个advanceIter()模板。
 
 \subsubsubsection{E.3.2\hspace{0.2cm}约束和标签调度}
 
-第20.2节中，讨论了使用标记调度重载advanceIter()算法的问题。该方法以一种相当优雅的方式集成到受限模板中。例如，输入迭代器和前向迭代器不能通过语法接口加以区分。所以，可以使用标签来定义其中之一:
+第20.2节中，讨论了使用标记调度重载advanceIter()算法的问题。该方法以一种相当优雅的方式集成到受限模板中，输入迭代器和前向迭代器不能通过语法接口加以区分。所以，可以使用标签来定义其中之一:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

@@ -1,15 +1,15 @@
 
-大多数上下文中，可以使用逻辑操作符组合多个类型特征谓词。然而，模板元编程的上下文中，这并不够:
+大多数上下文中，可以使用逻辑操作符组合多个类型特征谓词。模板元编程的上下文中，这并不够:
 
 \begin{itemize}
 \item 
-必须处理可能失败的特征(例如，不完整的类型)。
+必须处理可能失败的特征(不完整的类型)。
 
 \item 
 组合类型特征定义。
 \end{itemize}
 
-为此提供了类型特征std::conjunction<>， std::disjunction<>和std::negation<>。
+为此提供了类型特征std::conjunction<>，std::disjunction<>和std::negation<>。
 
 这些辅助函数会短路布尔值的计算(分别在\&\&和||的第一个false后中止计算，或第一个true后中止计算)。例如，若使用不完整类型:
 
@@ -29,7 +29,7 @@ static_assert(std::is_constructible<X,int>{}
 			"can’t init X or Y from int");
 \end{lstlisting}
 
-因为is\_constructible<X，int>已经产生了true，所以以下语句保证可以编译:
+因为is\_constructible<X，int>已经产生了true，以下语句保证可以编译:
 
 \begin{lstlisting}[style=styleCXX]
 // OK:
@@ -38,7 +38,7 @@ static_assert(std::disjunction<std::is_constructible<X, int>,
 			"can’t init X or Y from int");
 \end{lstlisting}
 
-另一个是通过逻辑组合现有类型特征，来定义新类型特征的一种简单方法。例如，可以容易地定义一个特性来检查一个类型是否“不是指针”(既不是指针，也不是成员指针，也不是空指针):
+另一个是通过逻辑组合现有类型特征，来定义新类型特征的一种简单方法，可以定义一个特性来检查一个类型是否“不是指针”(既不是指针，也不是成员指针，也不是空指针):
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -49,7 +49,7 @@ struct isNoPtrT : std::negation<std::disjunction<std::is_null_pointer<T>,
 };
 \end{lstlisting}
 
-因为结合了相应的特征类，所以这里不能使用逻辑操作符。根据这个定义，以下方式是可用的:
+因为结合了相应的特征类，所以这里不能使用逻辑操作符。根据这个定义，以下方式可用:
 
 \begin{lstlisting}[style=styleCXX]
 std::cout << isNoPtrT<void*>::value << ’\n’; // false
@@ -85,7 +85,7 @@ print(Ts...)
 }
 \end{lstlisting}
 
-注意，省略号放在std::negation后面，以便用于参数包的每个元素。
+省略号放在std::negation后面，以便用于参数包的每个元素。
 
 \begin{table}[H]
 	\begin{center}
@@ -103,13 +103,13 @@ print(Ts...)
 表D.8. 组合其他类型特征
 \end{center}
 
-std::conjunction<B...>::value
+\textbf{std::conjunction<B...>::value}
 
-std::disjunction<B...>::value
+\textbf{std::disjunction<B...>::value}
 
 \begin{itemize}
 \item 
-至传入的特性B...中少有一个或全部为布尔特征时，生成true
+传入的特性B...至少有一个或全部为布尔特征时，生成true
 
 \item 
 逻辑上分别对传入的特征使用操作符\&\&或||。
@@ -118,10 +118,10 @@ std::disjunction<B...>::value
 这两个特性都会短路(第一个false或true之后中止计算)。
 
 \item 
-自C++17后可用
+C++17后可用
 \end{itemize}
 
-std::negation<B>::value
+\textbf{std::negation<B>::value}
 
 \begin{itemize}
 \item 
@@ -131,7 +131,7 @@ std::negation<B>::value
 对传入的特性使用逻辑非运算符。
 
 \item 
-自C++17后可用
+C++17后可用
 \end{itemize}
 
 

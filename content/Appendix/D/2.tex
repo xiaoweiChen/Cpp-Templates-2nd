@@ -17,17 +17,18 @@
 本节测试给定类型的主要类型类别。对于给定类型，只有一个主类型类别具有计算结果为true的静态值成员。
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
-\hspace*{0.75cm}C++14前，唯一的例外是std::nullptr\_t，对于它所有的主类型类别实用程序都产生了false，因为is\_null\_pointer<>不是C++11的一部分。
+\hspace*{0.75cm}C++14前，唯一的例外是std::nullptr\_t，对于所有的主类型类别实用程序都产生了false，因为is\_null\_pointer<>不是C++11的一部分。
 \end{tcolorbox}
 
 结果与类型是否用const和/或volatile(cv限定)限定无关。
 
-注意，对于类型std::size\_t和std::ptrdiff\_t，当\_integral<>时结果为真。对于类型std::max\_align\_t，这些主要类型类别中哪一个是true是实现的细节(因此，它可能是整型、浮点型或类类型)。语言指定Lambda表达式是类类型(参见第15.10.6节)。因此，将is\_class应用于该类型可得到true。
+注意，对于类型std::size\_t和std::ptrdiff\_t，当\_integral<>时结果为真。对于类型std::max\_align\_t，这些主要类型类别中哪一个是true是实现的细节(可能是整型、浮点型或类)。语言指定Lambda表达式是类(参见第15.10.6节)，将is\_class应用于该类型可得到true。
 
 \begin{table}[H]
+	\centering
 	\begin{tabular}{|l|l|}
 		\hline
-		特征                                                    & 作用                                                                                                         \\ \hline
+		\textbf{特征 }                                                   & \textbf{作用}                                                                                                         \\ \hline
 		is\_void\textless{}T\textgreater{}                       & void类型                                                                                                      \\ \hline
 		is\_integral\textless{}T \textgreater{}                  & \begin{tabular}[c]{@{}l@{}}整数类型(包括bool, char, char16\_t, char32\_t, wchar\_t)\end{tabular} \\ \hline
 		is\_floating\_point\textless{}T \textgreater{}           & 浮点类型(float, double, long double)                                                               \\ \hline
@@ -49,9 +50,9 @@
 表D.1. 检查主要类型类别的特征
 \end{center}
 
-Lambda表达式的类型是一个类类型(参见第15.10.6节)。因此，将is\_class应用于该类型将得到true。
+Lambda表达式的类型是一个类(参见第15.10.6节)，将is\_class应用于该类型将得到true。
 
-std::is\_void<T>::value
+\textbf{std::is\_void<T>::value}
 
 \begin{itemize}
 \item 
@@ -70,7 +71,7 @@ is_void_v<decltype(f())> // yields true (return type of f() is void)
 
 \end{itemize}
 
-std::is\_integral<T>::value
+\textbf{std::is\_integral<T>::value}
 
 \begin{itemize}
 \item 
@@ -89,24 +90,24 @@ bool
 
 \end{itemize}
 
-std::is\_floating\_point<T>::value
+\textbf{std::is\_floating\_point<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是(cv限定的)float、double或long double则为true
+若类型T是(cv限定的)float、double或long double则为true
 \end{itemize}
 
-std::is\_array<T>::value
+\textbf{std::is\_array<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是一个(cv限定的)数组类型，则生成true。
+若类型T是一个(cv限定的)数组类型，则生成true。
 
 \item 
-由语言规则声明为数组(带或不带长度)的参数实际上可以是指针类型。
+由语言规则声明为数组(带或不带长度)的参数可以是指针类型。
 
 \item 
-注意，类std::array<>不是数组类型，而是类类型。
+std::array<>不是数组类型，而是类。
 
 \item 
 例如:
@@ -126,13 +127,13 @@ void foo(int a[], int b[5], int* c)
 
 \item 
 参见第19.8.2节了解实现细节。
-
 \end{itemize}
 
-std::is\_pointer<T>::value
+\textbf{std::is\_pointer<T>::value}
+
 \begin{itemize}
 \item 
-如果类型T是一个(cv限定的)指针，则生成true。这包括:
+若类型T是一个(cv限定的)指针，则生成true。包括:
 \begin{itemize}
 
 \item[-] 
@@ -142,7 +143,7 @@ std::is\_pointer<T>::value
 参数声明为数组(带/不带长度)或函数类型
 \end{itemize}
 
-这不包括:
+不包括:
 
 \begin{itemize}
 \item[-] 
@@ -176,11 +177,11 @@ int* foo(int a[5], void(f)())
 参见第19.8.2节了解实现细节。
 \end{itemize}
 
-std::is\_null\_pointer<T>::value
+\textbf{std::is\_null\_pointer<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是(cv限定的)std::nullptr\_t，它是nullptr的类型，则生成true。
+若类型T是(cv限定的)std::nullptr\_t，则是nullptr的类型，则生成true。
 
 \item 
 例如:
@@ -195,22 +196,22 @@ is_null_pointer_v<decltype(p)> // yields false (p has not type std::nullptr_t)
 从C++14开始支持。
 \end{itemize}
 
-std::is\_member\_object\_pointer<T>::value
+\textbf{std::is\_member\_object\_pointer<T>::value}
 
-std::is\_member\_function\_pointer<T>::value
+\textbf{std::is\_member\_function\_pointer<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是一个(cv限定的)指向成员的指针类型(例如，int X::*或对于某些类类型X的int (X::*)())，则返回true。
+若类型T是一个(cv限定的)指向成员的指针类型(int X::*或对于某些类X的int (X::*)())，则返回true。
 \end{itemize}
 
-std::is\_lvalue\_reference<T>::value
+\textbf{std::is\_lvalue\_reference<T>::value}
 
-std::is\_rvalue\_reference<T>::value
+\textbf{std::is\_rvalue\_reference<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T分别是(cv限定的)左值或右值引用类型，则生成true。
+若类型T分别是(cv限定的)左值或右值引用类型，则生成true。
 
 \item 
 例如:
@@ -229,21 +230,21 @@ is_rvalue_reference_v<void> // yields false
 参见第19.8.2节了解实现细节。
 \end{itemize}
 
-std::is\_enum<T>::value
+\textbf{std::is\_enum<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是(cv限定的)枚举类型，则生成true。这既适用于作用域枚举类型，也适用于非作用域枚举类型。
+若类型T是(cv限定的)枚举类型，则生成true。这既适用于作用域枚举类型，也适用于非作用域枚举类型。
 
 \item 
 参见第19.8.5节了解实现细节。
 \end{itemize}
 
-std::is\_class<T>::value
+\textbf{std::is\_class<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是用class或struct声明的(cv限定的)类类型，包括从实例化类模板中生成的这种类型，则生成真。注意，语言保证Lambda表达式的类型是类类型(参见15.10.6节)。
+若类型T是用class或struct声明的(cv限定的)类，包括从实例化类模板中生成的这种类型，则生成真。语言保证Lambda表达式的类型是类(参见15.10.6节)。
 
 \item 
 对联合、作用域枚举类型(尽管用enum类声明)、std::nullptr\_t和任何其他类型会产生false。
@@ -263,21 +264,21 @@ is_class_v<decltype(l1)> // yields true (a lambda is a class object)
 参见第19.8.4节了解实现细节。
 \end{itemize}
 
-std::is\_union<T>::value
+\textbf{std::is\_union<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是一个(cv限定的)联合，包括一个由联合模板的类模板生成的联合，则生成true。
+若类型T是一个(cv限定的)联合，包括一个由联合模板的类模板生成的联合，则生成true。
 \end{itemize}
 
-std::is\_function<T>::value
+\textbf{std::is\_function<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是一个(cv限定的)函数类型，则生成true。对函数指针类型、Lambda表达式的类型和其他类型产生false。
+若类型T是一个(cv限定的)函数类型，则生成true。对函数指针类型、Lambda表达式的类型和其他类型产生false。
 
 \item 
-根据语言规则声明为函数类型的参数，实际上可以是一个指针类型。
+根据语言规则声明为函数类型的参数，实际上可以是指针类型。
 
 \item 
 例如:
@@ -297,13 +298,13 @@ void foo(void(f)())
 
 \subsubsubsection{D.2.2\hspace{0.2cm}复合类型类别的测试}
 
-以下类型可以确定一个类型是否属于更一般的类型类别，该类型类别是一些主要类型类别的联合。复合类型类别不构成严格的划分:一个类型可以属于多个复合类型类别(例如，指针类型既是标量类型又是复合类型)。同样，cv限定符(const和volatile)在对类型进行分类时无关。
+以下类型可以确定类型是否属于更一般类型类别，该类型类别是一些主要类型类别的联合。复合类型类别不构成严格的划分:一个类型可以属于多个复合类型类别(例如，指针类型既是标量类型又是复合类型)。同样，cv限定符(const和volatile)在对类型进行分类时无关。
 
-std::is\_reference<T>::value
+\textbf{std::is\_reference<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是引用类型，则生成true。
+若类型T是引用类型，则生成true。
 
 \item 
 等价于: 
@@ -320,7 +321,7 @@ is_lvalue_reference_v<T> || is_rvalue_reference_v<T>
 	\centering
 	\begin{tabular}{|l|l|}
 		\hline
-		特性                                          & 作用                                                                                                                                                                                     \\ \hline
+		\textbf{特性}                                          & \textbf{作用}                                                                                                                                                                                     \\ \hline
 		is\_reference\textless{}T \textgreater{}       & 左值或右值引用                                                                                                                                                                 \\ \hline
 		is\_member\_pointer\textless{}T \textgreater{} & 指向非静态成员的指针                                                                                                                                                                \\ \hline
 		is\_arithmetic\textless{}T \textgreater{}      & 整型(包括bool和字符型)或浮点型                                                                                                                            \\ \hline
@@ -335,11 +336,11 @@ is_lvalue_reference_v<T> || is_rvalue_reference_v<T>
 表D.2. 检查复合类型类别的特征
 \end{center}
 
-std::is\_member\_pointer <T>::value
+\textbf{std::is\_member\_pointer <T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是任何指向成员的类型，则生成true。
+若类型T是任何指向成员的类型，则生成true。
 
 \item 
 等价于: 
@@ -348,11 +349,11 @@ std::is\_member\_pointer <T>::value
 \end{lstlisting}
 \end{itemize}
 
-std::is\_arithmetic<T>::value
+\textbf{std::is\_arithmetic<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是算术类型(bool、字符类型、整数类型或浮点类型)，则生成true。
+若类型T是算术类型(bool、字符类型、整数类型或浮点类型)，则生成true。
 
 \item 
 等价于: 
@@ -361,11 +362,11 @@ is_integral_v<T> || is_floating_point_v<T>
 \end{lstlisting}
 \end{itemize}
 
-std::is\_fundamental<T>::value
+\textbf{std::is\_fundamental<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是基本类型(算术类型或void或std::nullptr\_t)，则生成true。
+若类型T是基本类型(算术类型或void或std::nullptr\_t)，则生成true。
 
 \item 
 等价于: 
@@ -383,12 +384,11 @@ is_arithmetic_v<T> || is_void_v<T> || is_null_pointer_v<T>
 参见第448页19.8.1节中的IsFundaT的实现细节。
 \end{itemize}
 
-
-std::is\_scalar<T>::value
+\textbf{std::is\_scalar<T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是“标量”类型，则生成true。
+若类型T是“标量”类型，则生成true。
 
 \item 
 等价于:  
@@ -398,11 +398,11 @@ is_arithmetic_v<T> || is_enum_v<T> || is_pointer_v<T>
 \end{lstlisting}
 \end{itemize}
 
-std::is\_object < T >::value
+\textbf{std::is\_object < T >::value}
 
 \begin{itemize}
 \item 
-如果类型T描述了对象的类型，则生成true。
+若类型T描述了对象的类型，则生成true。
 
 \item 
 等价于: 
@@ -417,11 +417,11 @@ is_scalar_v<T> || is_array_v<T> || is_class_v<T> || is_union_v<T>
 \end{lstlisting}
 \end{itemize}
 
-std::is\_compound <T>::value
+\textbf{std::is\_compound <T>::value}
 
 \begin{itemize}
 \item 
-如果类型T是由其他类型组合而成的类型，则生成true。
+若类型T是由其他类型组合而成的类型，则生成true。
 
 \item 
 等价于: 

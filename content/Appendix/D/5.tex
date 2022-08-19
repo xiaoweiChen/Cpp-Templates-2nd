@@ -21,13 +21,13 @@
 表D.7. 剩余类型特征
 \end{center}
 
-std::enable\_if<cond>::type
+\textbf{std::enable\_if<cond>::type}
 
-std::enable\_if<cond, T>::type
+\textbf{std::enable\_if<cond, T>::type}
 
 \begin{itemize}
 \item
-如果cond为true，则在其成员类型中返回void或T。否则，不定义成员类型。
+若cond为true，则在其成员类型中返回void或T。否则，不定义成员类型。
 
 \item
 因为当cond为false时，没有定义类型成员，因此该特性可以通常给定的条件，禁用或使用SFINAE退出函数模板。
@@ -39,17 +39,17 @@ std::enable\_if<cond, T>::type
 有关std::enable\_if如何实现的详细信息，请参见第20.3节。
 \end{itemize}
 
-std::conditional<cond, T, F>::type
+\textbf{std::conditional<cond, T, F>::type}
 
 \begin{itemize}
 \item
-如果cond为真，则为T，否则为F。
+若cond为true，则为T，否则为F。
 
 \item
 这是19.7.1节介绍的特征IfThenElseT的标准版本。
 
 \item
-与普通的C++ if-then-else语句不同，then和else分支的模板参数都是在选择之前进行求值的，因此两个分支都不包含错误的代码，或者程序可能是格式错误的。因此，可能需要添加一个间接级别，以避免then和else分支中的表达式在未使用该分支时进行计算。第19.7.1节演示了特征IfThenElseT的这个功能，其具有相同的行为。
+与普通的C++ if-then-else语句不同，then和else分支的模板参数都是在选择之前进行求值的，因此两个分支都不包含错误的代码，或者程序可能是格式错误的。可能需要添加一个间接级别，以避免then和else分支中的表达式在未使用该分支时进行计算。第19.7.1节演示了特征IfThenElseT的这个功能，其具有相同的行为。
 
 \item
 参见第11.5节中的示例。
@@ -58,20 +58,20 @@ std::conditional<cond, T, F>::type
 请参阅19.7.1节，了解std::conditional的实现。
 \end{itemize}
 
-std::common\_type<T...>::type
+\textbf{std::common\_type<T...>::type}
 
 \begin{itemize}
 \item
 生成给定T1, T2, ..., Tn类型的“共同类型”。
 
 \item
-普通类型的计算比本附录中讨论的要复杂一些。粗略地说，当第二个和第三个操作数是U和V类型时(引用类型仅用于确定两个操作数的值类别)，U和V两种类型是条件三元操作符产生的类型;如果该类型无效，则没有共同类型。decay\_t应用于此结果。这个计算可以通过特化重写为std::common\_type<U, V>(C++标准库中，偏特化存在于持续时间和时间点)。
+普通类型的计算比本附录中讨论的要复杂一些。粗略地说，当第二个和第三个操作数是U和V类型时(引用类型仅用于确定两个操作数的值类别)，U和V两种类型是条件三元操作符产生的类型;若该类型无效，则没有共同类型。decay\_t应用于此结果。这个计算可以通过特化重写为std::common\_type<U, V>(C++标准库中，偏特化存在于持续时间和时间点)。
 
 \item
-若没有给出类型或没有公共类型存在，则没有定义类型成员，因此使用会出错(可能会导致SFINAE输出使用它的函数模板)。
+若没有给出类型或没有公共类型存在，则没有定义类型成员，因此会出错(可能会导致SFINAE输出使用它的函数模板)。
 
 \item
-如果给出单类型，结果是对该类型为decay\_t。
+若给出单类型，结果是对该类型为decay\_t。
 
 \item
 对于两个以上的类型，common\_type递归地用公共类型替换前两个类型T1和T2。若该进程失败，则没有通用类型。
@@ -94,11 +94,11 @@ struct common_type<T1,T2> {
 \end{lstlisting}
 \end{itemize}
 
-std::aligned\_union<MIN\_SZ, T...>::type
+\textbf{std::aligned\_union<MIN\_SZ, T...>::type}
 
 \begin{itemize}
 \item
-生成一个普通的旧数据类型(POD)可用作未初始化存储，大小至少为MIN\_SZ，适合保存给定的类型T1, T2，…Tn。
+生成一个普通的旧数据类型(POD)可用作未初始化存储，大小至少为MIN\_SZ，适合保存给定的类型T1，T2，…Tn。
 
 \item
 此外，还可以生成一个静态成员alignment\_value，其值表示所有给定类型中需要严格对齐于该值，对于结果类型来说等价于
@@ -126,12 +126,12 @@ std::cout << std::aligned_union<0, char,
 		<< ’\n’;
 \end{lstlisting}
 
-注意使用aligned\_union来获取对齐值，而不是使用aligned\_union\_t获取类型。
+使用aligned\_union来获取对齐值，而不是使用aligned\_union\_t获取类型。
 \end{itemize}
 
-std::aligned\_storage<MAX\_TYPE\_SZ>::type
+\textbf{std::aligned\_storage<MAX\_TYPE\_SZ>::type}
 
-std::aligned\_storage<MAX\_TYPE\_SZ, DEF\_ALIGN>::type
+\textbf{std::aligned\_storage<MAX\_TYPE\_SZ, DEF\_ALIGN>::type}
 
 \begin{itemize}
 \item

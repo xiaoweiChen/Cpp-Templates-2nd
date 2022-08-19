@@ -30,18 +30,18 @@
 表D.6. 类型构造的特性
 \end{center}
 
-std::remove\_const<T>::type
+\textbf{std::remove\_const<T>::type}
 
-std::remove\_volatile<T>::type
+\textbf{std::remove\_volatile<T>::type}
 
-std::remove\_cv<T>::type
+\textbf{std::remove\_cv<T>::type}
 
 \begin{itemize}
 \item
 生成不带const或/和volatile的T类型。
 
 \item
-注意，const指针是const限定类型，而非const指针或指向const类型的引用则不是const限定类型。例如:
+const指针是const限定类型，而非const指针或指向const类型的引用则不是const限定类型。例如:
 
 \begin{lstlisting}[style=styleCXX]
 remove_cv_t<int> // yields int
@@ -50,7 +50,7 @@ remove_cv_t<int const volatile> // yields int
 remove_const_t<int const&> // yields int const& (only refers to int const)
 \end{lstlisting}
 
-显然，类型构造特征的顺序很重要:
+类型构造特征的顺序很重要:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}由于这个原因，C++17后的下一个标准可能会提供remove\_refcv特性。
@@ -61,7 +61,7 @@ remove_const_t<remove_reference_t<int const&>> // yields int
 remove_reference_t<remove_const_t<int const&>> // yields int const
 \end{lstlisting}
 
-相反，我们可能更喜欢使用std::decay<>。但是，它会将数组和函数类型转换成相应的指针类型(见第D.4节):
+相反，我们可能更喜欢使用std::decay<>，但它会将数组和函数类型转换成相应的指针类型(见第D.4节):
 
 \begin{lstlisting}[style=styleCXX]
 decay_t<int const&> // yields int
@@ -71,18 +71,18 @@ decay_t<int const&> // yields int
 参见19.3.2节了解实现细节。
 \end{itemize}
 
-std::add\_const<T>::type
+\textbf{std::add\_const<T>::type}
 
-std::add\_volatile<T>::type
+\textbf{std::add\_volatile<T>::type}
 
-std::add\_cv<T>::type
+\textbf{std::add\_cv<T>::type}
 
 \begin{itemize}
 \item
 生成在带有const或/和volatile限定符的T类型。
 
 \item
-将这些特征应用于引用类型或函数类型是无效的。例如:
+将这些特征应用于引用类型或函数类型无效。例如:
 \begin{lstlisting}[style=styleCXX]
 add_cv_t<int> // yields int const volatile
 add_cv_t<int const> // yields int const volatile
@@ -93,9 +93,9 @@ add_const_t<int&> // yields int&
 \end{lstlisting}
 \end{itemize}
 
-std::make\_signed<T>::type
+\textbf{std::make\_signed<T>::type}
 
-std::make\_unsigned<T>::type
+\textbf{std::make\_unsigned<T>::type}
 
 \begin{itemize}
 \item
@@ -105,7 +105,7 @@ std::make\_unsigned<T>::type
 T是枚举类型，或除bool以外的整型(cv限定)。所有其他类型都会导致未定义行为(参见第19.7.1节，讨论如何避免这种未定义行为)。
 
 \item
-将这些特征应用于引用类型或函数类型是无效的，而非const指针或对const类型的引用不由const限定。例如:
+将这些特征应用于引用类型或函数类型无效，而非const指针或对const类型的引用不由const限定。例如:
 \begin{lstlisting}[style=styleCXX]
 make_unsigned_t<char> // yields unsigned char
 make_unsigned_t<int> // yields unsigned int
@@ -113,11 +113,11 @@ make_unsigned_t<int const&> // undefined behavior
 \end{lstlisting}
 \end{itemize}
 
-std::remove\_reference<T>::type
+\textbf{std::remove\_reference<T>::type}
 
 \begin{itemize}
 \item
-生成引用类型T引用的类型(如果T不是引用类型，则生成T本身)。
+生成引用类型T引用的类型(若T不是引用类型，则生成T本身)。
 
 \item
 例如:
@@ -129,7 +129,7 @@ remove_reference_t<int&&> // yields int
 \end{lstlisting}
 
 \item
-注意，引用类型本身不是const类型。因此，类型构造特征的顺序很重要:
+引用类型本身不是const类型。因此，类型构造特征的顺序很重要:
 
 \begin{tcolorbox}[colback=webgreen!5!white,colframe=webgreen!75!black]
 \hspace*{0.75cm}由于这个原因，C++17后的下一个标准可能会提供remove\_refcv特性。
@@ -140,7 +140,7 @@ remove_const_t<remove_reference_t<int const&>> // yields int
 remove_reference_t<remove_const_t<int const&>> // yields int const
 \end{lstlisting}
 
-相反，我们可能更喜欢使用std::decay<>。但是，它会将数组和函数类型转换成相应的指针类型(见第D.4节):
+相反，我们可能更喜欢使用std::decay<>，但会将数组和函数类型转换成相应的指针类型(见第D.4节):
 
 \begin{lstlisting}[style=styleCXX]
 decay_t<int const&> // yields int
@@ -150,9 +150,9 @@ decay_t<int const&> // yields int
 参见19.3.2节了解实现细节。
 \end{itemize}
 
-std::add\_lvalue\_reference<T>::type
+\textbf{std::add\_lvalue\_reference<T>::type}
 
-std::add\_rvalue\_reference<T>::type
+\textbf{std::add\_rvalue\_reference<T>::type}
 
 \begin{itemize}
 \item
@@ -162,7 +162,7 @@ std::add\_rvalue\_reference<T>::type
 若T不是可引用的(cv限定的)void或用const、volatile、\&和/或\&\&限定的函数类型)，则生成T。
 
 \item
-注意，若T已经是一个引用类型，特性使用引用折叠规则(参见第15.6.1节):只有当使用add\_rvalue\_reference并且T是一个右值引用时，结果是一个右值引用。
+若T已经是一个引用类型，特性使用引用折叠规则(参见第15.6.1节):只有当使用add\_rvalue\_reference并且T是一个右值引用时，结果是一个右值引用。
 
 \item
 例如:
@@ -181,11 +181,11 @@ add_rvalue_reference_t<void> // yields void
 参见第19.3.2节了解实现细节。
 \end{itemize}
 
-std::remove\_pointer<T>::type
+\textbf{std::remove\_pointer<T>::type}
 
 \begin{itemize}
 \item
-生成指针类型T所指向的类型(如果不是指针类型，则生成T本身)。
+生成指针类型T所指向的类型(若不是指针类型，则生成T本身)。
 
 \item
 例如:
@@ -196,7 +196,7 @@ remove_pointer_t<int const* const* const> // yields int const* const
 \end{lstlisting}
 \end{itemize}
 
-std::add\_pointer<T>::type
+\textbf{std::add\_pointer<T>::type}
 
 \begin{itemize}
 \item
@@ -218,16 +218,16 @@ add_pointer_t<void(int) const> // yields void(int) const (no change)
 \end{lstlisting}
 \end{itemize}
 
-std::remove\_extent<T>::type
+\textbf{std::remove\_extent<T>::type}
 
-std::remove\_all\_extents<T>::type
+\textbf{std::remove\_all\_extents<T>::type}
 
 \begin{itemize}
 \item
-给定数组类型，remove\_extent生成直接元素类型(本身可以是数组类型)，而remove\_all\_extents剥离所有“数组层”来产生底层元素类型(因此不再是数组类型)。如果T不是数组类型，则生成T本身。
+给定数组类型，remove\_extent生成直接元素类型(本身可以是数组类型)，而remove\_all\_extents剥离所有“数组层”来产生底层元素类型(因此不再是数组类型)。若T不是数组类型，则生成T本身。
 
 \item
-指针没有维度信息，数组类型中未指定的边界指定维度。(通常，用数组类型声明的函数参数没有实际的数组类型，而且std::array也不是数组类型。参见第D.2.1节。)
+指针没有维度信息，数组类型中未指定的边界指定维度(用数组类型声明的函数参数没有实际的数组类型，而且std::array也不是数组类型。参见第D.2.1节)。
 
 \item
 例如:
@@ -248,7 +248,7 @@ remove_all_extents_t<int(*)[5]> // yields int(*)[5]
 参见第23.1.2节了解实现细节。
 \end{itemize}
 
-std::decay<T>::type
+\textbf{std::decay<T>::type}
 
 \begin{itemize}
 \item
@@ -268,14 +268,14 @@ std::decay<T>::type
 若结果是一个函数类型，则生成该函数类型的add\_pointer产生的类型(参见第11.1.1节)。
 
 \item[-]
-生成的结果不包含任何前置const/volatile限定符。
+生成的结果不包含const/volatile限定符。
 \end{itemize}
 
 \item
 初始化auto类型的对象时，通过参数的值传递或类型转换decay<>模型。
 
 \item
-decay<>对于处理可能用引用类型替代，但用于确定另一个函数的返回类型或参数类型的模板参数特别有用。关于讨论和使用std::decay<>()(后者历史上有用来实现std::make\_pair<>())的例子，请参阅第1.3.2节和第7.6节。
+decay<>对于处理可能用引用类型替代，但用于确定另一个函数的返回类型或参数类型的模板参数特别有用。关于讨论和使用std::decay<>()(历史上有用后者来实现std::make\_pair<>())的例子，请参阅第1.3.2节和第7.6节。
 
 \item
 例如:

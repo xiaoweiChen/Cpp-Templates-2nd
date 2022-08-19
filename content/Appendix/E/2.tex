@@ -13,13 +13,13 @@ concept LessThanComparable = requires(T x, T y) {
 };
 \end{lstlisting}
 
-请注意require表达式如何包含一个可选参数列表:这些参数永远不会用参数替换，而可以认为是一组“哑变量”，可用来在require表达式体中表达需求。这种情况下，短语表达了这样的需求
+请注意require表达式如何包含一个可选参数列表:这些参数永远不会用参数替换，可以认为是一组“哑变量”，可用来在require表达式体中表达需求。短语表达了这样的需求
 
 \begin{lstlisting}[style=styleCXX]
 { x < y } -> bool;
 \end{lstlisting}
 
-这种语法意味着(a)表达式x < y必须在SFINAE意义上有效，(b)表达式的结果必须可转换为bool类型。这种形式的短语中，关键字noexcept可以插入到\texttt{->}标记之前，以表示大括号中的表达式不会抛出异常(即，应用于该表达式的noexcept(…)为true。如果不需要这样的约束，短语的隐式转换部分(即\texttt{->}类型)可以省略，若只需要检查表达式的有效性，则可以删除大括号，这样短语就可以简化为表达式。
+这种语法意味着(a)表达式x < y必须在SFINAE意义上有效，(b)表达式的结果必须可转换为bool类型。这种形式的短语中，关键字noexcept可以插入到\texttt{->}标记之前，以表示大括号中的表达式不会抛出异常(即，应用于该表达式的noexcept(…)为true。若不需要这样的约束，短语的隐式转换部分(即\texttt{->}类型)可以省略，若只需要检查表达式的有效性，则可以删除大括号，这样短语就可以简化为表达式。
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -28,7 +28,7 @@ concept Swappable = requires(T x, T y) {
 };
 \end{lstlisting}
 
-require表达式还可以表达对关联类型的需求。考虑前面假设的序列概念:除了要求seq.begin()等表达式的有效性外，还需要相应的序列迭代器类型。可以表示为:
+requires表达式还可以表达对关联类型的需求。考虑前面假设的序列概念:除了要求seq.begin()等表达式的有效性外，还需要相应的序列迭代器类型。可以表示为:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Seq>
@@ -39,7 +39,7 @@ concept Sequence = requires(Seq seq) {
 };
 \end{lstlisting}
 
-typename type;表示类型存在的需求(这称为类型需求)。本例中，必须存在的类型是概念模板参数的成员，但不一定总是这样。例如，可以要求存在一个IteratorFor<Seq>类型，通过需求短语实现
+typename type;表示类型存在的需求(这称为类型需求)。本例中，必须存在的类型是概念模板参数的成员，但不一定总是这样，可以要求存在一个IteratorFor<Seq>类型，通过require短语实现
 
 \begin{lstlisting}[style=styleCXX]
 ...
@@ -47,7 +47,7 @@ typename IteratorFor<Seq>;
 ...
 \end{lstlisting}
 
-上面的Sequence概念定义展示了，如何通过逐个列出短语来组合短语。还有第三类需求短语，其只包含调用另一个概念。假设有一个迭代器的概念，希望序列概念不仅要求Seq::iterator是一种类型，而且要求该类型满足iterator概念的约束条件。表达式如下:
+上面的Sequence概念定义展示了，通过逐个列出短语来组合短语。还有第三类需求短语，其只包含调用另一个概念。假设有一个迭代器的概念，希望序列概念不仅要求Seq::iterator是一种类型，而且要求该类型满足iterator概念的约束条件。表达式如下:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename Seq>
@@ -59,7 +59,7 @@ concept Sequence = requires(Seq seq) {
 };
 \end{lstlisting}
 
-也就是说，可以在require表达式中添加require子句(这种短语被为嵌套需求)。
+也就是说，可以在requires表达式中添加子句(这种短语视为嵌套需求)。
 
 
 

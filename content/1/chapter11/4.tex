@@ -105,7 +105,7 @@ int main()
 	Arr<int,size> x; // initializes internal vector with 10 elements
 	x.print(); // OK
 	size += 100; // OOPS: modifies SZ in Arr<>
-	x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
+	x.print(); // run-time ERROR: invalid memory access: loops over 110 elements
 }
 \end{lstlisting}
 
@@ -124,7 +124,7 @@ int int size = 10;
 ...
 Arr<int,size> x; // initializes internal vector with 10 elements
 size += 100; // OOPS: modifies SZ in Arr<>
-x.print(); // run-time ERROR: invalid memory access: loops over 120 elements
+x.print(); // run-time ERROR: invalid memory access: loops over 110 elements
 \end{lstlisting}
 
 将模板参数SZ更改为int const\&类型并不能解决这个问题，因为size本身可以修改。

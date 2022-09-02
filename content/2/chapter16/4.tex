@@ -127,7 +127,7 @@ class List<T* C::*> { // #5
 	using ElementType = T* C::*;
 	...
 	inline void append(ElementType pm) {
-		impl.append((void* C::*)pm);
+		impl.append(static_cast<void* C::*>(pm));
 	}
 	inline std::size_t length() const {
 		return impl.length();

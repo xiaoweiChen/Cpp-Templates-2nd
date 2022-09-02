@@ -102,7 +102,7 @@ void distinguish (Array<int> a1, Array<int> a2)
 }
 \end{lstlisting}
 
-调用quickExchange()之后，指向第一个数组的指针p变成了指向第二个数组的指针。即使在交换操作之后，指向非数组s1的指针仍然指向s1:只交换所指向的值。前缀quick\_is有助于使用快捷方式来实现所需的操作，但通用exchange()模板仍然可以对Array<T>进行优化:
+调用quickExchange()之后，指向第一个数组的指针p变成了指向第二个数组的指针。即使在交换操作之后，指向非数组s1的指针仍然指向s1:只交换所指向的值。前缀quick有助于使用快捷方式来实现所需的操作，但通用exchange()模板仍然可以对Array<T>进行优化:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>

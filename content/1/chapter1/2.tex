@@ -32,13 +32,14 @@ T max (T const& a, T const& b)
 template<typename T>
 T max (T a, T b);
 ...
+int i = 17;
 int const c = 42;
 max(i, c); // OK: T推导为int
 max(c, c); // OK: T推导为int
 int& ir = i;
 max(i, ir); // OK: T推导为int
 int arr[4];
-foo(&i, arr); // OK: T推导为int*
+max(&i, arr); // OK: T推导为int*
 \end{lstlisting}
 
 下面就是反面案例了：
@@ -46,7 +47,7 @@ foo(&i, arr); // OK: T推导为int*
 \begin{lstlisting}[style=styleCXX]
 max(4, 7.2); // ERROR: T推导为int或double
 std::string s;
-foo("hello", s); // ERROR: T推导为char const[6]或std::string
+max("hello", s); // ERROR: T推导为char const*或std::string
 \end{lstlisting}
 
 有三种方法可以处理此类错误:

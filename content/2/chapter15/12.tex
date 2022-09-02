@@ -166,11 +166,11 @@ class S {
 
 \begin{lstlisting}[style=styleCXX]
 S x{12}; // x has type S<int>
-S y{s1};
-S z(s1);
+S y{x};
+S z(x);
 \end{lstlisting}
 
-已经知道x的类型是S<int>，但是x和y的类型应该是什么?直观产生的两种类型是S<S<int>{}>和S<int>。委员会决定，两种情况下都应该是S<int>，这有点争议。为什么会引起争议?考虑一个类似的vector类型的例子:
+已经知道x的类型是S<int>，但是y和z的类型应该是什么?直观产生的两种类型是S<S<int>{}>和S<int>。委员会决定，两种情况下都应该是S<int>，这有点争议。为什么会引起争议?考虑一个类似的vector类型的例子:
 
 \begin{lstlisting}[style=styleCXX]
 std::vector v{1, 2, 3}; // vector<int>, not surprising

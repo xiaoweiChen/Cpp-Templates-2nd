@@ -45,7 +45,7 @@ struct V {
 		X(double);
 	};
 } v;
-int r = f(v, 7.0); // OK: T is deduced to int through the first parameter,
+int r = f(v, 7.0); // OK: T is deduced to V through the first parameter,
 					// which causes the second parameter to have type V::X
 					// which can be constructed from a double value
 \end{lstlisting}

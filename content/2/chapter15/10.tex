@@ -20,7 +20,7 @@ void useContainer(Container const& container)
 上面的例子中，auto的两次使用避免了书写迭代器类型和迭代器的值类型这两种冗长类型的必要:
 
 \begin{lstlisting}[style=styleCXX]
-typename Container::const_iterator pos = container.begin();
+typename Container::iterator pos = container.begin();
 ...
 typename std::iterator_traits<typename Container::iterator>::reference
 	element = *pos++;
@@ -377,7 +377,7 @@ C++14添加了一个结合了auto和decltype的特性:decltype(auto)。与auto�
 int i = 42; // i has type int
 int const& ref = i; // ref has type int const& and refers to i
 
-auto x = ref; // x1 has type int and is a new independent object
+auto x = ref; // x has type int and is a new independent object
 
 decltype(auto) y = ref; // y has type int const& and also refers to i
 \end{lstlisting}

@@ -102,7 +102,7 @@ std::size_t len (...)
 }
 \end{lstlisting}
 
-这里，还提供了一个通用的len()函数，该函数总是匹配，但其匹配度也是最糟糕的那个(重载解析中使用省略号匹配(…))(参见C.2节)。
+这里，还提供了一个通用的len()函数，该函数总是匹配，但其匹配度也是最糟糕的那个(重载解析中使用省略号匹配(…)，参见C.2节)。
 
 对于数组和vector，这里有两个匹配，其中特化的匹配更好。对于指针，只有保底候选可以匹配，这样编译器就不会再抱怨这个调用缺少len()了。
 
@@ -170,7 +170,7 @@ namespace std {
 		public:
 		...
 		template<typename F, typename... Args,
-		typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>,
+		typename = enable_if_t<!is_same_v<decay_t<F>,
 		thread>>>
 		explicit thread(F&& f, Args&&... args);
 		...

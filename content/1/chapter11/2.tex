@@ -92,7 +92,7 @@ is_assignable_v<int&,int&> // yields true
 
 \begin{lstlisting}[style=styleCXX]
 is_swappable_v<int> // yields true (assuming lvalues)
-is_swappable_v<int&,int&> // yields true (equivalent to the previous check)
+is_swappable_with_v<int&,int&> // yields true (equivalent to the previous check)
 is_swappable_with_v<int,int> // yields false (taking value category into account)
 \end{lstlisting}
 

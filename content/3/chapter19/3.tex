@@ -364,6 +364,8 @@ int main()
 \hspace*{0.75cm}使用术语衰变可能会有点混乱，因为在C中它只意味着从数组/函数类型到指针类型的转换，而在这里它还包括删除const/volatile限定符。
 \end{tcolorbox}
 
+它的实现结合了上面描述的几种技术。
+
 首先，定义了非数组、非函数的情况，可以简单地删除const和volatile限定符:
 
 \begin{lstlisting}[style=styleCXX]
@@ -561,7 +563,7 @@ void foo(T t)
 int main()
 {
 	foo(42); // calls fooImpl(42, TrueType)
-	foo(7.7); // calls fooImpl(42, FalseType)
+	foo(7.7); // calls fooImpl(7.7, FalseType)
 }
 \end{lstlisting}
 

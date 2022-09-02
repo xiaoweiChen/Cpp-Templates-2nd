@@ -49,7 +49,7 @@ template<...> static long test(...);
 
 \begin{lstlisting}[style=styleCXX]
 static constexpr bool value
-	= IsSameT<decltype(test<...>(nullptr)), char>::value;
+	= IsSameT<decltype(test<T>(nullptr)), char>::value;
 \end{lstlisting}
 
 如果选择了返回类型为char的第一个test()成员，value将初始化为isSame<char,char>，为true。否则，将初始化为isSame<long,char>，该值为false。
@@ -228,7 +228,7 @@ struct IsDefaultConstructibleT<T, VoidT<decltype(T())>> : std::true_type
 };
 \end{lstlisting}
 
-与上面针对谓词特征的IsDefaultConstructibleT改进版本一样，定义了从std::false\_type派生的一般情况，因为默认情况下类型没有成员size\_type。
+与上面针对谓词特征的IsDefaultConstructibleT改进版本一样，定义了从std::false\_type派生的一般情况，默认情况下，假定类型没有默认构造函数。
 
 这里有趣的特性是第二个模板参数，默认为助手类的VoidT类型，可以使用编译时类型构造的偏特化。
 

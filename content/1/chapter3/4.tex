@@ -46,14 +46,14 @@ void Stack<T,Maxsize>::push (T const& elem)
 template<typename T, auto Maxsize>
 void Stack<T,Maxsize>::pop ()
 {
-	assert(!elems.empty());
+	assert(!empty());
 	--numElems; // decrement number of elements
 }
 
 template<typename T, auto Maxsize>
 T const& Stack<T,Maxsize>::top () const
 {
-	assert(!elems.empty());
+	assert(!empty());
 	return elems[numElems-1]; // return last element
 }
 \end{lstlisting}

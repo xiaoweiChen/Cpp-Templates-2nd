@@ -159,7 +159,7 @@ auto max (T1 a, T2 b) -> typename std::decay<decltype(true?a:b)>::type
 }
 \end{lstlisting}
 
-这里使用了std::decay<>，修饰了返回值的类型。其在标准库中的<type\_trait>头文件中定义(参见第D.5节)。因为是类型，必须用typename进行限定才能访问(参见第5.1节)。
+这里使用了std::decay<>，修饰了返回值的类型。其在标准库中的<type\_traits>头文件中定义(参见第D.4节)。因为是类型，必须用typename进行限定才能访问(参见第5.1节)。
 
 auto类型的初始化是衰变的，这也适用于返回类型为auto的返回值。auto作为返回类型的行为就像下面的代码一样，其中a由i(衰变类型)声明:
 

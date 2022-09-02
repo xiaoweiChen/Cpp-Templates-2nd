@@ -77,14 +77,14 @@ void f (X&& val) {
 \hspace*{0.75cm}移动语义不传递是有意为之的。若不是这样，就会在函数中第一次使用可移动对象时丢失其内部值。
 \end{tcolorbox}
 
-尽管在第三个f()中val声明为右值引用，但当用作表达式时，值类别是非常量左值(参见附录B)，并且在第一个f()中表现为val。若没有move()，将调用g(X\&)而不是g(\&\&)来表示非常量左值。
+尽管在第三个f()中val声明为右值引用，但当用作表达式时，值类别是非常量左值(参见附录B)，并且在第一个f()中表现为val。若没有move()，将调用g(X\&)而不是g(X\&\&)来表示非常量左值。
 
 想在通用代码中合并这三种情况，就要面对一个问题:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
-void f (T val) {
-	g(T);
+void f (T& val) {
+	g(val);
 }
 \end{lstlisting}
 

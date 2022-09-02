@@ -9,7 +9,7 @@ C++11引入了右值引用来支持新的特性，包括移动语义和完美转
 using RI = int&;
 int i = 42;
 RI r = i;
-R const& rr = r; // OK: rr has type int&
+RI const& rr = r; // OK: rr has type int&
 \end{lstlisting}
 
 确定由这样的组合产生的类型的规则称为引用折叠规则。
@@ -223,7 +223,7 @@ class X
 	X(X&&); // X is not a template parameter
 	X(T&&); // this constructor is not a function template
 	
-	template<typename Other> X(X<U>&&); // X<U> is not a template parameter
+	template<typename U> X(X<U>&&); // X<U> is not a template parameter
 	template<typename U> X(U, T&&); // T is a template parameter from
 	// an outer template
 };

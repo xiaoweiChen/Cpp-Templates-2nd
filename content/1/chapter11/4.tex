@@ -1,4 +1,4 @@
-虽然模板类型参数不常见，但它可以成为引用类型。例如:
+虽然不常见，但模板类型参数可以成为引用类型。例如:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
@@ -50,10 +50,10 @@ int main()
 {
 	RefMem<int> rm1, rm2;
 	rm1 = rm2; // OK
-	
+
 	RefMem<int&> rm3; // ERROR: invalid default value for N
 	RefMem<int&, 0> rm4; // ERROR: invalid default value for N
-	
+
 	extern int null;
 	RefMem<int&,null> rm5, rm6;
 	rm5 = rm6; // ERROR: operator= is deleted due to reference member
@@ -63,13 +63,13 @@ int main()
 这里，有一个具有模板参数类型T成员的类，用非类型模板参数Z初始化，Z具有初始值的默认值为零。用int类型实例化类符合预期。然而，当试图用引用其实例化时，麻烦出现了:
 
 \begin{itemize}
-\item 
+\item
 默认初始化不再工作。
 
-\item 
+\item
 不能再传递0作为int的初始值。
 
-\item 
+\item
 因为非静态引用成员的类已经删除了默认的赋值操作符，赋值操作符不再可用。
 \end{itemize}
 
@@ -101,7 +101,7 @@ int size = 10;
 int main()
 {
 	Arr<int&,size> y; // compile-time ERROR deep in the code of class std::vector<>
-	
+
 	Arr<int,size> x; // initializes internal vector with 10 elements
 	x.print(); // OK
 	size += 100; // OOPS: modifies SZ in Arr<>
@@ -141,7 +141,7 @@ class Arr;
 出于这个原因，标准库有时会有奇怪的规范和约束。例如:
 
 \begin{itemize}
-\item 
+\item
 为了在模板参数为引用实例化时仍然具有赋值操作符，std::pair<>和std::tuple<>类实现了赋值操作符，而不是使用默认行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
@@ -163,7 +163,7 @@ namespace std {
 }
 \end{lstlisting}
 
-\item 
+\item
 由于副作用的复杂性，C++17标准库类模板std::optional<>和std::variant<>的实例化是“病态”的(至少在C++17中是这样)。
 
 要禁用引用，简单的静态断言就足够了:

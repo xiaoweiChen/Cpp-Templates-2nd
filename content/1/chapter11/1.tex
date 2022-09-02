@@ -6,13 +6,13 @@
 C++中，有几种类型可以很好地用于回调，它们既可以作为函数调用参数传递，也可以以f(…)方式直接使用:
 
 \begin{itemize}
-\item 
+\item
 函数指针类型
 
-\item 
+\item
 具有重载operator()(函数操作符，有时称为函子)的类类型，包括Lambda
 
-\item 
+\item
 使用转换函数生成指向函数的指针或指向函数引用的类类型
 \end{itemize}
 
@@ -68,13 +68,13 @@ int main()
 	std::vector<int> primes = { 2, 3, 5, 7, 11, 13, 17, 19 };
 	foreach(primes.begin(), primes.end(), // range
 			func); // function as callable (decays to pointer)
-	
+
 	foreach(primes.begin(), primes.end(), // range
 			&func); // function pointer as callable
-			
+
 	foreach(primes.begin(), primes.end(), // range
 			FuncObj()); // function object as callable
-	
+
 	foreach(primes.begin(), primes.end(), // range
 			[] (int i) { // lambda as callable
 				std::cout << "lambda called for: " << i << ’\n’;
@@ -85,15 +85,15 @@ int main()
 来仔细看看每种情况:
 
 \begin{itemize}
-\item 
+\item
 将函数名作为函数参数传递时，实际上传递的不是函数本身，而是指向函数的指针或引用。与数组一样(参见7.4节)，函数实参在按值传递时衰变为指针，对于模板参数类型，将推导出指向函数的指针类型。
 
 就像数组一样，函数可以通过引用传递，但函数类型不能用const限定。若用可调用的const\&类型声明foreach()的最后一个参数，那么const将会忽略。(主流C++编码中很少使用函数引用。)
 
-\item 
+\item
 第二个调用通过传递函数名的地址显式接受函数指针。这相当于第一次调用(其中函数名隐式衰变为指针值)，但可能更清晰一些
 
-\item 
+\item
 传递函子时，将类类型对象作为可调用对象传递。通过类类型调用通常相当于调用其函数操作符。因此，
 
 \begin{lstlisting}[style=styleCXX]
@@ -122,10 +122,10 @@ op(*current);
 
 其中F是类类型对象可以转换为的函数指针或函数引用的类型。
 
-\item 
+\item
 Lambda表达式产生函子(称为闭包)，这种情况与函子情况没有区别。然而，Lambda是引入函子的一种非常方便的快捷方式。C++11后，经常出现在C++代码中。
 
-有趣的是，以[]开头的Lambda(没有捕获)产生到函数指针的转换操作符。因为因为闭包的普通函数操作符会匹配得更好，所以从来没将其作为代理函数。
+有趣的是，以[]开头的Lambda(没有捕获)产生到函数指针的转换操作符。因为闭包的普通函数操作符会匹配得更好，所以从来没将其作为代理函数。
 \end{itemize}
 
 \subsubsubsection{11.1.2\hspace{0.2cm}处理成员函数和附加函数}
@@ -155,10 +155,10 @@ void foreach (Iter current, Iter end, Callable op, Args const&... args)
 这里除了可调用的参数外，还接受任意数量的附加参数。然后，foreach()模板使用给定的可调用对象调用std::invoke()，再加上附加的给定参数和所引用的元素。std::invoke()处理如下:
 
 \begin{itemize}
-\item 
+\item
 如果可调用对象是指向成员的指针，则使用第一个附加参数作为this对象。所有附加参数只是作为参数传递给可调用对象。
 
-\item 
+\item
 否则，所有附加参数都只是作为参数传递给可调用对象。
 \end{itemize}
 
@@ -198,7 +198,7 @@ int main()
 				std::cout << prefix << i << ’\n’;
 			},
 			"- value: "); // 1st arg of lambda
-			
+
 	// call obj.memfunc() for/with each elements in primes passed as argument
 	MyClass obj;
 	foreach(primes.begin(), primes.end(), // elements used as args
@@ -253,7 +253,7 @@ return ret;
 使用decltype(auto)也有一个问题:若可调用对象的返回类型为void，则不允许将ret初始化为decltype(auto)，因为void是一个不完整的类型。现在，有以下选择:
 
 \begin{itemize}
-\item 
+\item
 在语句的前一行声明一个对象，其析构函数执行希望实现的可观察行为。例如:
 
 \begin{lstlisting}[style=styleCXX]
@@ -266,7 +266,7 @@ return std::invoke(std::forward<Callable>(op),
 					std::forward<Args>(args)...);
 \end{lstlisting}
 
-\item 
+\item
 以不同的方式实现void和非void的情况:
 
 \hspace*{\fill} \\ %插入空行

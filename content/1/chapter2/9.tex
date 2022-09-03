@@ -3,7 +3,7 @@ C++17前，必须将所有模板参数类型传递给类模板(除非有默认�
 例如，前面所有的代码示例中，可以使用复制构造函数，而非指定模板参数:
 
 \begin{lstlisting}[style=styleCXX]
-Stack<int> intStack1; // stack of strings
+Stack<int> intStack1; // stack of ints
 Stack<int> intStack2 = intStack1; // OK in all versions
 Stack intStack3 = intStack1; // OK since C++17
 \end{lstlisting}
@@ -36,7 +36,7 @@ Stack intStack = 0; // Stack<int> deduced since C++17
 
 \begin{itemize}
 \item 
-根据int构造函数的定义，必须请求默认构造函数以其默认行为可用。因为只有在没有定义其他构造函数时，默认构造函数才可用:
+根据int构造函数模板的定义，必须请求默认构造函数以其默认行为可用。因为只有在没有定义其他构造函数时，默认构造函数才可用:
 \begin{lstlisting}[style=styleCXX]
 Stack() = default;
 \end{lstlisting}

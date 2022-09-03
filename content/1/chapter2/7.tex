@@ -38,7 +38,7 @@ template<typename T, typename Cont>
 T const& Stack<T,Cont>::top () const
 {
 	assert(!elems.empty());
-	return elems.back(); // return copy of last element
+	return elems.back(); // return last element
 }
 \end{lstlisting}
 

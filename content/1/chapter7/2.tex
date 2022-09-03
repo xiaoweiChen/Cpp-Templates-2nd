@@ -197,7 +197,7 @@ std::string const c = "hi";
 passR(c); // OK: T deduced as std::string const&
 passR("hi"); // OK: T deduced as char const(&)[3] (also the type of arg)
 int arr[4];
-passR("hi"); // OK: T deduced as int (&)[4] (also the type of arg)
+passR(arr); // OK: T deduced as int (&)[4] (also the type of arg)
 \end{lstlisting}
 
 每一种情况下，passR()内部的参数arg有一个类型，“知道”传递的是右值(使用移动语义)还是常量/非常量左值。这是传递参数的唯一方法，这样就可以用来区分这三种情况的行为。
@@ -213,9 +213,9 @@ void passR(T&& arg) { // arg is a forwarding reference
 	...
 }
 
-foo(42); // OK: T deduced as int
+passR(42); // OK: T deduced as int
 int i;
-foo(i); // ERROR: T deduced as int&, which makes the declaration of x in passR() invalid
+passR(i); // ERROR: T deduced as int&, which makes the declaration of x in passR() invalid
 \end{lstlisting}
 
 有关如何处理这种情况的详细信息，请参阅第15.6.2节。

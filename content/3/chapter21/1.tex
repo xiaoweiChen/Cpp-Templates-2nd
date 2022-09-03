@@ -194,14 +194,14 @@ class BaseMemberPair : private Base {
 	BaseMemberPair (Base const & b, Member const & m)
 	: Base(b), mem(m) {
 	}
-	// access base class data via first()
+	// access base class data via base()
 	Base const& base() const {
 		return static_cast<Base const&>(*this);
 	}
 	Base& base() {
 		return static_cast<Base&>(*this);
 	}
-	// access member data via second()
+	// access member data via member()
 	Member const& member() const {
 		return this->mem;
 	}

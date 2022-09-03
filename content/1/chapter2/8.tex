@@ -82,7 +82,7 @@ using DequeStack = Stack<T, std::deque<T>>;
 别名模板对于制作类模板成员类型的快捷方式特别合适。比如：
 
 \begin{lstlisting}[style=styleCXX]
-struct C {
+template<typename T> struct MyType {
 	typedef ... iterator;
 	...
 };
@@ -91,7 +91,7 @@ struct C {
 或
 
 \begin{lstlisting}[style=styleCXX]
-struct MyType {
+template<typename T> struct MyType {
 	using iterator = ...;
 	...
 };
@@ -107,7 +107,7 @@ using MyTypeIterator = typename MyType<T>::iterator;
 也可以这样
 
 \begin{lstlisting}[style=styleCXX]
-MyTypeIterator<int> pos;
+MyTypeIterator<T> pos;
 \end{lstlisting}
 
 而不像下面这样:

@@ -7,7 +7,7 @@ void printT (T arg) {
 }
 
 std::string s = "hello";
-printT(s); // pass s by reference
+printT(s); // pass s by value
 printT(std::cref(s)); // pass s “as if by reference”
 \end{lstlisting}
 
@@ -48,7 +48,7 @@ int main()
 
 最后一次调用通过值传递std::reference\_wrapper<string const>类型的对象到参数arg，然后传递并转换回其底层类型std::string。
 
-编译器必须知道返回原始类型必要的隐式转换。因此，只有通过泛型代码传递对象时，std::ref()和std::cref()才能正常工作。例如，因为没有为std::reference\_wrapper<>定义输出操作符，直接尝试输出传递的泛型类型T对象将失败:
+编译器必须知道返回原始类型必要的隐式转换。因此，只有通过泛型代码将对象传递给非泛型函数时，std::ref()和std::cref()才能正常工作。例如，因为没有为std::reference\_wrapper<>定义输出操作符，直接尝试输出传递的泛型类型T对象将失败:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
@@ -71,8 +71,8 @@ bool isless(T1 arg1, T2 arg2)
 }
 ...
 std::string s = "hello";
-if (isless(std::cref(s) < "world")) ... // ERROR
-if (isless(std::cref(s) < std::string("world"))) ... // ERROR
+if (isless(std::cref(s), "world")) ... // ERROR
+if (isless(std::cref(s), std::string("world"))) ... // ERROR
 \end{lstlisting}
 
 将arg1和arg2声明为通用类型T也没有帮助:

@@ -80,7 +80,7 @@ printV(c); // c decays so that arg has type std::string
 printV("hi"); // decays to pointer so that arg has type char const*
 
 int arr[4];
-printV(arr); // decays to pointer so that arg has type char const*
+printV(arr); // decays to pointer so that arg has type int*
 \end{lstlisting}
 
 因此，当传递字符串字面值"hi"时，类型char const[3]衰变为char const*，从而成为T的推导类型。

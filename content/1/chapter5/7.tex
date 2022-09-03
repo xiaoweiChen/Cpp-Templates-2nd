@@ -175,7 +175,7 @@ template<typename T, template<typename,typename> class Cont>
 T const& Stack<T,Cont>::top () const
 {
 	assert(!elems.empty());
-	return elems.back(); // return copy of last element
+	return elems.back(); // return last element
 }
 
 template<typename T, template<typename,typename> class Cont>

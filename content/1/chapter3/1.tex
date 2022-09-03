@@ -45,19 +45,19 @@ void Stack<T,Maxsize>::push (T const& elem)
 template<typename T, std::size_t Maxsize>
 void Stack<T,Maxsize>::pop ()
 {
-	assert(!elems.empty());
+	assert(!empty());
 	--numElems; // decrement number of elements
 }
 
 template<typename T, std::size_t Maxsize>
 T const& Stack<T,Maxsize>::top () const
 {
-	assert(!elems.empty());
+	assert(!empty());
 	return elems[numElems-1]; // return last element
 }
 \end{lstlisting}
 
-第二个模板形参Maxsize是int类型，指定了堆栈元素内部数组的容量:
+第二个模板形参Maxsize是std::size\_t类型，指定了堆栈元素内部数组的容量:
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T, std::size_t Maxsize>

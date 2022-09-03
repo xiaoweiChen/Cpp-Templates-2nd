@@ -268,41 +268,41 @@ Visual Studio 2013或2015中，这段代码按预期编译。但是，使用g++�
 {\scriptsize
 \begin{tcblisting}{commandshell={}}
 16 In file included from /cygdrive/p/gcc/gcc61-include/bits/move.h:57:0,
-18                  from /cygdrive/p/gcc/gcc61-include/bits/stl_pair.h:59,
-19                  from /cygdrive/p/gcc/gcc61-include/bits/stl_algobase.h:64,
-20 from /cygdrive/p/gcc/gcc61-include/bits/char_traits.h:39,
-21                  from /cygdrive/p/gcc/gcc61-include/string:40,
-22                  from errornovel2.cpp:1:
-23 /cygdrive/p/gcc/gcc61-include/type_traits: In instantiation of ’struct std::__not_<std::
+17                  from /cygdrive/p/gcc/gcc61-include/bits/stl_pair.h:59,
+18                  from /cygdrive/p/gcc/gcc61-include/bits/stl_algobase.h:64,
+19 from /cygdrive/p/gcc/gcc61-include/bits/char_traits.h:39,
+20                  from /cygdrive/p/gcc/gcc61-include/string:40,
+21                  from errornovel2.cpp:1:
+22 /cygdrive/p/gcc/gcc61-include/type_traits: In instantiation of ’struct std::__not_<std::
    __and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
    Customer, main()::MyCustomerHash> > >’:
-24 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: required from ’class std::
+23 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: required from ’class std::
    unordered_set<Customer, main()::MyCustomerHash>’
-25 errornovel2.cpp:28:47: required from here
-26 /cygdrive/p/gcc/gcc61-include/type_traits:154:38: error: ’value’ is not a member of ’std
+24 errornovel2.cpp:28:47: required from here
+25 /cygdrive/p/gcc/gcc61-include/type_traits:154:38: error: ’value’ is not a member of ’std
    ::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::__is_noexcept_hash<
    Customer, main()::MyCustomerHash> >’
-27      : public integral_constant<bool, !_Pp::value>
-28                                                  ^~~~
-29 In file included from /cygdrive/p/gcc/gcc61-include/unordered_set:48:0,
-30                  from errornovel2.cpp:2:
-31 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h: In instantiation of ’class std::
+26      : public integral_constant<bool, !_Pp::value>
+27                                                  ^~~~
+28 In file included from /cygdrive/p/gcc/gcc61-include/unordered_set:48:0,
+29                  from errornovel2.cpp:2:
+30 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h: In instantiation of ’class std::
    unordered_set<Customer, main()::MyCustomerHash>’:
-32 errornovel2.cpp:28:47: required from here
+31 errornovel2.cpp:28:47: required from here
 \end{tcblisting}
 }
 {\scriptsize
 \begin{tcblisting}{commandshell={}}
-33 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: error: ’value’ is not a member
+32 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:95:63: error: ’value’ is not a member
    of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
    __is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
-34        typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
-35                                                                                  ^~~~~~~~~~
-36 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:102:45: error: ’value’ is not a member
+33        typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
+34                                                                                  ^~~~~~~~~~
+35 /cygdrive/p/gcc/gcc61-include/bits/unordered_set.h:102:45: error: ’value’ is not a member
    of ’std::__not_<std::__and_<std::__is_fast_hash<main()::MyCustomerHash>, std::__detail::
    __is_noexcept_hash<Customer, main()::MyCustomerHash> > >’
-37 typedef typename _Hashtable::key_type key_type;
-38                                                     ^~~~~~~~
+36 typedef typename _Hashtable::key_type key_type;
+37                                                     ^~~~~~~~
 ...
 \end{tcblisting}
 }

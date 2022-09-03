@@ -12,7 +12,7 @@ struct IsConvertibleHelper {
 	private:
 	// test() trying to call the helper aux(TO) for a FROM passed as F:
 		static void aux(TO);
-	template<typename F, typename T,
+	template<typename F, typename,
 	typename = decltype(aux(std::declval<F>()))>
 		static std::true_type test(void*);
 	// test() fallback:
@@ -119,7 +119,7 @@ struct IsConvertibleHelper<FROM,TO,false> {
 };
 \end{lstlisting}
 
-尔模板参数，对所有这些特殊情况使用主辅助特征的实现。若转换为数组或函数(因为IsVoidT<TO>是假的)，或者FROM是void而TO不是，则生成false\_type；对于两个void类型，也将生成false\_type。其他情况都为第三个参数产生false参数，因此采用偏特化，这与已经讨论过的实现相对应。
+尔模板参数，对所有这些特殊情况使用主辅助特征的实现。若转换为数组或函数(因为IsVoidT<TO>是假的)，或者FROM是void而TO不是，则生成false\_type；对于两个void类型，将生成true\_type。其他情况都为第三个参数产生false参数，因此采用偏特化，这与已经讨论过的实现相对应。
 
 请参阅19.8.2节和19.8.3节来讨论如何实现IsArrayT。
 

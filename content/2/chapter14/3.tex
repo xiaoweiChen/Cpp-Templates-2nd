@@ -27,9 +27,9 @@ namespace N {
 	enum E { e };
 }
 
-template<typename> void f() {}
+template<typename> void f(T p) {}
 
-template<typename T> void h(T P) {
+template<typename T> void h(T p) {
 	f<int>(p); // #1
 	g<int>(p); // #2 ERROR
 }

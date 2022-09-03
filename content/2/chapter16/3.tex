@@ -202,6 +202,16 @@ template<> int f(int*) // OK: specialization of #2
 }
 \end{lstlisting}
 
+一个完整的函数模板特化只提供了一个替代定义，而没有提供替代声明。因此，签名(包括返回类型)必须完全匹配:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T> auto foo();
+
+template<> int foo<int>() { return 42; }  // ERROR
+
+template<> auto foo<int>() { return 42; } // OK
+\end{lstlisting}
+
 完整函数模板特化不能包含默认参数值。然而，为特化模板指定默认参数仍然适用于显式特化:
 
 \begin{lstlisting}[style=styleCXX]

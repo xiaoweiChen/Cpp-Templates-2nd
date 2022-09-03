@@ -7,7 +7,7 @@
 template<typename T>
 class Stack {
 	...
-	void printOn() (std::ostream& strm) const {
+	void printOn(std::ostream& strm) const {
 		for (T const& elem : elems) {
 			strm << elem << ' '; // 对每个元素使用<<
 		}

@@ -29,11 +29,11 @@ C++14中，对象必须具有外部或内部链接。
 
 \begin{lstlisting}[style=styleCXX]
 template<char const* name>
-class MyClass {
+class Message { // OK
 	...
 };
 
-MyClass<"hello"> x; // ERROR: string literal "hello" not allowed
+Message<"hello"> x; // ERROR: string literal "hello" not allowed
 \end{lstlisting}
 
 但也有解决方法(同样取决于C++的版本):
@@ -50,7 +50,7 @@ int main()
 }
 \end{lstlisting}
 
-三种情况下，常量字符数组都由"hello"初始化，该对象用作用char const*声明的模板参数。若对象具有外部链接(s03)，这在所有C++版本中都有效;若对象具有内部链接(s11)，则在C++11和C++14中也是有效的;若对象没有链接，则需要C++17的支持。
+三种情况下，常量字符数组都由"hi"初始化，该对象用作用char const*声明的模板参数。若对象具有外部链接(s03)，这在所有C++版本中都有效;若对象具有内部链接(s11)，则在C++11和C++14中也是有效的;若对象没有链接，则需要C++17的支持。
 
 请参阅第12.3.3节和第17.2节讨论了该领域在未来变化的可能。
 

@@ -2,6 +2,8 @@
 
 *Second Edition*
 
+<a><img src="cover.jpg" height="256px" align="right"></a>
+
 * 作者：David Vandevoorde，Nicolai M. Josuttis，Douglas Gregor
 * 译者：陈晓伟
 * 首次发布时间：2017年9月8日([来源](https://www.amazon.com/C-Templates-Complete-Guide-2nd/dp/0321714121))
@@ -65,5 +67,4 @@
   * https://github.com/Walton1128/CPP-Templates-2nd--
   * https://github.com/r00tk1ts/cpp-templates-2nd
   * https://www.zhihu.com/column/c_1397602018500890624
-
 

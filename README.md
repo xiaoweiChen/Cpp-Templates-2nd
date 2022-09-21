@@ -44,7 +44,7 @@
 
 附录包含了许多在正文中经常提到的信息，我们也试图让其变得更有趣。
 
-根据经验，学习新东西的最好方法是看例子。因此，可以在本书中找到大量的例子。有些只是用几行代码解释一个抽象概念，而另一些是具体应用的完整源码。后一种示例将通过注释来说明需要包含程序代码的文件。可以在这本书的网站http://www.tmplbook.com上找到这些文件。
+根据经验，学习新东西的最好方法是看例子。因此，可以在本书中找到大量的例子。有些只是用几行代码解释一个抽象概念，而另一些是具体应用的完整源码。后一种示例将通过注释来说明需要包含程序代码的文件。可以在这本书的网站<http://www.tmplbook.com>上找到这些文件。
 
 ## 作者简介
 
@@ -58,13 +58,13 @@
 
 ## 本书相关
 
-* github地址：https://github.com/xiaoweiChen/Cpp-Templates-2nd
-* 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html 
-* vscode中配置latex：https://blog.csdn.net/Ruins_LEE/article/details/123555016
-* 开源示例：https://github.com/downdemo/Cpp-Templates-2ed
+* github地址：<https://github.com/xiaoweiChen/Cpp-Templates-2nd>
+* 译文的LaTeX 环境配置：<https://www.cnblogs.com/1625--H/p/11524968.html>
+* vscode中配置latex：<https://blog.csdn.net/Ruins_LEE/article/details/123555016>
+* 开源示例：<https://github.com/downdemo/Cpp-Templates-2ed>
 * 开源翻译：
 
-  * https://github.com/Walton1128/CPP-Templates-2nd--
-  * https://github.com/r00tk1ts/cpp-templates-2nd
-  * https://www.zhihu.com/column/c_1397602018500890624
+  * <https://github.com/Walton1128/CPP-Templates-2nd-->
+  * <https://github.com/r00tk1ts/cpp-templates-2nd>
+  * <https://www.zhihu.com/column/c_1397602018500890624>
 

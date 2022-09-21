@@ -7,7 +7,7 @@ void f(First first, Rest... rest);
 
 void g(int i, double j, int* k)
 {
-	f(i, j, k); // deduces First to int, Rest to fdouble, int*g
+	f(i, j, k); // deduces First to int, Rest to {double, int*}
 }
 \end{lstlisting}
 
@@ -27,10 +27,10 @@ template<typename... Ts, typename... Rest>
 void foo(pair<int, float> pif, pair<int, double> pid,
 pair<double, double> pdd)
 {
-	h1(pif, pid); // OK: deduces T to int, Rest to ffloat, doubleg
-	h2(pif, pid); // OK: deduces Ts to fint, intg, Rest to ffloat, doubleg
+	h1(pif, pid); // OK: deduces T to int, Rest to {float, double}
+	h2(pif, pid); // OK: deduces Ts to {int, int}, Rest to {float, double}
 	h1(pif, pdd); // ERROR: T deduced to int from the 1st arg, but to double from the 2nd
-	h2(pif, pdd); // OK: deduces Ts to fint, doubleg, Rest to ffloat, doubleg
+	h2(pif, pdd); // OK: deduces Ts to {int, double}, Rest to {float, double}
 }
 \end{lstlisting}
 
@@ -56,13 +56,13 @@ bool f2(Tuple<Types1...>, Tuple<Types2...>);
 void bar(Tuple<short, int, long> sv,
 		Tuple<unsigned short, unsigned, unsigned long> uv)
 {
-	f1(sv, sv); // OK: Types is deduced to fshort, int, longg
-	f2(sv, sv); // OK: Types1 is deduced to fshort, int, longg,
-				// Types2 is deduced to fshort, int, longg
-	f1(sv, uv); // ERROR: Types is deduced to fshort, int, longg from the 1st arg, but
-				// to funsigned short, unsigned, unsigned longg from the 2nd
-	f2(sv, uv); // OK: Types1 is deduced to fshort, int, longg,
-				// Types2 is deduced to funsigned short, unsigned, unsigned longg
+	f1(sv, sv); // OK: Types is deduced to {short, int, long}
+	f2(sv, sv); // OK: Types1 is deduced to {short, int, long},
+				// Types2 is deduced to {short, int, long}
+	f1(sv, uv); // ERROR: Types is deduced to {short, int, long} from the 1st arg, but
+				// to {unsigned short, unsigned, unsigned long} from the 2nd
+	f2(sv, uv); // OK: Types1 is deduced to {short, int, long},
+				// Types2 is deduced to {unsigned short, unsigned, unsigned long}
 }
 \end{lstlisting}
 

@@ -184,7 +184,7 @@ struct RemoveReferenceT<T&&> {
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
-using RemoveReference = typename RemoveReference<T>::Type;
+using RemoveReference = typename RemoveReferenceT<T>::Type;
 \end{lstlisting}
 
 有时会产生引用类型的构造派生类型时，可以从类型中删除引用，例如在第15.6节中讨论的T\&\&类型的函数参数的特殊推导规则。

@@ -272,7 +272,7 @@ using PlusResult = typename PlusResultT<T1, T2>::Type;
 
 \begin{lstlisting}[style=styleCXX]
 template<typename T1, typename T2>
-Array<RemoveCV<RemoveReference<PlusResultT<T1, T2>>>>
+Array<RemoveCV<RemoveReference<PlusResult<T1, T2>>>>
 operator+ (Array<T1> const&, Array<T2> const&);
 \end{lstlisting}
 

@@ -51,7 +51,7 @@ auto&& fr = ...;
 基于函数模板:
 
 \begin{lstlisting}[style=styleCXX]
-template<typename t> void f(T&& fr); // auto replaced by template parameter T
+template<typename T> void f(T&& fr); // auto replaced by template parameter T
 \end{lstlisting}
 
 这解释了下面的例子:

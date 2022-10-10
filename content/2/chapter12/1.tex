@@ -93,8 +93,8 @@ class List<T>::Handle {
 };
 
 template<typename T> // out-of-class member function template definition
-  template<typename T2>
-List<T>::List (List<T2> const& b)
+  template<typename U>
+List<T>::List (List<U> const& b)
 {
 	...
 }
@@ -137,8 +137,8 @@ union AllocChunk {
 \begin{lstlisting}[style=styleCXX]
 template<typename T>
 void report_top (Stack<T> const&, int number = 10);
-template<typename T>
 
+template<typename T>
 void fill (Array<T>&, T const& = T{}); // T{} is zero for built-in types
 \end{lstlisting}
 

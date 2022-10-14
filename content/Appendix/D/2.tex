@@ -345,7 +345,7 @@ is_lvalue_reference_v<T> || is_rvalue_reference_v<T>
 \item 
 等价于: 
 \begin{lstlisting}[style=styleCXX]
-! (is_member_object_pointer_v<T> || is_member_function_pointer_v<T>)
+is_member_object_pointer_v<T> || is_member_function_pointer_v<T>
 \end{lstlisting}
 \end{itemize}
 

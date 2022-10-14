@@ -197,9 +197,9 @@ struct IsDefaultConstructibleT : IsDefaultConstructibleHelper<T>::Type {
 };
 \end{lstlisting}
 
-若第一个test()函数模板有效，是首选重载，因此成员IsDefaultConstructibleHelper::Type由它的返回类型std::true\_type初始化。因此，IsConvertibleT<…>派生于std::true\_type。
+若第一个test()函数模板有效，是首选重载，因此成员IsDefaultConstructibleHelper::Type由它的返回类型std::true\_type初始化。因此，IsDefaultConstructibleT<…>派生于std::true\_type。
 
-若第一个test()函数模板无效，会因为SFINAE而禁用，IsDefaultConstructibleHelper::Type由test()回退的返回类型初始化，也就是std::false\_type。结果，IsConvertibleT<…>派生自std::false\_type。
+若第一个test()函数模板无效，会因为SFINAE而禁用，IsDefaultConstructibleHelper::Type由test()回退的返回类型初始化，也就是std::false\_type。结果，IsDefaultConstructibleT<…>派生自std::false\_type。
 
 \subsubsubsection{19.4.2\hspace{0.2cm}去除偏特化}
 
@@ -466,7 +466,7 @@ struct PlusResultT {
 
 为了解决这个问题，必须使PlusResultT对SFINAE友好，通过一个合适的定义使它更有弹性，即使decltype表达式是病态的。
 
-按照上一节描述的HasLessT的例子，定义了一个HasPlusT特性，其可以检测给定类型是否有合适的加法操作:
+按照上一节描述的PlusResultT的例子，定义了一个HasPlusT特性，其可以检测给定类型是否有合适的加法操作:
 
 \hspace*{\fill} \\ %插入空行
 \noindent
